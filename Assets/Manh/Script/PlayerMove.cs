@@ -12,8 +12,10 @@ public class PlayerMove : MonoBehaviour
     public float jumpHeight = 2f;
     public float gravity = -9.81f;
     public bool isGround;
+    public bool isJumpAndMove, isMove, isJump = true;
+  
 
-    private CharacterController controller;
+    public CharacterController controller;
     private Vector3 velocity;
 
     void Start()
@@ -24,12 +26,25 @@ public class PlayerMove : MonoBehaviour
 
     void Update()
     {
-        Move();
-        JumpAndGravity();
+        if (isJumpAndMove)
+        {
+            if (isMove)
+            {
+                Move();
+            }
+
+            if (isJump)
+            {
+                JumpAndGravity();
+            }
+
+        }
+       
     }
 
     void Move()
     {
+  
         Vector3 move = Vector3.zero;
 
         if (!manager.playerType.isPlayer2)
