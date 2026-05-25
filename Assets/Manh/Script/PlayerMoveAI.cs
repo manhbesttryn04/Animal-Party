@@ -50,29 +50,43 @@ public class PlayerMoveAI : MonoBehaviour
 
             GameObject target = pointCheck[currentIndex];
 
-            // đi tới ô
-            navMeshAgent.SetDestination(target.transform.position);
+            Vector3 offset = manager.playerType.isPlayer2
+     ? new Vector3(0, 0, -1f)
+     : new Vector3(0, 0, 1f);
+
+            navMeshAgent.SetDestination(target.transform.position + offset);
+
+
 
             // đợi tới nơi
             while (
-                navMeshAgent.pathPending ||
-                navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance
-            )
-            {
-               // manager.playerAnimator.playerAnimator.SetFloat("Walk", 0);
-                yield return null;
-            }
+                    navMeshAgent.pathPending ||
+                    navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance)
+                {
 
-            // đứng đúng vị trí
-            transform.position = target.transform.position;
+                    yield return null;
+                }
+
+            // đứng đúng vị tr
            
 
         }
         yield return new WaitForSeconds(0.5f);
-        manager.playerCamera.isFollow = false;
-
-
+        if (currentIndex + 1 < pointCheck.Count)
+        {
+            transform.LookAt(
+                pointCheck[currentIndex + 1].transform.position
+            );
+        }
+        manager.playerCamera.isFllow2 = false;
+        manager.playerCamera.isFllow3 = true;
+        yield return new WaitForSeconds(1f);
+        manager.playerCamera.isFllow3 = false;
         isMoving = false;
+        if (!manager.playerRound.isRound1)
+        {
+            manager.playerRound.isRound1 = true;
+        }
     }
     public void FindPonit()
     {

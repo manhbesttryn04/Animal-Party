@@ -43,6 +43,8 @@ public class PlayerDiceRoll : MonoBehaviour
     IEnumerator HideDiceAfterTime(int a)
     {
         yield return new WaitForSeconds(3f);
+        manager.playerCamera.isFollow = false;
+        manager.playerCamera.isFllow2 = true;
 
         for (int i = 0; i < dices.Count; i++)
         {
