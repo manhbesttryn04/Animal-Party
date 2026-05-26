@@ -4,23 +4,38 @@ using UnityEngine;
 
 public class MiniGame1 : MonoBehaviour
 {
+    public MiniGameManager manager;
     public TrapRow[] rows;
 
     public float delayBetweenRounds = 3f;
 
-    void Start()
+    bool isRunning = false;
+
+    public void StartMiniGame()
     {
+        if (isRunning)
+            return;
+
         StartCoroutine(RandomRowsRoutine());
+    }
+
+    public void StopMiniGame()
+    {
+        isRunning = false;
+
+        StopAllCoroutines();
     }
 
     IEnumerator RandomRowsRoutine()
     {
-        while (true)
-        {
-            List<int> usedIndexes = new List<int>();
+        isRunning = true;
 
-            List<Coroutine> runningRows =
-                new List<Coroutine>();
+        yield return new WaitForSeconds(5f);
+
+        while (isRunning)
+        {
+            List<int> usedIndexes =
+                new List<int>();
 
             int count = 0;
 
@@ -34,21 +49,26 @@ public class MiniGame1 : MonoBehaviour
                 {
                     usedIndexes.Add(rand);
 
-                    Coroutine c =
-                        StartCoroutine(
-                            rows[rand].RowRoutine()
-                        );
-
-                    runningRows.Add(c);
+                    StartCoroutine(
+                        rows[rand].RowRoutine()
+                    );
 
                     count++;
                 }
             }
 
-            // ĐỢI CHO TOÀN BỘ TRAP XONG
+            // ĐỢI TRAP CHẠY
             yield return new WaitForSeconds(3f);
+            if(manager.currentPlayer1.transform.position.y < 0.5f)
+            {
+                manager.currentPlayer1.GetComponent<PlayerMiniGame>().Respawn();
+            }
+            if(manager.currentPlayer2.transform.position.y < 0.5f)
+            {
+                manager.currentPlayer2.GetComponent<PlayerMiniGame>().Respawn();
+            }
 
-            // ĐỢI THÊM 5 GIÂY MỚI RANDOM TIẾP
+            // DELAY ROUND
             yield return new WaitForSeconds(
                 delayBetweenRounds
             );

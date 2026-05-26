@@ -79,6 +79,7 @@ public class TrapRow : MonoBehaviour
             skull.SetActive(false);
         }
 
+
         // =========================
         // HIỆN CÁ MẬP + ATTACK
         // =========================
