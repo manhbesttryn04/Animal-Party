@@ -43,6 +43,8 @@ public class MiniGameManager : MonoBehaviour
     // UI avatar
     public Image characterImagePlayer1;
     public Image characterImagePlayer2;
+    [Header("Loading UI")]
+    public GameObject loadingCanvas;
 
     [Header("Countdown Time")]
 
@@ -57,12 +59,10 @@ public class MiniGameManager : MonoBehaviour
 
     // Kiểm tra game đang chơi
     public bool isPlaying = false;
-
     private void Start()
     {
         StartMiniGame();
     }
-
     public void StartMiniGame()
     {
         // Nếu game đang chạy thì không start nữa
@@ -101,6 +101,15 @@ public class MiniGameManager : MonoBehaviour
             Debug.LogError("Camera index out of range!");
             yield break;
         }
+        // =========================
+        // LOADING
+        // =========================
+
+        loadingCanvas.SetActive(true);
+
+        yield return new WaitForSeconds(3f);
+
+        loadingCanvas.SetActive(false);
 
         // =========================
         // BẬT CAMERA
@@ -293,7 +302,9 @@ public class MiniGameManager : MonoBehaviour
         // =========================
 
         timerText.gameObject.SetActive(false);
-        UIMiniGame.SetActive(true);
+        UIMiniGame.SetActive(false);
+
+        GameManager.Instance.CheckPlayerWinRound(coin1.coinMiniGame, coin2.coinMiniGame);
 
         // =========================
         // XOÁ PLAYER

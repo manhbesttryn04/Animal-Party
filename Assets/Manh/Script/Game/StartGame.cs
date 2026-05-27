@@ -31,6 +31,7 @@ public class StartGame : MonoBehaviour
     {
         yield return new WaitForSeconds(2f);
         player2.GetComponent<PlayerManager>().playerAnimator.playerAnimator.SetTrigger("Dice");
+
     }
 }
 
