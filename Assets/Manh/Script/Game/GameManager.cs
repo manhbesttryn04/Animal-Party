@@ -65,6 +65,7 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(2f);
         PlayerCoin player1 = player1Main.GetComponent<PlayerCoin>();
         PlayerCoin player2 = player2Main.GetComponent<PlayerCoin>();
+        player1.AddCoin(playerCoin1);
         player2.AddCoin(playerCoin2);
         yield return new WaitForSeconds(2f);
         if(playerWinRound == "Player 1")
