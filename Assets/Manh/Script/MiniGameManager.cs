@@ -1,44 +1,71 @@
 ﻿using System.Collections;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 
 public class MiniGameManager : MonoBehaviour
 {
     [Header("Index MiniGame")]
-    public int indexMiniGame;
 
+    // Index minigame hiện tại
+    public int indexMiniGame = 1;
+
+    // Danh sách minigame
+    public MiniGameList miniGameList;
+
+    public GameObject UIMiniGame;
     [Header("Camera")]
-    public Camera miniGameCamera;
 
-    [Header("Cutscene")]
-    public MiniGameCameraCutscene cutscene;
-
-    [Header("MiniGame Logic")]
-    public MiniGame1 miniGame1;
+    // Danh sách camera + cutscene
+    public CameraCutList miniGameCamera;
 
     [Header("Spawn")]
+
+    // Vị trí spawn player
     public Transform spawnPoint;
 
     [Header("Player Prefab")]
+
     public GameObject player1Prefab;
     public GameObject player2Prefab;
 
     [Header("Timer")]
+
+    // UI timer
     public TextMeshProUGUI timerText;
 
+    [Header("Coin Count")]
+
+    // UI coin
+    public TextMeshProUGUI cointextPlayer1;
+    public TextMeshProUGUI cointextPlayer2;
+
+    // UI avatar
+    public Image characterImagePlayer1;
+    public Image characterImagePlayer2;
+
+    [Header("Countdown Time")]
+
+    // Thời gian minigame
     public float countDownTime = 99f;
 
+    [Header("Current Players")]
+
+    // Player runtime
     public GameObject currentPlayer1;
     public GameObject currentPlayer2;
 
+    // Kiểm tra game đang chơi
     public bool isPlaying = false;
 
-    private void Update()
+    private void Start()
     {
         StartMiniGame();
     }
+
     public void StartMiniGame()
     {
+        // Nếu game đang chạy thì không start nữa
         if (isPlaying)
             return;
 
@@ -50,18 +77,48 @@ public class MiniGameManager : MonoBehaviour
         isPlaying = true;
 
         // =========================
+        // CHECK INDEX
+        // =========================
+
+        if (indexMiniGame <= 0)
+        {
+            Debug.LogError("Index MiniGame invalid!");
+            yield break;
+        }
+
+        // =========================
+        // CHECK CAMERA LIST
+        // =========================
+
+        if (miniGameCamera == null)
+        {
+            Debug.LogError("MiniGameCamera is NULL!");
+            yield break;
+        }
+
+        if (indexMiniGame - 1 >= miniGameCamera.cameraList.Count)
+        {
+            Debug.LogError("Camera index out of range!");
+            yield break;
+        }
+
+        // =========================
         // BẬT CAMERA
         // =========================
-        miniGameCamera.gameObject.SetActive(true);
+
+        miniGameCamera.cameraList[indexMiniGame - 1]
+            .gameObject.SetActive(true);
 
         // =========================
         // HIỆN TIMER
         // =========================
+
         timerText.gameObject.SetActive(true);
 
         // =========================
         // SPAWN PLAYER
         // =========================
+
         currentPlayer1 =
             Instantiate(
                 player1Prefab,
@@ -72,13 +129,26 @@ public class MiniGameManager : MonoBehaviour
         currentPlayer2 =
             Instantiate(
                 player2Prefab,
-                spawnPoint.position + Vector3.right * 2,
+                spawnPoint.position + Vector3.right * 2f,
                 Quaternion.identity
             );
 
         // =========================
-        // CHECKPOINT
+        // PLAYER COMPONENT
         // =========================
+
+        PlayerInfo avatar1 =
+            currentPlayer1.GetComponent<PlayerInfo>();
+
+        PlayerInfo avatar2 =
+            currentPlayer2.GetComponent<PlayerInfo>();
+
+        PlayerCoin coin1 =
+            currentPlayer1.GetComponent<PlayerCoin>();
+
+        PlayerCoin coin2 =
+            currentPlayer2.GetComponent<PlayerCoin>();
+
         PlayerMiniGame p1 =
             currentPlayer1.GetComponent<PlayerMiniGame>();
 
@@ -88,6 +158,58 @@ public class MiniGameManager : MonoBehaviour
         PlayerType player2Type =
             currentPlayer2.GetComponent<PlayerType>();
 
+        // =========================
+        // CHECK COMPONENT
+        // =========================
+
+        if (avatar1 == null || avatar2 == null)
+        {
+            Debug.LogError("PlayerInfo missing!");
+            yield break;
+        }
+
+        if (coin1 == null || coin2 == null)
+        {
+            Debug.LogError("PlayerCoin missing!");
+            yield break;
+        }
+
+        if (p1 == null || p2 == null)
+        {
+            Debug.LogError("PlayerMiniGame missing!");
+            yield break;
+        }
+
+        if (player2Type == null)
+        {
+            Debug.LogError("PlayerType missing!");
+            yield break;
+        }
+
+        // =========================
+        // HIỆN AVATAR
+        // =========================
+
+        characterImagePlayer1.sprite =
+            avatar1.avatarCharacter;
+
+        characterImagePlayer2.sprite =
+            avatar2.avatarCharacter;
+
+        // =========================
+        // HIỆN COIN
+        // =========================
+
+        cointextPlayer1.text =
+            coin1.coinMiniGame.ToString();
+
+        cointextPlayer2.text =
+            coin2.coinMiniGame.ToString();
+
+        // =========================
+        // CHECKPOINT
+        // =========================
+
         player2Type.isPlayer2 = true;
 
         p1.checkPoint = spawnPoint;
@@ -96,21 +218,27 @@ public class MiniGameManager : MonoBehaviour
         // =========================
         // PLAY CUTSCENE
         // =========================
-        if (cutscene != null)
+
+        if (miniGameCamera.MiniGameCameraList[indexMiniGame - 1] != null)
         {
             yield return StartCoroutine(
-                cutscene.PlayCutscene()
+                miniGameCamera
+                .MiniGameCameraList[indexMiniGame - 1]
+                .PlayCutscene()
             );
         }
+        UIMiniGame.SetActive( true );
 
         // =========================
-        // BẮT ĐẦU MINIGAME
+        // START MINIGAME
         // =========================
-        miniGame1.StartMiniGame();
+
+        ExitStartMiniGame();
 
         // =========================
-        // TIMER ĐẾM NGƯỢC
+        // TIMER
         // =========================
+
         float timer = countDownTime;
 
         while (timer > 0)
@@ -131,36 +259,72 @@ public class MiniGameManager : MonoBehaviour
                 ":" +
                 remainSeconds.ToString("00");
 
+            // Update coin realtime
+            cointextPlayer1.text =
+                coin1.coinMiniGame.ToString();
+
+            cointextPlayer2.text =
+                coin2.coinMiniGame.ToString();
+
             yield return null;
         }
 
         // =========================
         // HẾT GIỜ
         // =========================
+
         timerText.text = "00:00";
 
         // =========================
         // STOP MINIGAME
         // =========================
-        miniGame1.StopMiniGame();
+
+        ExitStopMiniGame();
 
         // =========================
         // TẮT CAMERA
         // =========================
-        miniGameCamera.gameObject.SetActive(false);
+
+        miniGameCamera.cameraList[indexMiniGame - 1]
+            .gameObject.SetActive(false);
 
         // =========================
         // ẨN TIMER
         // =========================
+
         timerText.gameObject.SetActive(false);
+        UIMiniGame.SetActive(true);
 
         // =========================
         // XOÁ PLAYER
         // =========================
+
         Destroy(currentPlayer1);
 
         Destroy(currentPlayer2);
 
+        // =========================
+        // RESET
+        // =========================
+
         isPlaying = false;
+    }
+
+    // START MINIGAME LOGIC
+    public void ExitStartMiniGame()
+    {
+        if (indexMiniGame == 1)
+        {
+            miniGameList.miniGame1.StartMiniGame();
+        }
+    }
+
+    // STOP MINIGAME LOGIC
+    public void ExitStopMiniGame()
+    {
+        if (indexMiniGame == 1)
+        {
+            miniGameList.miniGame1.StopMiniGame();
+        }
     }
 }

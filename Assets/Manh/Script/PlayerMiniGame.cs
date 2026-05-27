@@ -21,5 +21,7 @@ public class PlayerMiniGame: MonoBehaviour
 
         if (cc != null)
             cc.enabled = true;
+        PlayerCoin coin = GetComponent<PlayerCoin>();
+        coin.TakeCoin(5);
     }
 }
