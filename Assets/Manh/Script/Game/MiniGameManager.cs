@@ -153,16 +153,14 @@ public class MiniGameManager : MonoBehaviour
     // START
     // =========================================================
 
-    private void Start()
-    {
-        // Bắt đầu minigame khi vào scene
-        StartMiniGame();
-    }
 
     // =========================================================
     // START MINIGAME
     // =========================================================
-
+    private void Start()
+    {
+        StartMiniGame();
+    }
     public void StartMiniGame()
     {
         // Nếu game đang chạy thì không start nữa

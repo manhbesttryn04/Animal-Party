@@ -60,15 +60,22 @@ public class MiniGame1 : MonoBehaviour
 
         while (isRunning)
         {
-            // Nếu không có row nào
+            // =========================
+            // CHECK ROW
+            // =========================
+
             if (rows == null || rows.Length == 0)
             {
                 Debug.LogWarning("Rows is empty!");
                 yield break;
             }
 
-            // List chống random trùng
-            List<int> usedIndexes = new List<int>();
+            // =========================
+            // RANDOM ROW
+            // =========================
+
+            List<int> usedIndexes =
+                new List<int>();
 
             int count = 0;
 
@@ -82,33 +89,80 @@ public class MiniGame1 : MonoBehaviour
             }
 
             // Không vượt quá số row hiện có
-            int maxRows = Mathf.Min(randomRowCount, rows.Length);
+            int maxRows =
+                Mathf.Min(
+                    randomRowCount,
+                    rows.Length
+                );
 
-            // RANDOM ROWS
+            // =========================
+            // RANDOM KHÔNG TRÙNG
+            // =========================
+
+            List<TrapRow> selectedRows =
+      new List<TrapRow>();
+
             while (count < maxRows)
             {
-                int rand = Random.Range(0, rows.Length);
+                int rand =
+                    Random.Range(
+                        0,
+                        rows.Length
+                    );
 
-                // Nếu row chưa được chọn
                 if (!usedIndexes.Contains(rand))
                 {
                     usedIndexes.Add(rand);
 
-                    // Chạy trap row
-                    StartCoroutine(rows[rand].RowRoutine());
+                    selectedRows.Add(rows[rand]);
 
                     count++;
                 }
             }
+            foreach (TrapRow row in selectedRows)
+            {
+                // HIỆN WARNING
+                row.ShowWarning();
 
-            // Đợi trap chạy
-            yield return new WaitForSeconds(2f);
+                // PLAYER NHÌN
+                yield return new WaitForSeconds(0.4f);
 
+                // TẮT WARNING
+                row.HideWarning();
+
+                // DELAY NHỎ
+                yield return new WaitForSeconds(0.1f);
+            }
+            yield return new WaitForSeconds(0.5f);
+
+            // CHẠY TẤT CẢ TRAP
+            foreach (TrapRow row in selectedRows)
+            {
+                StartCoroutine(
+                    row.RowRoutine()
+                );
+            }
+
+            // =========================
+            // ĐỢI TẤT CẢ ROW XONG
+            // =========================
+
+            yield return StartCoroutine(
+                WaitForRowsFinished()
+            );
+
+            // =========================
             // CHECK PLAYER 1
-            if (manager.currentPlayer1.transform.position.y < 0.5f)
+            // =========================
+
+            if (
+                manager.currentPlayer1
+                .transform.position.y < 0.5f
+            )
             {
                 PlayerMiniGame player1 =
-                    manager.currentPlayer1.GetComponent<PlayerMiniGame>();
+                    manager.currentPlayer1
+                    .GetComponent<PlayerMiniGame>();
 
                 if (player1 != null)
                 {
@@ -116,11 +170,18 @@ public class MiniGame1 : MonoBehaviour
                 }
             }
 
+            // =========================
             // CHECK PLAYER 2
-            if (manager.currentPlayer2.transform.position.y < 0.5f)
+            // =========================
+
+            if (
+                manager.currentPlayer2
+                .transform.position.y < 0.5f
+            )
             {
                 PlayerMiniGame player2 =
-                    manager.currentPlayer2.GetComponent<PlayerMiniGame>();
+                    manager.currentPlayer2
+                    .GetComponent<PlayerMiniGame>();
 
                 if (player2 != null)
                 {
@@ -128,10 +189,18 @@ public class MiniGame1 : MonoBehaviour
                 }
             }
 
-            // Delay giữa round
-            yield return new WaitForSeconds(currentDelay);
+            // =========================
+            // DELAY GIỮA ROUND
+            // =========================
 
-            // Giảm delay sau mỗi round
+            yield return new WaitForSeconds(
+                currentDelay
+            );
+
+            // =========================
+            // GIẢM DELAY
+            // =========================
+
             currentDelay -= delayDecrease;
 
             // Không cho thấp hơn minDelay
@@ -140,7 +209,33 @@ public class MiniGame1 : MonoBehaviour
                 currentDelay = minDelay;
             }
 
-            Debug.Log("Current Delay: " + currentDelay);
+            Debug.Log(
+                "Current Delay: " +
+                currentDelay
+            );
+        }
+    }
+
+
+    IEnumerator WaitForRowsFinished()
+    {
+        bool allFinished = false;
+
+        while (!allFinished)
+        {
+            allFinished = true;
+
+            for (int i = 0; i < rows.Length; i++)
+            {
+                // Nếu còn row đang chạy
+                if (rows[i].isRunning)
+                {
+                    allFinished = false;
+                    break;
+                }
+            }
+
+            yield return null;
         }
     }
 }

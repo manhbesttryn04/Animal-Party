@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class TrapRow : MonoBehaviour
@@ -58,26 +59,8 @@ public class TrapRow : MonoBehaviour
 
         isRunning = true;
 
-        // =========================
-        // HIỆN ĐẦU LÂU
-        // =========================
-        foreach (GameObject skull in skulls)
-        {
-            skull.SetActive(true);
-        }
-
-        // =========================
-        // CẢNH BÁO
-        // =========================
-        yield return new WaitForSeconds(warningTime);
-
-        // =========================
-        // ẨN ĐẦU LÂU
-        // =========================
-        foreach (GameObject skull in skulls)
-        {
-            skull.SetActive(false);
-        }
+        
+         yield return new WaitForSeconds(warningTime);
 
 
         // =========================
@@ -137,23 +120,65 @@ public class TrapRow : MonoBehaviour
         // =========================
         // HIỆN LẠI GẠCH
         // =========================
-        foreach (GameObject brick in bricks)
-        {
-            MeshRenderer mesh =
-                brick.GetComponent<MeshRenderer>();
-
-            if (mesh != null)
-                mesh.enabled = true;
-
-            Collider col =
-                brick.GetComponent<Collider>();
-
-            if (col != null)
-                col.enabled = true;
-        }
+        yield return StartCoroutine(
+     RestoreBricks()
+ );
 
         // XONG
         isRunning = false;
+    }
+    IEnumerator RestoreBricks()
+    {
+        yield return new WaitForSeconds(2f);
+        // Hồi từng cục
+        for (int i = 0; i < bricks.Length; i++)
+        {
+            StartCoroutine(
+                RestoreSingleBrick(bricks[i])
+            );
+
+            // Delay giữa từng cục
+            yield return new WaitForSeconds(0.5f);
+        }
+    }
+    IEnumerator RestoreSingleBrick(GameObject brick)
+    {
+        float time = 0;
+        float duration = 0.3f;
+
+        // BẬT COLLIDER
+        Collider col =
+            brick.GetComponent<Collider>();
+        MeshRenderer mes = brick.GetComponent<MeshRenderer>();
+        if(mes != null) { mes.enabled = true; }
+
+        if (col != null)
+            col.enabled = true;
+
+        // SCALE TỪ 0
+        brick.transform.localScale =
+            Vector3.zero;
+
+        while (time < 1)
+        {
+            time += Time.deltaTime / duration;
+
+            float smoothTime =
+                Mathf.SmoothStep(0, 1, time);
+
+            brick.transform.localScale =
+                Vector3.Lerp(
+                    Vector3.zero,
+                    Vector3.one,
+                    smoothTime
+                );
+
+            yield return null;
+        }
+
+        // FIX SCALE
+        brick.transform.localScale =
+            Vector3.one;
     }
 
     IEnumerator MoveSharks(bool moveUp)
@@ -193,6 +218,21 @@ public class TrapRow : MonoBehaviour
             }
 
             yield return null;
+        }
+    }
+    public void ShowWarning()
+    {
+        foreach (GameObject skull in skulls)
+        {
+            skull.SetActive(true);
+        }
+    }
+
+    public void HideWarning()
+    {
+        foreach (GameObject skull in skulls)
+        {
+            skull.SetActive(false);
         }
     }
 }
