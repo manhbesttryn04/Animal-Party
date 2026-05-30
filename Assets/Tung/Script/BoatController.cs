@@ -3,206 +3,265 @@ using System.Collections;
 
 public class BoatController : MonoBehaviour
 {
-    public enum BoatAxis { Forward, Right }
+    [Header("Boat Status")]
+    public bool isDead = false;
+    public float maxHP = 100f;
+    public float currentHP;
 
     [Header("Movement Settings")]
-    public float moveSpeed = 100f;
-    public float turnSpeed = 60f;
-    public BoatAxis moveAxis = BoatAxis.Forward;
+    public float tocDoTien = 10f;
+    public float tocDoNe = 15f;
+    public float gioiHanTrai = -15f;
+    public float gioiHanPhai = 15f;
 
-    [Header("Orientation Fix (Sửa Ngược Hướng)")]
-    public bool invertForwardBackward = false;
-    public bool invertLeftRight = false;
+    public enum ControlType { Boat1_AD, Boat2_Arrows }
 
-    [Header("Anti-Fly Settings (Khóa Độ Cao)")]
-    public float fixedWaterHeight = 0.5f;
-    public bool lockHeight = true;
+    [Header("Input Control")]
+    public ControlType controlType = ControlType.Boat1_AD;
 
-    [Header("Mario Kart Health System")]
-    public float maxHealth = 100f;
-    public float currentHealth;
-    public float damageOnCrash = 20f;
-    [Tooltip("Thời gian giãn cách giữa các lần trừ máu khi va chạm liên tiếp (giây)")]
-    public float damageInterval = 0.2f;
+    [Header("Height Offset")]
+    public float groundOffset = 0.5f;
 
-    [Header("Respawn Settings (Hồi Sinh)")]
-    public float respawnDelay = 2.0f;
-    public float respawnSafetyDistance = 3.0f;
+    [Header("Map Collision Settings")]
+    public float satThuongVaChamMap = 10f;
+    public float lucNayBờ = 8f;
+
+    [Header("Respawn Settings")]
+    [Tooltip("Thời gian chờ hồi sinh khi HẾT MÁU chết tại chỗ")]
+    public float thoiGianChoRespawn = 2.0f;
+    public float cooldownNhanSatThuong = 0.5f;
+
+    private float thoiGianChoPhepSatThuongTiep = 0f;
+    private bool dangDuocBaoVeAnToan = false;
+    private bool dangBiPhatDungIm = false;
+
+    [Header("Visual Animation")]
+    public Transform modelThuyenCon;
+    public bool daoNguocHuongNghieng = false;
+    public float gocNghiengToiDa = 25f;
+    public float tocDoNghieng = 12f;
 
     private Rigidbody rb;
-    private float movementInput;
-    private float turnInput;
-    private float lastDamageTime;
-    private bool isDead = false;
-    private Vector3 lastSafePosition;
+    private float viTriZBanDau;
+    private Vector3 viTriXuatPhatBanDau;
+    private Quaternion gocXoayMacDinhModelCon;
 
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
-
-        rb.useGravity = true;
-        rb.isKinematic = false;
-        rb.interpolation = RigidbodyInterpolation.Interpolate;
-        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-
-        currentHealth = maxHealth;
+        Time.timeScale = 1f;
         isDead = false;
+        dangBiPhatDungIm = false;
+        dangDuocBaoVeAnToan = false;
+        currentHP = maxHP;
+        viTriXuatPhatBanDau = transform.position;
+        viTriZBanDau = transform.position.z;
+        thoiGianChoPhepSatThuongTiep = 0f;
 
-        lastSafePosition = transform.position;
+        if (modelThuyenCon != null)
+        {
+            gocXoayMacDinhModelCon = modelThuyenCon.localRotation;
+        }
+
+        rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.useGravity = false;
+            rb.isKinematic = false;
+            rb.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
+        }
     }
 
     void Update()
     {
         if (isDead) return;
 
-        movementInput = Input.GetAxis("Vertical");
-        turnInput = Input.GetAxis("Horizontal");
+        float tocDoTienThucTe = dangBiPhatDungIm ? 0f : tocDoTien;
+        transform.Translate(Vector3.left * tocDoTienThucTe * Time.deltaTime, Space.World);
 
-        if (rb.linearVelocity.magnitude > 2f && !isDead)
+        float moveHorizontal = 0f;
+        if (controlType == ControlType.Boat1_AD)
         {
-            if (Mathf.Abs(transform.position.y - fixedWaterHeight) < 0.2f)
+            if (Input.GetKey(KeyCode.A)) moveHorizontal = -1f;
+            if (Input.GetKey(KeyCode.D)) moveHorizontal = 1f;
+        }
+        else if (controlType == ControlType.Boat2_Arrows)
+        {
+            if (Input.GetKey(KeyCode.LeftArrow)) moveHorizontal = -1f;
+            if (Input.GetKey(KeyCode.RightArrow)) moveHorizontal = 1f;
+        }
+
+        transform.Translate(Vector3.forward * moveHorizontal * tocDoNe * Time.deltaTime, Space.World);
+
+        if (modelThuyenCon != null)
+        {
+            float heSoDaoChieu = daoNguocHuongNghieng ? -1f : 1f;
+            float tinhGocNghieng = moveHorizontal * gocNghiengToiDa * heSoDaoChieu;
+            Vector3 trucDocNoiBo = modelThuyenCon.InverseTransformDirection(Vector3.left);
+            Quaternion bienDoiNghieng = Quaternion.AngleAxis(tinhGocNghieng, trucDocNoiBo);
+            Quaternion targetRotation = gocXoayMacDinhModelCon * bienDoiNghieng;
+            modelThuyenCon.localRotation = Quaternion.Lerp(modelThuyenCon.localRotation, targetRotation, Time.deltaTime * tocDoNghieng);
+        }
+
+        Vector3 currentPos = transform.position;
+        currentPos.z = Mathf.Clamp(currentPos.z, viTriZBanDau + gioiHanTrai, viTriZBanDau + gioiHanPhai);
+        transform.position = currentPos;
+
+        SnapToGroundWithTag();
+    }
+
+    void SnapToGroundWithTag()
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position + Vector3.up * 1f, Vector3.down, out hit, 4f))
+        {
+            if (hit.collider.CompareTag("Ground") && Mathf.Abs(hit.normal.y) > 0.7f)
             {
-                lastSafePosition = transform.position;
+                Vector3 newPos = transform.position;
+                newPos.y = hit.point.y + groundOffset;
+                transform.position = newPos;
             }
         }
     }
 
-    void FixedUpdate()
+    // ================= KHU VỰC DEBUG LOG VA CHẠM =================
+    void OnCollisionStay(Collision collision)
     {
-        if (isDead)
+        if (collision == null || collision.gameObject == null) return;
+
+        // LOG TRƯỚC: Check xem Unity Physics có đang ghi nhận hai vật thể chạm vào nhau không
+        // Nếu đâm vào bẫy mà không hiện dòng chữ màu xanh này -> Bạn chưa bật Collider/Rigidbody trên bẫy hoặc thuyền!
+        Debug.Log("<color=cyan>[PHYSICS] Thuyền đang cọ xát với vật thể: </color>" + collision.gameObject.name);
+
+        if (isDead || dangDuocBaoVeAnToan)
         {
-            rb.linearVelocity = Vector3.MoveTowards(rb.linearVelocity, Vector3.zero, Time.fixedDeltaTime * 10f);
+            // Log thông báo thuyền đang bất tử do vừa hồi sinh/dịch chuyển nên bẫy không thể gây sát thương
+            Debug.Log("<color=white>[IMMUNE] Bỏ qua va chạm vì thuyền đang trong trạng thái bất tử bảo vệ.</color>");
             return;
         }
 
-        MoveBoat();
-        TurnBoat();
-
-        if (lockHeight)
+        // Kiểm tra xem vật thể va chạm có chứa component Obstacle (bẫy gai) không
+        Obstacle bẫyGai = collision.gameObject.GetComponent<Obstacle>();
+        if (bẫyGai != null)
         {
-            KeepBoatOnWater();
-        }
-    }
+            // LOG 1: Tìm thấy bẫy gai thành công
+            Debug.Log("<color=yellow>[SPIKEBALL DETECTED] Đã nhận diện được bẫy gai: </color>" + collision.gameObject.name);
 
-    void MoveBoat()
-    {
-        Vector3 direction = (moveAxis == BoatAxis.Forward) ? transform.forward : transform.right;
-
-        if (invertForwardBackward)
-        {
-            direction = -direction;
-        }
-
-        Vector3 targetVelocity = direction * movementInput * moveSpeed;
-        targetVelocity.y = rb.linearVelocity.y;
-
-        rb.linearVelocity = targetVelocity;
-    }
-
-    void TurnBoat()
-    {
-        float turn = turnInput * turnSpeed * Time.fixedDeltaTime;
-        if (invertLeftRight)
-        {
-            turn = -turn;
-        }
-
-        Quaternion turnRotation = Quaternion.Euler(0f, turn, 0f);
-        rb.MoveRotation(rb.rotation * turnRotation);
-    }
-
-    void KeepBoatOnWater()
-    {
-        if (rb.linearVelocity.y > 0)
-        {
-            Vector3 vel = rb.linearVelocity;
-            vel.y = 0;
-            rb.linearVelocity = vel;
-        }
-
-        if (transform.position.y > fixedWaterHeight)
-        {
-            Vector3 pos = transform.position;
-            pos.y = fixedWaterHeight;
-            transform.position = pos;
-        }
-    }
-
-    // VA CHẠM PHÁT ĐẦU TIÊN
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (isDead) return;
-
-        // LỌC BUG: Chỉ trừ máu khi đâm vào vật thể có TAG là "Map"
-        if (collision.gameObject.CompareTag("Map"))
-        {
-            if (rb.linearVelocity.magnitude > 5f)
+            // Kiểm tra thời gian hồi chiêu nhận sát thương
+            if (Time.time < thoiGianChoPhepSatThuongTiep)
             {
-                TakeDamage(damageOnCrash);
-                lastDamageTime = Time.time;
+                Debug.LogWarning("[COOLDOWN] Đang trong thời gian chớp đỏ chớp vàng chặn bẫy. Còn: " + (thoiGianChoPhepSatThuongTiep - Time.time) + " giây.");
+                return;
             }
+
+            thoiGianChoPhepSatThuongTiep = Time.time + cooldownNhanSatThuong;
+
+            // LOG 2: Đủ điều kiện và trừ máu
+            Debug.Log("<color=red>[SPIKEBALL HIT] Đâm trúng bẫy gai thành công! Trừ đi " + bẫyGai.damageToApply + " HP.</color>");
+            XulyMatMau(bẫyGai.damageToApply);
+            return;
         }
-    }
 
-    // VA CHẠM LIÊN TIẾP (Cọ xát)
-    private void OnCollisionStay(Collision collision)
-    {
-        if (isDead) return;
-
-        // LỌC BUG: Chỉ trừ máu khi cọ xát với vật thể có TAG là "Map"
-        if (collision.gameObject.CompareTag("Map"))
+        // Va chạm bờ map
+        if (collision.gameObject.CompareTag("Ground") || collision.gameObject.CompareTag("Map"))
         {
-            if (Time.time - lastDamageTime >= damageInterval)
+            ContactPoint contact = collision.contacts[0];
+            if (Mathf.Abs(contact.normal.y) < 0.5f)
             {
-                if (Mathf.Abs(movementInput) > 0.1f || rb.linearVelocity.magnitude > 2f)
+                if (Time.time < thoiGianChoPhepSatThuongTiep) return;
+                thoiGianChoPhepSatThuongTiep = Time.time + cooldownNhanSatThuong;
+
+                Debug.Log("<color=orange>[MAP HIT] Va chạm bờ sông! Trừ " + satThuongVaChamMap + " HP.</color>");
+                XulyMatMau(satThuongVaChamMap);
+
+                if (rb != null && currentHP > 0)
                 {
-                    TakeDamage(damageOnCrash);
-                    lastDamageTime = Time.time;
+                    Vector3 huongNayBật = contact.normal * lucNayBờ;
+                    huongNayBật.y = 0;
+                    rb.linearVelocity = Vector3.zero;
+                    rb.AddForce(huongNayBật, ForceMode.VelocityChange);
                 }
             }
         }
     }
 
-    void TakeDamage(float amount)
+    private void XulyMatMau(float soMauMat)
     {
-        currentHealth -= amount;
-        Debug.Log("Thuyền bị đâm! Máu còn lại: " + currentHealth);
+        currentHP -= soMauMat;
+        // LOG 3: In ra lượng máu còn lại thực tế của con thuyền sau khi ăn đòn
+        Debug.Log("<color=magenta>[HP STATUS] " + gameObject.name + " vừa mất máu! Máu hiện tại còn lại: </color>" + currentHP + " / " + maxHP);
 
-        rb.linearVelocity = -rb.linearVelocity * 0.1f;
-
-        if (currentHealth <= 0)
+        if (currentHP <= 0)
         {
-            currentHealth = 0;
-            Die();
+            StartCoroutine(HoiSinhGocCoroutine());
         }
     }
 
-    void Die()
+    IEnumerator HoiSinhGocCoroutine()
     {
         isDead = true;
-        Debug.Log("THUYỀN BANH XÁC! Chuẩn bị hồi sinh...");
-        StartCoroutine(RespawnRoutine());
+        dangBiPhatDungIm = true;
+        dangDuocBaoVeAnToan = true;
+        currentHP = 0;
+        ResetVanTocPhysics();
+        Debug.Log("<color=red>[DIED] Thuyền hết máu! Đứng im tại chỗ chờ hồi sinh...</color>");
+
+        yield return new WaitForSeconds(thoiGianChoRespawn);
+
+        ResetVanTocPhysics();
+        currentHP = maxHP;
+        isDead = false;
+        dangBiPhatDungIm = false;
+
+        yield return new WaitForSeconds(1.0f);
+        dangDuocBaoVeAnToan = false;
+        thoiGianChoPhepSatThuongTiep = Time.time + cooldownNhanSatThuong;
+        Debug.Log("<color=green>[ALIVE] Thuyền hồi sinh đầy máu!</color>");
     }
 
-    IEnumerator RespawnRoutine()
+    public void HoiSinhTaiViTriChiDinh(Vector3 viTriHoiSinh)
     {
-        yield return new WaitForSeconds(respawnDelay);
+        if (dangDuocBaoVeAnToan || isDead) return;
+        StartCoroutine(HoiSinhBiTutLaiCoroutine(viTriHoiSinh));
+    }
 
-        Vector3 spawnPos = lastSafePosition;
+    IEnumerator HoiSinhBiTutLaiCoroutine(Vector3 viTriMoi)
+    {
+        dangDuocBaoVeAnToan = true;
+        currentHP = maxHP;
 
-        Vector3 moveDir = (moveAxis == BoatAxis.Forward) ? transform.forward : transform.right;
-        Vector3 backwardDirection = invertForwardBackward ? moveDir : -moveDir;
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
 
-        spawnPos += backwardDirection * respawnSafetyDistance;
-        spawnPos.y = fixedWaterHeight;
+        transform.position = viTriMoi;
 
-        transform.position = spawnPos;
-        rb.linearVelocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
+        if (modelThuyenCon != null)
+        {
+            modelThuyenCon.localRotation = gocXoayMacDinhModelCon;
+        }
 
-        currentHealth = maxHealth;
-        isDead = false;
+        if (rb != null)
+        {
+            rb.isKinematic = false;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
 
-        Debug.Log("ĐÃ HỒI SINH! Đạp ga tiếp đi mày!");
+        yield return new WaitForSeconds(1.0f);
+
+        dangDuocBaoVeAnToan = false;
+        thoiGianChoPhepSatThuongTiep = Time.time + cooldownNhanSatThuong;
+    }
+
+    private void ResetVanTocPhysics()
+    {
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
     }
 }
