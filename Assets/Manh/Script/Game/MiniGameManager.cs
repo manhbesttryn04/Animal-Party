@@ -157,10 +157,7 @@ public class MiniGameManager : MonoBehaviour
     // =========================================================
     // START MINIGAME
     // =========================================================
-    private void Start()
-    {
-        StartMiniGame();
-    }
+ 
     public void StartMiniGame()
     {
         // Nếu game đang chạy thì không start nữa

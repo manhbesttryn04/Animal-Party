@@ -9,6 +9,8 @@ public class PlayerManager : MonoBehaviour
     public PlayerMoveAI playerMoveAI;
     public PlayerCamera playerCamera;
     public PlayerRound playerRound;
+    public PlayerNotifi playerNotifi;
+    public PlayerInputDice playerInputDice;
     private void Awake()
     {
         playerMove = GetComponent<PlayerMove>();
@@ -18,6 +20,8 @@ public class PlayerManager : MonoBehaviour
         playerDiceRoll = GetComponent<PlayerDiceRoll>();
         playerCamera = GetComponent<PlayerCamera>();
         playerRound = GetComponent< PlayerRound>();
+        playerNotifi = GetComponent<PlayerNotifi>();
+        playerInputDice = GetComponent<PlayerInputDice>();
 
     }
 }

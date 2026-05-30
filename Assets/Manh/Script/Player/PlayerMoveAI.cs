@@ -16,6 +16,7 @@ public class PlayerMoveAI : MonoBehaviour
     public int currentIndex = 0;
 
     public bool isMoving = false;
+     
 
     private void Start()
     {
