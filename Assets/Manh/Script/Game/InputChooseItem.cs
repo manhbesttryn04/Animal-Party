@@ -11,7 +11,7 @@ public class InputChooseItem : MonoBehaviour
     private void Start()
     {
         // Tắt toàn bộ highlight
-        for (int i = 0; i < items.Length; i++)
+        for (int i = 1; i < items.Length; i++)
         {
             items[i].transform.GetChild(1).gameObject.SetActive(false); // P1
             items[i].transform.GetChild(2).gameObject.SetActive(false); // P2
