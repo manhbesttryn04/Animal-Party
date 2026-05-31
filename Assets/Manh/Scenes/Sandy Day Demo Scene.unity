@@ -7880,6 +7880,7 @@ GameObject:
   - component: {fileID: 283076508}
   - component: {fileID: 283076510}
   - component: {fileID: 283076509}
+  - component: {fileID: 283076511}
   m_Layer: 5
   m_Name: Image Item
   m_TagString: Untagged
@@ -7946,6 +7947,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 283076507}
   m_CullTransparentMesh: 1
+--- !u!114 &283076511
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 283076507}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 452cd09ec3c379e4cbc55bcaed975070, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  price: 0
+  priceText: {fileID: 0}
 --- !u!4 &284520192 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8417492045887110154, guid: 0330e8125ba92b244aef6b51a67355a3, type: 3}
@@ -8730,6 +8745,7 @@ GameObject:
   - component: {fileID: 309582410}
   - component: {fileID: 309582409}
   - component: {fileID: 309582411}
+  - component: {fileID: 309582412}
   m_Layer: 5
   m_Name: Item (2)
   m_TagString: Untagged
@@ -8814,6 +8830,20 @@ MonoBehaviour:
   bottom: 6
   left: 2
   right: 1
+--- !u!114 &309582412
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 309582407}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 452cd09ec3c379e4cbc55bcaed975070, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PriceItem
+  price: 200
+  priceText: {fileID: 0}
 --- !u!1 &311556830 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2803736223273102538, guid: 4f52f8c3927ff7d4b81b5a9b10fc27bf, type: 3}
@@ -14152,6 +14182,7 @@ GameObject:
   - component: {fileID: 492401209}
   - component: {fileID: 492401208}
   - component: {fileID: 492401210}
+  - component: {fileID: 492401211}
   m_Layer: 5
   m_Name: Item
   m_TagString: Untagged
@@ -14236,6 +14267,20 @@ MonoBehaviour:
   bottom: 4
   left: 3
   right: 2
+--- !u!114 &492401211
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 492401206}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 452cd09ec3c379e4cbc55bcaed975070, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PriceItem
+  price: 250
+  priceText: {fileID: 0}
 --- !u!1001 &493700352
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -15436,6 +15481,7 @@ GameObject:
   - component: {fileID: 519006953}
   - component: {fileID: 519006952}
   - component: {fileID: 519006954}
+  - component: {fileID: 519006955}
   m_Layer: 5
   m_Name: Item (3)
   m_TagString: Untagged
@@ -15520,6 +15566,20 @@ MonoBehaviour:
   bottom: 1
   left: 6
   right: 5
+--- !u!114 &519006955
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519006950}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 452cd09ec3c379e4cbc55bcaed975070, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PriceItem
+  price: 250
+  priceText: {fileID: 0}
 --- !u!1 &519509298 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2803736223273102538, guid: 4f52f8c3927ff7d4b81b5a9b10fc27bf, type: 3}
@@ -19421,8 +19481,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 273.39, y: -25}
-  m_SizeDelta: {x: 146.78, y: 0}
+  m_AnchoredPosition: {x: 312.015, y: -25}
+  m_SizeDelta: {x: 224.03, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &656507710
 MonoBehaviour:
@@ -19458,9 +19518,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '1
-
-'
+  m_text: 1000
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 5302535af1044152a457ed104f1f4b91, type: 2}
   m_sharedMaterial: {fileID: 2164040, guid: 5302535af1044152a457ed104f1f4b91, type: 2}
@@ -26857,6 +26915,7 @@ GameObject:
   - component: {fileID: 929444429}
   - component: {fileID: 929444428}
   - component: {fileID: 929444430}
+  - component: {fileID: 929444431}
   m_Layer: 5
   m_Name: Item (5)
   m_TagString: Untagged
@@ -26941,6 +27000,20 @@ MonoBehaviour:
   bottom: 3
   left: 5
   right: 4
+--- !u!114 &929444431
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 929444426}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 452cd09ec3c379e4cbc55bcaed975070, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PriceItem
+  price: 300
+  priceText: {fileID: 0}
 --- !u!1001 &930430859
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -28879,6 +28952,7 @@ MonoBehaviour:
   playerRound: {fileID: 0}
   playerNotifi: {fileID: 0}
   playerInputDice: {fileID: 0}
+  playerCoin: {fileID: 0}
 --- !u!95 &1052097431 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5533831327332223290, guid: 6a82e89f1e2344143bcb1c6c55a21721, type: 3}
@@ -28904,7 +28978,7 @@ MonoBehaviour:
   manager: {fileID: 1052097430}
   gameManager: {fileID: 0}
   coinMiniGame: 100
-  coinEndMiniGame: 0
+  coinEndMiniGame: 1000
 --- !u!114 &1052097434
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -31080,6 +31154,7 @@ GameObject:
   - component: {fileID: 1129281464}
   - component: {fileID: 1129281463}
   - component: {fileID: 1129281465}
+  - component: {fileID: 1129281466}
   m_Layer: 5
   m_Name: Item (4)
   m_TagString: Untagged
@@ -31164,6 +31239,20 @@ MonoBehaviour:
   bottom: 2
   left: 4
   right: 6
+--- !u!114 &1129281466
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1129281461}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 452cd09ec3c379e4cbc55bcaed975070, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PriceItem
+  price: 800
+  priceText: {fileID: 0}
 --- !u!4 &1134683737 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 413218, guid: 826b6a0b570e8460990010fa615b5a2a, type: 3}
@@ -31989,6 +32078,7 @@ GameObject:
   - component: {fileID: 1165001571}
   - component: {fileID: 1165001570}
   - component: {fileID: 1165001574}
+  - component: {fileID: 1165001575}
   m_Layer: 5
   m_Name: Canvas Shop
   m_TagString: Untagged
@@ -32108,8 +32198,41 @@ MonoBehaviour:
   - {fileID: 519006950}
   - {fileID: 1129281461}
   - {fileID: 929444426}
+  shopManager: {fileID: 1165001575}
   player1Index: 1
   player2Index: 1
+  isPlayer1Choose: 1
+  isPlayer2Choose: 1
+--- !u!114 &1165001575
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1165001569}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81a41c6680b609a4697acd1ed3716e50, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  itemSprites:
+  - {fileID: -7343220986905845580, guid: 215687feeab0b7445b4a1cd86c82c2e1, type: 3}
+  - {fileID: -3662145209645026858, guid: 215687feeab0b7445b4a1cd86c82c2e1, type: 3}
+  - {fileID: -1999946806344817058, guid: 215687feeab0b7445b4a1cd86c82c2e1, type: 3}
+  - {fileID: 4281911320752687849, guid: 215687feeab0b7445b4a1cd86c82c2e1, type: 3}
+  - {fileID: -6316392241553622110, guid: 215687feeab0b7445b4a1cd86c82c2e1, type: 3}
+  - {fileID: -1705673662, guid: 3ae3ac8b34767f54996feb4ddfd48891, type: 3}
+  players:
+  - {fileID: 0}
+  - {fileID: 0}
+  playerCoinTexts:
+  - {fileID: 1230717153}
+  - {fileID: 656507711}
+  playerItemImages:
+  - {fileID: 643987959}
+  - {fileID: 1291024650}
+  timeToBuy: 99
+  startTime: 0
 --- !u!1001 &1165036953
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -34126,8 +34249,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 273.39, y: -25}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 312.015, y: -25}
+  m_SizeDelta: {x: 224.03, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1230717153
 MonoBehaviour:
@@ -34149,7 +34272,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '1
+  m_text: '1000
+
 
 '
   m_isRightToLeft: 0
@@ -36844,6 +36968,7 @@ MonoBehaviour:
   playerRound: {fileID: 0}
   playerNotifi: {fileID: 0}
   playerInputDice: {fileID: 0}
+  playerCoin: {fileID: 0}
 --- !u!95 &1324390469 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5533831327332223290, guid: 6a82e89f1e2344143bcb1c6c55a21721, type: 3}
@@ -37000,7 +37125,7 @@ MonoBehaviour:
   manager: {fileID: 1324390468}
   gameManager: {fileID: 0}
   coinMiniGame: 100
-  coinEndMiniGame: 0
+  coinEndMiniGame: 1000
 --- !u!114 &1324390481
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -37705,6 +37830,7 @@ GameObject:
   - component: {fileID: 1342823087}
   - component: {fileID: 1342823086}
   - component: {fileID: 1342823088}
+  - component: {fileID: 1342823089}
   m_Layer: 5
   m_Name: Item (1)
   m_TagString: Untagged
@@ -37789,6 +37915,20 @@ MonoBehaviour:
   bottom: 5
   left: 1
   right: 3
+--- !u!114 &1342823089
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1342823084}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 452cd09ec3c379e4cbc55bcaed975070, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PriceItem
+  price: 200
+  priceText: {fileID: 0}
 --- !u!1 &1342905661 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7222095709164510688, guid: ce1803f4a99ce5b43922d092740ecdd9, type: 3}

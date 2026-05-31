@@ -4,9 +4,16 @@ public class InputChooseItem : MonoBehaviour
 {
     public GameObject[] items;
 
+    [Header("References")]
+    public ShopManager shopManager;
+
     [Header("Player Index")]
     public int player1Index = 0;
     public int player2Index = 0;
+
+    [Header("Can Choose")]
+    public bool isPlayer1Choose = true;
+    public bool isPlayer2Choose = true;
 
     private void Start()
     {
@@ -24,10 +31,36 @@ public class InputChooseItem : MonoBehaviour
 
     private void Update()
     {
-        HandlePlayer1Input();
-        HandlePlayer2Input();
+        // =========================
+        // PLAYER 1
+        // =========================
+        if (isPlayer1Choose)
+        {
+            HandlePlayer1Input();
+
+            if (Input.GetKeyDown(KeyCode.J))
+            {
+                BuyPlayer1Item();
+            }
+        }
+
+        // =========================
+        // PLAYER 2
+        // =========================
+        if (isPlayer2Choose)
+        {
+            HandlePlayer2Input();
+
+            if (Input.GetKeyDown(KeyCode.Keypad1))
+            {
+                BuyPlayer2Item();
+            }
+        }
     }
 
+    // =========================
+    // PLAYER 1 INPUT
+    // =========================
     private void HandlePlayer1Input()
     {
         IndexItem current = items[player1Index].GetComponent<IndexItem>();
@@ -45,6 +78,9 @@ public class InputChooseItem : MonoBehaviour
             ChangePlayer1(current.right);
     }
 
+    // =========================
+    // PLAYER 2 INPUT
+    // =========================
     private void HandlePlayer2Input()
     {
         IndexItem current = items[player2Index].GetComponent<IndexItem>();
@@ -62,6 +98,9 @@ public class InputChooseItem : MonoBehaviour
             ChangePlayer2(current.right);
     }
 
+    // =========================
+    // CHANGE PLAYER 1
+    // =========================
     private void ChangePlayer1(int newIndex)
     {
         if (newIndex < 0 || newIndex >= items.Length)
@@ -74,6 +113,9 @@ public class InputChooseItem : MonoBehaviour
         items[player1Index].transform.GetChild(1).gameObject.SetActive(true);
     }
 
+    // =========================
+    // CHANGE PLAYER 2
+    // =========================
     private void ChangePlayer2(int newIndex)
     {
         if (newIndex < 0 || newIndex >= items.Length)
@@ -84,5 +126,63 @@ public class InputChooseItem : MonoBehaviour
         player2Index = newIndex;
 
         items[player2Index].transform.GetChild(2).gameObject.SetActive(true);
+    }
+
+    // =========================
+    // BUY PLAYER 1 ITEM
+    // =========================
+    private void BuyPlayer1Item()
+    {
+        PriceItem item = items[player1Index].GetComponent<PriceItem>();
+
+        if (item == null)
+        {
+            Debug.LogError("Item chưa có script PriceItem");
+            return;
+        }
+
+        bool success = shopManager.BuyItem(
+            0,                  // Player 1
+            player1Index -1,       // Item Index
+            item.price          // Giá
+        );
+
+        if (success)
+        {
+            isPlayer1Choose = false;
+
+            items[player1Index]
+                .transform.GetChild(1)
+                .gameObject.SetActive(false);
+        }
+    }
+
+    // =========================
+    // BUY PLAYER 2 ITEM
+    // =========================
+    private void BuyPlayer2Item()
+    {
+        PriceItem item = items[player2Index].GetComponent<PriceItem>();
+
+        if (item == null)
+        {
+            Debug.LogError("Item chưa có script PriceItem");
+            return;
+        }
+
+        bool success = shopManager.BuyItem(
+            1,                  // Player 2
+            player2Index-1,       // Item Index
+            item.price          // Giá
+        );
+
+        if (success)
+        {
+            isPlayer2Choose = false;
+
+            items[player2Index]
+                .transform.GetChild(2)
+                .gameObject.SetActive(false);
+        }
     }
 }
