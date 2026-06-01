@@ -12,6 +12,8 @@ public class PlayerManager : MonoBehaviour
     public PlayerNotifi playerNotifi;
     public PlayerInputDice playerInputDice;
     public PlayerCoin playerCoin;
+    public PlayerBuff playerBuff;
+    public PlayerDebuff playerDebuff;
     private void Awake()
     {
         playerMove = GetComponent<PlayerMove>();
@@ -24,6 +26,8 @@ public class PlayerManager : MonoBehaviour
         playerNotifi = GetComponent<PlayerNotifi>();
         playerInputDice = GetComponent<PlayerInputDice>();
             playerCoin = GetComponent<PlayerCoin>();
+        playerBuff = GetComponent<PlayerBuff>();
+        playerBuff = GetComponent<PlayerBuff>();
 
     }
 }

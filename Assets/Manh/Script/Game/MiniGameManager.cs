@@ -456,6 +456,15 @@ public class MiniGameManager : MonoBehaviour
         // Stop gameplay
         ExitStopMiniGame();
 
+        // Hiện loading
+        loadingCanvas.SetActive(true);
+
+        // Chờ 2 giây
+        yield return new WaitForSeconds(2f);
+
+        // Tắt loading
+        loadingCanvas.SetActive(false);
+
         // =====================================================
         // DISABLE CAMERA
         // =====================================================

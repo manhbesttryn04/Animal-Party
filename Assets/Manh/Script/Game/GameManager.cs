@@ -70,14 +70,15 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(2f);
         if(playerWinRound == "Player 1")
         {
-
-        }else if(playerWinRound == "Player 2")
+            DebuffManager.Instance.OpenDebuffInternal(0);
+        }
+        else if(playerWinRound == "Player 2")
         {
-
+            DebuffManager.Instance.OpenDebuffInternal(1);
         }
         else
         {
-
+            ShopManager.Instance.Open();
         }
     }
    
