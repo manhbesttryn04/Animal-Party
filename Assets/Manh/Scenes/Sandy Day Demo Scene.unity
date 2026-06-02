@@ -8879,6 +8879,8 @@ GameObject:
   - component: {fileID: 288627986}
   - component: {fileID: 288627989}
   - component: {fileID: 288627988}
+  - component: {fileID: 288627991}
+  - component: {fileID: 288627990}
   m_Layer: 0
   m_Name: Mini Game Manager
   m_TagString: Untagged
@@ -8900,13 +8902,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   indexMiniGame: 1
   miniGameList: {fileID: 288627989}
-  intrusTextList: {fileID: 834109750}
-  videoInstructList: {fileID: 834109749}
+  intrusTextList: {fileID: 0}
+  videoInstructList: {fileID: 0}
   miniGameCamera: {fileID: 288627988}
   UIMiniGame: {fileID: 1528946550}
   loadingCanvas: {fileID: 1204757311}
   canvasInstruct: {fileID: 334150857}
   videoIntrucs: {fileID: 834109747}
+  textNameMiniGame: {fileID: 567376826}
   textInstrucs: {fileID: 501609122}
   textError: {fileID: 629135665}
   timerText: {fileID: 709970621}
@@ -8965,6 +8968,39 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   miniGame1: {fileID: 403601681}
+--- !u!114 &288627990
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 288627985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 288c7e5f94a322944b5b33fd01ac8949, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  nameMiniGameList:
+  - predatory shark
+  - find color
+  instructTextList:
+  - Use movement keys and quick reflexes to dodge shark attacks.
+  errorTextList:
+  - "The shark\u2019s hunting speed will gradually increase with each wave."
+--- !u!114 &288627991
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 288627985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7853470f5e08444da91a3ebf78dea25, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  videoInstructList:
+  - {fileID: 32900000, guid: 3ad0dc330f606bd4d8c67f47b74fd270, type: 3}
 --- !u!1001 &292198992
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -19167,7 +19203,7 @@ GameObject:
   - component: {fileID: 567376827}
   - component: {fileID: 567376826}
   m_Layer: 5
-  m_Name: Name MiniGame Text
+  m_Name: Text Name MiniGame
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -27870,8 +27906,6 @@ GameObject:
   m_Component:
   - component: {fileID: 834109748}
   - component: {fileID: 834109747}
-  - component: {fileID: 834109749}
-  - component: {fileID: 834109750}
   m_Layer: 0
   m_Name: Video Instruct
   m_TagString: Untagged
@@ -27930,36 +27964,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &834109749
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 834109746}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c7853470f5e08444da91a3ebf78dea25, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
-  videoInstructList:
-  - {fileID: 32900000, guid: 3ad0dc330f606bd4d8c67f47b74fd270, type: 3}
---- !u!114 &834109750
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 834109746}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 288c7e5f94a322944b5b33fd01ac8949, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
-  instructTextList:
-  - Use movement keys and quick reflexes to dodge shark attacks.
-  errorTextList:
-  - "The shark\u2019s hunting speed will gradually increase with each wave."
 --- !u!1 &836328041
 GameObject:
   m_ObjectHideFlags: 0
@@ -60554,7 +60558,7 @@ GameObject:
   - component: {fileID: 1991769825}
   - component: {fileID: 1991769829}
   m_Layer: 0
-  m_Name: Camera
+  m_Name: Camera MiniGame 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -63932,6 +63936,95 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2226528675839652509, guid: f85cce94b83995543bb47db1f041c082, type: 3}
   m_PrefabInstance: {fileID: 2088231832}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &2088762706
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3688762761693173372, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
+      propertyPath: m_Name
+      value: Canvas MiniGame 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279927144693065157, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -478.2492
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279927144693065157, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 147.92865
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279927144693065157, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -1101.9224
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279927144693065157, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279927144693065157, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279927144693065157, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279927144693065157, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279927144693065157, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279927144693065157, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279927144693065157, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4671214997049049867, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
+      propertyPath: m_Name
+      value: MiniGame 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6314640131592114855, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
+      propertyPath: m_fontAsset
+      value: 
+      objectReference: {fileID: 11400000, guid: 14a7d130244449a4f81d4bda22b3c6d2, type: 2}
+    - target: {fileID: 6314640131592114855, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -7440092695755481769, guid: 14a7d130244449a4f81d4bda22b3c6d2, type: 2}
+    - target: {fileID: 6314640131592114855, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
+      propertyPath: m_hasFontAssetChanged
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8206470754021063455, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
+      propertyPath: m_Name
+      value: Box
+      objectReference: {fileID: 0}
+    - target: {fileID: 8435473534178498746, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
+      propertyPath: m_fontAsset
+      value: 
+      objectReference: {fileID: 11400000, guid: 14a7d130244449a4f81d4bda22b3c6d2, type: 2}
+    - target: {fileID: 8435473534178498746, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -7440092695755481769, guid: 14a7d130244449a4f81d4bda22b3c6d2, type: 2}
+    - target: {fileID: 8435473534178498746, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
+      propertyPath: m_hasFontAssetChanged
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 62852b1a3ac70c1498ae48a2ce10867d, type: 3}
 --- !u!1001 &2089220372
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -66013,10 +66106,10 @@ SceneRoots:
   - {fileID: 1427530311}
   - {fileID: 46591905}
   - {fileID: 1065188562}
+  - {fileID: 1529704401}
   - {fileID: 322222924}
   - {fileID: 1765373862}
   - {fileID: 834109748}
-  - {fileID: 1529704401}
   - {fileID: 590141691}
   - {fileID: 1204757315}
   - {fileID: 1528946551}
@@ -66027,6 +66120,7 @@ SceneRoots:
   - {fileID: 1318379491}
   - {fileID: 632322391}
   - {fileID: 403601682}
+  - {fileID: 2088762706}
   - {fileID: 2013588821}
   - {fileID: 1264633344}
   - {fileID: 1358985573}

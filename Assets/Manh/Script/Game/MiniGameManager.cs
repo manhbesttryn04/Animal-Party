@@ -60,9 +60,12 @@ public class MiniGameManager : MonoBehaviour
 
     [Header("Instruction UI")]
 
+    
     // Video hướng dẫn
     public VideoPlayer videoIntrucs;
 
+    //Tên minigame
+    public TextMeshProUGUI textNameMiniGame;
     // Text hướng dẫn gameplay
     public TextMeshProUGUI textInstrucs;
 

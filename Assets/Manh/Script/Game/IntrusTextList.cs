@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class IntrusTextList : MonoBehaviour
 {
+    public List<string> nameMiniGameList;
     public List<string> instructTextList;
     public List<string> errorTextList;
+    
 }
