@@ -7,7 +7,7 @@ public class PlayerBuff : MonoBehaviour
     public bool isBuffDeffense;
     public bool isBuffMagic;
     public bool isBuffCanon;
-    public bool isBuffDice;
+    public int isBuffDice;
 
     public int countCoinPower;
 
@@ -22,7 +22,6 @@ public class PlayerBuff : MonoBehaviour
         isBuffDeffense = false;
         isBuffMagic = false;
         isBuffCanon = false;
-        isBuffDice = false;
         countCoinPower = 0;
 
         if (shieldMagic != null)
@@ -59,7 +58,7 @@ public class PlayerBuff : MonoBehaviour
                 break;
 
             case 5:
-                isBuffDice = true;
+                isBuffDice ++;
                 break;
         }
     }

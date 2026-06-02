@@ -60,7 +60,7 @@ public class ShopManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
-    }
+    }   
 
 
 
@@ -94,6 +94,8 @@ public class ShopManager : MonoBehaviour
             players[1] = p2.GetComponent<PlayerManager>();
         else
             Debug.LogError("Không tìm thấy Player 2");
+        //RISET BUFF CHO TẤT CẢ NGƯỜI CHƠI TRƯỚC KHI MỞ SHOP
+        GameManager.Instance.ResetBuffAllPlayer();
     }
 
     private void SetupUI()

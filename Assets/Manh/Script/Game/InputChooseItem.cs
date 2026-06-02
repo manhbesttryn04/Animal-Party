@@ -131,6 +131,7 @@ public class InputChooseItem : MonoBehaviour
             shopManager.ShowPlayer2Turn();
 
             items[player1Index].transform.GetChild(1).gameObject.SetActive(false);
+            CheckAllPlayersFinished();
         }
     }
 
@@ -175,6 +176,7 @@ public class InputChooseItem : MonoBehaviour
         {
             isPlayer2Choose = false;
             items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
+            CheckAllPlayersFinished();
         }
     }
 
@@ -277,6 +279,14 @@ public class InputChooseItem : MonoBehaviour
         else
         {
             isPlayer2Choose = false;
+            CheckAllPlayersFinished();
+        }
+    }
+    private void CheckAllPlayersFinished()
+    {
+        if (!isPlayer1Choose && !isPlayer2Choose)
+        {
+            ShopManager.Instance.CloseShop();
         }
     }
 

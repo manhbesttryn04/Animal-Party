@@ -492,6 +492,7 @@ public class MiniGameManager : MonoBehaviour
             coin1.coinMiniGame,
             coin2.coinMiniGame
         );
+        GameManager.Instance.ResetMagicDebuffAllPlayer();
 
         // =====================================================
         // DESTROY PLAYER

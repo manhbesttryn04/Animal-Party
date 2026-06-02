@@ -25,9 +25,9 @@ public class PlayerManager : MonoBehaviour
         playerRound = GetComponent< PlayerRound>();
         playerNotifi = GetComponent<PlayerNotifi>();
         playerInputDice = GetComponent<PlayerInputDice>();
-            playerCoin = GetComponent<PlayerCoin>();
+        playerCoin = GetComponent<PlayerCoin>();
         playerBuff = GetComponent<PlayerBuff>();
-        playerBuff = GetComponent<PlayerBuff>();
+        playerDebuff= GetComponent<PlayerDebuff>();
 
     }
 }

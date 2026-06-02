@@ -7,7 +7,6 @@ public class DebuffManager : MonoBehaviour
     public static DebuffManager _instance;
     public static DebuffManager Instance => _instance;
 
-
     [Header("Canvas")]
     public GameObject leftCanvas;
     public GameObject rightCanvas;
@@ -19,14 +18,16 @@ public class DebuffManager : MonoBehaviour
     public GameObject[] leftCards;
     public GameObject[] rightCards;
 
+    [Header("Index")]
     private int leftIndex;
     private int rightIndex;
 
     private bool leftActive;
     private bool rightActive;
-    public GameObject cannonPrefab;
 
-    #region OPEN STATIC
+    [Header("Prefab")]
+    public GameObject cannonPrefab;
+    public GameObject panelNotiifiChooseDebuff;
 
     private void Awake()
     {
@@ -34,13 +35,13 @@ public class DebuffManager : MonoBehaviour
         {
             _instance = this;
             DontDestroyOnLoad(gameObject);
-
         }
         else
         {
             Destroy(gameObject);
         }
     }
+
     public static void Open(int winner)
     {
         Instance.OpenDebuffInternal(winner);
@@ -52,11 +53,11 @@ public class DebuffManager : MonoBehaviour
         rightCanvas.SetActive(false);
 
         HideAllCards();
+        StartCoroutine(ShowPanelChoose());
 
         if (playerIndex == 0)
         {
             leftCanvas.SetActive(true);
-
             leftActive = true;
             rightActive = false;
 
@@ -66,7 +67,6 @@ public class DebuffManager : MonoBehaviour
         else
         {
             rightCanvas.SetActive(true);
-
             rightActive = true;
             leftActive = false;
 
@@ -74,10 +74,12 @@ public class DebuffManager : MonoBehaviour
             SetHighlight(rightCards, rightIndex, true);
         }
     }
-
-    #endregion
-
-    #region UPDATE
+    IEnumerator ShowPanelChoose()
+    {
+        panelNotiifiChooseDebuff.SetActive(true);
+        yield return new WaitForSeconds(2f);
+        panelNotiifiChooseDebuff.SetActive(false);
+    }
 
     private void Update()
     {
@@ -85,10 +87,9 @@ public class DebuffManager : MonoBehaviour
         if (rightActive) HandleRight();
     }
 
-    #endregion
-
-    #region LEFT INPUT
-
+    // =========================
+    // LEFT INPUT
+    // =========================
     private void HandleLeft()
     {
         IndexItem current = leftCards[leftIndex].GetComponent<IndexItem>();
@@ -108,16 +109,13 @@ public class DebuffManager : MonoBehaviour
         if (newIndex < 0 || newIndex >= leftCards.Length) return;
 
         SetHighlight(leftCards, leftIndex, false);
-
         leftIndex = newIndex;
-
         SetHighlight(leftCards, leftIndex, true);
     }
 
-    #endregion
-
-    #region RIGHT INPUT
-
+    // =========================
+    // RIGHT INPUT
+    // =========================
     private void HandleRight()
     {
         IndexItem current = rightCards[rightIndex].GetComponent<IndexItem>();
@@ -137,16 +135,13 @@ public class DebuffManager : MonoBehaviour
         if (newIndex < 0 || newIndex >= rightCards.Length) return;
 
         SetHighlight(rightCards, rightIndex, false);
-
         rightIndex = newIndex;
-
         SetHighlight(rightCards, rightIndex, true);
     }
 
-    #endregion
-
-    #region SELECT + SHOW DEBUFF
-
+    // =========================
+    // SELECT
+    // =========================
     private void Select(GameObject cardObj, int playerIndex)
     {
         RandomCard card = cardObj.GetComponent<RandomCard>();
@@ -157,27 +152,21 @@ public class DebuffManager : MonoBehaviour
 
         img.sprite = debuffSprite[card.itemIndex];
 
-        // Debuff Magic
         if (card.itemIndex == 0)
-        {
             StartCoroutine(ApplyMagicDebuff(playerIndex));
-        }
 
         if (card.itemIndex == 1)
-        {
-            StartCoroutine(
-                ApplyCannonDebuff(playerIndex)
-            );
-        }
+            StartCoroutine(ApplyCannonDebuff(playerIndex));
 
         StartCoroutine(End());
     }
+
+    // =========================
+    // MAGIC DEBUFF
+    // =========================
     private IEnumerator ApplyMagicDebuff(int playerIndex)
     {
-        string targetTag =
-            playerIndex == 0
-            ? "Player 2"
-            : "Player 1";
+        string targetTag = playerIndex == 0 ? "Player 2" : "Player 1";
 
         GameObject targetPlayer =
             GameObject.FindGameObjectWithTag(targetTag);
@@ -191,85 +180,48 @@ public class DebuffManager : MonoBehaviour
         if (player == null)
             yield break;
 
-        // Camera luôn di chuyển tới mục tiêu
+        // 🎥 CAMERA MOVE
         yield return StartCoroutine(
-            MoveCameraToPlayer(targetPlayer.transform)
+            CameraManager.Instance.MoveToTarget(targetPlayer.transform, 1f)
         );
 
-        // Có khiên kháng phép
+        // 🛡️ MAGIC SHIELD
         if (player.playerBuff.isBuffMagic)
         {
+            yield return StartCoroutine(player.playerBuff.ShowMagicShield());
+            yield return new WaitForSeconds(1.5f);
             yield return StartCoroutine(
-                player.playerBuff.ShowMagicShield()
+                CameraManager.Instance.FlyUp(15f, 1.2f)
             );
 
+            ShopManager.Instance.OpenShop();
             yield break;
         }
 
-        // Không có khiên => hóa đá
+        // ❄️ APPLY DEBUFF
         PlayerDebuff debuff =
             targetPlayer.GetComponent<PlayerDebuff>();
 
         if (debuff != null)
         {
             debuff.ApplyMagicRock();
+
+            yield return new WaitForSeconds(1.5f);
+            yield return StartCoroutine(
+                CameraManager.Instance.FlyUp(15f, 1.2f)
+            );
+
+            ShopManager.Instance.OpenShop();
         }
     }
 
-    private IEnumerator MoveCameraToPlayer(Transform target)
-    {
-        Camera cam = Camera.main;
-
-        if (cam == null)
-            yield break;
-
-        Vector3 startPos =
-            cam.transform.position;
-
-        Quaternion startRot =
-            cam.transform.rotation;
-
-        Vector3 endPos =
-            target.position + new Vector3(0f, 5f, -8f);
-
-        Quaternion endRot =
-            Quaternion.LookRotation(
-                target.position - endPos
-            );
-
-        float duration = 1f;
-        float time = 0f;
-
-        while (time < duration)
-        {
-            time += Time.deltaTime;
-
-            float t = time / duration;
-
-            cam.transform.position =
-                Vector3.Lerp(startPos, endPos, t);
-
-            cam.transform.rotation =
-                Quaternion.Slerp(startRot, endRot, t);
-
-            yield return null;
-        }
-
-        cam.transform.position = endPos;
-        cam.transform.rotation = endRot;
-    
-}
+    // =========================
+    // CANNON DEBUFF
+    // =========================
     private IEnumerator ApplyCannonDebuff(int playerIndex)
     {
-        string ownerTag =
-            playerIndex == 0
-            ? "Player 1"
-            : "Player 2";
-
-        string targetTag =
-            playerIndex == 0
-            ? "Player 2"
-            : "Player 1";
+        string ownerTag = playerIndex == 0 ? "Player 1" : "Player 2";
+        string targetTag = playerIndex == 0 ? "Player 2" : "Player 1";
 
         GameObject owner =
             GameObject.FindGameObjectWithTag(ownerTag);
@@ -280,25 +232,20 @@ public class DebuffManager : MonoBehaviour
         if (owner == null || target == null)
             yield break;
 
-        Vector3 spawnPos =
-            owner.transform.position +
-            owner.transform.right * 2f;
-
         GameObject cannon =
             Instantiate(
                 cannonPrefab,
-                spawnPos,
+                owner.transform.position + owner.transform.right * 2f,
                 Quaternion.identity
             );
 
         cannon.transform.LookAt(target.transform);
 
-        // Camera tới Cannon
+        // 🎥 CAMERA TO CANNON
         yield return StartCoroutine(
-            MoveCameraToPlayer(cannon.transform)
+            CameraManager.Instance.MoveToTarget(cannon.transform, 1f)
         );
 
-        // Giữ camera nhìn Cannon 1.5 giây
         yield return new WaitForSeconds(1.5f);
 
         CannonDebuff cannonScript =
@@ -307,92 +254,92 @@ public class DebuffManager : MonoBehaviour
         if (cannonScript == null)
             yield break;
 
-        // Bắn Bomb
         BombDebuff bomb =
             cannonScript.Fire(target.transform);
+
         Destroy(cannon, 0.5f);
 
-        // Sau khi bắn mới follow Bomb
         if (bomb != null)
         {
+            // Follow bomb tới khi bomb nổ
             yield return StartCoroutine(
                 FollowBomb(bomb.transform)
             );
+
+            // Nhìn player bị trúng đạn
+            yield return StartCoroutine(
+                CameraManager.Instance.MoveToTarget(
+                    target.transform,
+                    0.5f
+                )
+            );
+
+            // Giữ camera nhìn player 1 giây
+            yield return new WaitForSeconds(1f);
+
+            // Bay lên trời
+            yield return StartCoroutine(
+                CameraManager.Instance.FlyUp(
+                    15f,
+                    1.2f
+                )
+            );
+
+            ShopManager.Instance.Open();
         }
     }
+
+    // =========================
+    // BOMB FOLLOW CAMERA (MINI)
+    // =========================
     private IEnumerator FollowBomb(Transform bomb)
     {
-        Camera cam = Camera.main;
-
-        if (cam == null)
-            yield break;
-
         while (bomb != null)
         {
-            Vector3 desiredPos =
-                bomb.position +
-                new Vector3(0f, 2f, -4f);
+            Camera cam = Camera.main;
+
+            Vector3 desired =
+                bomb.position + new Vector3(0f, 2f, -4f);
 
             cam.transform.position =
-                Vector3.Lerp(
-                    cam.transform.position,
-                    desiredPos,
-                    8f * Time.deltaTime
-                );
+                Vector3.Lerp(cam.transform.position, desired, 8f * Time.deltaTime);
 
-            cam.transform.LookAt(
-                bomb.position
-            );
+            cam.transform.LookAt(bomb.position);
 
             yield return null;
         }
     }
 
+    // =========================
+    // END
+    // =========================
     private IEnumerator End()
     {
         yield return new WaitForSeconds(1f);
-
         HideAll();
     }
 
-    #endregion
-
-    #region RESET
-
+    // =========================
+    // RESET UI
+    // =========================
     private void Reset(GameObject[] cards, ref int index)
     {
         index = 0;
 
         for (int i = 0; i < cards.Length; i++)
         {
-           // cards[i].transform.GetChild(1).gameObject.SetActive(false);
-           // cards[i].transform.GetChild(2).gameObject.SetActive(false);
-
             RandomCard rc = cards[i].GetComponent<RandomCard>();
             if (rc != null)
-            {
                 rc.image.sprite = rc.spriteStar;
-            }
         }
     }
-
-    #endregion
-
-    #region UI
 
     private void SetHighlight(GameObject[] cards, int index, bool state)
     {
         cards[index].transform.GetChild(1).gameObject.SetActive(state);
     }
 
-    private void HideAllCards()
-    {
-       /* for (int i = 0; i < leftCards.Length; i++)
-            leftCards[i].SetActive(false);
-
-        for (int i = 0; i < rightCards.Length; i++)
-            rightCards[i].SetActive(false);*/
-    }
+    private void HideAllCards() { }
 
     private void HideAll()
     {
@@ -401,9 +348,5 @@ public class DebuffManager : MonoBehaviour
 
         leftCanvas.SetActive(false);
         rightCanvas.SetActive(false);
-
-        HideAllCards();
     }
-
-    #endregion
 }

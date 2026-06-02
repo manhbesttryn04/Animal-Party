@@ -208,34 +208,29 @@ public class MiniGame1 : MonoBehaviour
             {
                 currentDelay = minDelay;
             }
-
-            Debug.Log(
-                "Current Delay: " +
-                currentDelay
-            );
         }
-    }
 
 
-    IEnumerator WaitForRowsFinished()
-    {
-        bool allFinished = false;
-
-        while (!allFinished)
+        IEnumerator WaitForRowsFinished()
         {
-            allFinished = true;
+            bool allFinished = false;
 
-            for (int i = 0; i < rows.Length; i++)
+            while (!allFinished)
             {
-                // Nếu còn row đang chạy
-                if (rows[i].isRunning)
-                {
-                    allFinished = false;
-                    break;
-                }
-            }
+                allFinished = true;
 
-            yield return null;
+                for (int i = 0; i < rows.Length; i++)
+                {
+                    // Nếu còn row đang chạy
+                    if (rows[i].isRunning)
+                    {
+                        allFinished = false;
+                        break;
+                    }
+                }
+
+                yield return null;
+            }
         }
     }
 }

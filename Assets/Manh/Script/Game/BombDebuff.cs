@@ -13,15 +13,20 @@ public class BombDebuff : MonoBehaviour
     [Header("Explosion")]
     public GameObject explosionPrefab;
 
+    [Header("Power Knockback")]
+    public int power = 3;
+
     private Vector3 startPos;
 
     private void Start()
     {
         startPos = transform.position;
-
         StartCoroutine(FlyRoutine());
     }
 
+    // =========================
+    // FLY TO TARGET
+    // =========================
     private IEnumerator FlyRoutine()
     {
         float time = 0f;
@@ -32,20 +37,11 @@ public class BombDebuff : MonoBehaviour
 
             float t = time / flyTime;
 
-            Vector3 pos =
-                Vector3.Lerp(
-                    startPos,
-                    target.position,
-                    t
-                );
-
-            pos.y +=
-                arcHeight *
-                Mathf.Sin(t * Mathf.PI);
+            Vector3 pos = Vector3.Lerp(startPos, target.position, t);
+            pos.y += arcHeight * Mathf.Sin(t * Mathf.PI);
 
             transform.position = pos;
 
-            // Xoay bomb trên không
             transform.Rotate(
                 Vector3.forward,
                 rotateSpeed * Time.deltaTime,
@@ -58,19 +54,27 @@ public class BombDebuff : MonoBehaviour
         HitTarget();
     }
 
+    // =========================
+    // HIT TARGET
+    // =========================
     private void HitTarget()
     {
-        // Hiệu ứng nổ
+        // Explosion FX
         if (explosionPrefab != null)
         {
-            GameObject explosion =
-                Instantiate(
-                    explosionPrefab,
-                    transform.position,
-                    Quaternion.identity
-                );
+            GameObject explosion = Instantiate(
+                explosionPrefab,
+                transform.position,
+                Quaternion.identity
+            );
 
-            Destroy(explosion, 3f);
+            Destroy(explosion, 2f);
+        }
+
+        if (target == null)
+        {
+            Destroy(gameObject);
+            return;
         }
 
         PlayerManager player =
@@ -82,17 +86,24 @@ public class BombDebuff : MonoBehaviour
             return;
         }
 
-        // Có khiên Cannon
-        if (player.playerBuff.isBuffCanon)
+        // =========================
+        // SHIELD CHECK
+        // =========================
+        if (player.playerBuff.isBuffDeffense)
         {
-            StartCoroutine(
-                player.playerBuff.ShowCanonShield()
-            );
+            StartCoroutine(player.playerBuff.ShowDefenseShield());
+
+            player.playerBuff.isBuffDeffense = false;
+
+            Debug.Log(player.name + " blocked the bomb!");
 
             Destroy(gameObject);
             return;
         }
 
+        // =========================
+        // KNOCKBACK SYSTEM
+        // =========================
         PlayerMoveAI moveAI =
             target.GetComponent<PlayerMoveAI>();
 
@@ -102,32 +113,10 @@ public class BombDebuff : MonoBehaviour
             return;
         }
 
-        // Lùi 3 ô
-        moveAI.currentIndex =
-            Mathf.Max(
-                0,
-                moveAI.currentIndex - 3
-            );
+        Debug.Log(player.name + " hit by bomb! Knockback " + power);
 
-        GameObject point =
-            moveAI.pointCheck[
-                moveAI.currentIndex
-            ];
-
-        Vector3 offset =
-            player.playerType.isPlayer2
-            ? new Vector3(0, 0, -1f)
-            : new Vector3(0, 0, 1f);
-
-        target.position =
-            point.transform.position + offset;
-
-        Debug.Log(
-            player.name +
-            " bị bắn lùi 3 ô"
-        );
+        StartCoroutine(moveAI.BoomHitEffect(power));
 
         Destroy(gameObject);
     }
-
 }
