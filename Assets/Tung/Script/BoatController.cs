@@ -1,12 +1,20 @@
 using UnityEngine;
+using TMPro; // Bắt buộc phải có để điều khiển UI TextMeshPro
 using System.Collections;
 
 public class BoatController : MonoBehaviour
 {
-    [Header("Boat Status")]
+    [Header("Boat Status (System 100 HP)")]
     public bool isDead = false;
-    public float maxHP = 100f;
+    public float maxHP = 100f; // Máu tối đa 100
     public float currentHP;
+
+    // Đổi biến này thành static để TẤT CẢ các thuyền đều dùng chung trạng thái kết thúc game
+    public static bool isGameFinished = false;
+
+    [Header("UI Text Component")]
+    [Tooltip("Kéo Object chữ ngoài Hierarchy (Health_Text) vào đây")]
+    public TextMeshProUGUI healthTextUI;
 
     [Header("Movement Settings")]
     public float tocDoTien = 10f;
@@ -23,11 +31,10 @@ public class BoatController : MonoBehaviour
     public float groundOffset = 0.5f;
 
     [Header("Map Collision Settings")]
-    public float satThuongVaChamMap = 10f;
+    public float satThuongVaChamMap = 20f; // Va chạm vào bờ map trừ 20 máu
     public float lucNayBờ = 8f;
 
     [Header("Respawn Settings")]
-    [Tooltip("Thời gian chờ hồi sinh khi HẾT MÁU chết tại chỗ")]
     public float thoiGianChoRespawn = 2.0f;
     public float cooldownNhanSatThuong = 0.5f;
 
@@ -48,11 +55,14 @@ public class BoatController : MonoBehaviour
 
     void Start()
     {
-        Time.timeScale = 1f;
+        Time.timeScale = 1f; // Khởi động lại thời gian chạy bình thường khi vào game
         isDead = false;
+        isGameFinished = false; // Reset trạng thái kết thúc game khi chơi lại
         dangBiPhatDungIm = false;
         dangDuocBaoVeAnToan = false;
-        currentHP = maxHP;
+
+        currentHP = maxHP; // Khởi tạo đầy 100 máu
+
         viTriXuatPhatBanDau = transform.position;
         viTriZBanDau = transform.position.z;
         thoiGianChoPhepSatThuongTiep = 0f;
@@ -69,11 +79,14 @@ public class BoatController : MonoBehaviour
             rb.isKinematic = false;
             rb.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
         }
+
+        CapNhatUI_SoMau();
     }
 
     void Update()
     {
-        if (isDead) return;
+        // CHỐT: Nếu đã kết thúc game hoặc chết thì đứng im toàn bộ
+        if (isDead || isGameFinished) return;
 
         float tocDoTienThucTe = dangBiPhatDungIm ? 0f : tocDoTien;
         transform.Translate(Vector3.left * tocDoTienThucTe * Time.deltaTime, Space.World);
@@ -123,45 +136,47 @@ public class BoatController : MonoBehaviour
         }
     }
 
-    // ================= KHU VỰC DEBUG LOG VA CHẠM =================
+    // HÀM XỬ LÝ KHI CHẠM VÀO VẠCH ĐÍCH `FinishLine`
+    void OnTriggerEnter(Collider other)
+    {
+        // Kiểm tra xem có đúng là chạm vào vật thể có tag FinishLine không
+        if (other.CompareTag("FinishLine") && !isGameFinished)
+        {
+            isGameFinished = true; // Đóng băng trạng thái di chuyển của toàn bộ script
+
+            // Dừng mọi lực vật lý lập tức
+            if (rb != null) rb.linearVelocity = Vector3.zero;
+
+            // IN RA THÔNG BÁO THẮNG CUỘC TRÊN CONSOLE
+            if (controlType == ControlType.Boat1_AD)
+            {
+                Debug.Log("<color=cyan><b>[KẾT THÚC] PLAYER 1 ĐÃ VỀ ĐÍCH VÀ CHIẾN THẮNG!</b></color>");
+            }
+            else
+            {
+                Debug.Log("<color=yellow><b>[KẾT THÚC] PLAYER 2 ĐÃ VỀ ĐÍCH VÀ CHIẾN THẮNG!</b></color>");
+            }
+
+            // DỪNG TOÀN BỘ THỜI GIAN TRONG GAME (Đóng băng bẫy gai, thuyền kia, mọi chuyển động)
+            Time.timeScale = 0f;
+        }
+    }
+
     void OnCollisionStay(Collision collision)
     {
         if (collision == null || collision.gameObject == null) return;
+        if (isDead || dangDuocBaoVeAnToan || isGameFinished) return;
 
-        // LOG TRƯỚC: Check xem Unity Physics có đang ghi nhận hai vật thể chạm vào nhau không
-        // Nếu đâm vào bẫy mà không hiện dòng chữ màu xanh này -> Bạn chưa bật Collider/Rigidbody trên bẫy hoặc thuyền!
-        Debug.Log("<color=cyan>[PHYSICS] Thuyền đang cọ xát với vật thể: </color>" + collision.gameObject.name);
-
-        if (isDead || dangDuocBaoVeAnToan)
-        {
-            // Log thông báo thuyền đang bất tử do vừa hồi sinh/dịch chuyển nên bẫy không thể gây sát thương
-            Debug.Log("<color=white>[IMMUNE] Bỏ qua va chạm vì thuyền đang trong trạng thái bất tử bảo vệ.</color>");
-            return;
-        }
-
-        // Kiểm tra xem vật thể va chạm có chứa component Obstacle (bẫy gai) không
         Obstacle bẫyGai = collision.gameObject.GetComponent<Obstacle>();
         if (bẫyGai != null)
         {
-            // LOG 1: Tìm thấy bẫy gai thành công
-            Debug.Log("<color=yellow>[SPIKEBALL DETECTED] Đã nhận diện được bẫy gai: </color>" + collision.gameObject.name);
-
-            // Kiểm tra thời gian hồi chiêu nhận sát thương
-            if (Time.time < thoiGianChoPhepSatThuongTiep)
-            {
-                Debug.LogWarning("[COOLDOWN] Đang trong thời gian chớp đỏ chớp vàng chặn bẫy. Còn: " + (thoiGianChoPhepSatThuongTiep - Time.time) + " giây.");
-                return;
-            }
-
+            if (Time.time < thoiGianChoPhepSatThuongTiep) return;
             thoiGianChoPhepSatThuongTiep = Time.time + cooldownNhanSatThuong;
 
-            // LOG 2: Đủ điều kiện và trừ máu
-            Debug.Log("<color=red>[SPIKEBALL HIT] Đâm trúng bẫy gai thành công! Trừ đi " + bẫyGai.damageToApply + " HP.</color>");
-            XulyMatMau(bẫyGai.damageToApply);
+            XulyMatMau(20f);
             return;
         }
 
-        // Va chạm bờ map
         if (collision.gameObject.CompareTag("Ground") || collision.gameObject.CompareTag("Map"))
         {
             ContactPoint contact = collision.contacts[0];
@@ -170,7 +185,6 @@ public class BoatController : MonoBehaviour
                 if (Time.time < thoiGianChoPhepSatThuongTiep) return;
                 thoiGianChoPhepSatThuongTiep = Time.time + cooldownNhanSatThuong;
 
-                Debug.Log("<color=orange>[MAP HIT] Va chạm bờ sông! Trừ " + satThuongVaChamMap + " HP.</color>");
                 XulyMatMau(satThuongVaChamMap);
 
                 if (rb != null && currentHP > 0)
@@ -187,12 +201,21 @@ public class BoatController : MonoBehaviour
     private void XulyMatMau(float soMauMat)
     {
         currentHP -= soMauMat;
-        // LOG 3: In ra lượng máu còn lại thực tế của con thuyền sau khi ăn đòn
-        Debug.Log("<color=magenta>[HP STATUS] " + gameObject.name + " vừa mất máu! Máu hiện tại còn lại: </color>" + currentHP + " / " + maxHP);
+        if (currentHP < 0) currentHP = 0;
+
+        CapNhatUI_SoMau();
 
         if (currentHP <= 0)
         {
             StartCoroutine(HoiSinhGocCoroutine());
+        }
+    }
+
+    void CapNhatUI_SoMau()
+    {
+        if (healthTextUI != null)
+        {
+            healthTextUI.text = currentHP.ToString();
         }
     }
 
@@ -202,25 +225,25 @@ public class BoatController : MonoBehaviour
         dangBiPhatDungIm = true;
         dangDuocBaoVeAnToan = true;
         currentHP = 0;
+        CapNhatUI_SoMau();
         ResetVanTocPhysics();
-        Debug.Log("<color=red>[DIED] Thuyền hết máu! Đứng im tại chỗ chờ hồi sinh...</color>");
 
         yield return new WaitForSeconds(thoiGianChoRespawn);
 
         ResetVanTocPhysics();
         currentHP = maxHP;
+        CapNhatUI_SoMau();
         isDead = false;
         dangBiPhatDungIm = false;
 
         yield return new WaitForSeconds(1.0f);
         dangDuocBaoVeAnToan = false;
         thoiGianChoPhepSatThuongTiep = Time.time + cooldownNhanSatThuong;
-        Debug.Log("<color=green>[ALIVE] Thuyền hồi sinh đầy máu!</color>");
     }
 
     public void HoiSinhTaiViTriChiDinh(Vector3 viTriHoiSinh)
     {
-        if (dangDuocBaoVeAnToan || isDead) return;
+        if (dangDuocBaoVeAnToan || isDead || isGameFinished) return;
         StartCoroutine(HoiSinhBiTutLaiCoroutine(viTriHoiSinh));
     }
 
@@ -228,6 +251,7 @@ public class BoatController : MonoBehaviour
     {
         dangDuocBaoVeAnToan = true;
         currentHP = maxHP;
+        CapNhatUI_SoMau();
 
         if (rb != null)
         {
