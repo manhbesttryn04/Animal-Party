@@ -75,6 +75,9 @@ public class InputChooseItem : MonoBehaviour
 
             if (Input.GetKeyDown(KeyCode.J))
                 BuyPlayer1Item();
+
+            if (Input.GetKeyDown(KeyCode.K))
+                SkipPlayer1();
         }
 
         if (isPlayer2Choose)
@@ -83,6 +86,9 @@ public class InputChooseItem : MonoBehaviour
 
             if (Input.GetKeyDown(KeyCode.Keypad1))
                 BuyPlayer2Item();
+
+            if (Input.GetKeyDown(KeyCode.Keypad2))
+                SkipPlayer2();
         }
     }
 
@@ -134,6 +140,26 @@ public class InputChooseItem : MonoBehaviour
             CheckAllPlayersFinished();
         }
     }
+    private void SkipPlayer1()
+    {
+        isPlayer1Choose = false;
+        isPlayer2Choose = true;
+
+        items[player1Index].transform.GetChild(1).gameObject.SetActive(false);
+
+        shopManager.ShowPlayer2Turn();
+
+        items[player2Index].transform.GetChild(2).gameObject.SetActive(true);
+    }
+
+    private void SkipPlayer2()
+    {
+        isPlayer2Choose = false;
+
+        items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
+
+        CheckAllPlayersFinished();
+    }
 
     #endregion
 
@@ -148,6 +174,7 @@ public class InputChooseItem : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.LeftArrow)) ChangePlayer2(current.left);
         if (Input.GetKeyDown(KeyCode.RightArrow)) ChangePlayer2(current.right);
     }
+
 
     private void ChangePlayer2(int newIndex)
     {

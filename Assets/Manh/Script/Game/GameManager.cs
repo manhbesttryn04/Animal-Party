@@ -2,6 +2,7 @@
 using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class GameManager : MonoBehaviour
 {
@@ -20,6 +21,7 @@ public class GameManager : MonoBehaviour
     // Tham chiếu tới các manager khác
     MiniGameManager miniGameManager;
     StateStoryGame stateGame;
+    public bool canStartNextRound = false;
 
     private void Awake()
     {
@@ -59,12 +61,15 @@ public class GameManager : MonoBehaviour
             // Kiểm tra điều kiện bắt đầu minigame
             FistRoundMiniGame();
         }
+        WaitPlayer1RollDice();
+        StartNextRound();
+
     }
 
     // Kiểm tra ai thắng vòng
     public void CheckPlayerWinRound(int playerCoin1, int playerCoin2)
     {
-       
+
         // Player 1 nhiều coin hơn
         if (playerCoin1 > playerCoin2)
         {
@@ -150,8 +155,20 @@ public class GameManager : MonoBehaviour
     public void JoinRandomMiniGame()
     {
         // Đánh dấu đã qua vòng đầu
-        stateGame.isFistRound = true;
-
+        if (!stateGame.isFistRound)
+        {
+            stateGame.isFistRound = true;
+        }
+         
+        var randomIndex = Random.Range(0, 2);
+            if(randomIndex == 0)
+            {
+                miniGameManager.indexMiniGame = randomIndex +1;
+        }
+            else if(randomIndex == 1)
+        {
+                miniGameManager.indexMiniGame = randomIndex +1;
+        }
         // Chạy minigame
         miniGameManager.StartMiniGame();
     }
@@ -184,7 +201,7 @@ public class GameManager : MonoBehaviour
         if (p2 != null && p2.playerBuff != null)
         {
             p2.playerDebuff.ResetDebuff();
-       
+
         }
     }
     public void ResetBuffAllPlayer()
@@ -198,7 +215,95 @@ public class GameManager : MonoBehaviour
         if (p2 != null && p2.playerBuff != null)
         {
             p2.playerBuff.ResetBuff();
-       
+
+        }
+    }
+    public void ResetGameLoop()
+    {
+        canStartNextRound = false;
+        stateGame.isNextRound = false;
+
+        PlayerManager p1 = player1Main.GetComponent<PlayerManager>();
+        PlayerManager p2 = player2Main.GetComponent<PlayerManager>();
+        p1.playerRound.ResetNextRound();
+        p2.playerRound.ResetNextRound();
+
+    }
+    public void ExitNextRound()
+    {
+        ResetGameLoop();
+
+        StartCoroutine(Player1Dice());
+    }
+
+    public IEnumerator Player1Dice()
+    {
+        PlayerManager p1 = player1Main.GetComponent<PlayerManager>();
+        if (!p1.playerDebuff.isNoRollDice)
+        {
+            yield return new WaitForSeconds(0.5f);
+            p1.playerCamera.isFllow2 = true;
+            yield return new WaitForSeconds(2f);
+            p1.playerCamera.isFllow2 = false;
+            StartCoroutine(player1Main.GetComponent<PlayerManager>().playerNotifi.SetNotifi());
+            p1.GetComponent<PlayerManager>().playerInputDice.isClick = false;
+        }
+        else
+        {
+            yield return new WaitForSeconds(0.5f);
+            p1.playerCamera.isFllow2 = true;
+            yield return new WaitForSeconds(2f);
+            p1.playerCamera.isFllow2 = false;
+            yield return new WaitForSeconds(1f);
+            p1.playerRound.nextRound = true;
+        }
+
+
+    }
+    public IEnumerator Player2Dice()
+    {
+        PlayerManager p2 = player2Main.GetComponent<PlayerManager>();
+        if (!p2.playerDebuff.isNoRollDice)
+        {
+            yield return new WaitForSeconds(0.5f);
+            p2.playerCamera.isFllow2 = true;
+            yield return new WaitForSeconds(2f);
+            p2.playerCamera.isFllow2 = false;
+            StartCoroutine(player2Main.GetComponent<PlayerManager>().playerNotifi.SetNotifi());
+            p2.GetComponent<PlayerManager>().playerInputDice.isClick = false;
+        }
+        else
+        {
+            yield return new WaitForSeconds(0.5f);
+            p2.playerCamera.isFllow2 = true;
+            yield return new WaitForSeconds(2f);
+            p2.playerCamera.isFllow2 = false;
+            yield return new WaitForSeconds(1f);
+            p2.playerRound.nextRound = true;
+        }
+
+    }
+
+    public void WaitPlayer1RollDice()
+    {
+       PlayerManager p1 = player1Main.GetComponent<PlayerManager>();
+       PlayerManager p2 = player2Main.GetComponent<PlayerManager>();
+      
+        if(p1.playerRound.nextRound && !p2.playerRound.nextRound&& !stateGame.isNextRound)
+        {
+           
+            StartCoroutine(Player2Dice());
+            stateGame.isNextRound = true;
+        }
+    }
+    public void StartNextRound()
+    {
+        PlayerManager p1 = player1Main.GetComponent<PlayerManager>();
+        PlayerManager p2 = player2Main.GetComponent<PlayerManager>();
+        if(p1.playerRound.nextRound && p2.playerRound.nextRound&& !canStartNextRound)
+        {
+            JoinRandomMiniGame();
+            canStartNextRound = true;
         }
     }
 }

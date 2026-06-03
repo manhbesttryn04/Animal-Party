@@ -30,6 +30,8 @@ public class MiniGameManager : MonoBehaviour
     // Danh sách video hướng dẫn
     public VideoInstructList videoInstructList;
 
+    public MapMiniGameList mapMiniGameList;
+
     // =========================================================
     // CAMERA
     // =========================================================
@@ -47,6 +49,8 @@ public class MiniGameManager : MonoBehaviour
 
     // UI chính của minigame
     public GameObject UIMiniGame;
+    // Tên minigame
+    public TextMeshProUGUI textNameMiniGameMain;
 
     // UI loading
     public GameObject loadingCanvas;
@@ -60,7 +64,7 @@ public class MiniGameManager : MonoBehaviour
 
     [Header("Instruction UI")]
 
-    
+
     // Video hướng dẫn
     public VideoPlayer videoIntrucs;
 
@@ -112,7 +116,7 @@ public class MiniGameManager : MonoBehaviour
     [Header("Spawn")]
 
     // Vị trí spawn player
-    public Transform spawnPoint;
+    public TransSpawPlayerList spawnPoint;
 
     [Header("Player Prefab")]
 
@@ -160,7 +164,7 @@ public class MiniGameManager : MonoBehaviour
     // =========================================================
     // START MINIGAME
     // =========================================================
- 
+
     public void StartMiniGame()
     {
         // Nếu game đang chạy thì không start nữa
@@ -179,6 +183,7 @@ public class MiniGameManager : MonoBehaviour
     {
         // Đánh dấu game đang chạy
         isPlaying = true;
+        mapMiniGameList.mapMiniGameList[indexMiniGame - 1].SetActive(true);
 
         // =====================================================
         // CHECK INDEX
@@ -245,7 +250,7 @@ public class MiniGameManager : MonoBehaviour
         currentPlayer1 =
             Instantiate(
                 player1Prefab,
-                spawnPoint.position,
+                spawnPoint.transSpawPlayerList[indexMiniGame - 1].position,
                 Quaternion.identity
             );
 
@@ -253,7 +258,7 @@ public class MiniGameManager : MonoBehaviour
         currentPlayer2 =
             Instantiate(
                 player2Prefab,
-                spawnPoint.position + Vector3.right * 2f,
+              spawnPoint.transSpawPlayerList[indexMiniGame - 1].position + Vector3.right * 2f,
                 Quaternion.identity
             );
 
@@ -326,8 +331,8 @@ public class MiniGameManager : MonoBehaviour
         player2Type.isPlayer2 = true;
 
         // Set checkpoint
-        p1.checkPoint = spawnPoint;
-        p2.checkPoint = spawnPoint;
+        p1.checkPoint = spawnPoint.transSpawPlayerList[indexMiniGame - 1];
+        p2.checkPoint = spawnPoint.transSpawPlayerList[indexMiniGame - 1];
 
         // =====================================================
         // UPDATE UI
@@ -371,6 +376,10 @@ public class MiniGameManager : MonoBehaviour
         textInstrucs.text =
             intrusTextList.instructTextList[indexMiniGame - 1];
 
+        // Set tên minigame
+        textNameMiniGame.text =
+            intrusTextList.nameMiniGameList[indexMiniGame - 1];
+
         // Set text lỗi
         textError.text =
             intrusTextList.errorTextList[indexMiniGame - 1];
@@ -379,7 +388,7 @@ public class MiniGameManager : MonoBehaviour
         videoIntrucs.clip =
             videoInstructList.videoInstructList[indexMiniGame - 1];
 
-        
+
 
         // Play video
         //videoIntrucs.Play();
@@ -402,7 +411,7 @@ public class MiniGameManager : MonoBehaviour
         // =====================================================
 
         // Bắt đầu gameplay
-        ExitStartMiniGame();
+        StartMiniGameByIndex();
 
         // =====================================================
         // TIMER
@@ -531,16 +540,18 @@ public class MiniGameManager : MonoBehaviour
     // =========================================================
     // START MINIGAME LOGIC
     // =========================================================
-
-    public void ExitStartMiniGame()
+    public void StartMiniGameByIndex()
     {
-        // Nếu minigame 1
         if (indexMiniGame == 1)
         {
-            // Start minigame 1
             miniGameList.miniGame1.StartMiniGame();
         }
+        else if (indexMiniGame == 2)
+        {
+            miniGameList.miniGame2.StartMiniGame();
+        }
     }
+
 
     // =========================================================
     // STOP MINIGAME LOGIC
@@ -554,5 +565,11 @@ public class MiniGameManager : MonoBehaviour
             // Stop minigame 1
             miniGameList.miniGame1.StopMiniGame();
         }
+        else if (indexMiniGame == 2)
+        {
+            // Stop minigame 2
+            miniGameList.miniGame2.StopMiniGame();
+        }
+
     }
 }

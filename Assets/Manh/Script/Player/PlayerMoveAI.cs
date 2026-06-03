@@ -60,6 +60,8 @@ public class PlayerMoveAI : MonoBehaviour
     public IEnumerator AIToPoint(int value)
     {
         isMoving = true;
+        navMeshAgent.speed = 4f;
+        navMeshAgent.acceleration = 8f;
 
         for (int i = 0; i <= value; i++)
         {
@@ -115,6 +117,10 @@ public class PlayerMoveAI : MonoBehaviour
             {
                 manager.playerRound.isRound1 = true;
             }
+            if(!manager.playerRound.nextRound)
+            {
+                manager.playerRound.nextRound = true;
+            }
         }
     }
     public IEnumerator MoveBonus()
@@ -163,6 +169,10 @@ public class PlayerMoveAI : MonoBehaviour
         {
             manager.playerRound.isRound1 = true;
         }
+        if(!manager.playerRound.nextRound)
+        {
+            manager.playerRound.nextRound = true;
+        }
     }
 
     public IEnumerator BoomHitEffect(int power)
@@ -201,15 +211,19 @@ public class PlayerMoveAI : MonoBehaviour
         while (navMeshAgent.pathPending ||
                navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance)
         {
+
             yield return null;
         }
+        yield return new WaitForSeconds(0.5f);
+        navMeshAgent.speed = 4f;
+        navMeshAgent.acceleration = 8f;
 
         // =========================
         // RESET SPEED
         // =========================
-        navMeshAgent.speed = 4f;
-        navMeshAgent.acceleration = 8f;
 
+        navMeshAgent.ResetPath();
+        navMeshAgent.Warp(transform.position);
         isMoving = false;
     }
     void SetVisible(Renderer[] rends, bool state)

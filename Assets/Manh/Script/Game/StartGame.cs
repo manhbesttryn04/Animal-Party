@@ -26,7 +26,9 @@ public class StartGame : MonoBehaviour
     // Update is called once per frame
     public IEnumerator FistRoundPlayer1()
     {
-        
+        player1.GetComponent<PlayerManager>().playerCamera.isFllow2= true;
+         yield return new WaitForSeconds(2f);
+        player1.GetComponent<PlayerManager>().playerCamera.isFllow2 = false;
         yield return new WaitForSeconds(0.5f);
        StartCoroutine( player1.GetComponent<PlayerManager>().playerNotifi.SetNotifi());
         player1.GetComponent<PlayerManager>().playerInputDice.isClick = false;

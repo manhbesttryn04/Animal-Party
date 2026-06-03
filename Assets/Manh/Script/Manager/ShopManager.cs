@@ -242,6 +242,7 @@ public class ShopManager : MonoBehaviour
         }
 
         canvasShop.SetActive(false);
+        GameManager.Instance.ExitNextRound();
     }
 
     #endregion
