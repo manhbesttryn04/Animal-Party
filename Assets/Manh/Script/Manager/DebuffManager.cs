@@ -194,7 +194,7 @@ public class DebuffManager : MonoBehaviour
                 CameraManager.Instance.FlyUp(15f, 1.2f)
             );
 
-            ShopManager.Instance.OpenShop();
+            ShopManager.Instance.Open();
             yield break;
         }
 
@@ -211,7 +211,7 @@ public class DebuffManager : MonoBehaviour
                 CameraManager.Instance.FlyUp(15f, 1.2f)
             );
 
-            ShopManager.Instance.OpenShop();
+            ShopManager.Instance.Open();
         }
     }
 
@@ -326,9 +326,16 @@ public class DebuffManager : MonoBehaviour
     {
         index = 0;
 
+        // Random xem lá nào là 0, lá nào là 1
+        bool swap = Random.Range(0, 2) == 0;
+
+        cards[0].GetComponent<RandomCard>().itemIndex = swap ? 0 : 1;
+        cards[1].GetComponent<RandomCard>().itemIndex = swap ? 1 : 0;
+
         for (int i = 0; i < cards.Length; i++)
         {
             RandomCard rc = cards[i].GetComponent<RandomCard>();
+
             if (rc != null)
                 rc.image.sprite = rc.spriteStar;
         }
