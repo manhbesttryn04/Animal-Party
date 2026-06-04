@@ -265,6 +265,8 @@ public class DebuffManager : MonoBehaviour
             yield return StartCoroutine(
                 FollowBomb(bomb.transform)
             );
+            
+            yield return new WaitForSeconds(2f);
 
             // Nhìn player bị trúng đạn
             yield return StartCoroutine(

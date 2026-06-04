@@ -32,27 +32,39 @@ public class MiniGame1 : MonoBehaviour
     // Delay hiện tại runtime
     public float currentDelay;
 
+    public Coroutine gameRoutine;
+
     public void StartMiniGame()
     {
-        // Nếu game đang chạy thì không start nữa
-        if (isRunning)
-            return;
+        // Nếu đang chạy thì dừng trước
+        StopMiniGame();
 
-        StartCoroutine(RandomRowsRoutine());
+        gameRoutine = StartCoroutine(RandomRowsRoutine());
     }
 
     public void StopMiniGame()
     {
         isRunning = false;
 
-        StopAllCoroutines();
+        if (gameRoutine != null)
+        {
+            StopCoroutine(gameRoutine);
+            gameRoutine = null;
+        }
+
+        // Reset trạng thái tất cả row
+        foreach (TrapRow row in rows)
+        {
+            if (row != null)
+                row.isRunning = false;
+        }
     }
 
     IEnumerator RandomRowsRoutine()
     {
         isRunning = true;
 
-        // Reset delay khi start game
+        // Reset tốc độ mỗi lần bắt đầu game
         currentDelay = delayBetweenRounds;
 
         // Delay đầu game
@@ -60,49 +72,27 @@ public class MiniGame1 : MonoBehaviour
 
         while (isRunning)
         {
-            // =========================
-            // CHECK ROW
-            // =========================
-
             if (rows == null || rows.Length == 0)
             {
                 Debug.LogWarning("Rows is empty!");
                 yield break;
             }
 
-            // =========================
-            // RANDOM ROW
-            // =========================
+            List<int> usedIndexes = new List<int>();
+            List<TrapRow> selectedRows = new List<TrapRow>();
 
-            List<int> usedIndexes =
-                new List<int>();
-
-            int count = 0;
-
-            // Mặc định random 3 hàng
             int randomRowCount = 3;
 
-            // Nếu đạt tốc độ max thì random 4 hàng
             if (currentDelay <= minDelay)
-            {
                 randomRowCount = 4;
-            }
 
-            // Không vượt quá số row hiện có
             int maxRows =
                 Mathf.Min(
                     randomRowCount,
                     rows.Length
                 );
 
-            // =========================
-            // RANDOM KHÔNG TRÙNG
-            // =========================
-
-            List<TrapRow> selectedRows =
-      new List<TrapRow>();
-
-            while (count < maxRows)
+            while (selectedRows.Count < maxRows)
             {
                 int rand =
                     Random.Range(
@@ -113,29 +103,25 @@ public class MiniGame1 : MonoBehaviour
                 if (!usedIndexes.Contains(rand))
                 {
                     usedIndexes.Add(rand);
-
                     selectedRows.Add(rows[rand]);
-
-                    count++;
                 }
             }
+
+            // Hiện warning
             foreach (TrapRow row in selectedRows)
             {
-                // HIỆN WARNING
                 row.ShowWarning();
 
-                // PLAYER NHÌN
                 yield return new WaitForSeconds(0.4f);
 
-                // TẮT WARNING
                 row.HideWarning();
 
-                // DELAY NHỎ
                 yield return new WaitForSeconds(0.1f);
             }
+
             yield return new WaitForSeconds(0.5f);
 
-            // CHẠY TẤT CẢ TRAP
+            // Chạy trap
             foreach (TrapRow row in selectedRows)
             {
                 StartCoroutine(
@@ -143,94 +129,70 @@ public class MiniGame1 : MonoBehaviour
                 );
             }
 
-            // =========================
-            // ĐỢI TẤT CẢ ROW XONG
-            // =========================
-
+            // Chờ tất cả row xong
             yield return StartCoroutine(
                 WaitForRowsFinished()
             );
 
-            // =========================
-            // CHECK PLAYER 1
-            // =========================
-
+            // Check Player 1
             if (
-                manager.currentPlayer1
-                .transform.position.y < 0.5f
+                manager.currentPlayer1.transform.position.y < 0.5f
             )
             {
                 PlayerMiniGame player1 =
-                    manager.currentPlayer1
-                    .GetComponent<PlayerMiniGame>();
+                    manager.currentPlayer1.GetComponent<PlayerMiniGame>();
 
                 if (player1 != null)
-                {
                     player1.Respawn();
-                }
             }
 
-            // =========================
-            // CHECK PLAYER 2
-            // =========================
-
+            // Check Player 2
             if (
-                manager.currentPlayer2
-                .transform.position.y < 0.5f
+                manager.currentPlayer2.transform.position.y < 0.5f
             )
             {
                 PlayerMiniGame player2 =
-                    manager.currentPlayer2
-                    .GetComponent<PlayerMiniGame>();
+                    manager.currentPlayer2.GetComponent<PlayerMiniGame>();
 
                 if (player2 != null)
-                {
                     player2.Respawn();
-                }
             }
 
-            // =========================
-            // DELAY GIỮA ROUND
-            // =========================
-
+            // Delay giữa round
             yield return new WaitForSeconds(
                 currentDelay
             );
 
-            // =========================
-            // GIẢM DELAY
-            // =========================
-
+            // Giảm delay
             currentDelay -= delayDecrease;
 
-            // Không cho thấp hơn minDelay
             if (currentDelay < minDelay)
-            {
                 currentDelay = minDelay;
-            }
         }
 
+        isRunning = false;
+        gameRoutine = null;
+    }
 
-        IEnumerator WaitForRowsFinished()
+    IEnumerator WaitForRowsFinished()
+    {
+        while (true)
         {
-            bool allFinished = false;
+            bool allFinished = true;
 
-            while (!allFinished)
+            foreach (TrapRow row in rows)
             {
-                allFinished = true;
-
-                for (int i = 0; i < rows.Length; i++)
+                if (row != null && row.isRunning)
                 {
-                    // Nếu còn row đang chạy
-                    if (rows[i].isRunning)
-                    {
-                        allFinished = false;
-                        break;
-                    }
+                    allFinished = false;
+                    break;
                 }
-
-                yield return null;
             }
+
+            if (allFinished)
+                yield break;
+
+            yield return null;
         }
     }
 }

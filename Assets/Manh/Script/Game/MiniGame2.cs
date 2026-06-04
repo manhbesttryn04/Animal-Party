@@ -23,7 +23,7 @@ public class MiniGame2 : MonoBehaviour
 
     bool isRunning = false;
 
-    private List<Color> easyColors = new List<Color>();
+    private List<Color> easyColors = new List<Color>();A
     private List<Color> mediumColors = new List<Color>();
     private List<Color> hardColors = new List<Color>();
 
