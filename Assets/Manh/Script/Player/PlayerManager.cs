@@ -4,6 +4,7 @@ public class PlayerManager : MonoBehaviour
 {
     public PlayerAnimator playerAnimator;
     public PlayerMove playerMove;
+    public PlayerAttack playerAttack;
     public PlayerType playerType;
     public PlayerDiceRoll playerDiceRoll;
     public PlayerMoveAI playerMoveAI;
@@ -28,6 +29,7 @@ public class PlayerManager : MonoBehaviour
         playerCoin = GetComponent<PlayerCoin>();
         playerBuff = GetComponent<PlayerBuff>();
         playerDebuff= GetComponent<PlayerDebuff>();
+        playerAttack = GetComponent<PlayerAttack>();
 
     }
 }

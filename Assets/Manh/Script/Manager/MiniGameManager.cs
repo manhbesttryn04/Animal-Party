@@ -104,6 +104,7 @@ public class MiniGameManager : MonoBehaviour
     [Header("Avatar UI")]
 
     // Avatar player 1
+   
     public Image characterImagePlayer1;
 
     // Avatar player 2
@@ -467,6 +468,15 @@ public class MiniGameManager : MonoBehaviour
 
         // Stop gameplay
         ExitStopMiniGame();
+        // Ẩn UI minigame
+        UIMiniGame.SetActive(false);
+        UIManager.Instance.UpdateResultPanel(
+         coin1.coinMiniGame,
+         coin2.coinMiniGame
+     );
+
+        yield return new WaitForSeconds(5f);
+        UIManager.Instance.HideResultPanel();
 
         // Hiện loading
         loadingCanvas.SetActive(true);
@@ -492,8 +502,7 @@ public class MiniGameManager : MonoBehaviour
         // Ẩn timer
         timerText.gameObject.SetActive(false);
 
-        // Ẩn UI minigame
-        UIMiniGame.SetActive(false);
+       
 
         // =====================================================
         // CHECK WINNER
@@ -505,6 +514,8 @@ public class MiniGameManager : MonoBehaviour
             coin2.coinMiniGame
         );
         GameManager.Instance.ResetMagicDebuffAllPlayer();
+        GameManager.Instance.ConvertBuffDiceAllPlayer();
+
 
         // =====================================================
         // DESTROY PLAYER
@@ -515,6 +526,7 @@ public class MiniGameManager : MonoBehaviour
 
         // Xoá player 2
         Destroy(currentPlayer2);
+       
 
         // =====================================================
         // LOADING

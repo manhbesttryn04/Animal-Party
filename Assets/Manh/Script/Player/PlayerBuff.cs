@@ -8,6 +8,7 @@ public class PlayerBuff : MonoBehaviour
     public bool isBuffMagic;
     public bool isBuffCanon;
     public int isBuffDice;
+    public int isBuffDiceNext;
 
     public int countCoinPower;
 
@@ -22,7 +23,7 @@ public class PlayerBuff : MonoBehaviour
         isBuffDeffense = false;
         isBuffMagic = false;
         isBuffCanon = false;
-        countCoinPower = 0;
+       // countCoinPower = 0;
 
         if (shieldMagic != null)
             shieldMagic.SetActive(false);
@@ -58,7 +59,7 @@ public class PlayerBuff : MonoBehaviour
                 break;
 
             case 5:
-                isBuffDice ++;
+                isBuffDiceNext = 1;
                 break;
         }
     }
@@ -161,5 +162,13 @@ public class PlayerBuff : MonoBehaviour
         yield return new WaitForSeconds(2f);
 
         shieldDefense.SetActive(false);
+    }
+    public void ConvertBuffDice()
+    {
+        if (isBuffDiceNext > 0)
+        {
+            isBuffDice = 1;
+            isBuffDiceNext = 0;
+        }
     }
 }

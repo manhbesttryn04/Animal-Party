@@ -30,7 +30,7 @@ public class StartGame : MonoBehaviour
          yield return new WaitForSeconds(2f);
         player1.GetComponent<PlayerManager>().playerCamera.isFllow2 = false;
         yield return new WaitForSeconds(0.5f);
-       StartCoroutine( player1.GetComponent<PlayerManager>().playerNotifi.SetNotifi());
+     yield return  (StartCoroutine( player1.GetComponent<PlayerManager>().playerNotifi.SetNotifi()));
         player1.GetComponent<PlayerManager>().playerInputDice.isClick = false;
     }
     public IEnumerator FistRoundPlayer2()
@@ -39,7 +39,7 @@ public class StartGame : MonoBehaviour
         player2.GetComponent<PlayerManager>().playerCamera.isFllow2 = true;
         yield return new WaitForSeconds(0.5f);
         player2.GetComponent<PlayerManager>().playerCamera.isFllow2 = false;
-        StartCoroutine(player2.GetComponent<PlayerManager>().playerNotifi.SetNotifi());
+       yield return (StartCoroutine(player2.GetComponent<PlayerManager>().playerNotifi.SetNotifi()));
         player2.GetComponent<PlayerManager>().playerInputDice.isClick = false;
 
     }

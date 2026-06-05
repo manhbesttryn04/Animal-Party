@@ -214,13 +214,14 @@ public class ShopManager : MonoBehaviour
         ResetShop();
         UpdateCoin();
 
+        Invoke("ShowPlayer1Turn", 2f);
+
         inputChooseItem.player1Index = 0;
         inputChooseItem.player2Index = 0;
 
         inputChooseItem.isPlayer1Choose = true;
         inputChooseItem.isPlayer2Choose = false;
 
-        ShowPlayer1Turn();
 
         for (int i = 0; i < inputChooseItem.items.Length; i++)
         {

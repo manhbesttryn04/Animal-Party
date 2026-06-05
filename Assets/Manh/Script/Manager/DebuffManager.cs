@@ -253,16 +253,24 @@ public class DebuffManager : MonoBehaviour
 
         if (cannonScript == null)
             yield break;
-
+        if (owner.GetComponent<PlayerBuff>().isBuffCanon)
+        {
+           
+            UIManager.Instance.SendNotifi("Canon Buff");
+        }
+        yield return new WaitForSeconds(1f);
         BombDebuff bomb =
             cannonScript.Fire(target.transform);
+        bomb.power += 1; // Bomb không
 
         Destroy(cannon, 0.5f);
 
         if (bomb != null)
         {
-            // Follow bomb tới khi bomb nổ
-            yield return StartCoroutine(
+         
+
+               // Follow bomb tới khi bomb nổ
+                yield return StartCoroutine(
                 FollowBomb(bomb.transform)
             );
             

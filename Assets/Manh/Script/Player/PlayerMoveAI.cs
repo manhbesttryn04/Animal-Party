@@ -184,7 +184,7 @@ public class PlayerMoveAI : MonoBehaviour
         // =========================
         // 1. TRỪ INDEX
         // =========================
-        currentIndex = Mathf.Max(0, currentIndex - 3 );
+        currentIndex = Mathf.Max(0, currentIndex - power);
 
         GameObject targetPoint = pointCheck[currentIndex];
 

@@ -220,6 +220,19 @@ public class GameManager : MonoBehaviour
 
         }
     }
+    public void ConvertBuffDiceAllPlayer()
+    {
+        PlayerManager p1 = player1Main.GetComponent<PlayerManager>();
+        PlayerManager p2 = player2Main.GetComponent<PlayerManager>();
+        if (p1 != null && p1.playerBuff != null)
+        {
+            p1.playerBuff.ConvertBuffDice();
+        }
+        if (p2 != null && p2.playerBuff != null)
+        {
+            p2.playerBuff.ConvertBuffDice();
+        }
+    }
     public void ResetGameLoop()
     {
         canStartNextRound = false;
@@ -229,6 +242,7 @@ public class GameManager : MonoBehaviour
         PlayerManager p2 = player2Main.GetComponent<PlayerManager>();
         p1.playerRound.ResetNextRound();
         p2.playerRound.ResetNextRound();
+      //  ConvertBuffDiceAllPlayer();
 
     }
     public void ExitNextRound()
@@ -247,7 +261,7 @@ public class GameManager : MonoBehaviour
             p1.playerCamera.isFllow2 = true;
             yield return new WaitForSeconds(2f);
             p1.playerCamera.isFllow2 = false;
-            StartCoroutine(player1Main.GetComponent<PlayerManager>().playerNotifi.SetNotifi());
+           yield return (StartCoroutine(player1Main.GetComponent<PlayerManager>().playerNotifi.SetNotifi()));
             p1.GetComponent<PlayerManager>().playerInputDice.isClick = false;
         }
         else
@@ -271,7 +285,7 @@ public class GameManager : MonoBehaviour
             p2.playerCamera.isFllow2 = true;
             yield return new WaitForSeconds(2f);
             p2.playerCamera.isFllow2 = false;
-            StartCoroutine(player2Main.GetComponent<PlayerManager>().playerNotifi.SetNotifi());
+           yield return (StartCoroutine(player2Main.GetComponent<PlayerManager>().playerNotifi.SetNotifi()));
             p2.GetComponent<PlayerManager>().playerInputDice.isClick = false;
         }
         else
