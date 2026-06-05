@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 
 public class UIManager : MonoBehaviour
@@ -13,12 +13,97 @@ public class UIManager : MonoBehaviour
     public GameObject notifiPanel;
     public TextMeshProUGUI textNotifi;
 
+    public GameObject notifiPlay;
+    public GameObject notifiplayer1;
+    public GameObject notifiplayer2;
+    public TextMeshProUGUI coinTextNotP1;
+    public TextMeshProUGUI coinTextNotP2;
+    public TextMeshProUGUI indexTextP1;
+    public TextMeshProUGUI indexTextP2;
+
+
+    public PlayerManager playerManager1;
+    public PlayerManager playerManager2;
+
     private void Awake()
     {
         if (Instance == null)
             Instance = this;
         else
             Destroy(gameObject);
+    }
+    public void Start()
+    {
+        playerManager1 = GameObject.FindGameObjectWithTag("Player 1").GetComponent<PlayerManager>();
+        playerManager2 = GameObject.FindGameObjectWithTag("Player 2").GetComponent<PlayerManager>();
+
+    }
+
+
+    public void UpdateCoinPowerUI()
+    {
+        PlayerBuff p1 = playerManager1.playerBuff;
+        PlayerBuff p2 = playerManager2.playerBuff;
+
+        Transform coinRoot =
+            notifiplayer1.transform
+            .GetChild(2)
+            .GetChild(0);
+
+        Transform coinRoot2 =
+            notifiplayer2.transform
+            .GetChild(2)
+            .GetChild(0);
+
+        // Player 1
+        for (int i = 0; i < coinRoot.childCount; i++)
+        {
+            Transform blackPanel =
+                coinRoot.GetChild(i).GetChild(0);
+
+            // Có coin => tắt panel đen
+            // Chưa có coin => bật panel đen
+            blackPanel.gameObject.SetActive(
+                i >= p1.countCoinPower
+            );
+        }
+
+        // Player 2
+        for (int i = 0; i < coinRoot2.childCount; i++)
+        {
+            Transform blackPanel =
+                coinRoot2.GetChild(i).GetChild(0);
+
+            blackPanel.gameObject.SetActive(
+                i >= p2.countCoinPower
+            );
+        }
+    }
+    public void UpdateCoinAllPlayer()
+    {
+        PlayerCoin p1 = playerManager1.playerCoin;
+        PlayerCoin p2 = playerManager2.playerCoin;
+        coinTextNotP1.text= p1.coinEndMiniGame.ToString();
+       coinTextNotP2.text = p2.coinEndMiniGame.ToString();
+    }
+    public void UpdateIndexPlayerWalk()
+    {
+        PlayerMoveAI p1 = playerManager1.playerMoveAI;
+        PlayerMoveAI p2 = playerManager2.playerMoveAI;
+       indexTextP1.text = $"{p1.currentIndex}/22";
+        indexTextP2.text = $"{p2.currentIndex}/22";
+
+
+    }
+    public void HidePlayerPlayPanel(bool i)
+    {
+        notifiPanel.gameObject.SetActive( i );
+    }
+    public void Update()
+    {
+        UpdateCoinPowerUI();
+        UpdateCoinAllPlayer();
+        UpdateIndexPlayerWalk();
     }
 
     public void UpdateResultPanel(int coinP1, int coinP2)
