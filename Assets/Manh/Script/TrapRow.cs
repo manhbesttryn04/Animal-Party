@@ -129,7 +129,7 @@ public class TrapRow : MonoBehaviour
     }
     IEnumerator RestoreBricks()
     {
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(1f);
         // Hồi từng cục
         for (int i = 0; i < bricks.Length; i++)
         {
@@ -138,7 +138,7 @@ public class TrapRow : MonoBehaviour
             );
 
             // Delay giữa từng cục
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(0.2f);
         }
     }
     IEnumerator RestoreSingleBrick(GameObject brick)
