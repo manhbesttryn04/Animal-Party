@@ -562,6 +562,9 @@ public class MiniGameManager : MonoBehaviour
         else if (indexMiniGame == 2)
         {
             miniGameList.miniGame2.StartMiniGame();
+        }else if(indexMiniGame == 3)
+        {
+            miniGameList.miniGame3.StartMiniGame();
         }
     }
 
@@ -582,6 +585,9 @@ public class MiniGameManager : MonoBehaviour
         {
             // Stop minigame 2
             miniGameList.miniGame2.StopMiniGame();
+        }else if(indexMiniGame == 3)
+        {
+            miniGameList.miniGame3.StopMiniGame();
         }
 
     }

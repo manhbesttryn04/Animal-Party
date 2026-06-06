@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-public class LaserSpamManager : MonoBehaviour
+public class MiniGame3 : MonoBehaviour
 {
     public enum SpawnMode 
     { 
