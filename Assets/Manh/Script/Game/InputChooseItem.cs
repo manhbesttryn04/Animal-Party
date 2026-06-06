@@ -193,8 +193,8 @@ public class InputChooseItem : MonoBehaviour
         if (player2Index == 1)
         {
             if (!shopManager.BuyItem(1, player2Index, item.price))
-                return;
 
+                return;
             OpenRandomCard(1);
             return;
         }

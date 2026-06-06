@@ -31,6 +31,7 @@ public class MiniGameManager : MonoBehaviour
     public VideoInstructList videoInstructList;
 
     public MapMiniGameList mapMiniGameList;
+   
 
     // =========================================================
     // CAMERA

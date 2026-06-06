@@ -65,8 +65,9 @@ public class PlayerMoveAI : MonoBehaviour
 
         for (int i = 0; i <= value; i++)
         {
-            
+
             // sang ô tiếp theo
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.walkPlayerClip);
             currentIndex++;
 
             GameObject target = pointCheck[currentIndex];

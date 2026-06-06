@@ -101,9 +101,14 @@ public class UIManager : MonoBehaviour
     }
     public void Update()
     {
-        UpdateCoinPowerUI();
-        UpdateCoinAllPlayer();
-        UpdateIndexPlayerWalk();
+        if (notifiPlay.activeSelf)
+        {
+            UpdateCoinPowerUI();
+            UpdateCoinAllPlayer();
+            UpdateIndexPlayerWalk();
+        }
+        else return;
+      
     }
 
     public void UpdateResultPanel(int coinP1, int coinP2)

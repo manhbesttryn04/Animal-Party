@@ -7,6 +7,7 @@ public class CannonDebuff : MonoBehaviour
 
     public BombDebuff Fire(Transform target)
     {
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.cannonClip);
         GameObject bomb =
             Instantiate(
                 bombPrefab,

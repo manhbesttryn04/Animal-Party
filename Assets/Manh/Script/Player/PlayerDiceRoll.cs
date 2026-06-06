@@ -56,4 +56,8 @@ public class PlayerDiceRoll : MonoBehaviour
       
 
     }
+    public void PlayerAudioDice()
+    {
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.diceRollClip);
+    }
 }
