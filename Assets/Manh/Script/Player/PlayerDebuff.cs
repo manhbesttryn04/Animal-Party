@@ -23,7 +23,7 @@ public class PlayerDebuff : MonoBehaviour
         if (rockMagic != null)
         {
             rockMagic.SetActive(true);
-
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.bebuffRockMagicClip);
             rockMagic.transform.localScale =
                 originalScale * 2f;
         }

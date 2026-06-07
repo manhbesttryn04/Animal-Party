@@ -70,6 +70,7 @@ public class PlayerBuff : MonoBehaviour
             yield break;
 
         shieldMagic.SetActive(true);
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.buffMagicClip);
 
         Transform shield = shieldMagic.transform;
 
@@ -144,8 +145,9 @@ public class PlayerBuff : MonoBehaviour
     {
         if (shieldDice == null)
             yield break;
-
+        
         shieldDice.SetActive(true);
+     
 
         yield return new WaitForSeconds(2f);
 
@@ -156,7 +158,7 @@ public class PlayerBuff : MonoBehaviour
     {
         if (shieldDefense == null)
             yield break;
-
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.buffDeffClip);
         shieldDefense.SetActive(true);
 
         yield return new WaitForSeconds(2f);

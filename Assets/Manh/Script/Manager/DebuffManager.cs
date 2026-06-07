@@ -108,6 +108,8 @@ public class DebuffManager : MonoBehaviour
     {
         if (newIndex < 0 || newIndex >= leftCards.Length) return;
 
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.movechooseItemClip);
+
         SetHighlight(leftCards, leftIndex, false);
         leftIndex = newIndex;
         SetHighlight(leftCards, leftIndex, true);
@@ -133,7 +135,7 @@ public class DebuffManager : MonoBehaviour
     private void MoveRight(int newIndex)
     {
         if (newIndex < 0 || newIndex >= rightCards.Length) return;
-
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.movechooseItemClip);
         SetHighlight(rightCards, rightIndex, false);
         rightIndex = newIndex;
         SetHighlight(rightCards, rightIndex, true);
@@ -235,7 +237,7 @@ public class DebuffManager : MonoBehaviour
         GameObject cannon =
             Instantiate(
                 cannonPrefab,
-                owner.transform.position + owner.transform.right * 2f,
+                owner.transform.position + owner.transform.forward * 2f,
                 Quaternion.identity
             );
 

@@ -19,6 +19,7 @@ public class CannonDebuff : MonoBehaviour
             bomb.GetComponent<BombDebuff>();
 
         bombScript.target = target;
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.fallingBom);
 
         return bombScript;
     }

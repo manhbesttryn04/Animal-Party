@@ -109,6 +109,7 @@ public class InputChooseItem : MonoBehaviour
     private void ChangePlayer1(int newIndex)
     {
         if (newIndex < 0 || newIndex >= items.Length) return;
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.movechooseItemClip);
 
         items[player1Index].transform.GetChild(1).gameObject.SetActive(false);
         player1Index = newIndex;
@@ -179,6 +180,7 @@ public class InputChooseItem : MonoBehaviour
     private void ChangePlayer2(int newIndex)
     {
         if (newIndex < 0 || newIndex >= items.Length) return;
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.movechooseItemClip);
 
         items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
         player2Index = newIndex;
@@ -214,6 +216,7 @@ public class InputChooseItem : MonoBehaviour
     private void OpenRandomCard(int playerIndex)
     {
         shopManager.canvasRandomCard.SetActive(true);
+      
 
         randomCardPlayer = playerIndex;
         randomCardIndex = 0;
@@ -270,7 +273,7 @@ public class InputChooseItem : MonoBehaviour
     private void ChangeRandomCard(int newIndex)
     {
         if (newIndex < 0 || newIndex >= itemCardRandom.Length) return;
-
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.movechooseItemClip);
         itemCardRandom[randomCardIndex].transform.GetChild(1).gameObject.SetActive(false);
 
         randomCardIndex = newIndex;
@@ -287,6 +290,7 @@ public class InputChooseItem : MonoBehaviour
         itemCardRandom[randomCardIndex].transform.GetChild(2).gameObject.SetActive(true);
 
         card.image.sprite = shopManager.itemSprites[card.itemIndex];
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.buyItemClip);
 
         shopManager.ShowPlayerItem(randomCardPlayer, card.itemIndex);
 
@@ -313,8 +317,14 @@ public class InputChooseItem : MonoBehaviour
     {
         if (!isPlayer1Choose && !isPlayer2Choose)
         {
-            ShopManager.Instance.CloseShop();
+
+            StartCoroutine(CloseShop());
         }
+    }
+    public IEnumerator CloseShop()
+    {
+        yield return new WaitForSeconds(2f);
+        ShopManager.Instance.CloseShop();
     }
 
     #endregion

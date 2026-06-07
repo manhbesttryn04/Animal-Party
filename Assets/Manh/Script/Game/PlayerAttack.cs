@@ -8,7 +8,7 @@ public class PlayerAttack : MonoBehaviour
     [Header("Attack Settings")]
     public BoxCollider kickCollider;
     public float attackCooldown = 2f;
-  
+    public float aimDistance = 3f;
 
     private bool canAttack = true;
 
@@ -41,7 +41,27 @@ public class PlayerAttack : MonoBehaviour
 
     private void Attack()
     {
-        canAttack = false;
+        Transform target = FindTarget();
+
+        if (target != null)
+        {
+            float distance = Vector3.Distance(transform.position, target.position);
+
+            // Nếu đối thủ đủ gần thì tự động xoay mặt về phía đối thủ
+            if (distance <= aimDistance)
+            {
+                Vector3 dir = target.position - transform.position;
+                dir.y = 0f;
+
+                if (dir != Vector3.zero)
+                {
+                    transform.rotation = Quaternion.LookRotation(dir);
+                }
+            }
+        }
+        else Debug.Log("Ko");
+
+            canAttack = false;
 
         if (playerManager != null &&
             playerManager.playerAnimator.playerAnimator != null)
@@ -50,6 +70,31 @@ public class PlayerAttack : MonoBehaviour
         }
 
         Invoke(nameof(ResetAttack), attackCooldown);
+    }
+
+    private Transform FindTarget()
+    {
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player 1");
+
+        Transform nearest = null;
+        float nearestDistance = Mathf.Infinity;
+
+        foreach (GameObject p in players)
+        {
+            // Bỏ qua chính mình
+            if (p == gameObject)
+                continue;
+
+            float distance = Vector3.Distance(transform.position, p.transform.position);
+
+            if (distance < nearestDistance)
+            {
+                nearestDistance = distance;
+                nearest = p.transform;
+            }
+        }
+
+        return nearest;
     }
 
     private void ResetAttack()
@@ -70,6 +115,4 @@ public class PlayerAttack : MonoBehaviour
         if (kickCollider != null)
             kickCollider.enabled = false;
     }
-
-   
 }

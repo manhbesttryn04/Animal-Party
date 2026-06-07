@@ -775,8 +775,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 0
   serializedVersion: 3
-  m_Size: {x: 0.8588069, y: 0.33915663, z: 0.80724573}
-  m_Center: {x: -0.043503553, y: -0.04835856, z: 0.14368905}
+  m_Size: {x: 0.8588069, y: 0.33915663, z: 1.1841099}
+  m_Center: {x: -0.043503553, y: -0.04835856, z: -0.04474297}
 --- !u!114 &4558108828095383673
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1839,7 +1839,7 @@ MonoBehaviour:
   playerManager: {fileID: 8795236823910409085}
   kickCollider: {fileID: 5364022259146517314}
   attackCooldown: 2
-  knockbackForce: 5
+  aimDistance: 3
 --- !u!4 &5753519119905417946 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 680b36b9f8c4f824692a8472049936d9, type: 3}

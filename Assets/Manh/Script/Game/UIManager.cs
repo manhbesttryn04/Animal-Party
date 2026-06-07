@@ -116,6 +116,8 @@ public class UIManager : MonoBehaviour
         if (resultPanel != null)
         {
             resultPanel.SetActive(true);
+            //Mo nhac 
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.openResultPanel);
             if (coinTextP1 != null)
                 coinTextP1.text = $"{coinP1}";
             if (coinTextP2 != null)
@@ -169,5 +171,9 @@ public class UIManager : MonoBehaviour
         {
             notifiPanel.SetActive(false);
         }
+    }
+    public void HideNotifiPlayPanel(bool i)
+    {
+        notifiPlay.gameObject.SetActive(i);
     }
 }

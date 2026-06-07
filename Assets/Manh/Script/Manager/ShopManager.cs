@@ -66,6 +66,7 @@ public class ShopManager : MonoBehaviour
 
     public void Open()
     {
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.openShopClip);
         SetupPlayers();
         SetupUI();
         OpenShop();
@@ -165,12 +166,20 @@ public class ShopManager : MonoBehaviour
 
         if (player.playerCoin.coinEndMiniGame < price)
         {
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.noCoinBuyItemClip);
             StartCoroutine(FlashCoinText(playerIndex));
             return false;
         }
 
+        if(itemIndex == 1)
+        {
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.openCardRamdomClip);
+        }else
+        {
+           
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.buyItemClip);
+        }
         player.playerCoin.coinEndMiniGame -= price;
-
         UpdateCoin();
 
         if (itemIndex == 1)

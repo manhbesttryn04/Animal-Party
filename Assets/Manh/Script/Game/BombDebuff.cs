@@ -59,6 +59,7 @@ public class BombDebuff : MonoBehaviour
     // =========================
     private void HitTarget()
     {
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.boomClip);
         // Explosion FX
         if (explosionPrefab != null)
         {

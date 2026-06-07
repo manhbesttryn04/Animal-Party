@@ -219,12 +219,17 @@ public class MiniGameManager : MonoBehaviour
         // =====================================================
         // LOADING
         // =====================================================
-
+        //tat nhac
+        AudioManager.Instance.StopMusic();
+        //Tat bang game
+        UIManager.Instance.HideNotifiPlayPanel(false);
         // Hiện loading
         loadingCanvas.SetActive(true);
 
         // Delay loading
         yield return new WaitForSeconds(3f);
+        //Mo am thanh minigame
+        OpenMusicminiGame();
 
         // Tắt loading
         loadingCanvas.SetActive(false);
@@ -466,6 +471,8 @@ public class MiniGameManager : MonoBehaviour
         // =====================================================
         // STOP MINIGAME
         // =====================================================
+        //Tatt am thanh
+        AudioManager.Instance.StopMusic();
 
         // Stop gameplay
         ExitStopMiniGame();
@@ -544,10 +551,14 @@ public class MiniGameManager : MonoBehaviour
 
         // =====================================================
         // RESET
-        // =====================================================
-
+       
         // Reset trạng thái
         isPlaying = false;
+        // =====================================================
+        //Mo bang play
+        UIManager.Instance.HideNotifiPlayPanel(true);
+        //Mo nhac maingame
+        AudioManager.Instance.PlayMusic(AudioManager.Instance.musicMainClip);
     }
 
     // =========================================================
@@ -590,5 +601,9 @@ public class MiniGameManager : MonoBehaviour
             miniGameList.miniGame3.StopMiniGame();
         }
 
+    }
+    public void OpenMusicminiGame()
+    {
+       AudioManager.Instance.OpenMusicminiGame(indexMiniGame);
     }
 }
