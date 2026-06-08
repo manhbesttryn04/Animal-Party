@@ -164,12 +164,12 @@ public class GameManager : MonoBehaviour
             if(randomIndex == 0)
             {
                 miniGameManager.indexMiniGame = 0
-                +2;
+                +4;
         }
             else if(randomIndex == 1)
         {
                 miniGameManager.indexMiniGame = 0
-                +2;
+                +4;
         }
         // Chạy minigame
         miniGameManager.StartMiniGame();

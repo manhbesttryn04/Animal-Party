@@ -32,8 +32,11 @@ public class AudioManager : MonoBehaviour
     public AudioClip openCardRamdomClip;
     public AudioClip noCoinBuyItemClip;
 
-    [Header("UI")]
+    [Header("UI SFX")]
     public AudioClip openResultPanel;
+    public AudioClip nextRound;
+    [Header("Camera SFX")]
+    public AudioClip moveCamera;
 
 
     

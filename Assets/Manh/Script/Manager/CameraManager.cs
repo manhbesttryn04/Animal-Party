@@ -29,6 +29,7 @@ public class CameraManager : MonoBehaviour
     // =========================
     public IEnumerator MoveToTarget(Transform target, float duration)
     {
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.moveCamera);
         Vector3 startPos = cam.transform.position;
         Quaternion startRot = cam.transform.rotation;
 
@@ -60,6 +61,7 @@ public class CameraManager : MonoBehaviour
     // =========================
     public IEnumerator FlyUp(float height, float duration)
     {
+        //AudioManager.Instance.PlaySFX(AudioManager.Instance.moveCamera);
         Vector3 startPos = cam.transform.position;
         Quaternion startRot = cam.transform.rotation;
 

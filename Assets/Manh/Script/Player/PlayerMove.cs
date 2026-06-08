@@ -13,7 +13,8 @@ public class PlayerMove : MonoBehaviour
     public float gravity = -9.81f;
     public bool isGround;
     public bool isJumpAndMove, isMove, isJump = true;
-  
+    public bool IsMoving { get; private set; }
+
 
     public CharacterController controller;
     private Vector3 velocity;
@@ -61,6 +62,8 @@ public class PlayerMove : MonoBehaviour
             if (Input.GetKey(KeyCode.LeftArrow)) move += Vector3.left;
             if (Input.GetKey(KeyCode.RightArrow)) move += Vector3.right;
         }
+
+        IsMoving = move.magnitude > 0.1f;
 
         if (move.magnitude > 0.1f)
         {

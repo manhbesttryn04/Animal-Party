@@ -11,7 +11,9 @@ public class StartGame : MonoBehaviour
         player1 = GameObject.FindGameObjectWithTag("Player 1");
         player2 = GameObject.FindGameObjectWithTag("Player 2");
         StartCoroutine(FistRoundPlayer1());
+       
         AudioManager.Instance.PlayMusic(AudioManager.Instance.musicMainClip);
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.moveCamera);
     }
     private void Update()
     {

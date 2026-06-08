@@ -549,9 +549,11 @@ public class MiniGameManager : MonoBehaviour
         // Tắt loading
         loadingCanvas.SetActive(false);
 
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.nextRound);
+
         // =====================================================
         // RESET
-       
+
         // Reset trạng thái
         isPlaying = false;
         // =====================================================
@@ -573,12 +575,40 @@ public class MiniGameManager : MonoBehaviour
         else if (indexMiniGame == 2)
         {
             miniGameList.miniGame2.StartMiniGame();
-        }else if(indexMiniGame == 3)
+        }
+        else if (indexMiniGame == 3)
         {
             miniGameList.miniGame3.StartMiniGame();
         }
-    }
+        else if (indexMiniGame == 4)
+        {
+            miniGameList.miniGame4.StartMiniGame();
+        }
+        else if (indexMiniGame == 5)
+        {
 
+        }
+        else if (indexMiniGame == 6)
+        {
+
+        }
+        else if (indexMiniGame == 7)
+        {
+
+        }
+        else if (indexMiniGame == 8)
+        {
+
+        }
+        else if (indexMiniGame == 9)
+        {
+
+        }
+        else if (indexMiniGame == 10)
+        {
+
+        }
+    }
 
     // =========================================================
     // STOP MINIGAME LOGIC
@@ -586,21 +616,46 @@ public class MiniGameManager : MonoBehaviour
 
     public void ExitStopMiniGame()
     {
-        // Nếu minigame 1
         if (indexMiniGame == 1)
         {
-            // Stop minigame 1
             miniGameList.miniGame1.StopMiniGame();
         }
         else if (indexMiniGame == 2)
         {
-            // Stop minigame 2
             miniGameList.miniGame2.StopMiniGame();
-        }else if(indexMiniGame == 3)
+        }
+        else if (indexMiniGame == 3)
         {
             miniGameList.miniGame3.StopMiniGame();
         }
+        else if (indexMiniGame == 4)
+        {
+           miniGameList.miniGame4.StopMiniGame();
+        }
+        else if (indexMiniGame == 5)
+        {
 
+        }
+        else if (indexMiniGame == 6)
+        {
+
+        }
+        else if (indexMiniGame == 7)
+        {
+
+        }
+        else if (indexMiniGame == 8)
+        {
+
+        }
+        else if (indexMiniGame == 9)
+        {
+
+        }
+        else if (indexMiniGame == 10)
+        {
+
+        }
     }
     public void OpenMusicminiGame()
     {
