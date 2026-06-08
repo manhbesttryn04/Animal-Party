@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 public class MiniGame4 : MonoBehaviour
 {
@@ -37,7 +38,7 @@ public class MiniGame4 : MonoBehaviour
     private void Start()
     {
         backRotation = transform.rotation;
-        lookRotation = backRotation * Quaternion.Euler(0f, 90f, 0f);
+        lookRotation = backRotation * Quaternion.Euler(0f, 180f, 0f);
     }
 
     public void StartMiniGame()
@@ -127,12 +128,18 @@ public class MiniGame4 : MonoBehaviour
         if (detectedPlayers.Contains(playerObj)) return;
 
         PlayerMove move = playerObj.GetComponent<PlayerMove>();
+        PlayerAnimator ani = playerObj.GetComponent<PlayerAnimator>();
+        if (ani != null)
+        {
+            ani.playerAnimator.SetFloat("Run", 0f);
+        }
         if (move == null) return;
 
         if (move.IsMoving)
         {
             detectedPlayers.Add(playerObj);
             move.isJumpAndMove = false;
+
             attackQueue.Enqueue(playerObj);
         }
     }
@@ -203,6 +210,7 @@ public class MiniGame4 : MonoBehaviour
         yield return new WaitForSeconds(respawnDelay);
 
         PlayerMiniGame mini = target.GetComponent<PlayerMiniGame>();
+      
         if (mini != null)
         {
             mini.Respawn();
