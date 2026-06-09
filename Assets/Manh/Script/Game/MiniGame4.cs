@@ -11,9 +11,10 @@ public class MiniGame4 : MonoBehaviour
     [Header("Pirate")]
     public Animator animator;
 
+
     [Header("Settings")]
     public float firstWaitTime = 3f;
-    public float watchTime = 4f;
+    public float watchTime = 5f;
     public float rotateSpeed = 5f;
     public float respawnDelay = 1.5f;
 
@@ -22,6 +23,9 @@ public class MiniGame4 : MonoBehaviour
     public AudioClip scanSound;     // hồi hộp khi quan sát
     public AudioClip laughSound;    // cười khi phát hiện
     public AudioClip gunShotSound;  // tiếng súng
+
+    [Header("VFX")]
+    public GameObject muzzleFlash;
 
     private bool isRunning;
     private bool isAttacking;
@@ -37,7 +41,7 @@ public class MiniGame4 : MonoBehaviour
 
     private void Start()
     {
-        backRotation = transform.rotation;
+        backRotation = Quaternion.Euler(0, 0, 0);
         lookRotation = backRotation * Quaternion.Euler(0f, 180f, 0f);
     }
 
@@ -68,6 +72,7 @@ public class MiniGame4 : MonoBehaviour
 
     IEnumerator PirateRoutine()
     {
+        transform.rotation = lookRotation;
         isRunning = true;
 
         yield return new WaitForSeconds(firstWaitTime);
@@ -77,15 +82,16 @@ public class MiniGame4 : MonoBehaviour
             attackQueue.Clear();
             detectedPlayers.Clear();
 
-            yield return StartCoroutine(RotateTo(lookRotation));
-
             // 🔊 bật nhạc hồi hộp khi quan sát
             if (audioSource != null && scanSound != null)
             {
                 audioSource.clip = scanSound;
-                audioSource.loop = true;
+                audioSource.loop = false;
                 audioSource.Play();
             }
+            yield return StartCoroutine(RotateTo(lookRotation));
+
+           
 
             float timer = 0f;
 
@@ -128,20 +134,33 @@ public class MiniGame4 : MonoBehaviour
         if (detectedPlayers.Contains(playerObj)) return;
 
         PlayerMove move = playerObj.GetComponent<PlayerMove>();
-        PlayerAnimator ani = playerObj.GetComponent<PlayerAnimator>();
-        if (ani != null)
-        {
-            ani.playerAnimator.SetFloat("Run", 0f);
-        }
+       
         if (move == null) return;
 
         if (move.IsMoving)
         {
-            detectedPlayers.Add(playerObj);
-            move.isJumpAndMove = false;
+            if (move.IsMoving)
+            {
+                detectedPlayers.Add(playerObj);
 
-            attackQueue.Enqueue(playerObj);
+                StartCoroutine(CatchPlayer(playerObj, move));
+            }
         }
+    }
+    IEnumerator CatchPlayer(GameObject playerObj, PlayerMove move)
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        if (playerObj == null || move == null)
+            yield break;
+    PlayerAnimator p = playerObj.GetComponent<PlayerAnimator>();
+        if (p != null) {
+            p.playerAnimator.SetFloat("Run", 0f);
+        }
+
+        move.isJumpAndMove = false;
+
+        attackQueue.Enqueue(playerObj);
     }
 
     IEnumerator ProcessAttackQueue()
@@ -201,11 +220,8 @@ public class MiniGame4 : MonoBehaviour
         {
             animator.SetTrigger("Attack");
         }
-
-        if (audioSource != null && gunShotSound != null)
-        {
-            audioSource.PlayOneShot(gunShotSound);
-        }
+       
+        
 
         yield return new WaitForSeconds(respawnDelay);
 
@@ -225,6 +241,7 @@ public class MiniGame4 : MonoBehaviour
         yield return StartCoroutine(RotateTo(lookRotation));
     }
 
+
     IEnumerator RotateTo(Quaternion targetRotation)
     {
         while (Quaternion.Angle(transform.rotation, targetRotation) > 1f)
@@ -238,5 +255,21 @@ public class MiniGame4 : MonoBehaviour
         }
 
         transform.rotation = targetRotation;
+    }
+    public void PiraterAttack()
+    {
+        StartCoroutine(ShowMuzzleFlash());
+    }
+    IEnumerator ShowMuzzleFlash()
+    {
+        muzzleFlash.SetActive(true);
+        if (audioSource != null && gunShotSound != null)
+        {
+            audioSource.PlayOneShot(gunShotSound);
+        }
+
+        yield return new WaitForSeconds(0.5f);
+
+        muzzleFlash.SetActive(false);
     }
 }

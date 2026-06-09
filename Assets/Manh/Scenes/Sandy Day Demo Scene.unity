@@ -12587,7 +12587,7 @@ Transform:
   m_GameObject: {fileID: 323440552}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 40.05, y: -2, z: 2.63}
+  m_LocalPosition: {x: 35.98, y: -1.63, z: 2.57}
   m_LocalScale: {x: 1.3899999, y: 1.39, z: 1.3900001}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -14983,7 +14983,7 @@ Transform:
   m_GameObject: {fileID: 388878817}
   serializedVersion: 2
   m_LocalRotation: {x: -0.080312364, y: 0.5970025, z: -0.12331329, w: -0.7886266}
-  m_LocalPosition: {x: 111.4, y: 9.7, z: -5.8}
+  m_LocalPosition: {x: 112.48, y: 6.13, z: -5.72}
   m_LocalScale: {x: 1.3899999, y: 1.39, z: 1.3900001}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -20202,7 +20202,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1743301284569550, guid: ad2ab49d0a2a17148bd51c93d977bdbc, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4300533007854612, guid: ad2ab49d0a2a17148bd51c93d977bdbc, type: 3}
       propertyPath: m_LocalScale.x
@@ -35669,7 +35669,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 831129791}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -64402,6 +64402,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3288489268802418288, guid: 4f52f8c3927ff7d4b81b5a9b10fc27bf, type: 3}
   m_PrefabInstance: {fileID: 865865091}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1562842203 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1743301284569550, guid: ad2ab49d0a2a17148bd51c93d977bdbc, type: 3}
+  m_PrefabInstance: {fileID: 497744269}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1562842204 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4300533007854612, guid: ad2ab49d0a2a17148bd51c93d977bdbc, type: 3}
@@ -91473,7 +91478,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7726325503316364365}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -37.15, y: -9.21, z: 21.58}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -91510,7 +91515,7 @@ Transform:
   - {fileID: 6515220968191057251}
   - {fileID: 3783271005754727064}
   m_Father: {fileID: 4765270132718329655}
-  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!4 &6983623951930511792
 Transform:
   m_ObjectHideFlags: 0
@@ -96745,13 +96750,14 @@ MonoBehaviour:
   manager: {fileID: 288627986}
   animator: {fileID: 7491744360742360974}
   firstWaitTime: 3
-  watchTime: 4
+  watchTime: 5
   rotateSpeed: 5
   respawnDelay: 1.5
   audioSource: {fileID: 7726325503316364367}
-  scanSound: {fileID: 8300000, guid: 9b4e2531340cb074d9f4f0dbd0bccddc, type: 3}
+  scanSound: {fileID: 8300000, guid: 0b58ea4de3f0958469a6df5aeff3a2c8, type: 3}
   laughSound: {fileID: 8300000, guid: 7dccd73180f7cc04e8cdacb2c140da9b, type: 3}
   gunShotSound: {fileID: 8300000, guid: a01d0ddd27a28e24f9d4a559e26324c0, type: 3}
+  muzzleFlash: {fileID: 1562842203}
 --- !u!82 &7726325503316364367
 AudioSource:
   m_ObjectHideFlags: 0
