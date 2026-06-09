@@ -16,9 +16,7 @@ public class PlayerMoveAI : MonoBehaviour
     public int currentIndex = 0;
 
     public bool isMoving = false;
-    
-   // public System.Action OnMoveFinished;
-   public GameObject bonusPanel;
+   
 
 
     private void Start()
@@ -27,21 +25,7 @@ public class PlayerMoveAI : MonoBehaviour
 
         pointCheck = FindAnyObjectByType<PointCheck>().point.ToList();
         FindPonit();
-        if(manager.playerType.isPlayer2)
-        {
-            bonusPanel = GameObject.Find("Bonus Panel 2");
-        }
-        else
-        {
-           bonusPanel = GameObject.Find("Bonus Panel 1");
-        }
-
-       if(bonusPanel != null)
-        {
-            bonusPanel.SetActive(false);
-        }
-
-
+     
     }
     private void Update()
     {
@@ -126,12 +110,12 @@ public class PlayerMoveAI : MonoBehaviour
     }
     public IEnumerator MoveBonus()
     {
-       
-            bonusPanel.SetActive(true);
+
+      StartCoroutine(UIManager.Instance.HideBonusPanel());
 
         yield return new WaitForSeconds(1f);
 
-            bonusPanel.SetActive(false);
+ 
 
         for (int i = 0; i < 2; i++)
         {
@@ -237,7 +221,7 @@ public class PlayerMoveAI : MonoBehaviour
 
     public void FindPonit()
     {
-        for (int i = 0; i <22; i++)
+        for (int i = 0; i <34; i++)
         {
             pointCheck[i] = GameObject.Find($"Point {i + 1}");
         }

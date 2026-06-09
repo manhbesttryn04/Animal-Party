@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System.Collections;
+using TMPro;
 using UnityEngine;
 
 public class UIManager : MonoBehaviour
@@ -21,6 +22,8 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI indexTextP1;
     public TextMeshProUGUI indexTextP2;
 
+    public GameObject bonusPanel;
+   
 
     public PlayerManager playerManager1;
     public PlayerManager playerManager2;
@@ -90,8 +93,8 @@ public class UIManager : MonoBehaviour
     {
         PlayerMoveAI p1 = playerManager1.playerMoveAI;
         PlayerMoveAI p2 = playerManager2.playerMoveAI;
-       indexTextP1.text = $"{p1.currentIndex}/22";
-        indexTextP2.text = $"{p2.currentIndex}/22";
+       indexTextP1.text = $"{p1.currentIndex}/33";
+        indexTextP2.text = $"{p2.currentIndex}/33";
 
 
     }
@@ -175,5 +178,12 @@ public class UIManager : MonoBehaviour
     public void HideNotifiPlayPanel(bool i)
     {
         notifiPlay.gameObject.SetActive(i);
+    }
+    
+    public IEnumerator HideBonusPanel()
+    {
+        bonusPanel.SetActive(true);
+        yield return new WaitForSeconds(1f);
+        bonusPanel.SetActive(false);
     }
 }
