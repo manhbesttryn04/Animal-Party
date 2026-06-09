@@ -26,6 +26,7 @@ public class MiniGame1 : MonoBehaviour
     // Thời gian chờ trước khi game bắt đầu
     public float startDelay = 5f;
 
+    [Header("Audio")]
     public AudioSource source;
     public AudioClip warningAudio;
     public AudioClip sharkAttackAudio;

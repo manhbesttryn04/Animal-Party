@@ -8,6 +8,10 @@ public class MiniGame2 : MonoBehaviour
 {
     [Header("Manager")]
     public MiniGameManager manager;
+    [Header("Audio")]
+    public AudioSource source;
+    public AudioClip brickFallClip;
+
 
     [Header("Danh sách ô màu")]
     public List<ColorPad> allPads = new List<ColorPad>();
@@ -230,13 +234,17 @@ public class MiniGame2 : MonoBehaviour
             {
                 timerText.text = "??";
             }
-
+            //âm thanh sập
+            source.PlayOneShot(brickFallClip);
+            yield return new WaitForSeconds(0.5f);
             // Làm sập các ô sai
             // Làm sập các ô sai
             foreach (ColorPad pad in allPads)
             {
                 pad.CheckSurvival();
             }
+          
+
 
             // Chờ người chơi rơi
             yield return new WaitForSeconds(2f);
