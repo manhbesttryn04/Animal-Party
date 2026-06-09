@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class TrapRow : MonoBehaviour
 {
+    public MiniGame1 mini1;
+
     [Header("Objects")]
     public GameObject[] skulls;
     public GameObject[] bricks;
@@ -26,6 +28,7 @@ public class TrapRow : MonoBehaviour
 
     void Start()
     {
+        mini1 = GetComponentInParent<MiniGame1>();
         // Lưu vị trí ban đầu cá mập
         sharkStartPos = new Vector3[sharks.Length];
 
@@ -135,7 +138,9 @@ public class TrapRow : MonoBehaviour
         {
             StartCoroutine(
                 RestoreSingleBrick(bricks[i])
+              
             );
+            mini1.source.PlayOneShot(mini1.loadBrickAudio);
 
             // Delay giữa từng cục
             yield return new WaitForSeconds(0.2f);
