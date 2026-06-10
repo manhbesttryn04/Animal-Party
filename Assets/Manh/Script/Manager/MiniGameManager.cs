@@ -269,6 +269,7 @@ public class MiniGameManager : MonoBehaviour
                 Quaternion.identity
             );
 
+
         // =====================================================
         // GET COMPONENT
         // =====================================================
@@ -297,6 +298,16 @@ public class MiniGameManager : MonoBehaviour
         // Lấy PlayerType
         PlayerType player2Type =
             currentPlayer2.GetComponent<PlayerType>();
+        //Lấy Player move
+        PlayerMove move1 = currentPlayer1.GetComponent<PlayerMove>();
+        PlayerMove move2 = currentPlayer2.GetComponent<PlayerMove>();
+        //Khóa di chuyển
+        yield return new WaitForSeconds(0.5f);
+        if (move1 != null)
+            move1.isJumpAndMove = false;
+
+        if (move2 != null)
+            move2.isJumpAndMove = false;
 
         // =====================================================
         // CHECK COMPONENT
@@ -405,6 +416,12 @@ public class MiniGameManager : MonoBehaviour
 
         // Tắt UI hướng dẫn
         canvasInstruct.SetActive(false);
+        // Mở di chuyển
+        if (move1 != null)
+            move1.isJumpAndMove = true;
+
+        if (move2 != null)
+            move2.isJumpAndMove = true;
 
         // =====================================================
         // SHOW GAME UI

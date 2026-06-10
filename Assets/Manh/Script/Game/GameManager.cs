@@ -160,17 +160,17 @@ public class GameManager : MonoBehaviour
             stateGame.isFistRound = true;
         }
          
-        var randomIndex = Random.Range(0, 2);
+       /* var randomIndex = Random.Range(0, 2);
             if(randomIndex == 0)
             {
                 miniGameManager.indexMiniGame = 0
-                +2;
+                +4;
         }
             else if(randomIndex == 1)
         {
                 miniGameManager.indexMiniGame = 0
-                +2 ;
-        }
+                +4;
+        }*/
         // Chạy minigame
         miniGameManager.StartMiniGame();
     }

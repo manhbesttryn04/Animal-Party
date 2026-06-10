@@ -24,4 +24,17 @@ public class PlayerMiniGame: MonoBehaviour
         PlayerCoin coin = GetComponent<PlayerCoin>();
         coin.TakeCoin(5);
     }
+    public void UpCoin(int i,int c)
+    {
+        if (i == 0)
+        {
+            PlayerCoin coin = GetComponent<PlayerCoin>();
+            coin.TakeCoin(c);
+        }
+        else if (i == 1) {
+            PlayerCoin coin = GetComponent<PlayerCoin>();
+            coin.AddCoin(c);
+        }
+    }
+       
 }
