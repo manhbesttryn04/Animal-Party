@@ -2186,7 +2186,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5618492064931746667}
-  - component: {fileID: 5323322210885024073}
   m_Layer: 0
   m_Name: SpamManager
   m_TagString: Untagged
@@ -2209,36 +2208,3 @@ Transform:
   m_Children: []
   m_Father: {fileID: 4455984613608982416}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5323322210885024073
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8407474012243257242}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f5a9bd96bd049504db17f4666857c0cf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LaserSpamManager
-  timerText: {fileID: 0}
-  countdownText: {fileID: 0}
-  totalGameTime: 100
-  timeToPhase2: 15
-  timeToPhase3: 30
-  timeToPhase4: 45
-  p2_LaserSpeed: 4
-  p2_LasersPerWave: 3
-  p2_WaveDelay: 4
-  p3_LaserSpeed: 6
-  p3_LasersPerWave: 4
-  p3_WaveDelay: 3.5
-  p4_LaserSpeed: 8.5
-  p4_LasersPerWave: 5
-  p4_WaveDelay: 3
-  centralHub: {fileID: 4590403570765563927}
-  spamLaserPrefab: {fileID: 1621989739444899223, guid: a76355fb54d1f0b47a7f7acd322e876d, type: 3}
-  spawnPoints:
-  - {fileID: 102818240075588082}
-  - {fileID: 8440503839455849369}
-  isRunning: 0

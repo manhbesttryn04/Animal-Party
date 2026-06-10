@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1138324210631112690}
   - component: {fileID: 2991490575613441654}
   - component: {fileID: -1968484127701247495}
+  - component: {fileID: 8351912362384593854}
   m_Layer: 0
   m_Name: SpamLaserPrefab
   m_TagString: Untagged
@@ -89,7 +90,7 @@ LineRenderer:
   - {x: 0, y: 0, z: 1}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 1
+    widthMultiplier: 0.3
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -157,10 +158,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7722671d9ea4a540a51a5eac14b97b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LaserSpamObject
-  laserLength: 25
-  laserWidth: 0.01
+  laserLength: 15
+  laserWidth: 0.1
   speed: 8
-  maxDistance: 40
+  maxDistance: 30
 --- !u!114 &2991490575613441654
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -200,3 +201,20 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 2}
   m_Center: {x: 0, y: 0, z: 0.5}
+--- !u!114 &8351912362384593854
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1621989739444899223}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 487b06e5d61ac2b4ea9e89ae4a436483, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnimalParty.Obstacles.LaserTrap
+  targetLayer:
+    serializedVersion: 2
+    m_Bits: 8
+  hitCooldown: 2
+  knockbackForce: 10
