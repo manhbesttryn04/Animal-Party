@@ -120,13 +120,7 @@ public class MiniGameManager : MonoBehaviour
     // Vị trí spawn player
     public TransSpawPlayerList spawnPoint;
 
-    [Header("Player Prefab")]
-
-    // Prefab player 1
-    public GameObject player1Prefab;
-
-    // Prefab player 2
-    public GameObject player2Prefab;
+   
 
     // =========================================================
     // CURRENT PLAYER
@@ -256,7 +250,7 @@ public class MiniGameManager : MonoBehaviour
         // Spawn player 1
         currentPlayer1 =
             Instantiate(
-                player1Prefab,
+                 CharacterManager.Instance.playerPlaylist[CharacterManager.Instance.indexPlayer1],
                 spawnPoint.transSpawPlayerList[indexMiniGame - 1].position,
                 Quaternion.identity
             );
@@ -264,7 +258,7 @@ public class MiniGameManager : MonoBehaviour
         // Spawn player 2
         currentPlayer2 =
             Instantiate(
-                player2Prefab,
+                CharacterManager.Instance.playerPlaylist[CharacterManager.Instance.indexPlayer2],
               spawnPoint.transSpawPlayerList[indexMiniGame - 1].position + Vector3.right * 2f,
                 Quaternion.identity
             );

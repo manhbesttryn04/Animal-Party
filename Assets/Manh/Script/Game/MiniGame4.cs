@@ -185,7 +185,7 @@ public class MiniGame4 : MonoBehaviour
     }
     IEnumerator CatchPlayer(GameObject playerObj, PlayerMove move)
     {
-        yield return new WaitForSeconds(0.5f);
+       // yield return new WaitForSeconds(0.01f);
 
         if (playerObj == null || move == null)
             yield break;
