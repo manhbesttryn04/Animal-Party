@@ -29,8 +29,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1621989739444899223}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0, y: 0.9990118, z: 0, w: -0.04444538}
+  m_LocalPosition: {x: 19110.98, y: -1813.308, z: -13575.993}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -86,8 +86,8 @@ LineRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Positions:
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 1}
+  - {x: -7.5, y: 0, z: 0}
+  - {x: 7.5, y: 0, z: 0}
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 0.3
@@ -95,8 +95,17 @@ LineRenderer:
       serializedVersion: 2
       m_Curve:
       - serializedVersion: 3
-        time: 0.0021476746
-        value: 1
+        time: 0.12244897
+        value: 0.3333333
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 0.3333333
         inSlope: 0
         outSlope: 0
         tangentMode: 0
@@ -143,7 +152,7 @@ LineRenderer:
     textureScale: {x: 1, y: 1}
     shadowBias: 0.5
     generateLightingData: 0
-  m_UseWorldSpace: 1
+  m_UseWorldSpace: 0
   m_Loop: 0
   m_ApplyActiveColorSpace: 1
 --- !u!114 &1138324210631112690
@@ -160,7 +169,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LaserSpamObject
   laserLength: 15
   laserWidth: 0.1
-  speed: 8
+  speed: 4
   maxDistance: 30
 --- !u!114 &2991490575613441654
 MonoBehaviour:
@@ -195,12 +204,12 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 2}
-  m_Center: {x: 0, y: 0, z: 0.5}
+  m_Size: {x: 82.73286, y: 0.1385498, z: 0.1450017}
+  m_Center: {x: -2.3411827, y: -0.0025024414, z: 0.004210909}
 --- !u!114 &8351912362384593854
 MonoBehaviour:
   m_ObjectHideFlags: 0

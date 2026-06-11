@@ -3,6 +3,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine.Video;
+using Unity.VisualScripting;
 
 public class MiniGameManager : MonoBehaviour
 {
@@ -31,7 +32,11 @@ public class MiniGameManager : MonoBehaviour
     public VideoInstructList videoInstructList;
 
     public MapMiniGameList mapMiniGameList;
-   
+
+    [Header("Light Setting")]
+    public Light light;
+    public float startIntensity;
+
 
     // =========================================================
     // CAMERA
@@ -146,6 +151,8 @@ public class MiniGameManager : MonoBehaviour
     // =========================================================
     // STATE
     // =========================================================
+    public Material normalSkybox;
+    public Material stormSkybox;
 
     [Header("Game State")]
 
@@ -161,11 +168,20 @@ public class MiniGameManager : MonoBehaviour
     // START MINIGAME
     // =========================================================
 
+    private void Start()
+    {
+        
+        if (light != null)
+        {
+            startIntensity = light.intensity;
+        }
+    }
     public void StartMiniGame()
     {
         // Nếu game đang chạy thì không start nữa
         if (isPlaying)
             return;
+      
 
         // Chạy coroutine chính
         StartCoroutine(MiniGameRoutine());
@@ -177,6 +193,8 @@ public class MiniGameManager : MonoBehaviour
 
     IEnumerator MiniGameRoutine()
     {
+        //set light theo minigame
+        SetUpStartLightAndTime();
         // Đánh dấu game đang chạy
         isPlaying = true;
         mapMiniGameList.mapMiniGameList[indexMiniGame - 1].SetActive(true);
@@ -496,7 +514,8 @@ public class MiniGameManager : MonoBehaviour
 
         yield return new WaitForSeconds(5f);
         UIManager.Instance.HideResultPanel();
-
+        //Tra light
+        SetupStopLightAndTime();
         // Hiện loading
         loadingCanvas.SetActive(true);
 
@@ -597,7 +616,7 @@ public class MiniGameManager : MonoBehaviour
         }
         else if (indexMiniGame == 5)
         {
-
+            miniGameList.miniGame5.StartMiniGame();
         }
         else if (indexMiniGame == 6)
         {
@@ -645,7 +664,7 @@ public class MiniGameManager : MonoBehaviour
         }
         else if (indexMiniGame == 5)
         {
-
+            miniGameList.miniGame5.StopMiniGame();
         }
         else if (indexMiniGame == 6)
         {
@@ -671,5 +690,68 @@ public class MiniGameManager : MonoBehaviour
     public void OpenMusicminiGame()
     {
        AudioManager.Instance.OpenMusicminiGame(indexMiniGame);
+    }
+    public void SetUpStartLightAndTime()
+    {
+        switch (indexMiniGame)
+        {
+            case 1:
+                countDownTime = 60f;    
+                break;
+
+            case 2:
+                countDownTime = 60f;
+                break;
+
+            case 3:
+                light.intensity = 0;
+                countDownTime = 30f;
+                break;
+
+            case 4:
+                light.intensity = 0.2f;
+                ChangeToStormSky();
+                countDownTime = 91f;
+                break;
+
+            case 5:
+                light.intensity = 0.2f;
+                countDownTime = 60f;
+                break;
+
+            case 6:
+                break;
+
+            case 7:
+                break;
+
+            case 8:
+                break;
+
+            case 9:
+                break;
+
+            case 10:
+                break;
+
+            default:
+                break;
+        }
+    }
+    public void SetupStopLightAndTime()
+    {
+        light.intensity = startIntensity;
+        ChangeToNormalSky();
+    }
+    public void ChangeToStormSky()
+    {
+        RenderSettings.skybox = stormSkybox;
+        DynamicGI.UpdateEnvironment();
+    }
+
+    public void ChangeToNormalSky()
+    {
+        RenderSettings.skybox = normalSkybox;
+        DynamicGI.UpdateEnvironment();
     }
 }

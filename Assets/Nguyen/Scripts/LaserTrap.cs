@@ -17,7 +17,7 @@ namespace AnimalParty.Obstacles
 
         [Header("--- Trap Settings ---")]
         [Tooltip("Thời gian kháng sát thương tạm thời (giây). Ngăn chặn lỗi tụt máu liên tục trong 1 frame.")]
-        [SerializeField, Min(0f)] private float hitCooldown = 0.5f;
+        [SerializeField, Min(0f)] public float hitCooldown = 0.5f;
         
         [Tooltip("Lực hất văng vật lý (Knockback).")]
         [SerializeField, Range(0f, 100f)] private float knockbackForce = 15f;
@@ -44,7 +44,7 @@ namespace AnimalParty.Obstacles
         private void OnTriggerEnter(Collider other) => ProcessHit(other);
         
         // Dùng OnTriggerStay để xử lý trường hợp người chơi đứng lỳ trong vùng Lazer
-        private void OnTriggerStay(Collider other) => ProcessHit(other);
+     //   private void OnTriggerStay(Collider other) => ProcessHit(other);
 
         private void OnTriggerExit(Collider other)
         {
@@ -89,25 +89,27 @@ namespace AnimalParty.Obstacles
         private void ExecuteDamageAndKnockback(Collider targetCollider)
         {
             // GỌI HÀM TRỪ MÁU BÊN FILE PlayerHealth.cs
-            targetCollider.SendMessage("TakeDamage", SendMessageOptions.DontRequireReceiver);
+          PlayerMiniGame mini = targetCollider.GetComponentInParent<PlayerMiniGame>();
+            if (mini != null)
+            {
+                mini.UpCoin(0, 1);
+            }
+            else Debug.Log("ko thay");
 
-            ApplyKnockback(targetCollider);
+               // ApplyKnockback(targetCollider);
         }
 
         private void ApplyKnockback(Collider targetCollider)
         {
-            // Sử dụng TryGetComponent - Chuẩn mực C# hiện đại thay cho GetComponent
-            if (targetCollider.TryGetComponent(out Rigidbody rb))
+            if (targetCollider.TryGetComponent(out CharacterController cc))
             {
-                // Reset gia tốc hiện tại để lực hất luôn đồng đều, không bị cộng dồn
-                rb.linearVelocity = Vector3.zero; 
+                Vector3 pushDirection =
+                    (targetCollider.transform.position - transform.position).normalized;
 
-                // Tính toán Vector hướng hất: Đẩy văng ra xa khỏi tâm Lazer và hất bổng lên trời
-                Vector3 pushDirection = (targetCollider.transform.position - transform.position).normalized;
-                pushDirection.y = 0.8f; 
+                pushDirection.y = 0.8f;
 
-                // ForceMode.Impulse chuyên dùng cho các lực tác động tức thời (Vụ nổ, va chạm)
-                rb.AddForce(pushDirection * knockbackForce, ForceMode.Impulse);
+                // Đẩy lùi ngay lập tức
+                cc.Move(pushDirection * 2f);
             }
         }
 

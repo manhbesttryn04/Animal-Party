@@ -2,13 +2,13 @@
 
 public class GrowItem : MonoBehaviour
 {
-    private MiniGamePaint manager;
+    private MiniGame5 manager;
 
     // Bán kính quét xem Player có đến gần để nhặt không
     private float pickupRadius = 0.6f;
 
     // Hàm này giúp GameManager truyền tham chiếu quản lý vào vật phẩm khi sinh ra
-    public void Setup(MiniGamePaint gameManager)
+    public void Setup(MiniGame5 gameManager)
     {
         manager = gameManager;
     }

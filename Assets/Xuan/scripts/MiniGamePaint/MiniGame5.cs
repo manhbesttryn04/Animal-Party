@@ -6,7 +6,7 @@ using TMPro;
 
 public enum PadHazardType { None, Bomb, Freeze }
 
-public class MiniGamePaint : MonoBehaviour
+public class MiniGame5 : MonoBehaviour
 {
     [Header("Trạng thái quản lý Minigame")]
     public bool isPlaying = false;
@@ -36,13 +36,17 @@ public class MiniGamePaint : MonoBehaviour
     [Header("UI Giao diện")]
     public TextMeshProUGUI timerText;
     public TextMeshProUGUI resultText;
-    public float gameDuration = 60f;
+    public float gameDuration = 57f;
+
+    [Header("Audio")]
+    public AudioSource source;
 
     private bool isPlayer1Frozen = false;
     private bool isPlayer2Frozen = false;
 
     private Vector3 player1OriginalScale = Vector3.one;
     private Vector3 player2OriginalScale = Vector3.one;
+  
 
     private List<GameObject> spawnedItems = new List<GameObject>();
 
@@ -51,10 +55,7 @@ public class MiniGamePaint : MonoBehaviour
         InitializeManualPads();
     }
 
-    void Start()
-    {
-        StartMiniGame();
-    }
+ 
 
     void Update()
     {
@@ -96,13 +97,15 @@ public class MiniGamePaint : MonoBehaviour
 
     public void StartMiniGame()
     {
+        source.Play();
+       
         if (isPlaying) return;
-
+        resultText.gameObject.SetActive(true);
         isPlaying = true;
         isPlayer1Frozen = false;
         isPlayer2Frozen = false;
 
-        if (resultText != null) resultText.text = "Trận đấu bắt đầu!";
+        if (resultText != null) resultText.text = "Minigame Start";
 
         foreach (PaintPadData pad in allPads)
         {
@@ -118,11 +121,13 @@ public class MiniGamePaint : MonoBehaviour
 
     public void StopMiniGame()
     {
+        source.Stop();
         isPlaying = false;
         StopAllCoroutines();
         ClearAllSpawnedItems();
         if (timerText != null) timerText.text = "-";
-        Debug.Log("Minigame Tranh Màu đã dừng.");
+        resultText.gameObject.SetActive(false);
+       // Debug.Log("Minigame Tranh Màu đã dừng.");
     }
 
     IEnumerator PaintGameRoutine()
@@ -329,7 +334,7 @@ public class MiniGamePaint : MonoBehaviour
     IEnumerator GrowPlayerRoutine(bool isPlayer2, GameObject playerObj)
     {
         int pNumber = !isPlayer2 ? 1 : 2;
-        Debug.Log($"<Color=Lime>Player {pNumber} phóng to X{growMultiplier} và giảm 50% tốc độ!</Color>");
+      // Debug.Log($"<Color=Lime>Player {pNumber} phóng to X{growMultiplier} và giảm 50% tốc độ!</Color>");
 
         CharacterController cc = playerObj.GetComponent<CharacterController>();
         if (cc != null) cc.enabled = false;
@@ -378,7 +383,7 @@ public class MiniGamePaint : MonoBehaviour
             {
                 movementScript.speed = originalSpeed;
             }
-            Debug.Log($"<Color=White>Player {pNumber} thu nhỏ và phục hồi tốc độ gốc.</Color>");
+          //  Debug.Log($"<Color=White>Player {pNumber} thu nhỏ và phục hồi tốc độ gốc.</Color>");
         }
     }
 
@@ -411,9 +416,9 @@ public class MiniGamePaint : MonoBehaviour
         }
         if (resultText != null)
         {
-            if (p1Count > p2Count) { resultText.text = $"P1 THẮNG! ({p1Count} vs {p2Count})"; resultText.color = player1Color; }
-            else if (p2Count > p1Count) { resultText.text = $"P2 THẮNG! ({p2Count} vs {p1Count})"; resultText.color = player2Color; }
-            else { resultText.text = $"HÒA NHAU! ({p1Count} vs {p2Count})"; resultText.color = Color.white; }
+            if (p1Count > p2Count) { resultText.text = $"P1 win! ({p1Count} vs {p2Count})"; resultText.color = player1Color; }
+            else if (p2Count > p1Count) { resultText.text = $"P2 win! ({p2Count} vs {p1Count})"; resultText.color = player2Color; }
+            else { resultText.text = $"Draw! ({p1Count} vs {p2Count})"; resultText.color = Color.white; }
         }
     }
 }
@@ -425,9 +430,9 @@ public class PaintPadData
     public string ownerTag = "";
     public PadHazardType hazardType = PadHazardType.None;
 
-    private MiniGamePaint manager;
+    private MiniGame5 manager;
 
-    public PaintPadData(GameObject obj, MeshRenderer meshRenderer, MiniGamePaint gameManager)
+    public PaintPadData(GameObject obj, MeshRenderer meshRenderer, MiniGame5 gameManager)
     {
         padObject = obj; renderer = meshRenderer; manager = gameManager;
     }
@@ -435,7 +440,7 @@ public class PaintPadData
     public void UpdateDetection()
     {
         Vector3 centerPosition = padObject.transform.position + new Vector3(0f, 0.6f, 0f);
-        Vector3 checkSize = new Vector3(1.5f, 0.5f, 1.5f);
+        Vector3 checkSize = new Vector3(1.1f, 0.5f, 1.1f);
 
         Collider[] hitColliders = Physics.OverlapBox(centerPosition, checkSize, padObject.transform.rotation);
 
@@ -453,11 +458,11 @@ public class PaintPadData
                     float distanceX = Mathf.Abs(closestPoint.x - padCenter.x);
                     float distanceZ = Mathf.Abs(closestPoint.z - padCenter.z);
 
-                    float targetRadius = 0.48f;
+                    float targetRadius = 0.42f;
 
-                    if (pObj.transform.localScale.x > 1.05f)
+                    if (pObj.transform.localScale.x > 1.5f)
                     {
-                        targetRadius = 0.48f * pObj.transform.localScale.x;
+                        targetRadius = 0.42f * pObj.transform.localScale.x;
                     }
 
                     if (distanceX < targetRadius && distanceZ < targetRadius)

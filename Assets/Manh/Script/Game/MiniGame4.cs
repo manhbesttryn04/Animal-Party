@@ -10,6 +10,7 @@ public class MiniGame4 : MonoBehaviour
 
     [Header("Pirate")]
     public Animator animator;
+    public ThunderStorm thunder;
 
 
     [Header("Settings")]
@@ -27,7 +28,7 @@ public class MiniGame4 : MonoBehaviour
     public AudioClip scanSound;     // hồi hộp khi quan sát
     public AudioClip laughSound;    // cười khi phát hiện
     public AudioClip gunShotSound;  // tiếng súng
-
+    public AudioClip rainSound;
     [Header("VFX")]
     public GameObject muzzleFlash;
 
@@ -93,6 +94,7 @@ public class MiniGame4 : MonoBehaviour
 
     IEnumerator PirateRoutine()
     {
+        thunder.audioSource.PlayOneShot(rainSound);
         transform.rotation = lookRotation;
         isRunning = true;
 

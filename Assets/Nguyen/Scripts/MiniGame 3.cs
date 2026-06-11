@@ -38,8 +38,8 @@ public class MiniGame3 : MonoBehaviour
     [Header("References")]
     public PummelLaserHub centralHub; 
     public GameObject spamLaserPrefab;
-    public List<Transform> spawnPoints = new List<Transform>(); 
-    
+    public List<Transform> spawnPoints = new List<Transform>();
+   
     // ==========================================
     // BIẾN QUẢN LÝ THEO CHUẨN CỦA TEAM DỰ ÁN
     // ==========================================
@@ -83,6 +83,7 @@ public class MiniGame3 : MonoBehaviour
 
     public void StopMiniGame()
     {
+      
         isRunning = false;
         TriggerGameOver(); // Gọi hàm dọn dẹp laser của chúng ta
         StopAllCoroutines(); 
@@ -116,6 +117,7 @@ public class MiniGame3 : MonoBehaviour
 
     private IEnumerator PlayStartCountdown()
     {
+        
         string[] countdownTokens = { "3", "2", "1", "GO!" };
         if (countdownText != null) countdownText.gameObject.SetActive(true);
 
