@@ -23,6 +23,10 @@ public class PlayerMoveAI : MonoBehaviour
     {
         navMeshAgent = GetComponent<NavMeshAgent>();
 
+        navMeshAgent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
+        navMeshAgent.avoidancePriority = 50;
+        navMeshAgent = GetComponent<NavMeshAgent>();
+        navMeshAgent.updateRotation = false;
         pointCheck = FindAnyObjectByType<PointCheck>().point.ToList();
         FindPonit();
      
@@ -31,6 +35,7 @@ public class PlayerMoveAI : MonoBehaviour
     {
         manager.playerAnimator.playerAnimator.SetFloat("Walk", navMeshAgent.velocity.magnitude);
     }
+   
 
     // Hàm gọi khi xúc xắc ra số
     public void StartMove(int value)
@@ -57,8 +62,8 @@ public class PlayerMoveAI : MonoBehaviour
             GameObject target = pointCheck[currentIndex];
 
             Vector3 offset = manager.playerType.isPlayer2
-     ? new Vector3(0, 0, -1f)
-     : new Vector3(0, 0, 1f);
+     ? new Vector3(0, 0, -0.3f)
+     : new Vector3(0, 0, 0.3f);
 
             navMeshAgent.SetDestination(target.transform.position + offset);
 
@@ -80,9 +85,8 @@ public class PlayerMoveAI : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         if (currentIndex + 1 < pointCheck.Count)
         {
-            transform.LookAt(
-                pointCheck[currentIndex + 1].transform.position
-            );
+            transform.LookAt( pointCheck[currentIndex + 1].transform.position);
+
         }
        
       
@@ -117,15 +121,16 @@ public class PlayerMoveAI : MonoBehaviour
 
  
 
-        for (int i = 0; i < 2; i++)
+        for (int i = 0; i < 20; i++)
         {
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.walkPlayerClip);
             currentIndex++;
 
             GameObject target = pointCheck[currentIndex];
 
             Vector3 offset = manager.playerType.isPlayer2
-                ? new Vector3(0, 0, -1f)
-                : new Vector3(0, 0, 1f);
+                ? new Vector3(0, 0, -0.3f)
+                : new Vector3(0, 0, 0.3f);
 
             navMeshAgent.SetDestination(target.transform.position + offset);
 

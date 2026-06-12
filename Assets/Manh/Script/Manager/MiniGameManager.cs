@@ -696,27 +696,27 @@ public class MiniGameManager : MonoBehaviour
         switch (indexMiniGame)
         {
             case 1:
-                countDownTime = 60f;    
+              //  countDownTime = 60f;    
                 break;
 
             case 2:
-                countDownTime = 60f;
+               // countDownTime = 60f;
                 break;
 
             case 3:
                 light.intensity = 0;
-                countDownTime = 99f;
+              //  countDownTime = 99f;
                 break;
 
             case 4:
                 light.intensity = 0.2f;
                 ChangeToStormSky();
-                countDownTime = 99f;
+               // countDownTime = 99f;
                 break;
 
             case 5:
                 light.intensity = 0.2f;
-                countDownTime = 60f;
+               // countDownTime = 60f;
                 break;
 
             case 6:
