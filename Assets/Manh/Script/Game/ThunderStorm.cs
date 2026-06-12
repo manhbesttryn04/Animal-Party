@@ -14,17 +14,17 @@ public class ThunderStorm : MonoBehaviour
 
     private float nextLightningTime;
     private bool isLightning;
+    public bool isOpen;
 
     private void Start()
     {
-        if (lightningLight != null)
-            lightningLight.enabled = false;
+      
 
         SetNextLightning();
     }
 
     private void Update()
-    {
+    { if (!isOpen) return;
         if (Time.time >= nextLightningTime && !isLightning)
         {
             StartCoroutine(LightningStrike());
@@ -47,7 +47,7 @@ public class ThunderStorm : MonoBehaviour
         for (int i = 0; i < flashCount; i++)
         {
             // Tăng sáng
-            lightningLight.enabled = true;
+           // lightningLight.enabled = true;
             lightningLight.intensity = originalIntensity + Random.Range(1.5f, 3f);
 
             yield return new WaitForSeconds(Random.Range(0.03f, 0.08f));
@@ -66,7 +66,7 @@ public class ThunderStorm : MonoBehaviour
         }
 
         lightningLight.intensity = originalIntensity;
-        lightningLight.enabled = true;
+       // lightningLight.enabled = true;
 
         isLightning = false;
     }

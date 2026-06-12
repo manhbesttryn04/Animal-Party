@@ -564,12 +564,12 @@ public class MiniGameManager : MonoBehaviour
 
         // Xoá player 2
         Destroy(currentPlayer2);
-       
+
 
         // =====================================================
         // LOADING
         // =====================================================
-
+        mapMiniGameList.mapMiniGameList[indexMiniGame - 1].SetActive(false);
         // Hiện loading
         loadingCanvas.SetActive(true);
 
@@ -705,13 +705,13 @@ public class MiniGameManager : MonoBehaviour
 
             case 3:
                 light.intensity = 0;
-                countDownTime = 30f;
+                countDownTime = 99f;
                 break;
 
             case 4:
                 light.intensity = 0.2f;
                 ChangeToStormSky();
-                countDownTime = 91f;
+                countDownTime = 99f;
                 break;
 
             case 5:
