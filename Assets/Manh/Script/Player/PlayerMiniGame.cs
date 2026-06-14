@@ -26,14 +26,16 @@ public class PlayerMiniGame: MonoBehaviour
     }
     public void UpCoin(int i,int c)
     {
+        int aa = Mathf.Max(0, c);
         if (i == 0)
         {
             PlayerCoin coin = GetComponent<PlayerCoin>();
-            coin.TakeCoin(c);
+       
+            coin.TakeCoin(aa);
         }
         else if (i == 1) {
             PlayerCoin coin = GetComponent<PlayerCoin>();
-            coin.AddCoin(c);
+            coin.AddCoin(aa);
         }
     }
        

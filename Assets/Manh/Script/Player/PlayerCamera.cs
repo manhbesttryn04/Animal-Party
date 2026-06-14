@@ -19,7 +19,7 @@ public class PlayerCamera : MonoBehaviour
     public bool isFollow = false;
     public bool isFllow2 = false;
     public bool isFllow3 = false;
-
+    
     private void Start()
     {
         cameraMain = Camera.main;
@@ -46,7 +46,30 @@ public class PlayerCamera : MonoBehaviour
                 smoothTime
             );
 
-            cameraMain.transform.LookAt(player.transform);
+            if (isFollow)
+            {
+                Transform targetPoint = player.GetComponent<PlayerMoveAI>()
+                    .pointCheck[player.GetComponent<PlayerMoveAI>().currentIndex]
+                    .transform;
+
+                Vector3 lookPos = targetPoint.position;
+                lookPos.y += 4f;
+
+                Quaternion targetRot = Quaternion.LookRotation(
+                    lookPos - cameraMain.transform.position
+                );
+
+                cameraMain.transform.rotation = Quaternion.Slerp(
+                    cameraMain.transform.rotation,
+                    targetRot,
+                    100f * Time.deltaTime
+                );
+            }
+            else
+            {
+                // Camera 2 và 3 giữ nguyên
+                cameraMain.transform.LookAt(player.transform);
+            }
         }
     }
 

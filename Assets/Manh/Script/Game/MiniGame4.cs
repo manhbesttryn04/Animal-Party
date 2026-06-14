@@ -90,6 +90,8 @@ public class MiniGame4 : MonoBehaviour
         CheckFinishReward(manager.currentPlayer1);
         CheckFinishReward(manager.currentPlayer2);
         transform.rotation = backRotation;
+        thunder.isOpen = false;
+        thunder.lightningLight.enabled = true;
     }
 
     IEnumerator PirateRoutine()
