@@ -126,13 +126,14 @@ public class MiniGame2 : MonoBehaviour
             int safePadsCount = 8;
             float maxTimeForChoice = 5f;
 
-            if (currentRound >= 1 && currentRound <= 5)
+            // Đã giữ nguyên logic chỉnh sửa lượt chơi của bạn
+            if (currentRound >= 1 && currentRound <= 2)
             {
                 activeColorPool = easyColors;
                 safePadsCount = Random.Range(8, 12);
                 maxTimeForChoice = 5f;
             }
-            else if (currentRound >= 6 && currentRound <= 10)
+            else if (currentRound >= 3 && currentRound <= 4)
             {
                 activeColorPool = mediumColors;
                 safePadsCount = Random.Range(4, 7);
@@ -234,17 +235,31 @@ public class MiniGame2 : MonoBehaviour
             {
                 timerText.text = "??";
             }
-            //âm thanh sập
+
+            // âm thanh sập
             source.PlayOneShot(brickFallClip);
             yield return new WaitForSeconds(0.5f);
-            // Làm sập các ô sai
+
+            // ---- ĐÃ SỬA: QUÉT ĐẾM PLAYER THEO ĐỘ RỘNG HỘP TỐI ƯU HƠN ----
+            foreach (ColorPad pad in allPads)
+            {
+                if (pad != null && pad.isSafe)
+                {
+                    int playerCountOnThisPad = CountPlayersOnPad(pad.gameObject);
+
+                    if (playerCountOnThisPad >= 2)
+                    {
+                        pad.isSafe = false;
+                        Debug.Log($"<Color=Red>Ô {pad.gameObject.name} bị sập vì có {playerCountOnThisPad} Player cùng đứng!</Color>");
+                    }
+                }
+            }
+
             // Làm sập các ô sai
             foreach (ColorPad pad in allPads)
             {
                 pad.CheckSurvival();
             }
-          
-
 
             // Chờ người chơi rơi
             yield return new WaitForSeconds(2f);
@@ -294,5 +309,37 @@ public class MiniGame2 : MonoBehaviour
             // Sang vòng tiếp theo
             currentRound++;
         }
+    }
+
+    // ---- ĐÃ CẬP NHẬT: HÀM QUÉT ĐẾM KHÔNG BỊ SÓT VÀ KHÔNG KÉN TAG ----
+    private int CountPlayersOnPad(GameObject padObj)
+    {
+        int count = 0;
+
+        // Tăng chiều cao hộp quét lên (1.5f) và nới rộng ra sát viền ô (0.49f) để không sót Player đứng rìa
+        Vector3 center = padObj.transform.position + new Vector3(0f, 1.0f, 0f);
+        Vector3 halfExtents = new Vector3(0.49f, 1.0f, 0.49f);
+
+        // Quét tất cả vật thể nằm trong phạm vi trên không của ô
+        Collider[] hitColliders = Physics.OverlapBox(center, halfExtents, padObj.transform.rotation);
+
+        foreach (Collider col in hitColliders)
+        {
+            // Bỏ qua nếu quét trúng chính cái ô sàn hoặc các ô sàn lân cận
+            if (col.gameObject == padObj || col.gameObject.GetComponent<ColorPad>() != null)
+                continue;
+
+            // Nhận diện Player dựa trên bất kỳ script cốt lõi nào của nhân vật (PlayerMove, PlayerMiniGame, v.v.)
+            bool isPlayer = col.CompareTag("Player") ||
+                            col.GetComponent<PlayerMove>() != null ||
+                            col.GetComponentInParent<PlayerMove>() != null ||
+                            col.GetComponent<PlayerMiniGame>() != null;
+
+            if (isPlayer)
+            {
+                count++;
+            }
+        }
+        return count;
     }
 }
