@@ -70,8 +70,8 @@ public class SetUpPlayerCutScene : MonoBehaviour
     {
         PlayerCutScene p1 = player1List[indexP1].GetComponent<PlayerCutScene>();
         PlayerCutScene p2 = player2List[indexP2].GetComponent<PlayerCutScene>();
-        p1.isMoving = true;
-        p2.isMoving = true;
+        p1.startCutscene = true;
+        p2.startCutscene = true;
     }
 
 }

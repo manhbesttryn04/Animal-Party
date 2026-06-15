@@ -6,6 +6,7 @@ public class CutScene2 : MonoBehaviour
 {
     [Header("References")]
     public ShipPatrol ship;
+    public SetUpPlayerCutScene set;
     public Camera cam;
 
     [Header("CutScene Points")]
@@ -49,6 +50,8 @@ public class CutScene2 : MonoBehaviour
 
         // Teleport -> 6
         TeleportToTransform(transVideos[6]);
+        ship.gameObject.SetActive(false);
+        set.StartCutScene();
 
         // Move -> 7
         yield return MoveToTransform(transVideos[7]);
@@ -60,6 +63,7 @@ public class CutScene2 : MonoBehaviour
         // Move -> 10
         yield return MoveToTransform(transVideos[9]);
         yield return new WaitForSeconds(5f);
+        set.StartMovePlayer();
         TeleportToTransform(transVideos[10]);
         yield return new WaitForSeconds(5f);
 
