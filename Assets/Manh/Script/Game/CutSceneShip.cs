@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class CutSceneShip : MonoBehaviour
 {
@@ -16,7 +17,7 @@ public class CutSceneShip : MonoBehaviour
     public AudioSource source;
     public AudioClip shipVoiceClip;
     public AudioClip shipMoveClip;
-
+    public GameObject blackPanel;
     private void Start()
     {
         StartCoroutine(CutScene());
@@ -41,15 +42,21 @@ public class CutSceneShip : MonoBehaviour
         // Point 4
         yield return StartCoroutine(MoveAndRotate(transVideoList[3]));
         yield return new WaitForSeconds(1f);
-
+        //StartCoroutine(ShowBlackPanel(4f));
         // Point 5
-        yield return StartCoroutine(MoveAndRotate(transVideoList[4]));
-        yield return new WaitForSeconds(0.5f);
+       cam.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+        cam.transform.position = transVideoList[4].position;
+       
+    
+            yield return new WaitForSeconds(0.5f);
 
         // Point 6
+        StartCoroutine(ShowBlackPanel(6f));
         yield return StartCoroutine(MoveAndRotate(transVideoList[5]));
+        
+        
 
-        Debug.Log("CutScene Complete");
+       // Debug.Log("CutScene Complete");
     }
 
     IEnumerator MoveAndRotate(Transform target)
@@ -78,5 +85,19 @@ public class CutSceneShip : MonoBehaviour
 
         cam.transform.position = target.position;
         cam.transform.rotation = target.rotation;
+    }
+    IEnumerator ShowBlackPanel(float time)
+    {
+        blackPanel.SetActive(true);
+
+        yield return new WaitForSeconds(time);
+        
+        StartCoroutine(LoadScene(2));
+
+     
+    }
+    IEnumerator LoadScene(int i) {
+        yield return new WaitForSeconds(1f);
+        SceneManager.LoadScene(i);
     }
 }
