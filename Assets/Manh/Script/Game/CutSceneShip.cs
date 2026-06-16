@@ -18,6 +18,9 @@ public class CutSceneShip : MonoBehaviour
     public AudioClip shipVoiceClip;
     public AudioClip shipMoveClip;
     public GameObject blackPanel;
+    public GameObject blackFlastPanel;
+    [Header("Audio")]
+    public List<AudioSource> audioSources;
     private void Start()
     {
         StartCoroutine(CutScene());
@@ -44,6 +47,7 @@ public class CutSceneShip : MonoBehaviour
         yield return new WaitForSeconds(1f);
         //StartCoroutine(ShowBlackPanel(4f));
         // Point 5
+        blackFlastPanel.SetActive(true);
        cam.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
         cam.transform.position = transVideoList[4].position;
        
@@ -89,7 +93,7 @@ public class CutSceneShip : MonoBehaviour
     IEnumerator ShowBlackPanel(float time)
     {
         blackPanel.SetActive(true);
-
+        StartCoroutine(FadeOutAudio(6f)); // giảm âm lượng trong 2 giây
         yield return new WaitForSeconds(time);
         
         StartCoroutine(LoadScene(2));
@@ -99,5 +103,33 @@ public class CutSceneShip : MonoBehaviour
     IEnumerator LoadScene(int i) {
         yield return new WaitForSeconds(1f);
         SceneManager.LoadScene(i);
+    }
+    IEnumerator FadeOutAudio(float duration)
+    {
+        List<float> startVolumes = new List<float>();
+
+        foreach (AudioSource audio in audioSources)
+        {
+            startVolumes.Add(audio.volume);
+        }
+
+        float time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+
+            for (int i = 0; i < audioSources.Count; i++)
+            {
+                audioSources[i].volume = Mathf.Lerp(startVolumes[i], 0f, time / duration);
+            }
+
+            yield return null;
+        }
+
+        foreach (AudioSource audio in audioSources)
+        {
+            audio.volume = 0f;
+        }
     }
 }

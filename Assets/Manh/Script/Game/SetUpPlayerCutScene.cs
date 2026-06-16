@@ -13,6 +13,8 @@ public class SetUpPlayerCutScene : MonoBehaviour
 
     private void Start()
     {
+        indexP1 = SendIndexCharacter.Instance.player1Index;
+        indexP2 = SendIndexCharacter.Instance.player2Index;
         SetupCharacter();
         EndCutScene();
     }

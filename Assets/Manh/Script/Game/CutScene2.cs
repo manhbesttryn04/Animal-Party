@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class CutScene2 : MonoBehaviour
 {
@@ -19,6 +20,11 @@ public class CutScene2 : MonoBehaviour
     [Header("Ship Stop Position")]
     public Vector3 shipStopPosition = new Vector3(-42.9f, 0.2f, 16f);
     public float shipStopDistance = 0.5f;
+    public GameObject blackPanel;
+    public GameObject blackClosePanel;
+    public GameObject nameMapPanel;
+    [Header("Audio")]
+    public List<AudioSource> audioSources;
 
     private void Start()
     {
@@ -33,11 +39,12 @@ public class CutScene2 : MonoBehaviour
 
         // Teleport -> 1
         TeleportToTransform(transVideos[1]);
-
+        nameMapPanel.SetActive(true);
         yield return new WaitForSeconds(0.5f);
 
         // Teleport -> 2
         TeleportToTransform(transVideos[2]);
+        
 
         // Move -> 3
         yield return MoveToTransform(transVideos[3]);
@@ -58,14 +65,19 @@ public class CutScene2 : MonoBehaviour
 
         // Teleport -> 8
         TeleportToTransform(transVideos[8]);
+        nameMapPanel.SetActive(false );
+        yield return new WaitForSeconds(3f);
         moveSpeed = 100f;
 
         // Move -> 10
         yield return MoveToTransform(transVideos[9]);
-        yield return new WaitForSeconds(5f);
+        yield return new WaitForSeconds(3f);
         set.StartMovePlayer();
+        StartCoroutine(FadeOutAudio(6f));
+        blackClosePanel.gameObject.SetActive(true);
         TeleportToTransform(transVideos[10]);
-        yield return new WaitForSeconds(5f);
+        yield return new WaitForSeconds(4f);
+        SceneManager.LoadScene(3);
 
 
 
@@ -105,7 +117,45 @@ public class CutScene2 : MonoBehaviour
 
     void TeleportToTransform(Transform target)
     {
+        StartCoroutine(ShowBlackPanel(2));
         cam.transform.position = target.position;
         cam.transform.rotation = target.rotation;
+       
+    }
+    IEnumerator ShowBlackPanel(float time = 1f)
+    {
+        blackPanel.SetActive(true);
+
+        yield return new WaitForSeconds(time);
+
+        blackPanel.SetActive(false);
+    }
+    IEnumerator FadeOutAudio(float duration)
+    {
+        List<float> startVolumes = new List<float>();
+
+        foreach (AudioSource audio in audioSources)
+        {
+            startVolumes.Add(audio.volume);
+        }
+
+        float time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+
+            for (int i = 0; i < audioSources.Count; i++)
+            {
+                audioSources[i].volume = Mathf.Lerp(startVolumes[i], 0f, time / duration);
+            }
+
+            yield return null;
+        }
+
+        foreach (AudioSource audio in audioSources)
+        {
+            audio.volume = 0f;
+        }
     }
 }
