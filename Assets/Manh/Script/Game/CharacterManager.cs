@@ -22,8 +22,9 @@ public class CharacterManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
-        indexPlayer1 = SendIndexCharacter.Instance.player1Index;
-        indexPlayer2 = SendIndexCharacter.Instance.player2Index;
+        
+      //  indexPlayer1 = SendIndexCharacter.Instance.player1Index;
+       // indexPlayer2 = SendIndexCharacter.Instance.player2Index;
         SetUpPlayer();
         
     }
