@@ -268,7 +268,26 @@ public class IslandGameManager : MonoBehaviour
 
         yield return new WaitForSeconds(0.1f);
 
-        GameObject bullet = Instantiate(bulletPrefab, cannonTransform.position + (cannonTransform.forward * 1.2f), cannonTransform.rotation);
+        // --- ĐOẠN ĐIỀU CHỈNH VỊ TRÍ ĐẦU NÒNG SÚNG MỚI ---
+        Vector3 spawnPosition = cannonTransform.position;
+        Quaternion spawnRotation = cannonTransform.rotation;
+
+        // Tự tìm kiếm Object trống con tên là "FirePoint" nằm bên dưới khẩu đại bác
+        Transform firePoint = cannonTransform.Find("FirePoint");
+
+        if (firePoint != null)
+        {
+            spawnPosition = firePoint.position;
+            spawnRotation = firePoint.rotation;
+        }
+        else
+        {
+            // Bù trừ vị trí lên phía trước nếu chưa tạo FirePoint trên Editor
+            spawnPosition = cannonTransform.position + (cannonTransform.forward * 1.2f);
+        }
+
+        // Tạo đạn tại đúng vị trí đầu nòng
+        GameObject bullet = Instantiate(bulletPrefab, spawnPosition, spawnRotation);
 
         IslandBulletCollision bulletScript = bullet.AddComponent<IslandBulletCollision>();
         bulletScript.Setup(this);
@@ -276,7 +295,8 @@ public class IslandGameManager : MonoBehaviour
         Rigidbody rb = bullet.GetComponent<Rigidbody>();
         if (rb != null)
         {
-            rb.linearVelocity = cannonTransform.forward * bulletSpeed;
+            // Viên đạn bay thẳng theo hướng mặt của đầu nòng súng
+            rb.linearVelocity = spawnRotation * Vector3.forward * bulletSpeed;
         }
 
         Destroy(bullet, 4f);
