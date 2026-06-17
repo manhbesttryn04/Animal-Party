@@ -15,6 +15,10 @@ public class IslandGameManager : MonoBehaviour
     public List<Transform> cannonPositions = new List<Transform>();
     public float bulletSpeed = 15f;
 
+    [Header("Cấu hình Quay Nòng Pháo (Mới)")]
+    [Tooltip("Góc quay tối đa sang trái hoặc phải (Ví dụ: 25 độ)")]
+    public float maxSpreadAngle = 25f;
+
     [Header("UI Giao diện")]
     public TextMeshProUGUI timerText;
     public TextMeshProUGUI gameStatusText;
@@ -25,7 +29,7 @@ public class IslandGameManager : MonoBehaviour
     public float baseKnockbackForce = 12f;     // Lực đẩy tối thiểu khi 0%
     public float knockbackScaling = 0.45f;    // Tốc độ tăng lực đẩy theo %
     public float superKnockbackForce = 65f;   // Siêu lực đẩy khi đạt 100%
-    public float knockbackDecay = 6f;         // Tốc độ dừng lại sau khi bị đẩy (Số càng cao dừng càng nhanh)
+    public float knockbackDecay = 6f;         // Tốc độ dừng lại sau khi bị đẩy
 
     // Biến lưu trữ đối tượng Player tự động tìm kiếm
     private GameObject player1Obj;
@@ -41,7 +45,9 @@ public class IslandGameManager : MonoBehaviour
     private Vector3 p1KnockbackVelocity = Vector3.zero;
     private Vector3 p2KnockbackVelocity = Vector3.zero;
 
+    // Lưu vị trí và góc xoay gốc của các khẩu pháo
     private Dictionary<Transform, Vector3> cannonOriginalPositions = new Dictionary<Transform, Vector3>();
+    private Dictionary<Transform, Quaternion> cannonOriginalRotations = new Dictionary<Transform, Quaternion>();
 
     private void Start()
     {
@@ -55,7 +61,11 @@ public class IslandGameManager : MonoBehaviour
         {
             if (cannon != null)
             {
+                // Lưu lại vị trí và góc xoay hướng chuẩn ban đầu của pháo
                 cannonOriginalPositions[cannon] = cannon.position;
+                cannonOriginalRotations[cannon] = cannon.rotation;
+
+                // Giấu pháo xuống dưới đất
                 cannon.position = cannon.position + new Vector3(0f, -1.5f, 0f);
             }
         }
@@ -94,7 +104,6 @@ public class IslandGameManager : MonoBehaviour
             }
         }
 
-        // Lấy liên kết đến script di chuyển của Player để chuẩn bị đẩy bằng Controller
         if (player1Obj != null) p1MoveScript = player1Obj.GetComponent<PlayerMove>();
         if (player2Obj != null) p2MoveScript = player2Obj.GetComponent<PlayerMove>();
 
@@ -106,7 +115,6 @@ public class IslandGameManager : MonoBehaviour
     {
         if (!isPlaying) return;
 
-        // XỬ LÝ DI CHUYỂN ĐẨY LÙI CHO CHARACTER CONTROLLER THEO TỪNG FRAME
         ApplyCharacterControllerKnockback();
 
         // KIỂM TRA RỚT ĐẢO
@@ -122,18 +130,14 @@ public class IslandGameManager : MonoBehaviour
         }
     }
 
-    // Hàm liên tục thực thi lực đẩy bằng lệnh .Move() của Player
     void ApplyCharacterControllerKnockback()
     {
-        // Xử lý đẩy Player 1
         if (p1KnockbackVelocity.magnitude > 0.1f && p1MoveScript != null && p1MoveScript.controller != null)
         {
             p1MoveScript.controller.Move(p1KnockbackVelocity * Time.deltaTime);
-            // Giảm dần lực đẩy theo thời gian để tạo độ ma sát lướt đi rồi dừng lại
             p1KnockbackVelocity = Vector3.Lerp(p1KnockbackVelocity, Vector3.zero, knockbackDecay * Time.deltaTime);
         }
 
-        // Xử lý đẩy Player 2
         if (p2KnockbackVelocity.magnitude > 0.1f && p2MoveScript != null && p2MoveScript.controller != null)
         {
             p2MoveScript.controller.Move(p2KnockbackVelocity * Time.deltaTime);
@@ -141,7 +145,6 @@ public class IslandGameManager : MonoBehaviour
         }
     }
 
-    // HÀM XỬ LÝ TRÚNG ĐẠN MỚI: TÍNH VECTOR VẬN TỐC ĐẨY THAY VÌ RIGIDBODY
     public void ProcessBulletHit(GameObject hitPlayer, Vector3 bulletPosition)
     {
         if (!isPlaying) return;
@@ -170,34 +173,24 @@ public class IslandGameManager : MonoBehaviour
 
         UpdatePercentUI();
 
-        // Tính toán hướng đẩy từ tâm viên đạn ra Player
         Vector3 pushDirection = (hitPlayer.transform.position - bulletPosition).normalized;
-        pushDirection.y = 0.1f; // Độ nảy nhẹ trên không sàn phẳng
+        pushDirection.y = 0.1f;
 
         float finalForce = baseKnockbackForce;
 
         if (currentPercent >= 100)
         {
-            finalForce = superKnockbackForce; // Siêu lực hất văng khi 100%
-
+            finalForce = superKnockbackForce;
             if (isP1) p1Percent = 0; else p2Percent = 0;
             Invoke("UpdatePercentUI", 0.6f);
         }
         else
         {
-            // Lực tỷ lệ thuận với số phần trăm đang có
             finalForce = baseKnockbackForce + (currentPercent * knockbackScaling);
         }
 
-        // Nạp vector vận tốc đẩy vào biến nội bộ của GameManager để cập nhật ở Update()
-        if (isP1)
-        {
-            p1KnockbackVelocity = pushDirection * finalForce;
-        }
-        else
-        {
-            p2KnockbackVelocity = pushDirection * finalForce;
-        }
+        if (isP1) p1KnockbackVelocity = pushDirection * finalForce;
+        else p2KnockbackVelocity = pushDirection * finalForce;
     }
 
     void UpdatePercentUI()
@@ -247,16 +240,18 @@ public class IslandGameManager : MonoBehaviour
         }
     }
 
+    // HÀM XỬ LÝ TRỒI LÊN - XOAY QUÉT GÓC - BẮN ĐẠN - LẶN XUỐNG
     IEnumerator AnimateAndShoot(Transform cannonTransform)
     {
         Vector3 upPos = cannonTransform.position;
-        if (cannonOriginalPositions.ContainsKey(cannonTransform))
-        {
-            upPos = cannonOriginalPositions[cannonTransform];
-        }
+        Quaternion originalRot = transform.rotation; // Góc xoay dự phòng
+
+        if (cannonOriginalPositions.ContainsKey(cannonTransform)) upPos = cannonOriginalPositions[cannonTransform];
+        if (cannonOriginalRotations.ContainsKey(cannonTransform)) originalRot = cannonOriginalRotations[cannonTransform];
 
         Vector3 downPos = upPos + new Vector3(0f, -1.5f, 0f);
 
+        // 1. Pháo trồi lên mặt đất
         float elapsed = 0f;
         while (elapsed < 0.3f)
         {
@@ -266,15 +261,26 @@ public class IslandGameManager : MonoBehaviour
         }
         cannonTransform.position = upPos;
 
+        // 2. MỚI: Tính toán góc lệch ngẫu nhiên trái/phải và xoay pháo qua góc đó
+        float randomAngle = Random.Range(-maxSpreadAngle, maxSpreadAngle);
+        Quaternion targetRotation = originalRot * Quaternion.Euler(0f, randomAngle, 0f);
+
+        elapsed = 0f;
+        while (elapsed < 0.2f) // Thời gian xoay nòng mất 0.2 giây
+        {
+            cannonTransform.rotation = Quaternion.Slerp(originalRot, targetRotation, elapsed / 0.2f);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        cannonTransform.rotation = targetRotation;
+
         yield return new WaitForSeconds(0.1f);
 
-        // --- ĐOẠN ĐIỀU CHỈNH VỊ TRÍ ĐẦU NÒNG SÚNG MỚI ---
+        // 3. Tiến hành bắn đạn từ đầu nòng FirePoint (Theo góc đã xoay)
         Vector3 spawnPosition = cannonTransform.position;
         Quaternion spawnRotation = cannonTransform.rotation;
 
-        // Tự tìm kiếm Object trống con tên là "FirePoint" nằm bên dưới khẩu đại bác
         Transform firePoint = cannonTransform.Find("FirePoint");
-
         if (firePoint != null)
         {
             spawnPosition = firePoint.position;
@@ -282,20 +288,16 @@ public class IslandGameManager : MonoBehaviour
         }
         else
         {
-            // Bù trừ vị trí lên phía trước nếu chưa tạo FirePoint trên Editor
             spawnPosition = cannonTransform.position + (cannonTransform.forward * 1.2f);
         }
 
-        // Tạo đạn tại đúng vị trí đầu nòng
         GameObject bullet = Instantiate(bulletPrefab, spawnPosition, spawnRotation);
-
         IslandBulletCollision bulletScript = bullet.AddComponent<IslandBulletCollision>();
         bulletScript.Setup(this);
 
         Rigidbody rb = bullet.GetComponent<Rigidbody>();
         if (rb != null)
         {
-            // Viên đạn bay thẳng theo hướng mặt của đầu nòng súng
             rb.linearVelocity = spawnRotation * Vector3.forward * bulletSpeed;
         }
 
@@ -303,14 +305,17 @@ public class IslandGameManager : MonoBehaviour
 
         yield return new WaitForSeconds(0.3f);
 
+        // 4. Lặn xuống đồng thời trả góc xoay súng về vị trí ban đầu chuẩn xác
         elapsed = 0f;
         while (elapsed < 0.4f)
         {
             cannonTransform.position = Vector3.Lerp(upPos, downPos, elapsed / 0.4f);
+            cannonTransform.rotation = Quaternion.Slerp(targetRotation, originalRot, elapsed / 0.4f);
             elapsed += Time.deltaTime;
             yield return null;
         }
         cannonTransform.position = downPos;
+        cannonTransform.rotation = originalRot;
     }
 
     private List<Transform> GetRandomCannons(int count)
