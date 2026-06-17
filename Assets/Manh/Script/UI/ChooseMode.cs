@@ -274,7 +274,7 @@ public class ChooseMode : MonoBehaviour
             timer += 2f;
         }
 
-        SceneManager.LoadScene(buildIndex);
+        SceneManager.LoadScene("CutScene 1");
     }
 
     private IEnumerator HighlightText(TextMeshProUGUI text)

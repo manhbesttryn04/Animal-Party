@@ -9,6 +9,7 @@ public class ShipPatrol : MonoBehaviour
 
     private Vector3 startPos;
     private Vector3 targetPos;
+    public bool isStop = false;
 
     private void Start()
     {
@@ -20,7 +21,7 @@ public class ShipPatrol : MonoBehaviour
     }
 
     private void Update()
-    {
+    {if (isStop) return;
         Vector3 direction =
             (targetPos - transform.position).normalized;
 

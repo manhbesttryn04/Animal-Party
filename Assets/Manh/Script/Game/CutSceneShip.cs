@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class CutSceneShip : MonoBehaviour
 {
@@ -16,7 +17,10 @@ public class CutSceneShip : MonoBehaviour
     public AudioSource source;
     public AudioClip shipVoiceClip;
     public AudioClip shipMoveClip;
-
+    public GameObject blackPanel;
+    public GameObject blackFlastPanel;
+    [Header("Audio")]
+    public List<AudioSource> audioSources;
     private void Start()
     {
         StartCoroutine(CutScene());
@@ -41,15 +45,22 @@ public class CutSceneShip : MonoBehaviour
         // Point 4
         yield return StartCoroutine(MoveAndRotate(transVideoList[3]));
         yield return new WaitForSeconds(1f);
-
+        //StartCoroutine(ShowBlackPanel(4f));
         // Point 5
-        yield return StartCoroutine(MoveAndRotate(transVideoList[4]));
-        yield return new WaitForSeconds(0.5f);
+        blackFlastPanel.SetActive(true);
+       cam.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+        cam.transform.position = transVideoList[4].position;
+       
+    
+            yield return new WaitForSeconds(0.5f);
 
         // Point 6
+        StartCoroutine(ShowBlackPanel(6f));
         yield return StartCoroutine(MoveAndRotate(transVideoList[5]));
+        
+        
 
-        Debug.Log("CutScene Complete");
+       // Debug.Log("CutScene Complete");
     }
 
     IEnumerator MoveAndRotate(Transform target)
@@ -78,5 +89,47 @@ public class CutSceneShip : MonoBehaviour
 
         cam.transform.position = target.position;
         cam.transform.rotation = target.rotation;
+    }
+    IEnumerator ShowBlackPanel(float time)
+    {
+        blackPanel.SetActive(true);
+        StartCoroutine(FadeOutAudio(6f)); // giảm âm lượng trong 2 giây
+        yield return new WaitForSeconds(time);
+        
+        StartCoroutine(LoadScene("CutScene 2"));
+
+     
+    }
+    IEnumerator LoadScene(string name) {
+        yield return new WaitForSeconds(1f);
+        SceneManager.LoadScene(name);
+    }
+    IEnumerator FadeOutAudio(float duration)
+    {
+        List<float> startVolumes = new List<float>();
+
+        foreach (AudioSource audio in audioSources)
+        {
+            startVolumes.Add(audio.volume);
+        }
+
+        float time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+
+            for (int i = 0; i < audioSources.Count; i++)
+            {
+                audioSources[i].volume = Mathf.Lerp(startVolumes[i], 0f, time / duration);
+            }
+
+            yield return null;
+        }
+
+        foreach (AudioSource audio in audioSources)
+        {
+            audio.volume = 0f;
+        }
     }
 }
