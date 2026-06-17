@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -16,6 +17,12 @@ public class MainMenuController : MonoBehaviour
     {
         SafePlayClick();
         SafeStopMusic();
+
+        StartCoroutine(StartLoadScene());
+    }
+    IEnumerator StartLoadScene()
+    {
+        yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
         SceneManager.LoadScene(gameSceneName);
     }
 

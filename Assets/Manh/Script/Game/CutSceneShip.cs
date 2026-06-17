@@ -96,13 +96,13 @@ public class CutSceneShip : MonoBehaviour
         StartCoroutine(FadeOutAudio(6f)); // giảm âm lượng trong 2 giây
         yield return new WaitForSeconds(time);
         
-        StartCoroutine(LoadScene(2));
+        StartCoroutine(LoadScene("CutScene 2"));
 
      
     }
-    IEnumerator LoadScene(int i) {
+    IEnumerator LoadScene(string name) {
         yield return new WaitForSeconds(1f);
-        SceneManager.LoadScene(i);
+        SceneManager.LoadScene(name);
     }
     IEnumerator FadeOutAudio(float duration)
     {

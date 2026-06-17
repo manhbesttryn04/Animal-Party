@@ -77,7 +77,7 @@ public class CutScene2 : MonoBehaviour
         blackClosePanel.gameObject.SetActive(true);
         TeleportToTransform(transVideos[10]);
         yield return new WaitForSeconds(4f);
-        SceneManager.LoadScene(3);
+        SceneManager.LoadScene("MainScene");
 
 
 

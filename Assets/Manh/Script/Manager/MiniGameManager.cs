@@ -58,9 +58,6 @@ public class MiniGameManager : MonoBehaviour
     // Tên minigame
     public TextMeshProUGUI textNameMiniGameMain;
 
-    // UI loading
-    public GameObject loadingCanvas;
-
     // UI hướng dẫn
     public GameObject canvasInstruct;
 
@@ -235,16 +232,11 @@ public class MiniGameManager : MonoBehaviour
         AudioManager.Instance.StopMusic();
         //Tat bang game
         UIManager.Instance.HideNotifiPlayPanel(false);
-        // Hiện loading
-        loadingCanvas.SetActive(true);
-
-        // Delay loading
-        yield return new WaitForSeconds(3f);
+        yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
         //Mo am thanh minigame
         OpenMusicminiGame();
 
-        // Tắt loading
-        loadingCanvas.SetActive(false);
+      
 
         // =====================================================
         // ENABLE CAMERA
@@ -517,13 +509,8 @@ public class MiniGameManager : MonoBehaviour
         //Tra light
         SetupStopLightAndTime();
         // Hiện loading
-        loadingCanvas.SetActive(true);
-
-        // Chờ 2 giây
-        yield return new WaitForSeconds(2f);
-
-        // Tắt loading
-        loadingCanvas.SetActive(false);
+        yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
+        LoadingManager.Instance.HideLoading();
 
         // =====================================================
         // DISABLE CAMERA
@@ -570,14 +557,8 @@ public class MiniGameManager : MonoBehaviour
         // LOADING
         // =====================================================
         mapMiniGameList.mapMiniGameList[indexMiniGame - 1].SetActive(false);
-        // Hiện loading
-        loadingCanvas.SetActive(true);
-
-        // Delay loading
-        yield return new WaitForSeconds(3f);
-
-        // Tắt loading
-        loadingCanvas.SetActive(false);
+       
+       //     yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
 
         AudioManager.Instance.PlaySFX(AudioManager.Instance.nextRound);
 
