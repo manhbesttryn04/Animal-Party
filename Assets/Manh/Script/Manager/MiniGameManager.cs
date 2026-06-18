@@ -60,6 +60,7 @@ public class MiniGameManager : MonoBehaviour
 
     // UI hướng dẫn
     public GameObject canvasInstruct;
+    public GameObject blackPanel;
 
     // =========================================================
     // INSTRUCTION UI
@@ -233,6 +234,11 @@ public class MiniGameManager : MonoBehaviour
         //Tat bang game
         UIManager.Instance.HideNotifiPlayPanel(false);
         yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
+        LoadingManager.Instance.HideLoading();
+        blackPanel.gameObject.SetActive(false);
+
+        blackPanel.gameObject.SetActive(true);
+
         //Mo am thanh minigame
         OpenMusicminiGame();
 
@@ -507,7 +513,7 @@ public class MiniGameManager : MonoBehaviour
         yield return new WaitForSeconds(5f);
         UIManager.Instance.HideResultPanel();
         //Tra light
-        SetupStopLightAndTime();
+      //  SetupStopLightAndTime();
         // Hiện loading
         yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
         LoadingManager.Instance.HideLoading();
