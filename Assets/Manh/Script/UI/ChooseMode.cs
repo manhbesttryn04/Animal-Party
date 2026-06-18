@@ -273,7 +273,7 @@ public class ChooseMode : MonoBehaviour
 
             timer += 2f;
         }
-
+       yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
         SceneManager.LoadScene("CutScene 1");
     }
 
