@@ -33,7 +33,7 @@ public class PlayerMoveAI : MonoBehaviour
     }
     private void Update()
     {
-        manager.playerAnimator.playerAnimator.SetFloat("Walk", navMeshAgent.velocity.magnitude);
+        //manager.playerAnimator.playerAnimator.SetFloat("Walk", navMeshAgent.velocity.magnitude);
     }
    
 
@@ -65,21 +65,8 @@ public class PlayerMoveAI : MonoBehaviour
      ? new Vector3(0, 0, -0.3f)
      : new Vector3(0, 0, 0.3f);
 
-            navMeshAgent.SetDestination(target.transform.position + offset);
+            yield return StartCoroutine(JumpTo(target.transform.position + offset));
 
-
-
-            // đợi tới nơi
-            while (
-                    navMeshAgent.pathPending ||
-                    navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance)
-                {
-
-                    yield return null;
-                }
-
-            // đứng đúng vị tr
-           
 
         }
         yield return new WaitForSeconds(0.5f);
@@ -121,7 +108,7 @@ public class PlayerMoveAI : MonoBehaviour
 
  
 
-        for (int i = 0; i < 20; i++)
+        for (int i = 0; i < 2; i++)
         {
             AudioManager.Instance.PlaySFX(AudioManager.Instance.walkPlayerClip);
             currentIndex++;
@@ -132,13 +119,7 @@ public class PlayerMoveAI : MonoBehaviour
                 ? new Vector3(0, 0, -0.3f)
                 : new Vector3(0, 0, 0.3f);
 
-            navMeshAgent.SetDestination(target.transform.position + offset);
-
-            while (navMeshAgent.pathPending ||
-                   navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance)
-            {
-                yield return null;
-            }
+            yield return StartCoroutine(JumpTo(target.transform.position + offset));
 
             yield return new WaitForSeconds(0.3f);
         }
@@ -216,12 +197,49 @@ public class PlayerMoveAI : MonoBehaviour
         navMeshAgent.Warp(transform.position);
         isMoving = false;
     }
-    void SetVisible(Renderer[] rends, bool state)
+  IEnumerator JumpTo(Vector3 targetPos)
     {
-        foreach (Renderer r in rends)
+        navMeshAgent.enabled = false;
+
+        Vector3 startPos = transform.position;
+
+        manager.playerAnimator.playerAnimator.SetTrigger("Jump");
+
+        // Đợi animation Jump bắt đầu
+        while (!manager.playerAnimator.playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("Jump"))
         {
-            r.enabled = state;
+            yield return null;
         }
+
+        float duration = 0.4f;
+        float height = 0.8f;
+        float t = 0;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+
+            float percent = t / duration;
+
+            Vector3 pos = Vector3.Lerp(startPos, targetPos, percent);
+            pos.y += Mathf.Sin(percent * Mathf.PI) * height;
+
+            transform.position = pos;
+
+            yield return null;
+        }
+
+        transform.position = targetPos;
+
+        // Đợi Jump kết thúc, Animator quay về Idle/Walk
+        while (manager.playerAnimator.playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("Jump"))
+        {
+            yield return null;
+        }
+        yield return new WaitForSeconds(0.5f);
+
+        navMeshAgent.enabled = true;
+        navMeshAgent.Warp(targetPos);
     }
 
     public void FindPonit()

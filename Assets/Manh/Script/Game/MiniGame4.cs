@@ -10,8 +10,6 @@ public class MiniGame4 : MonoBehaviour
 
     [Header("Pirate")]
     public Animator animator;
-    public ThunderStorm thunder;
-
 
     [Header("Settings")]
     public float firstWaitTime = 3f;
@@ -25,6 +23,7 @@ public class MiniGame4 : MonoBehaviour
 
     [Header("Audio")]
     public AudioSource audioSource;
+    public AudioSource environmentAudioSource;
     public AudioClip scanSound;     // hồi hộp khi quan sát
     public AudioClip laughSound;    // cười khi phát hiện
     public AudioClip gunShotSound;  // tiếng súng
@@ -58,8 +57,8 @@ public class MiniGame4 : MonoBehaviour
         if(p1 != null && p2 != null)
         {
             //Set speed
-            p1.playerMove.speed = 1.5f;
-            p2.playerMove.speed = 1.5f;
+            p1.playerMove.speed = 0.4f;
+            p2.playerMove.speed = 0.4f;
             //Set funny
             p1.playerFunnyItem.isBoxFunny = true;
             p2.playerFunnyItem.isBoxFunny = true;
@@ -90,13 +89,11 @@ public class MiniGame4 : MonoBehaviour
         CheckFinishReward(manager.currentPlayer1);
         CheckFinishReward(manager.currentPlayer2);
         transform.rotation = backRotation;
-        thunder.isOpen = false;
-        thunder.lightningLight.enabled = true;
     }
 
     IEnumerator PirateRoutine()
     {
-        thunder.audioSource.PlayOneShot(rainSound);
+       environmentAudioSource.PlayOneShot(rainSound);
         transform.rotation = lookRotation;
         isRunning = true;
 

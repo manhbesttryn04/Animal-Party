@@ -29,7 +29,7 @@ public class AudioManager1 : MonoBehaviour
             return;
         }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
+       // DontDestroyOnLoad(gameObject);
 
         // Tạo 3 AudioSource riêng cho 3 loại âm thanh
         musicSource = gameObject.AddComponent<AudioSource>();

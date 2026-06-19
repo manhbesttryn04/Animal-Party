@@ -73,7 +73,7 @@ public class CutScene2 : MonoBehaviour
         yield return MoveToTransform(transVideos[9]);
         yield return new WaitForSeconds(3f);
         set.StartMovePlayer();
-        StartCoroutine(FadeOutAudio(6f));
+        StartCoroutine(FadeOutAudio(4f));
         blackClosePanel.gameObject.SetActive(true);
         TeleportToTransform(transVideos[10]);
         yield return new WaitForSeconds(4f);

@@ -696,8 +696,8 @@ public class MiniGameManager : MonoBehaviour
                 break;
 
             case 4:
-                light.intensity = 0.2f;
-                ChangeToStormSky();
+              //  light.intensity = 0.2f;
+               // ChangeToStormSky();
                // countDownTime = 99f;
                 break;
 
