@@ -58,6 +58,10 @@ public class UIManager : MonoBehaviour
     //List Image Buff
     public List<Sprite> buffImageList;
 
+    // Bonus Coin UI
+    public GameObject bonusCoinTextP1;
+    public GameObject bonusCoinTextP2;
+
     #endregion
 
     // Panel thưởng
@@ -320,5 +324,26 @@ public class UIManager : MonoBehaviour
         yield return new WaitForSeconds(1f);
 
         bonusPanel.SetActive(false);
+    }
+
+    public void ShowBonusCoin(int playerID)
+    {
+        if (playerID == 0)
+        {
+            StartCoroutine(ShowUIBonusCoin(bonusCoinTextP1));
+        }
+        else if (playerID == 1)
+        {
+            StartCoroutine(ShowUIBonusCoin(bonusCoinTextP2));
+        }
+    }
+
+    IEnumerator ShowUIBonusCoin(GameObject canvas)
+    {
+        canvas.SetActive(true);
+
+        yield return new WaitForSeconds(0.5f);
+
+        canvas.SetActive(false);
     }
 }

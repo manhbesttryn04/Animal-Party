@@ -39,6 +39,8 @@ public class Bomb : MonoBehaviour
             explodeDelay
         );
 
+        //Âm thanh nổ
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.boomClip);
         // EFFECT
         GameObject ef = null;
 
