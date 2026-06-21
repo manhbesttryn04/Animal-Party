@@ -18747,7 +18747,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f5c43531b7774c45ba1db7013ef8a54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  indexMiniGame: 4
+  indexMiniGame: 5
   miniGameList: {fileID: 288627989}
   intrusTextList: {fileID: 288627990}
   videoInstructList: {fileID: 288627991}
@@ -18771,7 +18771,7 @@ MonoBehaviour:
   spawnPoint: {fileID: 288627992}
   currentPlayer1: {fileID: 0}
   currentPlayer2: {fileID: 0}
-  countDownTime: 30
+  countDownTime: 62
   normalSkybox: {fileID: 2100000, guid: e550df687ac68f944a92c396a4e02e77, type: 2}
   stormSkybox: {fileID: 2100000, guid: d1385980456cd2044b282d73625457db, type: 2}
   isPlaying: 0
@@ -43044,7 +43044,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1206543014827690906, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1206714611690724146, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
       propertyPath: m_Enabled
@@ -43492,7 +43492,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4379940023425671287, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4414177631608453945, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
       propertyPath: m_Enabled
@@ -43548,7 +43548,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4862996779301257779, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4870529605988573890, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
       propertyPath: m_Enabled
@@ -43714,9 +43714,17 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5685182549969697587, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5776855216856673241, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
       propertyPath: m_Enabled
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5803950316516033611, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5811140826717621742, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
       propertyPath: m_Enabled
@@ -43906,6 +43914,26 @@ PrefabInstance:
       propertyPath: timerText
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 7157922600730249406, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
+      propertyPath: bombMaterial
+      value: 
+      objectReference: {fileID: 2100000, guid: 094fa6cd6a0664449aafe56c08e39785, type: 2}
+    - target: {fileID: 7157922600730249406, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
+      propertyPath: freezeMaterial
+      value: 
+      objectReference: {fileID: 2100000, guid: 4098b5c896321634b839d931cc6018c4, type: 2}
+    - target: {fileID: 7157922600730249406, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
+      propertyPath: defaultMaterial
+      value: 
+      objectReference: {fileID: 2100000, guid: f24ea54cb233b2d44af53e5ace41275f, type: 2}
+    - target: {fileID: 7157922600730249406, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
+      propertyPath: player1Material
+      value: 
+      objectReference: {fileID: 2100000, guid: c3c960a817b55dd4cad40b9e65b7982c, type: 2}
+    - target: {fileID: 7157922600730249406, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
+      propertyPath: player2Material
+      value: 
+      objectReference: {fileID: 2100000, guid: 347927da05e0a3242918338059e90704, type: 2}
     - target: {fileID: 7161234790343092138, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
       propertyPath: m_LocalPosition.x
       value: -909.8958
@@ -44100,7 +44128,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8282104316160255476, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8371610184525911906, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
       propertyPath: m_Enabled
@@ -44170,6 +44198,10 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8747317047759541022, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8757795926610830181, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
       propertyPath: m_Enabled
       value: 1
@@ -44225,6 +44257,10 @@ PrefabInstance:
     - target: {fileID: 8983807459425869279, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
       propertyPath: m_Enabled
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9030120472138496741, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9031231817889945083, guid: c0bb98eca22b47f48b9f7a301e3690f7, type: 3}
       propertyPath: m_Enabled

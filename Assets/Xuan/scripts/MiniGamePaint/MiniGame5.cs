@@ -16,15 +16,16 @@ public class MiniGame5 : MonoBehaviour
 
     private List<PaintPadData> allPads = new List<PaintPadData>();
 
-    [Header("Cấu hình màu sắc của 2 Player")]
-    public Color player1Color = Color.blue;
-    public Color player2Color = Color.red;
+    [Header("CẤU HÌNH MATERIAL CHỨA HÌNH ICON (MỚI)")]
+    public Material defaultMaterial;   // Ô trống mặc định
+    public Material player1Material;   // Chứa hình của Player 1
+    public Material player2Material;   // Chứa hình của Player 2
+    public Material bombMaterial;      // Chứa hình quả Bom
+    public Material freezeMaterial;    // Chứa hình khối Băng
 
-    [Header("Cấu hình Ô Cạm Bẫy (Bom & Băng)")]
-    public Color bombColor = Color.black;
+    [Header("Cấu hình màu nhấp nháy cho Bom")]
     public Color bombFlashColor = new Color(1f, 0.5f, 0f);
     public float bombFlashSpeed = 8f;
-    public Color freezeColor = Color.cyan;
     public float hazardResetInterval = 5f;
 
     [Header("Cấu hình Vật phẩm Phóng To (PREFAB)")]
@@ -46,7 +47,6 @@ public class MiniGame5 : MonoBehaviour
 
     private Vector3 player1OriginalScale = Vector3.one;
     private Vector3 player2OriginalScale = Vector3.one;
-  
 
     private List<GameObject> spawnedItems = new List<GameObject>();
 
@@ -54,8 +54,6 @@ public class MiniGame5 : MonoBehaviour
     {
         InitializeManualPads();
     }
-
- 
 
     void Update()
     {
@@ -67,7 +65,7 @@ public class MiniGame5 : MonoBehaviour
 
                 if (pad.hazardType == PadHazardType.Bomb)
                 {
-                    pad.UpdateBombFlashing(bombColor, bombFlashColor, bombFlashSpeed);
+                    pad.UpdateBombFlashing(Color.white, bombFlashColor, bombFlashSpeed);
                 }
             }
         }
@@ -97,10 +95,10 @@ public class MiniGame5 : MonoBehaviour
 
     public void StartMiniGame()
     {
-        source.Play();
-       
+        if (source != null) source.Play();
+
         if (isPlaying) return;
-        resultText.gameObject.SetActive(true);
+        if (resultText != null) resultText.gameObject.SetActive(true);
         isPlaying = true;
         isPlayer1Frozen = false;
         isPlayer2Frozen = false;
@@ -121,13 +119,12 @@ public class MiniGame5 : MonoBehaviour
 
     public void StopMiniGame()
     {
-        source.Stop();
+        if (source != null) source.Stop();
         isPlaying = false;
         StopAllCoroutines();
         ClearAllSpawnedItems();
         if (timerText != null) timerText.text = "-";
-        resultText.gameObject.SetActive(false);
-       // Debug.Log("Minigame Tranh Màu đã dừng.");
+        if (resultText != null) resultText.gameObject.SetActive(false);
     }
 
     IEnumerator PaintGameRoutine()
@@ -190,6 +187,7 @@ public class MiniGame5 : MonoBehaviour
             {
                 if (currentIndex >= totalHazards) break;
                 availablePads[currentIndex].hazardType = PadHazardType.Bomb;
+                availablePads[currentIndex].ApplyHazardVisual();
                 currentIndex++;
             }
 
@@ -256,11 +254,11 @@ public class MiniGame5 : MonoBehaviour
 
         if (!isP2)
         {
-            padData.SetOwner("Player 1", player1Color);
+            padData.SetOwner("Player 1", player1Material);
         }
         else
         {
-            padData.SetOwner("Player 2", player2Color);
+            padData.SetOwner("Player 2", player2Material);
         }
     }
 
@@ -330,16 +328,11 @@ public class MiniGame5 : MonoBehaviour
         StartCoroutine(GrowPlayerRoutine(isPlayer2, playerObj));
     }
 
-    // ---- CẬP NHẬT LOGIC: GIẢM 50% TỐC ĐỘ DI CHUYỂN KHI PHÓNG TO ----
     IEnumerator GrowPlayerRoutine(bool isPlayer2, GameObject playerObj)
     {
-        int pNumber = !isPlayer2 ? 1 : 2;
-      // Debug.Log($"<Color=Lime>Player {pNumber} phóng to X{growMultiplier} và giảm 50% tốc độ!</Color>");
-
         CharacterController cc = playerObj.GetComponent<CharacterController>();
         if (cc != null) cc.enabled = false;
 
-        // Lưu kích thước gốc
         if (!isPlayer2) player1OriginalScale = playerObj.transform.localScale;
         else player2OriginalScale = playerObj.transform.localScale;
 
@@ -350,40 +343,32 @@ public class MiniGame5 : MonoBehaviour
             liftOffset = playerCollider.bounds.size.y;
         }
 
-        // Thực hiện phóng to mô hình
         Vector3 targetScale = (!isPlayer2 ? player1OriginalScale : player2OriginalScale) * growMultiplier;
         playerObj.transform.localScale = targetScale;
         playerObj.transform.position += new Vector3(0f, liftOffset * (growMultiplier - 1f) * 0.5f, 0f);
 
         if (cc != null) cc.enabled = true;
 
-        // --- XỬ LÝ TỐC ĐỘ DI CHUYỂN ---
-        float originalSpeed = 5f; // Tốc độ dự phòng mặc định
+        float originalSpeed = 5f;
         PlayerMove movementScript = playerObj.GetComponent<PlayerMove>();
         if (movementScript != null)
         {
-            originalSpeed = movementScript.speed;      // Lưu lại tốc độ ban đầu (ví dụ: 5f)
-            movementScript.speed = originalSpeed * 0.5f; // Giảm đi 50% tốc độ (còn lại 2.5f)
+            originalSpeed = movementScript.speed;
+            movementScript.speed = originalSpeed * 0.5f;
         }
 
-        // Duy trì trạng thái khổng lồ và đi chậm
         yield return new WaitForSeconds(growDuration);
 
-        // Khôi phục lại trạng thái cũ
         if (playerObj != null)
         {
             if (cc != null) cc.enabled = false;
-
             playerObj.transform.localScale = !isPlayer2 ? player1OriginalScale : player2OriginalScale;
-
             if (cc != null) cc.enabled = true;
 
-            // Trả lại tốc độ ban đầu cho Player khi thu nhỏ
             if (movementScript != null)
             {
                 movementScript.speed = originalSpeed;
             }
-          //  Debug.Log($"<Color=White>Player {pNumber} thu nhỏ và phục hồi tốc độ gốc.</Color>");
         }
     }
 
@@ -416,8 +401,9 @@ public class MiniGame5 : MonoBehaviour
         }
         if (resultText != null)
         {
-            if (p1Count > p2Count) { resultText.text = $"P1 win! ({p1Count} vs {p2Count})"; resultText.color = player1Color; }
-            else if (p2Count > p1Count) { resultText.text = $"P2 win! ({p2Count} vs {p1Count})"; resultText.color = player2Color; }
+            // Thiết lập đổi màu chữ kết quả theo màu đặc trưng của Material Player
+            if (p1Count > p2Count) { resultText.text = $"P1 win! ({p1Count} vs {p2Count})"; resultText.color = Color.blue; }
+            else if (p2Count > p1Count) { resultText.text = $"P2 win! ({p2Count} vs {p1Count})"; resultText.color = Color.red; }
             else { resultText.text = $"Draw! ({p1Count} vs {p2Count})"; resultText.color = Color.white; }
         }
     }
@@ -474,6 +460,7 @@ public class PaintPadData
         }
     }
 
+    // Nhấp nháy màu nhuộm (Tint Color) trực tiếp trên Material của quả Bom
     public void UpdateBombFlashing(Color c1, Color c2, float speed)
     {
         if (renderer == null) return;
@@ -481,30 +468,45 @@ public class PaintPadData
         renderer.material.color = Color.Lerp(c1, c2, lerpFactor);
     }
 
-    public void SetOwner(string tag, Color color)
+    // Thay đổi Material sang dạng chứa hình của Player
+    public void SetOwner(string tag, Material playerMat)
     {
         if (hazardType != PadHazardType.None) return;
         ownerTag = tag;
-        if (renderer != null) renderer.material.color = color;
+        if (renderer != null)
+        {
+            renderer.material = playerMat;
+            renderer.material.color = Color.white; // Đảm bảo giữ nguyên màu sắc gốc của ảnh texture
+        }
     }
 
+    // Thay đổi Material sang dạng chứa hình bẫy Bom hoặc Băng
     public void ApplyHazardVisual()
     {
         if (renderer == null) return;
-        if (hazardType == PadHazardType.Freeze) renderer.material.color = manager.freezeColor;
+        renderer.material.color = Color.white;
+
+        if (hazardType == PadHazardType.Bomb) renderer.material = manager.bombMaterial;
+        else if (hazardType == PadHazardType.Freeze) renderer.material = manager.freezeMaterial;
     }
 
     public void RestoreVisualAfterHazard()
     {
         if (renderer == null) return;
-        if (ownerTag == "Player 1") renderer.material.color = manager.player1Color;
-        else if (ownerTag == "Player 2") renderer.material.color = manager.player2Color;
-        else renderer.material.color = Color.white;
+        renderer.material.color = Color.white;
+
+        if (ownerTag == "Player 1") renderer.material = manager.player1Material;
+        else if (ownerTag == "Player 2") renderer.material = manager.player2Material;
+        else renderer.material = manager.defaultMaterial;
     }
 
     public void ResetColor()
     {
         ownerTag = ""; hazardType = PadHazardType.None;
-        if (renderer != null) renderer.material.color = Color.white;
+        if (renderer != null)
+        {
+            renderer.material = manager.defaultMaterial;
+            renderer.material.color = Color.white;
+        }
     }
 }
