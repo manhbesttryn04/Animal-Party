@@ -21,6 +21,7 @@ public class CutSceneShip : MonoBehaviour
     public AudioSource source;
     public AudioClip shipVoiceClip;
     public AudioClip shipMoveClip;
+    public List<AudioClip> oggyVoiceClips;
     public List<AudioSource> audioSources;
 
     [Header("Panels")]
@@ -34,24 +35,28 @@ public class CutSceneShip : MonoBehaviour
     public Outline subtitleOutline;
 
     [Header("--- SKIP UI ---")]
-    [Tooltip("GameObject chứa chữ 'Press Space to Skip' góc màn hình")]
     public GameObject skipHintObject;
-    [Tooltip("TMP Text của skip hint (để fade in/out)")]
     public TMP_Text skipHintText;
 
-    [Header("--- MÀU SUBTITLE ---")]
-    public Color normalTextColor = Color.white;
-    public Color normalOutlineColor = new Color(1f, 1f, 1f, 0.2f);
-    public Color finalTextColor = new Color(0.96f, 0.90f, 0.66f, 1f);
-    public Color finalOutlineColor = new Color(0.79f, 0.64f, 0.15f, 1f);
+    [Header("--- GRADIENT PRESET ---")]
+    [Tooltip("Tạo asset: Assets → Create → TextMeshPro → Color Gradient → đặt tên NormalGradient\nMàu: trái #5C2E00, phải #1A0A00")]
+    public TMP_ColorGradient normalGradient;
+
+    [Tooltip("Tạo asset: Assets → Create → TextMeshPro → Color Gradient → đặt tên FinalGradient\nMàu: 4 góc đều #7A0000 (đỏ son)")]
+    public TMP_ColorGradient finalGradient;
+
+    [Header("--- OUTLINE MÀU THEO CÂU ---")]
+    public Color normalOutlineColor = new Color(1f, 1f, 1f, 0.2f);       // trắng mờ
+    public Color finalOutlineColor = new Color(1f, 1f, 1f, 0.31f);       // trắng mờ nhạt (chữ đỏ tách bảng gỗ)
 
     [Header("--- TIMING ---")]
     public float fadeInDuration = 0.5f;
     public float fadeOutDuration = 0.3f;
-    public float betweenLineFade = 0.3f; // thời gian fade out câu cũ trước khi hiện câu mới
+    public float betweenLineFade = 0.3f;
 
     private Coroutine typingCoroutine;
     private bool isSkipped = false;
+    private int oggyVoiceIndex = 0;
 
     private string[] storyLines = new string[]
     {
@@ -66,8 +71,6 @@ public class CutSceneShip : MonoBehaviour
     {
         if (subtitlePanel) subtitlePanel.SetActive(false);
         if (subtitleText) { subtitleText.text = ""; subtitleText.alpha = 0f; }
-
-        // Hiện skip hint mờ dần sau 1s
         if (skipHintObject) skipHintObject.SetActive(false);
 
         StartCoroutine(CutScene());
@@ -76,11 +79,8 @@ public class CutSceneShip : MonoBehaviour
 
     private void Update()
     {
-        // Bấm Space hoặc Enter để skip
         if (!isSkipped && (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)))
-        {
             SkipCutscene();
-        }
     }
 
     private void SkipCutscene()
@@ -96,8 +96,6 @@ public class CutSceneShip : MonoBehaviour
     {
         yield return new WaitForSeconds(1f);
         if (skipHintObject) skipHintObject.SetActive(true);
-
-        // Fade in skip hint
         if (skipHintText)
         {
             skipHintText.alpha = 0f;
@@ -105,7 +103,7 @@ public class CutSceneShip : MonoBehaviour
             while (t < 0.5f)
             {
                 t += Time.deltaTime;
-                skipHintText.alpha = Mathf.Lerp(0f, 0.7f, t / 0.5f); // mờ nhạt thôi, không cần nổi bật
+                skipHintText.alpha = Mathf.Lerp(0f, 0.7f, t / 0.5f);
                 yield return null;
             }
         }
@@ -136,18 +134,16 @@ public class CutSceneShip : MonoBehaviour
         yield return StartCoroutine(MoveAndRotate(transVideoList[3]));
         yield return new WaitForSeconds(1f);
 
-        // Point 5 — flash đen + teleport (không subtitle)
+        // Point 5 — flash đen + teleport
         HideSubtitle();
         blackFlastPanel.SetActive(true);
         cam.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
         cam.transform.position = transVideoList[4].position;
         yield return new WaitForSeconds(0.5f);
 
-        // Point 6 — câu cuối vàng
+        // Point 6 — câu cuối đỏ son
         StartCoroutine(MoveAndRotate(transVideoList[5]));
         yield return new WaitForSeconds(1.5f);
-
-        // Ẩn skip hint trước câu cuối
         if (skipHintObject) skipHintObject.SetActive(false);
 
         yield return StartCoroutine(ShowSubtitleWithFade(storyLines[4], true));
@@ -155,22 +151,40 @@ public class CutSceneShip : MonoBehaviour
         StartCoroutine(ShowBlackPanel(4f));
     }
 
-    // Fade out câu cũ → đổi màu → fade in câu mới
+    private void PlayNextOggyVoice()
+    {
+        if (oggyVoiceClips == null || oggyVoiceClips.Count == 0) return;
+        source.PlayOneShot(oggyVoiceClips[oggyVoiceIndex]);
+        oggyVoiceIndex = (oggyVoiceIndex + 1) % oggyVoiceClips.Count;
+    }
+
     IEnumerator ShowSubtitleWithFade(string line, bool isFinal)
     {
-        // Nếu đang có chữ → fade out trước
+        // Fade out câu cũ nếu đang hiện
         if (subtitleText && subtitleText.alpha > 0f)
         {
             yield return StartCoroutine(FadeOutLine());
             yield return new WaitForSeconds(betweenLineFade);
         }
 
-        // Đổi màu theo loại câu
         if (subtitlePanel) subtitlePanel.SetActive(true);
-        if (subtitleText) subtitleText.color = isFinal ? finalTextColor : normalTextColor;
-        if (subtitleOutline) subtitleOutline.effectColor = isFinal ? finalOutlineColor : normalOutlineColor;
 
-        // Fade in câu mới
+        // Áp gradient preset theo loại câu
+        if (subtitleText)
+        {
+            subtitleText.enableVertexGradient = true;
+            if (isFinal && finalGradient != null)
+                subtitleText.colorGradientPreset = finalGradient;
+            else if (!isFinal && normalGradient != null)
+                subtitleText.colorGradientPreset = normalGradient;
+        }
+
+        // Đổi màu outline
+        if (subtitleOutline)
+            subtitleOutline.effectColor = isFinal ? finalOutlineColor : normalOutlineColor;
+
+        PlayNextOggyVoice();
+
         yield return StartCoroutine(FadeInLine(line));
     }
 
@@ -190,7 +204,6 @@ public class CutSceneShip : MonoBehaviour
     IEnumerator FadeInLine(string line)
     {
         if (subtitleText) { subtitleText.text = line; subtitleText.alpha = 0f; }
-
         float time = 0f;
         while (time < fadeInDuration)
         {
@@ -205,14 +218,12 @@ public class CutSceneShip : MonoBehaviour
     {
         float startAlpha = subtitleText != null ? subtitleText.alpha : 1f;
         float time = 0f;
-
         while (time < fadeOutDuration)
         {
             time += Time.deltaTime;
             if (subtitleText) subtitleText.alpha = Mathf.Lerp(startAlpha, 0f, time / fadeOutDuration);
             yield return null;
         }
-
         if (subtitleText) { subtitleText.alpha = 0f; subtitleText.text = ""; }
         if (subtitlePanel) subtitlePanel.SetActive(false);
     }
@@ -251,7 +262,6 @@ public class CutSceneShip : MonoBehaviour
     {
         List<float> startVolumes = new List<float>();
         foreach (AudioSource audio in audioSources) startVolumes.Add(audio.volume);
-
         float time = 0f;
         while (time < duration)
         {
