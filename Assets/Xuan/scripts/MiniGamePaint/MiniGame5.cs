@@ -16,7 +16,7 @@ public class MiniGame5 : MonoBehaviour
 
     private List<PaintPadData> allPads = new List<PaintPadData>();
 
-    [Header("CẤU HÌNH MATERIAL CHỨA HÌNH ICON (MỚI)")]
+    [Header("CẤU HÌNH MATERIAL CHỨA HÌNH ICON")]
     public Material defaultMaterial;   // Ô trống mặc định
     public Material player1Material;   // Chứa hình của Player 1
     public Material player2Material;   // Chứa hình của Player 2
@@ -30,7 +30,8 @@ public class MiniGame5 : MonoBehaviour
 
     [Header("Cấu hình Vật phẩm Phóng To (PREFAB)")]
     public GameObject growItemPrefab;
-    public float growDuration = 5f;
+    public float growDuration = 5f;      // Thời gian TÁC DỤNG khổng lồ kéo dài (5 giây)
+    public float itemExistDuration = 5f; // Thời gian TỒN TẠI trên sân trước khi tự hủy (5 giây)
     public float growMultiplier = 3f;
     public float itemSpawnHeight = 0.5f;
 
@@ -48,7 +49,8 @@ public class MiniGame5 : MonoBehaviour
     private Vector3 player1OriginalScale = Vector3.one;
     private Vector3 player2OriginalScale = Vector3.one;
 
-    private List<GameObject> spawnedItems = new List<GameObject>();
+    private GameObject currentSpawnedItem = null;
+    private Coroutine itemDestroyCoroutine = null; // Quản lý luồng tự hủy vật phẩm sau 5s trên sân
 
     void Awake()
     {
@@ -110,7 +112,7 @@ public class MiniGame5 : MonoBehaviour
             pad.ResetColor();
         }
 
-        ClearAllSpawnedItems();
+        ClearCurrentSpawnedItem();
 
         StartCoroutine(PaintGameRoutine());
         StartCoroutine(SpawnHazardsRoutine());
@@ -122,7 +124,7 @@ public class MiniGame5 : MonoBehaviour
         if (source != null) source.Stop();
         isPlaying = false;
         StopAllCoroutines();
-        ClearAllSpawnedItems();
+        ClearCurrentSpawnedItem();
         if (timerText != null) timerText.text = "-";
         if (resultText != null) resultText.gameObject.SetActive(false);
     }
@@ -141,6 +143,10 @@ public class MiniGame5 : MonoBehaviour
         isPlaying = false;
         if (timerText != null) timerText.text = "HẾT GIỜ!";
 
+        // 🛠️ THAY ĐỔI: Ẩn/Xóa ngay lập tức vật phẩm phóng to khi hết giờ
+        ClearCurrentSpawnedItem();
+
+        // Tính điểm và làm sạch visual cho các ô chứa cạm bẫy
         CalculateFinalScore();
     }
 
@@ -211,20 +217,33 @@ public class MiniGame5 : MonoBehaviour
         {
             if (growItemPrefab != null && allPads.Count > 0)
             {
+                ClearCurrentSpawnedItem();
+
                 PaintPadData randomPad = allPads[Random.Range(0, allPads.Count)];
                 Vector3 spawnPos = randomPad.padObject.transform.position + new Vector3(0f, itemSpawnHeight, 0f);
-                GameObject newItem = Instantiate(growItemPrefab, spawnPos, Quaternion.identity);
 
-                GrowItem itemScript = newItem.GetComponent<GrowItem>();
+                currentSpawnedItem = Instantiate(growItemPrefab, spawnPos, Quaternion.identity);
+
+                GrowItem itemScript = currentSpawnedItem.GetComponent<GrowItem>();
                 if (itemScript != null)
                 {
                     itemScript.Setup(this);
                 }
 
-                spawnedItems.Add(newItem);
+                itemDestroyCoroutine = StartCoroutine(DestroyItemAfterDelay(currentSpawnedItem, itemExistDuration));
             }
 
-            yield return new WaitForSeconds(10f);
+            yield return new WaitForSeconds(11f);
+        }
+    }
+
+    IEnumerator DestroyItemAfterDelay(GameObject item, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (item != null && item == currentSpawnedItem)
+        {
+            Destroy(item);
+            currentSpawnedItem = null;
         }
     }
 
@@ -325,6 +344,14 @@ public class MiniGame5 : MonoBehaviour
     public void OnGrowItemPickedUp(bool isPlayer2, GameObject playerObj)
     {
         if (!isPlaying) return;
+
+        if (itemDestroyCoroutine != null)
+        {
+            StopCoroutine(itemDestroyCoroutine);
+            itemDestroyCoroutine = null;
+        }
+        currentSpawnedItem = null;
+
         StartCoroutine(GrowPlayerRoutine(isPlayer2, playerObj));
     }
 
@@ -382,26 +409,47 @@ public class MiniGame5 : MonoBehaviour
         }
     }
 
-    void ClearAllSpawnedItems()
+    void ClearCurrentSpawnedItem()
     {
-        foreach (GameObject item in spawnedItems)
+        if (itemDestroyCoroutine != null)
         {
-            if (item != null) Destroy(item);
+            StopCoroutine(itemDestroyCoroutine);
+            itemDestroyCoroutine = null;
         }
-        spawnedItems.Clear();
+
+        if (currentSpawnedItem != null)
+        {
+            Destroy(currentSpawnedItem);
+            currentSpawnedItem = null;
+        }
     }
 
+    // 🛠️ SỬA ĐỔI CHÍNH: Xử lý hiển thị trực quan các ô màu khi kết thúc game
     void CalculateFinalScore()
     {
         int p1Count = 0; int p2Count = 0;
+
         foreach (PaintPadData pad in allPads)
         {
+            // Nếu ô sàn đang chứa bẫy Bom hoặc Băng khi hết giờ
+            if (pad.hazardType == PadHazardType.Bomb || pad.hazardType == PadHazardType.Freeze)
+            {
+                // Loại bỏ trạng thái cạm bẫy
+                pad.hazardType = PadHazardType.None;
+
+                // Trả ô sàn về trạng thái trước đó. Hàm này sẽ tự động kiểm tra:
+                // Nếu ô từng có chủ là Player 1/2 -> Hiện lại màu Player tương ứng.
+                // Nếu là ô trống -> Quay về vật liệu defaultMaterial mặc định.
+                pad.RestoreVisualAfterHazard();
+            }
+
+            // Tiến hành đếm điểm cuối cùng của cả hai Player dựa trên dữ liệu thật
             if (pad.ownerTag == "Player 1") p1Count++;
             else if (pad.ownerTag == "Player 2") p2Count++;
         }
+
         if (resultText != null)
         {
-            // Thiết lập đổi màu chữ kết quả theo màu đặc trưng của Material Player
             if (p1Count > p2Count) { resultText.text = $"P1 win! ({p1Count} vs {p2Count})"; resultText.color = Color.blue; }
             else if (p2Count > p1Count) { resultText.text = $"P2 win! ({p2Count} vs {p1Count})"; resultText.color = Color.red; }
             else { resultText.text = $"Draw! ({p1Count} vs {p2Count})"; resultText.color = Color.white; }
@@ -460,7 +508,6 @@ public class PaintPadData
         }
     }
 
-    // Nhấp nháy màu nhuộm (Tint Color) trực tiếp trên Material của quả Bom
     public void UpdateBombFlashing(Color c1, Color c2, float speed)
     {
         if (renderer == null) return;
@@ -468,7 +515,6 @@ public class PaintPadData
         renderer.material.color = Color.Lerp(c1, c2, lerpFactor);
     }
 
-    // Thay đổi Material sang dạng chứa hình của Player
     public void SetOwner(string tag, Material playerMat)
     {
         if (hazardType != PadHazardType.None) return;
@@ -476,11 +522,10 @@ public class PaintPadData
         if (renderer != null)
         {
             renderer.material = playerMat;
-            renderer.material.color = Color.white; // Đảm bảo giữ nguyên màu sắc gốc của ảnh texture
+            renderer.material.color = Color.white;
         }
     }
 
-    // Thay đổi Material sang dạng chứa hình bẫy Bom hoặc Băng
     public void ApplyHazardVisual()
     {
         if (renderer == null) return;
