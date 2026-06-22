@@ -8,9 +8,14 @@ public class MiniGame2 : MonoBehaviour
 {
     [Header("Manager")]
     public MiniGameManager manager;
+    [Header("Camera Shake")]
+    public CameraShake cameraShake;
+    public float shakeDuration = 1.2f;
+    public float shakeStrength = 0.25f;
     [Header("Audio")]
     public AudioSource source;
     public AudioClip brickFallClip;
+    public AudioSource javaSource;
 
 
     [Header("Danh sách ô màu")]
@@ -62,7 +67,7 @@ public class MiniGame2 : MonoBehaviour
     public void StopMiniGame()
     {
         isRunning = false;
-
+        javaSource.enabled = false;
         StopAllCoroutines();
 
         if (canvasMiniGame != null)
@@ -85,33 +90,30 @@ public class MiniGame2 : MonoBehaviour
 
     void InitializeColorPools()
     {
+        // CẤP ĐỘ DỄ: Còn 4 màu (Đã xóa Magenta và Cyan)
         easyColors.Add(Color.red);
         easyColors.Add(Color.blue);
         easyColors.Add(Color.yellow);
         easyColors.Add(Color.green);
-        easyColors.Add(Color.magenta);
-        easyColors.Add(Color.cyan);
 
+        // CẤP ĐỘ TRUNG BÌNH: Lấy 4 màu trên cộng thêm 3 màu mới (Đã xóa 2 màu cuối là Xanh dương nhạt và Hồng nhạt)
         mediumColors.AddRange(easyColors);
-        mediumColors.Add(new Color(1f, 0.5f, 0f));
-        mediumColors.Add(new Color(0.5f, 0f, 0.5f));
-        mediumColors.Add(new Color(0f, 0.5f, 0f));
-        mediumColors.Add(new Color(0.6f, 0.8f, 1f));
-        mediumColors.Add(new Color(1f, 0.75f, 0.8f));
+        mediumColors.Add(new Color(1f, 0.5f, 0f));     // Màu Cam
+        mediumColors.Add(new Color(0.5f, 0f, 0.5f));   // Màu Tím
+        mediumColors.Add(new Color(0f, 0.5f, 0f));     // Màu Xanh lá đậm
 
+        // CẤP ĐỘ KHÓ: Lấy tất cả màu trung bình cộng thêm 4 màu mới (Đã xóa 2 màu cuối là Xám và Xám nhạt)
         hardColors.AddRange(mediumColors);
-        hardColors.Add(new Color(0.75f, 1f, 0f));
-        hardColors.Add(new Color(0f, 1f, 0.5f));
-        hardColors.Add(new Color(1f, 0.3f, 0.5f));
-        hardColors.Add(new Color(0.5f, 0.25f, 0f));
-        hardColors.Add(new Color(0.4f, 0.4f, 0.4f));
-        hardColors.Add(new Color(0.85f, 0.85f, 0.85f));
+        hardColors.Add(new Color(0.75f, 1f, 0f));      // Màu Chanh Tây (Lime)
+        hardColors.Add(new Color(0f, 1f, 0.5f));       // Màu Xanh bạc hà (Mint)
+        hardColors.Add(new Color(1f, 0.3f, 0.5f));     // Màu Hồng hạc (Flamingo)
+        hardColors.Add(new Color(0.5f, 0.25f, 0f));    // Màu Nâu đất
     }
 
     IEnumerator ColorGameLoop()
     {
         isRunning = true;
-
+        javaSource.enabled = true;
         currentRound = 1;
 
         yield return new WaitForSeconds(startDelay);
@@ -120,7 +122,7 @@ public class MiniGame2 : MonoBehaviour
         {
             if (roundText != null)
             {
-                roundText.text = "Lượt: " + currentRound;
+                roundText.text = "Round:" + currentRound;
             }
 
             int safePadsCount = 8;
@@ -238,6 +240,11 @@ public class MiniGame2 : MonoBehaviour
 
             // âm thanh sập
             source.PlayOneShot(brickFallClip);
+            if (cameraShake != null)
+            {
+                cameraShake.Shake(shakeDuration, shakeStrength);
+            }
+
             yield return new WaitForSeconds(0.5f);
 
             // ---- ĐÃ SỬA: QUÉT ĐẾM PLAYER THEO ĐỘ RỘNG HỘP TỐI ƯU HƠN ----
@@ -250,7 +257,7 @@ public class MiniGame2 : MonoBehaviour
                     if (playerCountOnThisPad >= 2)
                     {
                         pad.isSafe = false;
-                        Debug.Log($"<Color=Red>Ô {pad.gameObject.name} bị sập vì có {playerCountOnThisPad} Player cùng đứng!</Color>");
+                       // Debug.Log($"<Color=Red>Ô {pad.gameObject.name} bị sập vì có {playerCountOnThisPad} Player cùng đứng!</Color>");
                     }
                 }
             }

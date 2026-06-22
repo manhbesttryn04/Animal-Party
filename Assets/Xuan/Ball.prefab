@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 4125530506753513333}
   - component: {fileID: 7962880991040173490}
   - component: {fileID: 4969395806415118332}
+  - component: {fileID: 1795756313665021199}
   m_Layer: 0
   m_Name: Ball
   m_TagString: Untagged
@@ -125,3 +126,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1ac82850daaacee49b3dff618aeac0ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrowItem
+--- !u!114 &1795756313665021199
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4399692281173012721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 471645414da736046b540296f3678f4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FloatingObject
+  floatHeight: 0.3
+  floatSpeed: 2
+  rotateSpeed: 20
