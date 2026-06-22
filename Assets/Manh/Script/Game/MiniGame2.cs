@@ -15,6 +15,7 @@ public class MiniGame2 : MonoBehaviour
     [Header("Audio")]
     public AudioSource source;
     public AudioClip brickFallClip;
+    public AudioSource javaSource;
 
 
     [Header("Danh sách ô màu")]
@@ -66,7 +67,7 @@ public class MiniGame2 : MonoBehaviour
     public void StopMiniGame()
     {
         isRunning = false;
-
+        javaSource.enabled = false;
         StopAllCoroutines();
 
         if (canvasMiniGame != null)
@@ -112,7 +113,7 @@ public class MiniGame2 : MonoBehaviour
     IEnumerator ColorGameLoop()
     {
         isRunning = true;
-
+        javaSource.enabled = true;
         currentRound = 1;
 
         yield return new WaitForSeconds(startDelay);
@@ -121,7 +122,7 @@ public class MiniGame2 : MonoBehaviour
         {
             if (roundText != null)
             {
-                roundText.text = "Lượt: " + currentRound;
+                roundText.text = "Round:" + currentRound;
             }
 
             int safePadsCount = 8;
@@ -256,7 +257,7 @@ public class MiniGame2 : MonoBehaviour
                     if (playerCountOnThisPad >= 2)
                     {
                         pad.isSafe = false;
-                        Debug.Log($"<Color=Red>Ô {pad.gameObject.name} bị sập vì có {playerCountOnThisPad} Player cùng đứng!</Color>");
+                       // Debug.Log($"<Color=Red>Ô {pad.gameObject.name} bị sập vì có {playerCountOnThisPad} Player cùng đứng!</Color>");
                     }
                 }
             }
