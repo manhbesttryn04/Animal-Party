@@ -8,6 +8,10 @@ public class MiniGame2 : MonoBehaviour
 {
     [Header("Manager")]
     public MiniGameManager manager;
+    [Header("Camera Shake")]
+    public CameraShake cameraShake;
+    public float shakeDuration = 1.2f;
+    public float shakeStrength = 0.25f;
     [Header("Audio")]
     public AudioSource source;
     public AudioClip brickFallClip;
@@ -235,6 +239,11 @@ public class MiniGame2 : MonoBehaviour
 
             // âm thanh sập
             source.PlayOneShot(brickFallClip);
+            if (cameraShake != null)
+            {
+                cameraShake.Shake(shakeDuration, shakeStrength);
+            }
+
             yield return new WaitForSeconds(0.5f);
 
             // ---- ĐÃ SỬA: QUÉT ĐẾM PLAYER THEO ĐỘ RỘNG HỘP TỐI ƯU HƠN ----

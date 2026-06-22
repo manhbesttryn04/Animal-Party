@@ -137,7 +137,7 @@ public class ColorPad : MonoBehaviour
         transform.position = startPosition;
         transform.rotation = startRotation;
 
-        SetPadColor(Color.white);
+        SetPadColor(Color.gray3);
 
         if (meshRenderer != null)
         {
