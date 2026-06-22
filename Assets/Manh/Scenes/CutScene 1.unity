@@ -14535,7 +14535,7 @@ Transform:
   m_GameObject: {fileID: 775207260}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: -281, y: 5.38, z: 58}
+  m_LocalPosition: {x: -281, y: 8, z: 58}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -20597,10 +20597,10 @@ RectTransform:
   - {fileID: 1341078683}
   m_Father: {fileID: 1300930894}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 117, y: 18}
-  m_SizeDelta: {x: -900, y: 80}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 1200, y: 80}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &1161043929
 MonoBehaviour:
@@ -22811,14 +22811,10 @@ MonoBehaviour:
   - {fileID: 2000440087}
   cam: {fileID: 775207262}
   moveSpeed: 7
-  rotateSpeed: 2
+  rotateSpeed: 3
   source: {fileID: 1263849324}
   shipVoiceClip: {fileID: 8300000, guid: c53bb44a1f2d266458a1807af7671053, type: 3}
   shipMoveClip: {fileID: 8300000, guid: 7547672e6e0985641b4c354253ef190f, type: 3}
-  oggyVoiceClips:
-  - {fileID: 8300000, guid: ed840c62331888c42b0fe12dd33bb832, type: 3}
-  - {fileID: 8300000, guid: a453d5f7fc252fa45b3141283a9ff6e9, type: 3}
-  - {fileID: 8300000, guid: 9d759f9a9c837024fa97a120abffc76e, type: 3}
   audioSources:
   - {fileID: 775207265}
   - {fileID: 1263849324}
@@ -22834,7 +22830,14 @@ MonoBehaviour:
   finalGradient: {fileID: 11400000, guid: 41a3a6f1c47ea1946a73249ca2de1843, type: 2}
   normalOutlineColor: {r: 1, g: 1, b: 1, a: 0.2}
   finalOutlineColor: {r: 1, g: 1, b: 1, a: 0.12156863}
-  fadeInDuration: 0.5
+  narratorVoices:
+  - {fileID: 8300000, guid: ff31036c1a5145c43bf0561eacd7de1d, type: 3}
+  - {fileID: 8300000, guid: 62f4847f802ebb0419cf94f970938eba, type: 3}
+  - {fileID: 8300000, guid: 2b0137dd89afaa7459c550643d07c1f1, type: 3}
+  - {fileID: 8300000, guid: b8445ab1920c4a545967bef79f979df4, type: 3}
+  - {fileID: 8300000, guid: 0be23ca505168824a97c139ee10bf3c0, type: 3}
+  narratorVolume: 1
+  typeSpeed: 0.035
   fadeOutDuration: 0.3
   betweenLineFade: 0.3
 --- !u!4 &1263849323
@@ -37646,7 +37649,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: 0, z: 66.35254, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -39824,6 +39827,10 @@ PrefabInstance:
     - target: {fileID: 203866527842977423, guid: 48c3ad13977f20a4095fce6c0186711c, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4608966730463473846, guid: 48c3ad13977f20a4095fce6c0186711c, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 20.9
       objectReference: {fileID: 0}
     - target: {fileID: 4984177965433441110, guid: 48c3ad13977f20a4095fce6c0186711c, type: 3}
       propertyPath: m_Name
