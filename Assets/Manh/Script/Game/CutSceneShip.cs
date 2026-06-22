@@ -124,22 +124,22 @@ public class CutSceneShip : MonoBehaviour
         source.PlayOneShot(shipMoveClip);
 
         // Point 1
-        yield return StartCoroutine(ShowSubtitleWithVoice(0, false));
+        StartCoroutine(ShowSubtitleWithVoice(0, false));
         yield return StartCoroutine(MoveAndRotate(transVideoList[0]));
         yield return new WaitForSeconds(1f);
 
         // Point 2
-        yield return StartCoroutine(ShowSubtitleWithVoice(1, false));
+        StartCoroutine(ShowSubtitleWithVoice(1, false));
         yield return StartCoroutine(MoveAndRotate(transVideoList[1]));
         yield return new WaitForSeconds(1f);
 
         // Point 3
-        yield return StartCoroutine(ShowSubtitleWithVoice(2, false));
+        StartCoroutine(ShowSubtitleWithVoice(2, false));
         yield return StartCoroutine(MoveAndRotate(transVideoList[2]));
         yield return new WaitForSeconds(1f);
 
         // Point 4
-        yield return StartCoroutine(ShowSubtitleWithVoice(3, false));
+        StartCoroutine(ShowSubtitleWithVoice(3, false));
         yield return StartCoroutine(MoveAndRotate(transVideoList[3]));
         yield return new WaitForSeconds(1f);
 
@@ -156,7 +156,7 @@ public class CutSceneShip : MonoBehaviour
         yield return new WaitForSeconds(1.5f);
         if (skipHintObject) skipHintObject.SetActive(false);
 
-        yield return StartCoroutine(ShowSubtitleWithVoice(4, true));
+        StartCoroutine(ShowSubtitleWithVoice(4, true));
         yield return new WaitForSeconds(3f);
         StartCoroutine(ShowBlackPanel(4f));
     }
