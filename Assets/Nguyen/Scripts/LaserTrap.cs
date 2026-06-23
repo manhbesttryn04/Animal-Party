@@ -1,118 +1,196 @@
+using AnimalParty.Audio;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// Sử dụng Namespace giúp code không bị đụng độ tên với các thư viện của đồng đội
-namespace AnimalParty.Obstacles 
+namespace AnimalParty.Obstacles
 {
-    // Bắt buộc Unity phải có Collider thì script này mới chạy (tránh lỗi ngớ ngẩn quên gắn)
     [RequireComponent(typeof(Collider))]
-    [DisallowMultipleComponent] // Ngăn chặn việc lỡ tay kéo 2 script vào cùng 1 object
+    [DisallowMultipleComponent]
     public class LaserTrap : MonoBehaviour
     {
-        #region CẤU HÌNH TRÊN INSPECTOR
-        
         [Header("--- Target Detection ---")]
-        [Tooltip("Sử dụng LayerMask để lọc đối tượng va chạm (Tối ưu hiệu năng vật lý hơn dùng Tag)")]
         [SerializeField] private LayerMask targetLayer;
 
+        [Header("--- Wall Raycast ---")]
+        [SerializeField] private LayerMask wallLayer;
+        [SerializeField] private LineRenderer laserLine;
+        [SerializeField] private ParticleSystem leftWallImpact;
+        [SerializeField] private ParticleSystem rightWallImpact;
+        [SerializeField] private float impactOffset = 0.05f;
+
         [Header("--- Trap Settings ---")]
-        [Tooltip("Thời gian kháng sát thương tạm thời (giây). Ngăn chặn lỗi tụt máu liên tục trong 1 frame.")]
-        [SerializeField, Min(0f)] public float hitCooldown = 0.5f;
-        
-        [Tooltip("Lực hất văng vật lý (Knockback).")]
-        [SerializeField, Range(0f, 100f)] private float knockbackForce = 15f;
+        [SerializeField] private float hitCooldown = 0.5f;
+        [SerializeField] private int coinPenalty = 5;
+        [SerializeField] private float stunTime = 0.2f;
 
-        #endregion
+        [Header("--- Debug ---")]
+        [SerializeField] private bool showDebug = true;
 
-        #region BIẾN NỘI BỘ (PRIVATE)
-        
-        // Bộ nhớ Cache: Lưu lại thời điểm cuối cùng một mục tiêu bị chạm để tính Cooldown
-        private readonly Dictionary<Collider, float> _lastHitTimes = new Dictionary<Collider, float>();
+        private readonly Dictionary<Collider, float> _lastHitTimes =
+            new Dictionary<Collider, float>();
+
         private Collider _trapCollider;
-
-        #endregion
-
-        #region LOGIC VA CHẠM
 
         private void Awake()
         {
-            // Tự động chuyển thành Trigger bằng code, giảm thiểu rủi ro Human Error
             _trapCollider = GetComponent<Collider>();
             _trapCollider.isTrigger = true;
+
+            HideWallImpact();
         }
 
-        private void OnTriggerEnter(Collider other) => ProcessHit(other);
-        
-        // Dùng OnTriggerStay để xử lý trường hợp người chơi đứng lỳ trong vùng Lazer
-     //   private void OnTriggerStay(Collider other) => ProcessHit(other);
-
-        private void OnTriggerExit(Collider other)
+        private void Update()
         {
-            // Tối ưu bộ nhớ: Xóa mục tiêu khỏi danh sách chờ khi họ đã thoát khỏi Lazer
-            if (_lastHitTimes.ContainsKey(other))
+            UpdateWallImpact();
+        }
+
+        private void UpdateWallImpact()
+        {
+            if (laserLine == null || laserLine.positionCount < 2)
             {
-                _lastHitTimes.Remove(other);
+                HideWallImpact();
+                return;
+            }
+
+            // Vì KHÔNG dùng World Space nên phải đổi local -> world
+            Vector3 point0 = laserLine.transform.TransformPoint(laserLine.GetPosition(0));
+            Vector3 point1 = laserLine.transform.TransformPoint(laserLine.GetPosition(1));
+
+            Vector3 midPoint = Vector3.Lerp(point0, point1, 0.5f);
+
+            float leftDistance = Vector3.Distance(midPoint, point0);
+            float rightDistance = Vector3.Distance(midPoint, point1);
+
+            Vector3 dirMidToLeft = (point0 - midPoint).normalized;
+            Vector3 dirMidToRight = (point1 - midPoint).normalized;
+
+            Debug.DrawRay(midPoint, dirMidToLeft * leftDistance, Color.red);
+            Debug.DrawRay(midPoint, dirMidToRight * rightDistance, Color.blue);
+
+            if (Physics.Raycast(midPoint, dirMidToLeft, out RaycastHit leftHit, leftDistance, wallLayer))
+            {
+                Debug.Log("LEFT HIT: " + leftHit.collider.name);
+                ShowOneImpact(leftWallImpact, leftHit);
+            }
+            else
+            {
+                Debug.Log("LEFT KHONG HIT");
+                StopOneImpact(leftWallImpact);
+            }
+
+            if (Physics.Raycast(midPoint, dirMidToRight, out RaycastHit rightHit, rightDistance, wallLayer))
+            {
+                Debug.Log("RIGHT HIT: " + rightHit.collider.name);
+                ShowOneImpact(rightWallImpact, rightHit);
+            }
+            else
+            {
+                Debug.Log("RIGHT KHONG HIT");
+                StopOneImpact(rightWallImpact);
             }
         }
 
-        #endregion
+        private void ShowOneImpact(ParticleSystem impact, RaycastHit hit)
+        {
+            if (impact == null)
+            {
+                if (showDebug) Debug.LogWarning("Impact Particle NULL");
+                return;
+            }
 
-        #region XỬ LÝ CHÍNH TÂM
+            impact.gameObject.SetActive(true);
 
-        /// <summary>
-        /// Bộ lọc trung tâm: Xử lý logic an toàn trước khi áp dụng sát thương
-        /// </summary>
+            impact.transform.position =
+                hit.point + hit.normal * impactOffset;
+
+            impact.transform.rotation =
+                Quaternion.LookRotation(hit.normal);
+
+            if (!impact.isPlaying)
+                impact.Play();
+
+            if (showDebug)
+                Debug.Log("PLAY VFX AT: " + impact.transform.position);
+        }
+
+        private void StopOneImpact(ParticleSystem impact)
+        {
+            if (impact != null && impact.isPlaying)
+                impact.Stop();
+        }
+
+        private void HideWallImpact()
+        {
+            StopOneImpact(leftWallImpact);
+            StopOneImpact(rightWallImpact);
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            ProcessHit(other);
+        }
+
+        private void OnTriggerStay(Collider other)
+        {
+            ProcessHit(other);
+        }
+
+        private void OnTriggerExit(Collider other)
+        {
+            if (_lastHitTimes.ContainsKey(other))
+                _lastHitTimes.Remove(other);
+        }
+
         private void ProcessHit(Collider targetCollider)
         {
-            // 1. Kiểm tra Layer (Toán tử Bitwise tốc độ cao)
-            if ((targetLayer.value & (1 << targetCollider.gameObject.layer)) == 0) return;
+            if ((targetLayer.value & (1 << targetCollider.gameObject.layer)) == 0)
+                return;
 
-            // 2. Kiểm tra Cooldown (Có đang trong trạng thái miễn nhiễm không?)
-            if (!CanHitTarget(targetCollider)) return;
+            if (!CanHitTarget(targetCollider))
+                return;
 
-            // 3. Thực thi va chạm
-            ExecuteDamageAndKnockback(targetCollider);
+            HitPlayer(targetCollider);
 
-            // 4. Ghi đè lại thời gian chạm mới nhất
             _lastHitTimes[targetCollider] = Time.time;
         }
 
         private bool CanHitTarget(Collider targetCollider)
         {
             if (_lastHitTimes.TryGetValue(targetCollider, out float lastTime))
-            {
-                return (Time.time - lastTime) >= hitCooldown;
-            }
+                return Time.time - lastTime >= hitCooldown;
+
             return true;
         }
 
-        private void ExecuteDamageAndKnockback(Collider targetCollider)
+        private void HitPlayer(Collider targetCollider)
         {
-            // GỌI HÀM TRỪ MÁU BÊN FILE PlayerHealth.cs
-          PlayerMiniGame mini = targetCollider.GetComponentInParent<PlayerMiniGame>();
-            if (mini != null)
-            {
-                mini.UpCoin(0, 1);
-            }
-            else Debug.Log("ko thay");
+            if (MiniGameAudioManager.Instance != null)
+                MiniGameAudioManager.Instance.PlayHitLaserSound();
 
-               // ApplyKnockback(targetCollider);
+            PlayerMiniGame miniGame = targetCollider.GetComponent<PlayerMiniGame>();
+
+            if (miniGame != null)
+                miniGame.UpCoin(0, coinPenalty);
+
+            PlayerMove move = targetCollider.GetComponent<PlayerMove>();
+
+            if (move != null)
+                StartCoroutine(ElectricStun(move));
         }
 
-        private void ApplyKnockback(Collider targetCollider)
+        private IEnumerator ElectricStun(PlayerMove move)
         {
-            if (targetCollider.TryGetComponent(out CharacterController cc))
-            {
-                Vector3 pushDirection =
-                    (targetCollider.transform.position - transform.position).normalized;
+            move.isMove = false;
+            move.isJump = false;
 
-                pushDirection.y = 0.8f;
+            if (move.manager != null && move.manager.playerAnimator != null)
+                move.manager.playerAnimator.playerAnimator.SetTrigger("Jump");
 
-                // Đẩy lùi ngay lập tức
-                cc.Move(pushDirection * 2f);
-            }
+            yield return new WaitForSeconds(stunTime);
+
+            move.isMove = true;
+            move.isJump = true;
         }
-
-        #endregion
     }
 }

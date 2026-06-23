@@ -1,69 +1,190 @@
+using AnimalParty.Audio;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(LineRenderer))]
-public class AutoFitLaser : MonoBehaviour 
+public class AutoFitLaser : MonoBehaviour
 {
-    private LineRenderer line;
+    public LineRenderer line;
 
-    [Header("Cài đặt Laser")]
-    public float laserWidth = 0.5f; 
-    public float maxLaserDistance = 20f; 
-    public float fadeSpeed = 5f; // Tốc độ co giãn của tia laser (càng cao càng nhanh)
+    [Header("--- Cài đặt Laser ---")]
+    public float laserWidth = 0.5f;
+    public float maxLaserDistance = 50f;
+    public float fadeSpeed = 10f;
 
-    private float currentWidthMultiplier = 1f;
-    private float targetWidthMultiplier = 1f;
+    [Header("--- Layer ---")]
+    public LayerMask obstacleLayer;
+    public LayerMask targetLayer;
 
-    void Start()
+    [Header("--- Player Hit ---")]
+    public int coinPenalty = 5;
+    public float hitCooldown = 0.5f;
+    public float stunTime = 0.2f;
+
+    [Header("--- VFX chạm tường ---")]
+    public ParticleSystem wallImpact;
+    public float impactOffset = 0.05f;
+
+    public float currentWidthMultiplier = 0f;
+    public float targetWidthMultiplier = 0f;
+
+    private readonly Dictionary<PlayerMove, float> lastHitTimes = new();
+
+    private void Start()
     {
         line = GetComponent<LineRenderer>();
         line.useWorldSpace = true;
+        line.positionCount = 2;
+        line.startWidth = 0f;
+        line.endWidth = 0f;
+
+        HideWallImpact();
     }
 
-    void Update()
+    private void Update()
     {
-        // Tự động chuyển đổi mượt mà giữa độ dày cũ và mục tiêu (0 hoặc 1)
-        currentWidthMultiplier = Mathf.MoveTowards(currentWidthMultiplier, targetWidthMultiplier, fadeSpeed * Time.deltaTime);
+        currentWidthMultiplier = Mathf.MoveTowards(
+            currentWidthMultiplier,
+            targetWidthMultiplier,
+            fadeSpeed * Time.deltaTime
+        );
 
-        // Tính toán độ dày thực tế dựa trên tỉ lệ hiệu ứng
+        bool laserVisible = currentWidthMultiplier > 0.1f;
+
         float calculatedWidth = laserWidth * currentWidthMultiplier;
 
-        // 1. VẼ HÌNH ẢNH TIA LASER
         line.startWidth = calculatedWidth;
         line.endWidth = calculatedWidth;
-        line.SetPosition(0, transform.position);
 
-        float currentLaserLength = maxLaserDistance;
-        RaycastHit wallHit;
+        Vector3 startPoint = transform.position;
+        Vector3 direction = transform.forward;
+        Vector3 endPoint = startPoint + direction * maxLaserDistance;
 
-        if (Physics.Raycast(transform.position, transform.forward, out wallHit, maxLaserDistance))
+        // Line luôn dài full
+        line.SetPosition(0, startPoint);
+        line.SetPosition(1, endPoint);
+
+        // Raycast chỉ để hiện VFX tại điểm chạm Wall
+        if (Physics.Raycast(
+            startPoint,
+            direction,
+            out RaycastHit wallHit,
+            maxLaserDistance,
+            obstacleLayer,
+            QueryTriggerInteraction.Ignore))
         {
-            line.SetPosition(1, wallHit.point);
-            currentLaserLength = wallHit.distance;
+        
+            if (laserVisible)
+                ShowWallImpact(wallHit);
+            else
+            {
+             
+                HideWallImpact();
+            }
+
         }
         else
         {
-            line.SetPosition(1, transform.position + transform.forward * maxLaserDistance);
+            HideWallImpact();
         }
 
-        // 2. XỬ LÝ VA CHẠM (Chỉ gây sát thương khi tia laser đủ lớn)
-        if (currentWidthMultiplier > 0.1f) 
+        if (laserVisible)
         {
-            float radius = calculatedWidth / 2f;
-            RaycastHit[] hits = Physics.SphereCastAll(transform.position, radius, transform.forward, currentLaserLength);
-
-            foreach (RaycastHit hit in hits)
-            {
-                if (hit.collider.CompareTag("Player"))
-                {
-                    Debug.Log("Chém trúng: " + hit.collider.name);
-                }
-            }
+            CheckHitPlayer(calculatedWidth, maxLaserDistance);
         }
     }
 
-    // Hàm public để Hub bên ngoài gọi điều khiển bật tắt tàng hình
+    private void ShowWallImpact(RaycastHit wallHit)
+    {
+        if (wallImpact == null) return;
+
+        wallImpact.transform.position =
+            wallHit.point + wallHit.normal * impactOffset;
+
+        wallImpact.transform.rotation =
+            Quaternion.LookRotation(wallHit.normal);
+
+        if (!wallImpact.isPlaying)
+            wallImpact.Play();
+    }
+
+    private void HideWallImpact()
+    {
+        if (wallImpact == null) return;
+
+        if (wallImpact.isPlaying)
+            wallImpact.Stop();
+    }
+
+    private void CheckHitPlayer(float calculatedWidth, float laserLength)
+    {
+        float radius = calculatedWidth / 2f;
+
+        RaycastHit[] hits = Physics.SphereCastAll(
+            transform.position,
+            radius,
+            transform.forward,
+            laserLength,
+            targetLayer,
+            QueryTriggerInteraction.Ignore
+        );
+
+        foreach (RaycastHit hit in hits)
+        {
+            PlayerMove move =
+                hit.collider.GetComponentInParent<PlayerMove>();
+
+            if (move == null) continue;
+            if (!CanHit(move)) continue;
+
+            HitPlayer(move);
+            lastHitTimes[move] = Time.time;
+        }
+    }
+
+    private bool CanHit(PlayerMove move)
+    {
+        if (lastHitTimes.TryGetValue(move, out float lastTime))
+            return Time.time - lastTime >= hitCooldown;
+
+        return true;
+    }
+
+    private void HitPlayer(PlayerMove move)
+    {
+        MiniGameAudioManager.Instance.PlayHitLaserSound();
+        PlayerMiniGame mini =
+            move.GetComponent<PlayerMiniGame>();
+
+        if (mini != null)
+            mini.UpCoin(0, coinPenalty);
+
+        StartCoroutine(ElectricStun(move));
+    }
+
+    private IEnumerator ElectricStun(PlayerMove move)
+    {
+        move.isMove = false;
+        move.isJump = false;
+
+        if (move.manager != null &&
+            move.manager.playerAnimator != null)
+        {
+            move.manager.playerAnimator.playerAnimator.SetTrigger("Jump");
+        }
+
+        yield return new WaitForSeconds(stunTime);
+
+        move.isMove = true;
+        move.isJump = true;
+    }
+
     public void SetLaserActive(bool isActive)
     {
         targetWidthMultiplier = isActive ? 1f : 0f;
+
+        if (!isActive)
+            HideWallImpact();
     }
 }

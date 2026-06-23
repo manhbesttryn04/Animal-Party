@@ -15,7 +15,6 @@ public class PlayerMove : MonoBehaviour
     public bool isJumpAndMove, isMove, isJump = true;
     public bool IsMoving { get; private set; }
 
-
     public CharacterController controller;
     private Vector3 velocity;
 
@@ -38,11 +37,8 @@ public class PlayerMove : MonoBehaviour
             {
                 JumpAndGravity();
             }
-
         }
-       
     }
-
     void Move()
     {
   

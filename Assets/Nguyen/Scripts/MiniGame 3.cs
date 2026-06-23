@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
 
 public class MiniGame3 : MonoBehaviour
 {
@@ -10,15 +9,13 @@ public class MiniGame3 : MonoBehaviour
         Random, Alternating, DoubleAlternating, Burst, BothAtSameTime, AutoMixed 
     }
 
-    [Header("UI Settings")]
-    public TextMeshProUGUI timerText; 
-    public TextMeshProUGUI countdownText; 
-    public float totalGameTime = 300f; 
-
-    [Header("Phase Timings")]
-    public float timeToPhase2 = 15f;
-    public float timeToPhase3 = 30f;
-    public float timeToPhase4 = 45f;
+    [Header("--- Phase & Game Timings ---")]
+    [Tooltip("Tổng thời gian màn chơi (giây). Hết giờ này sẽ thắng/hết màn.")]
+    public float totalGameTime = 120f; // Mặc định 2 phút
+    
+    public float timeToPhase2 = 30f;
+    public float timeToPhase3 = 60f;
+    public float timeToPhase4 = 90f;
 
     [Header("Phase 2 Difficulty")]
     public float p2_LaserSpeed = 4f;       
@@ -38,11 +35,8 @@ public class MiniGame3 : MonoBehaviour
     [Header("References")]
     public PummelLaserHub centralHub; 
     public GameObject spamLaserPrefab;
-    public List<Transform> spawnPoints = new List<Transform>();
-   
-    // ==========================================
-    // BIẾN QUẢN LÝ THEO CHUẨN CỦA TEAM DỰ ÁN
-    // ==========================================
+    public List<Transform> spawnPoints = new List<Transform>(); 
+    
     [Header("Team Integration")]
     public bool isRunning = false; 
     
@@ -58,53 +52,44 @@ public class MiniGame3 : MonoBehaviour
     private int lastSpawnIndex = 0; 
     private int currentPhase = 0; 
     private bool isGameOver = false; 
-    private bool isCountdownActive = false; 
 
     void Start()
     {
         if (centralHub != null) centralHub.gameObject.SetActive(false);
-        
-        // Đã khôi phục lại lệnh này để game tự động chạy đếm ngược khi test độc lập!
-        //StartMiniGame(); 
     }
 
     public void StartMiniGame()
     {
-        // Nếu game đang chạy thì không start nữa
         if (isRunning) return;
 
         isRunning = true;
-        isCountdownActive = true;
         isGameOver = false;
+        survivalTime = 0f; 
+        currentPhase = 0;
         
-        // Chạy đếm ngược 3-2-1 rồi mới vào trận
-        StartCoroutine(PlayStartCountdown());
+        UpdateDifficultyPhase(); 
     }
 
     public void StopMiniGame()
     {
-      
         isRunning = false;
-        TriggerGameOver(); // Gọi hàm dọn dẹp laser của chúng ta
+        TriggerGameOver(); 
         StopAllCoroutines(); 
     }
-    // ==========================================
 
     void Update()
     {
-        // Kiểm tra xem game có đang được cho phép chạy không (Chuẩn của team)
-        if (!isRunning || isGameOver || isCountdownActive) return; 
+        if (!isRunning || isGameOver) return; 
 
         survivalTime += Time.deltaTime;
-        float remainingTime = totalGameTime - survivalTime;
 
-        if (remainingTime <= 0f)
+        // --- CƠ CHẾ MỚI: KIỂM TRA HẾT GIỜ ĐỂ KẾT THÚC MÀN CHƠI ---
+        if (survivalTime >= totalGameTime)
         {
-            StopMiniGame(); // Hết giờ tự động gọi hàm Stop của team
-            return;
+            CompleteMiniGame(); // Gọi hàm chiến thắng/kết thúc
+            return; // Dừng Update ngay lập tức
         }
 
-        UpdateUI(remainingTime);
         UpdateDifficultyPhase();
 
         waveTimer -= Time.deltaTime;
@@ -115,50 +100,33 @@ public class MiniGame3 : MonoBehaviour
         }
     }
 
-    private IEnumerator PlayStartCountdown()
+    // --- HÀM MỚI: KẾT THÚC KHI HẾT GIỜ ---
+    private void CompleteMiniGame()
     {
+        //Debug.Log("🎉 HẾT GIỜ! NGƯỜI CHƠI ĐÃ SỐNG SÓT THÀNH CÔNG!");
+        isRunning = false;
+        isGameOver = true;
         
-        string[] countdownTokens = { "3", "2", "1", "GO!" };
-        if (countdownText != null) countdownText.gameObject.SetActive(true);
-
-        foreach (string token in countdownTokens)
+        if (centralHub != null && centralHub.gameObject.activeInHierarchy) 
         {
-            if (countdownText != null) countdownText.text = token;
-            
-            float elapsed = 0f;
-            float slamDuration = 0.15f; 
-            
-            while (elapsed < slamDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = elapsed / slamDuration;
-                float easeOut = 1f - Mathf.Pow(1f - t, 4); 
-                float currentScale = Mathf.Lerp(4f, 1f, easeOut);
-                
-                if (countdownText != null) countdownText.transform.localScale = new Vector3(currentScale, currentScale, 1f);
-                yield return null;
-            }
-            
-            if (countdownText != null) countdownText.transform.localScale = Vector3.one;
-            yield return new WaitForSeconds(0.85f); 
+            centralHub.EndMinigameAndSink();
         }
+        
+        // Dọn dẹp Lazer rác trên sân
+        LaserSpamObject[] remainingLasers = FindObjectsByType<LaserSpamObject>(FindObjectsSortMode.None);
+        foreach (LaserSpamObject laser in remainingLasers) Destroy(laser.gameObject);
 
-        if (countdownText != null) countdownText.gameObject.SetActive(false);
-        isCountdownActive = false; 
-        UpdateDifficultyPhase(); 
-    }
-
-    private void UpdateUI(float remainingTime)
-    {
-        if (timerText != null) timerText.text = Mathf.CeilToInt(remainingTime).ToString();
+        // TODO: Chèn code gọi giao diện màn hình Win hoặc chuyển cảnh ở đây!
     }
 
     private void TriggerGameOver()
     {
         isGameOver = true; 
-        if (timerText != null) timerText.text = "0";
         
-        if (centralHub != null) centralHub.gameObject.SetActive(false);
+        if (centralHub != null && centralHub.gameObject.activeInHierarchy) 
+        {
+            centralHub.EndMinigameAndSink();
+        }
         
         LaserSpamObject[] remainingLasers = FindObjectsByType<LaserSpamObject>(FindObjectsSortMode.None);
         foreach (LaserSpamObject laser in remainingLasers) Destroy(laser.gameObject);
@@ -175,7 +143,8 @@ public class MiniGame3 : MonoBehaviour
         else if (survivalTime >= timeToPhase2 && survivalTime < timeToPhase3 && currentPhase != 2)
         {
             currentPhase = 2;
-            if (centralHub != null) centralHub.gameObject.SetActive(false); 
+            
+            if (centralHub != null) centralHub.EndMinigameAndSink();            
             
             currentMode = SpawnMode.Alternating; 
             currentLaserSpeed = p2_LaserSpeed;
@@ -186,7 +155,11 @@ public class MiniGame3 : MonoBehaviour
         else if (survivalTime >= timeToPhase3 && survivalTime < timeToPhase4 && currentPhase != 3)
         {
             currentPhase = 3;
-            if (centralHub != null) centralHub.gameObject.SetActive(false); 
+            
+            if (centralHub != null && centralHub.gameObject.activeInHierarchy) 
+            {
+                centralHub.EndMinigameAndSink(); 
+            }
             
             currentMode = SpawnMode.Random; 
             currentLaserSpeed = p3_LaserSpeed;
@@ -197,7 +170,11 @@ public class MiniGame3 : MonoBehaviour
         else if (survivalTime >= timeToPhase4 && currentPhase != 4)
         {
             currentPhase = 4;
-            if (centralHub != null) centralHub.gameObject.SetActive(false); 
+            
+            if (centralHub != null && centralHub.gameObject.activeInHierarchy) 
+            {
+                centralHub.EndMinigameAndSink(); 
+            }
             
             currentMode = SpawnMode.AutoMixed; 
             currentLaserSpeed = p4_LaserSpeed;
