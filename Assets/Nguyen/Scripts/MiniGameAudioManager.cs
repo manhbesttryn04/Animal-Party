@@ -10,7 +10,7 @@ namespace AnimalParty.Audio
         [Header("--- Máy Phát Âm Thanh (Audio Sources) ---")]
         [Tooltip("Nguồn phát nhạc nền (Sẽ lặp lại liên tục)")]
         public AudioSource bgmSource;
-        
+
         [Tooltip("Nguồn phát hiệu ứng (SFX - Bắn, Chạm, Nổ...)")]
         public AudioSource sfxSource;
 
@@ -29,7 +29,7 @@ namespace AnimalParty.Audio
             else
             {
                 // Nếu lỡ tay kéo 2 cục Manager vào Scene, hủy cục dư thừa đi
-                Destroy(gameObject); 
+                Destroy(gameObject);
             }
         }
 
@@ -68,6 +68,24 @@ namespace AnimalParty.Audio
             {
                 sfxSource.PlayOneShot(laserAmbientSound);
             }
+        }
+
+        public void StartLaserLoop()
+        {
+            if (bgmSource == null || laserAmbientSound == null)
+                return;
+
+            bgmSource.clip = laserAmbientSound;
+            bgmSource.loop = true;
+            bgmSource.Play();
+        }
+
+        public void StopLaserLoop()
+        {
+            if (bgmSource == null)
+                return;
+
+            bgmSource.Stop();
         }
     }
 }

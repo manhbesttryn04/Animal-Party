@@ -24,6 +24,11 @@ namespace AnimalParty.Obstacles
         [SerializeField] private int coinPenalty = 5;
         [SerializeField] private float stunTime = 0.2f;
 
+        [Header("--- Player Electric Effect ---")]
+        [SerializeField] private float playerShakeAmount = 0.08f;
+        [SerializeField] private float flashDuration = 0.4f;
+        [SerializeField] private float flashInterval = 0.05f;
+
         [Header("--- Debug ---")]
         [SerializeField] private bool showDebug = true;
 
@@ -31,6 +36,8 @@ namespace AnimalParty.Obstacles
             new Dictionary<Collider, float>();
 
         private Collider _trapCollider;
+        private readonly HashSet<PlayerMove> electricPlayers = new HashSet<PlayerMove>();
+
 
         private void Awake()
         {
@@ -53,9 +60,11 @@ namespace AnimalParty.Obstacles
                 return;
             }
 
-            // Vì KHÔNG dùng World Space nên phải đổi local -> world
-            Vector3 point0 = laserLine.transform.TransformPoint(laserLine.GetPosition(0));
-            Vector3 point1 = laserLine.transform.TransformPoint(laserLine.GetPosition(1));
+            Vector3 point0 =
+                laserLine.transform.TransformPoint(laserLine.GetPosition(0));
+
+            Vector3 point1 =
+                laserLine.transform.TransformPoint(laserLine.GetPosition(1));
 
             Vector3 midPoint = Vector3.Lerp(point0, point1, 0.5f);
 
@@ -65,28 +74,51 @@ namespace AnimalParty.Obstacles
             Vector3 dirMidToLeft = (point0 - midPoint).normalized;
             Vector3 dirMidToRight = (point1 - midPoint).normalized;
 
-            Debug.DrawRay(midPoint, dirMidToLeft * leftDistance, Color.red);
-            Debug.DrawRay(midPoint, dirMidToRight * rightDistance, Color.blue);
-
-            if (Physics.Raycast(midPoint, dirMidToLeft, out RaycastHit leftHit, leftDistance, wallLayer))
+            if (showDebug)
             {
-                Debug.Log("LEFT HIT: " + leftHit.collider.name);
+                Debug.DrawRay(midPoint, dirMidToLeft * leftDistance, Color.red);
+                Debug.DrawRay(midPoint, dirMidToRight * rightDistance, Color.blue);
+            }
+
+            if (Physics.Raycast(
+                midPoint,
+                dirMidToLeft,
+                out RaycastHit leftHit,
+                leftDistance,
+                wallLayer,
+                QueryTriggerInteraction.Ignore))
+            {
+                if (showDebug)
+                    Debug.Log("LEFT HIT: " + leftHit.collider.name);
+
                 ShowOneImpact(leftWallImpact, leftHit);
             }
             else
             {
-                Debug.Log("LEFT KHONG HIT");
+                if (showDebug)
+                    Debug.Log("LEFT KHONG HIT");
+
                 StopOneImpact(leftWallImpact);
             }
 
-            if (Physics.Raycast(midPoint, dirMidToRight, out RaycastHit rightHit, rightDistance, wallLayer))
+            if (Physics.Raycast(
+                midPoint,
+                dirMidToRight,
+                out RaycastHit rightHit,
+                rightDistance,
+                wallLayer,
+                QueryTriggerInteraction.Ignore))
             {
-                Debug.Log("RIGHT HIT: " + rightHit.collider.name);
+                if (showDebug)
+                    Debug.Log("RIGHT HIT: " + rightHit.collider.name);
+
                 ShowOneImpact(rightWallImpact, rightHit);
             }
             else
             {
-                Debug.Log("RIGHT KHONG HIT");
+                if (showDebug)
+                    Debug.Log("RIGHT KHONG HIT");
+
                 StopOneImpact(rightWallImpact);
             }
         }
@@ -95,7 +127,9 @@ namespace AnimalParty.Obstacles
         {
             if (impact == null)
             {
-                if (showDebug) Debug.LogWarning("Impact Particle NULL");
+                if (showDebug)
+                    Debug.LogWarning("Impact Particle NULL");
+
                 return;
             }
 
@@ -109,9 +143,6 @@ namespace AnimalParty.Obstacles
 
             if (!impact.isPlaying)
                 impact.Play();
-
-            if (showDebug)
-                Debug.Log("PLAY VFX AT: " + impact.transform.position);
         }
 
         private void StopOneImpact(ParticleSystem impact)
@@ -168,15 +199,23 @@ namespace AnimalParty.Obstacles
             if (MiniGameAudioManager.Instance != null)
                 MiniGameAudioManager.Instance.PlayHitLaserSound();
 
-            PlayerMiniGame miniGame = targetCollider.GetComponent<PlayerMiniGame>();
+            PlayerMiniGame miniGame =
+                targetCollider.GetComponent<PlayerMiniGame>();
 
             if (miniGame != null)
                 miniGame.UpCoin(0, coinPenalty);
 
-            PlayerMove move = targetCollider.GetComponent<PlayerMove>();
+            PlayerMove move =
+                targetCollider.GetComponent<PlayerMove>();
 
             if (move != null)
+            {
                 StartCoroutine(ElectricStun(move));
+                if (!electricPlayers.Contains(move))
+                {
+                    StartCoroutine(PlayerElectricEffect(move));
+                }
+            }
         }
 
         private IEnumerator ElectricStun(PlayerMove move)
@@ -184,13 +223,85 @@ namespace AnimalParty.Obstacles
             move.isMove = false;
             move.isJump = false;
 
-            if (move.manager != null && move.manager.playerAnimator != null)
+            if (move.manager != null &&
+                move.manager.playerAnimator != null)
+            {
                 move.manager.playerAnimator.playerAnimator.SetTrigger("Jump");
+            }
 
             yield return new WaitForSeconds(stunTime);
 
             move.isMove = true;
             move.isJump = true;
+        }
+
+        private IEnumerator PlayerElectricEffect(PlayerMove move)
+        {
+            electricPlayers.Add(move);
+            Transform playerTransform = move.transform;
+            Vector3 originalLocalPos = playerTransform.localPosition;
+
+            Renderer[] renderers =
+                move.GetComponentsInChildren<Renderer>();
+
+            List<Material> materials = new List<Material>();
+            List<Color> originalColors = new List<Color>();
+
+            foreach (Renderer r in renderers)
+            {
+                foreach (Material mat in r.materials)
+                {
+                    materials.Add(mat);
+
+                    if (mat.HasProperty("_BaseColor"))
+                        originalColors.Add(mat.GetColor("_BaseColor"));
+                    else if (mat.HasProperty("_Color"))
+                        originalColors.Add(mat.GetColor("_Color"));
+                    else
+                        originalColors.Add(Color.white);
+                }
+            }
+
+            float timer = 0f;
+            bool white = false;
+
+            while (timer < flashDuration)
+            {
+                Vector3 shakeOffset = new Vector3(
+                    Random.Range(-playerShakeAmount, playerShakeAmount),
+                    Random.Range(-playerShakeAmount, playerShakeAmount),
+                    Random.Range(-playerShakeAmount, playerShakeAmount)
+                );
+
+                playerTransform.localPosition =
+                    originalLocalPos + shakeOffset;
+
+                Color flashColor = white ? Color.white : Color.black;
+
+                for (int i = 0; i < materials.Count; i++)
+                {
+                    if (materials[i].HasProperty("_BaseColor"))
+                        materials[i].SetColor("_BaseColor", flashColor);
+                    else if (materials[i].HasProperty("_Color"))
+                        materials[i].SetColor("_Color", flashColor);
+                }
+
+                white = !white;
+
+                yield return new WaitForSeconds(flashInterval);
+                timer += flashInterval;
+            }
+
+            playerTransform.localPosition = originalLocalPos;
+
+            for (int i = 0; i < materials.Count; i++)
+            {
+                if (materials[i].HasProperty("_BaseColor"))
+                    materials[i].SetColor("_BaseColor", originalColors[i]);
+                else if (materials[i].HasProperty("_Color"))
+                    materials[i].SetColor("_Color", originalColors[i]);
+            }
+            electricPlayers.Remove(move);
         }
     }
 }

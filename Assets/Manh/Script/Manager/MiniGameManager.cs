@@ -33,11 +33,6 @@ public class MiniGameManager : MonoBehaviour
 
     public MapMiniGameList mapMiniGameList;
 
-    [Header("Light Setting")]
-    public Light light;
-    public float startIntensity;
-
-
     // =========================================================
     // CAMERA
     // =========================================================
@@ -149,9 +144,6 @@ public class MiniGameManager : MonoBehaviour
     // =========================================================
     // STATE
     // =========================================================
-    public Material normalSkybox;
-    public Material stormSkybox;
-
     [Header("Game State")]
 
     // Kiểm tra game đang chạy
@@ -166,14 +158,6 @@ public class MiniGameManager : MonoBehaviour
     // START MINIGAME
     // =========================================================
 
-    private void Start()
-    {
-        
-        if (light != null)
-        {
-            startIntensity = light.intensity;
-        }
-    }
     public void StartMiniGame()
     {
         // Nếu game đang chạy thì không start nữa
@@ -683,27 +667,23 @@ public class MiniGameManager : MonoBehaviour
         switch (indexMiniGame)
         {
             case 1:
-              //  countDownTime = 60f;    
+                countDownTime = 120f;    
                 break;
 
             case 2:
-               // countDownTime = 60f;
+                 countDownTime = 120f;
                 break;
 
             case 3:
-                light.intensity = 0;
-              //  countDownTime = 99f;
+                countDownTime = 120f;
                 break;
 
             case 4:
-              //  light.intensity = 0.2f;
-               // ChangeToStormSky();
-               // countDownTime = 99f;
+                countDownTime = 90f;
                 break;
 
             case 5:
-                light.intensity = 0.2f;
-               // countDownTime = 60f;
+               countDownTime = 120f;
                 break;
 
             case 6:
@@ -724,21 +704,5 @@ public class MiniGameManager : MonoBehaviour
             default:
                 break;
         }
-    }
-    public void SetupStopLightAndTime()
-    {
-        light.intensity = startIntensity;
-        ChangeToNormalSky();
-    }
-    public void ChangeToStormSky()
-    {
-        RenderSettings.skybox = stormSkybox;
-        DynamicGI.UpdateEnvironment();
-    }
-
-    public void ChangeToNormalSky()
-    {
-        RenderSettings.skybox = normalSkybox;
-        DynamicGI.UpdateEnvironment();
     }
 }

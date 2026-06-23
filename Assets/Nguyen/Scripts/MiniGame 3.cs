@@ -1,135 +1,157 @@
+using AnimalParty.Audio;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class MiniGame3 : MonoBehaviour
 {
-    public enum SpawnMode 
-    { 
-        Random, Alternating, DoubleAlternating, Burst, BothAtSameTime, AutoMixed 
+    public enum SpawnMode
+    {
+        Random, Alternating, DoubleAlternating, Burst, BothAtSameTime, AutoMixed
     }
 
     [Header("--- Phase & Game Timings ---")]
-    [Tooltip("Tổng thời gian màn chơi (giây). Hết giờ này sẽ thắng/hết màn.")]
-    public float totalGameTime = 120f; // Mặc định 2 phút
-    
+    public float totalGameTime = 120f;
     public float timeToPhase2 = 30f;
     public float timeToPhase3 = 60f;
     public float timeToPhase4 = 90f;
 
     [Header("Phase 2 Difficulty")]
-    public float p2_LaserSpeed = 4f;       
-    public int p2_LasersPerWave = 3;       
-    public float p2_WaveDelay = 4f;        
+    public float p2_LaserSpeed = 4f;
+    public int p2_LasersPerWave = 3;
+    public float p2_WaveDelay = 4f;
 
     [Header("Phase 3 Difficulty")]
-    public float p3_LaserSpeed = 6f;       
+    public float p3_LaserSpeed = 6f;
     public int p3_LasersPerWave = 4;
     public float p3_WaveDelay = 3.5f;
 
     [Header("Phase 4 Difficulty")]
-    public float p4_LaserSpeed = 8.5f;     
+    public float p4_LaserSpeed = 8.5f;
     public int p4_LasersPerWave = 5;
     public float p4_WaveDelay = 3f;
 
     [Header("References")]
-    public PummelLaserHub centralHub; 
+    public PummelLaserHub centralHub;
     public GameObject spamLaserPrefab;
-    public List<Transform> spawnPoints = new List<Transform>(); 
-    
+    public List<Transform> spawnPoints = new List<Transform>();
+
     [Header("Team Integration")]
-    public bool isRunning = false; 
-    
-    private float timeBetweenWaves = 5f;
-    private int lasersPerWave = 0; 
-    private float delayBetweenLasers = 1.2f;
-    private float currentLaserSpeed = 4f;
-    private SpawnMode currentMode = SpawnMode.Alternating;
+    public bool isRunning = false;
 
-    private float survivalTime = 0f;
-    private float waveTimer = 3f;
-    private int spawnCounter = 0; 
-    private int lastSpawnIndex = 0; 
-    private int currentPhase = 0; 
-    private bool isGameOver = false; 
+    private float timeBetweenWaves;
+    private int lasersPerWave;
+    private float delayBetweenLasers;
+    private float currentLaserSpeed;
+    private SpawnMode currentMode;
 
-    void Start()
+    private float survivalTime;
+    private float waveTimer;
+    private int spawnCounter;
+    private int lastSpawnIndex;
+    private int currentPhase;
+    private bool isGameOver;
+    private bool isSpawningWave;
+
+    private void Start()
     {
-        if (centralHub != null) centralHub.gameObject.SetActive(false);
+        ResetMiniGameState();
+
+        if (centralHub != null)
+            centralHub.gameObject.SetActive(false);
     }
 
     public void StartMiniGame()
     {
-        if (isRunning) return;
+        StopAllCoroutines();
+        ClearAllLasers();
+        ResetMiniGameState();
 
         isRunning = true;
         isGameOver = false;
-        survivalTime = 0f; 
-        currentPhase = 0;
-        
-        UpdateDifficultyPhase(); 
+
+        if (centralHub != null)
+        {
+            centralHub.gameObject.SetActive(true);
+            centralHub.ResetHub();
+        }
+
+        UpdateDifficultyPhase();
+
+        Debug.Log("MiniGame3 START");
     }
 
     public void StopMiniGame()
     {
+        if (!isRunning && isGameOver) return;
+
         isRunning = false;
-        TriggerGameOver(); 
-        StopAllCoroutines(); 
+        isGameOver = true;
+
+        StopAllCoroutines();
+        ClearAllLasers();
+
+        if (centralHub != null && centralHub.gameObject.activeInHierarchy)
+            centralHub.EndMinigameAndSink();
+
+        Debug.Log("MiniGame3 STOP");
     }
 
-    void Update()
+    private void Update()
     {
-        if (!isRunning || isGameOver) return; 
+        if (!isRunning || isGameOver) return;
 
         survivalTime += Time.deltaTime;
 
-        // --- CƠ CHẾ MỚI: KIỂM TRA HẾT GIỜ ĐỂ KẾT THÚC MÀN CHƠI ---
         if (survivalTime >= totalGameTime)
         {
-            CompleteMiniGame(); // Gọi hàm chiến thắng/kết thúc
-            return; // Dừng Update ngay lập tức
+            CompleteMiniGame();
+            return;
         }
 
         UpdateDifficultyPhase();
 
         waveTimer -= Time.deltaTime;
-        if (waveTimer <= 0f)
+
+        if (waveTimer <= 0f && !isSpawningWave)
         {
             StartCoroutine(SpawnSpamWave());
             waveTimer = timeBetweenWaves;
         }
     }
 
-    // --- HÀM MỚI: KẾT THÚC KHI HẾT GIỜ ---
-    private void CompleteMiniGame()
+    private void ResetMiniGameState()
     {
-        //Debug.Log("🎉 HẾT GIỜ! NGƯỜI CHƠI ĐÃ SỐNG SÓT THÀNH CÔNG!");
-        isRunning = false;
-        isGameOver = true;
-        
-        if (centralHub != null && centralHub.gameObject.activeInHierarchy) 
-        {
-            centralHub.EndMinigameAndSink();
-        }
-        
-        // Dọn dẹp Lazer rác trên sân
-        LaserSpamObject[] remainingLasers = FindObjectsByType<LaserSpamObject>(FindObjectsSortMode.None);
-        foreach (LaserSpamObject laser in remainingLasers) Destroy(laser.gameObject);
+        survivalTime = 0f;
+        waveTimer = 3f;
 
-        // TODO: Chèn code gọi giao diện màn hình Win hoặc chuyển cảnh ở đây!
+        currentPhase = 0;
+        spawnCounter = 0;
+        lastSpawnIndex = 0;
+        isSpawningWave = false;
+
+        timeBetweenWaves = 5f;
+        lasersPerWave = 0;
+        delayBetweenLasers = 1.2f;
+        currentLaserSpeed = 4f;
+        currentMode = SpawnMode.Alternating;
+
+        isRunning = false;
+        isGameOver = false;
     }
 
-    private void TriggerGameOver()
+    private void CompleteMiniGame()
     {
-        isGameOver = true; 
-        
-        if (centralHub != null && centralHub.gameObject.activeInHierarchy) 
-        {
+        isRunning = false;
+        isGameOver = true;
+
+        StopAllCoroutines();
+        ClearAllLasers();
+
+        if (centralHub != null && centralHub.gameObject.activeInHierarchy)
             centralHub.EndMinigameAndSink();
-        }
-        
-        LaserSpamObject[] remainingLasers = FindObjectsByType<LaserSpamObject>(FindObjectsSortMode.None);
-        foreach (LaserSpamObject laser in remainingLasers) Destroy(laser.gameObject);
+
+      //  Debug.Log("MiniGame3 COMPLETE");
     }
 
     private void UpdateDifficultyPhase()
@@ -137,79 +159,106 @@ public class MiniGame3 : MonoBehaviour
         if (survivalTime < timeToPhase2 && currentPhase != 1)
         {
             currentPhase = 1;
-            if (centralHub != null) centralHub.gameObject.SetActive(true); 
-            lasersPerWave = 0; 
+
+            lasersPerWave = 0;
+            waveTimer = timeBetweenWaves;
+
+           // Debug.Log("Phase 1: Central Hub");
         }
         else if (survivalTime >= timeToPhase2 && survivalTime < timeToPhase3 && currentPhase != 2)
         {
             currentPhase = 2;
-            
-            if (centralHub != null) centralHub.EndMinigameAndSink();            
-            
-            currentMode = SpawnMode.Alternating; 
+
+            if (centralHub != null && centralHub.gameObject.activeInHierarchy)
+                centralHub.EndMinigameAndSink();
+
+            currentMode = SpawnMode.Alternating;
             currentLaserSpeed = p2_LaserSpeed;
-            lasersPerWave = p2_LasersPerWave; 
+            lasersPerWave = p2_LasersPerWave;
             timeBetweenWaves = p2_WaveDelay;
             delayBetweenLasers = 1.2f;
+            waveTimer = timeBetweenWaves;
+
+            ///Debug.Log("Phase 2");
         }
         else if (survivalTime >= timeToPhase3 && survivalTime < timeToPhase4 && currentPhase != 3)
         {
             currentPhase = 3;
-            
-            if (centralHub != null && centralHub.gameObject.activeInHierarchy) 
-            {
-                centralHub.EndMinigameAndSink(); 
-            }
-            
-            currentMode = SpawnMode.Random; 
+
+            currentMode = SpawnMode.Random;
             currentLaserSpeed = p3_LaserSpeed;
             lasersPerWave = p3_LasersPerWave;
             timeBetweenWaves = p3_WaveDelay;
-            delayBetweenLasers = 1.0f; 
+            delayBetweenLasers = 1.0f;
+            waveTimer = timeBetweenWaves;
+
+          //  Debug.Log("Phase 3");
         }
         else if (survivalTime >= timeToPhase4 && currentPhase != 4)
         {
             currentPhase = 4;
-            
-            if (centralHub != null && centralHub.gameObject.activeInHierarchy) 
-            {
-                centralHub.EndMinigameAndSink(); 
-            }
-            
-            currentMode = SpawnMode.AutoMixed; 
+
+            currentMode = SpawnMode.AutoMixed;
             currentLaserSpeed = p4_LaserSpeed;
             lasersPerWave = p4_LasersPerWave;
             timeBetweenWaves = p4_WaveDelay;
             delayBetweenLasers = 0.8f;
+            waveTimer = timeBetweenWaves;
+
+            //Debug.Log("Phase 4");
         }
     }
 
     private IEnumerator SpawnSpamWave()
     {
-        if (spawnPoints.Count == 0 || spamLaserPrefab == null || lasersPerWave <= 0) yield break;
+        isSpawningWave = true;
 
-        SpawnMode waveMode = currentMode == SpawnMode.AutoMixed ? (SpawnMode)Random.Range(0, 6) : currentMode;
-        spawnCounter = 0; 
+        if (spawnPoints.Count == 0 || spamLaserPrefab == null || lasersPerWave <= 0)
+        {
+            isSpawningWave = false;
+            yield break;
+        }
+
+        SpawnMode waveMode =
+            currentMode == SpawnMode.AutoMixed
+                ? (SpawnMode)Random.Range(0, 6)
+                : currentMode;
+
+        spawnCounter = 0;
 
         for (int i = 0; i < lasersPerWave; i++)
         {
-            if (isGameOver) yield break; 
+            if (isGameOver)
+            {
+                isSpawningWave = false;
+                yield break;
+            }
 
             if (waveMode == SpawnMode.BothAtSameTime)
             {
-                foreach (Transform sp in spawnPoints) SpawnSingleLaser(sp);
+                foreach (Transform sp in spawnPoints)
+                    SpawnSingleLaser(sp);
             }
             else
             {
                 Transform selectedPoint = GetSpawnPoint(waveMode);
-                if (selectedPoint != null) SpawnSingleLaser(selectedPoint);
+
+                if (selectedPoint != null)
+                    SpawnSingleLaser(selectedPoint);
             }
 
-            float actualDelay = (waveMode == SpawnMode.Burst) ? delayBetweenLasers * 0.5f : delayBetweenLasers;
+            float actualDelay =
+                waveMode == SpawnMode.Burst
+                    ? delayBetweenLasers * 0.5f
+                    : delayBetweenLasers;
+
             yield return new WaitForSeconds(actualDelay);
         }
-        
-        if (waveMode == SpawnMode.Burst) lastSpawnIndex = (lastSpawnIndex + 1) % spawnPoints.Count;
+
+        if (waveMode == SpawnMode.Burst)
+            lastSpawnIndex = (lastSpawnIndex + 1) % spawnPoints.Count;
+
+        isSpawningWave = false;
     }
 
     private Transform GetSpawnPoint(SpawnMode mode)
@@ -218,23 +267,29 @@ public class MiniGame3 : MonoBehaviour
         {
             case SpawnMode.Random:
                 return spawnPoints[Random.Range(0, spawnPoints.Count)];
-            
+
             case SpawnMode.Alternating:
             case SpawnMode.Burst:
                 Transform pt = spawnPoints[lastSpawnIndex];
-                if (mode == SpawnMode.Alternating) lastSpawnIndex = (lastSpawnIndex + 1) % spawnPoints.Count;
+
+                if (mode == SpawnMode.Alternating)
+                    lastSpawnIndex = (lastSpawnIndex + 1) % spawnPoints.Count;
+
                 return pt;
-            
+
             case SpawnMode.DoubleAlternating:
                 Transform dPt = spawnPoints[lastSpawnIndex];
+
                 spawnCounter++;
-                if (spawnCounter >= 2) 
+
+                if (spawnCounter >= 2)
                 {
                     lastSpawnIndex = (lastSpawnIndex + 1) % spawnPoints.Count;
                     spawnCounter = 0;
                 }
+
                 return dPt;
-                
+
             default:
                 return spawnPoints[0];
         }
@@ -242,7 +297,7 @@ public class MiniGame3 : MonoBehaviour
 
     private void SpawnSingleLaser(Transform sp)
     {
-        Quaternion finalRotation = sp.rotation; 
+        Quaternion finalRotation = sp.rotation;
 
         if (Camera.main != null)
         {
@@ -250,14 +305,29 @@ public class MiniGame3 : MonoBehaviour
             camRight.y = 0f;
             camRight.Normalize();
 
-            if (sp.name.Contains("Left")) finalRotation = Quaternion.LookRotation(camRight);
-            else if (sp.name.Contains("Right")) finalRotation = Quaternion.LookRotation(-camRight);
+            if (sp.name.Contains("Left"))
+                finalRotation = Quaternion.LookRotation(camRight);
+            else if (sp.name.Contains("Right"))
+                finalRotation = Quaternion.LookRotation(-camRight);
         }
 
         GameObject newLaser = Instantiate(spamLaserPrefab, sp.position, finalRotation);
+
         if (newLaser.TryGetComponent<LaserSpamObject>(out var laserScript))
-        {
             laserScript.speed = currentLaserSpeed;
-        }
+
+        if (MiniGameAudioManager.Instance != null)
+            MiniGameAudioManager.Instance.PlayLaserSound();
+
+        // Debug.Log("Spawn Laser: " + newLaser.name);
+    }
+
+    private void ClearAllLasers()
+    {
+        LaserSpamObject[] remainingLasers =
+            FindObjectsByType<LaserSpamObject>(FindObjectsSortMode.None);
+
+        foreach (LaserSpamObject laser in remainingLasers)
+            Destroy(laser.gameObject);
     }
 }

@@ -22,6 +22,11 @@ public class AutoFitLaser : MonoBehaviour
     public float hitCooldown = 0.5f;
     public float stunTime = 0.2f;
 
+    [Header("--- Player Electric Effect ---")]
+    public float playerShakeAmount = 0.08f;
+    public float flashDuration = 0.4f;
+    public float flashInterval = 0.05f;
+
     [Header("--- VFX chạm tường ---")]
     public ParticleSystem wallImpact;
     public float impactOffset = 0.05f;
@@ -30,6 +35,7 @@ public class AutoFitLaser : MonoBehaviour
     public float targetWidthMultiplier = 0f;
 
     private readonly Dictionary<PlayerMove, float> lastHitTimes = new();
+    private readonly HashSet<PlayerMove> electricPlayers = new HashSet<PlayerMove>();
 
     private void Start()
     {
@@ -51,7 +57,6 @@ public class AutoFitLaser : MonoBehaviour
         );
 
         bool laserVisible = currentWidthMultiplier > 0.1f;
-
         float calculatedWidth = laserWidth * currentWidthMultiplier;
 
         line.startWidth = calculatedWidth;
@@ -61,11 +66,9 @@ public class AutoFitLaser : MonoBehaviour
         Vector3 direction = transform.forward;
         Vector3 endPoint = startPoint + direction * maxLaserDistance;
 
-        // Line luôn dài full
         line.SetPosition(0, startPoint);
         line.SetPosition(1, endPoint);
 
-        // Raycast chỉ để hiện VFX tại điểm chạm Wall
         if (Physics.Raycast(
             startPoint,
             direction,
@@ -74,15 +77,10 @@ public class AutoFitLaser : MonoBehaviour
             obstacleLayer,
             QueryTriggerInteraction.Ignore))
         {
-        
             if (laserVisible)
                 ShowWallImpact(wallHit);
             else
-            {
-             
                 HideWallImpact();
-            }
-
         }
         else
         {
@@ -153,14 +151,19 @@ public class AutoFitLaser : MonoBehaviour
 
     private void HitPlayer(PlayerMove move)
     {
-        MiniGameAudioManager.Instance.PlayHitLaserSound();
-        PlayerMiniGame mini =
-            move.GetComponent<PlayerMiniGame>();
+        if (MiniGameAudioManager.Instance != null)
+            MiniGameAudioManager.Instance.PlayHitLaserSound();
+
+        PlayerMiniGame mini = move.GetComponent<PlayerMiniGame>();
 
         if (mini != null)
             mini.UpCoin(0, coinPenalty);
 
         StartCoroutine(ElectricStun(move));
+        if (!electricPlayers.Contains(move))
+        {
+            StartCoroutine(PlayerElectricEffect(move));
+        }
     }
 
     private IEnumerator ElectricStun(PlayerMove move)
@@ -178,6 +181,75 @@ public class AutoFitLaser : MonoBehaviour
 
         move.isMove = true;
         move.isJump = true;
+    }
+
+    private IEnumerator PlayerElectricEffect(PlayerMove move)
+    {
+        electricPlayers.Add(move);
+        Transform playerTransform = move.transform;
+        Vector3 originalLocalPos = playerTransform.localPosition;
+
+        Renderer[] renderers =
+            move.GetComponentsInChildren<Renderer>();
+
+        List<Material> materials = new List<Material>();
+        List<Color> originalColors = new List<Color>();
+
+        foreach (Renderer r in renderers)
+        {
+            foreach (Material mat in r.materials)
+            {
+                materials.Add(mat);
+
+                if (mat.HasProperty("_BaseColor"))
+                    originalColors.Add(mat.GetColor("_BaseColor"));
+                else if (mat.HasProperty("_Color"))
+                    originalColors.Add(mat.GetColor("_Color"));
+                else
+                    originalColors.Add(Color.white);
+            }
+        }
+
+        float timer = 0f;
+        bool white = false;
+
+        while (timer < flashDuration)
+        {
+            Vector3 shakeOffset = new Vector3(
+                Random.Range(-playerShakeAmount, playerShakeAmount),
+                Random.Range(-playerShakeAmount, playerShakeAmount),
+                Random.Range(-playerShakeAmount, playerShakeAmount)
+            );
+
+            playerTransform.localPosition =
+                originalLocalPos + shakeOffset;
+
+            Color flashColor = white ? Color.white : Color.black;
+
+            for (int i = 0; i < materials.Count; i++)
+            {
+                if (materials[i].HasProperty("_BaseColor"))
+                    materials[i].SetColor("_BaseColor", flashColor);
+                else if (materials[i].HasProperty("_Color"))
+                    materials[i].SetColor("_Color", flashColor);
+            }
+
+            white = !white;
+
+            yield return new WaitForSeconds(flashInterval);
+            timer += flashInterval;
+        }
+
+        playerTransform.localPosition = originalLocalPos;
+
+        for (int i = 0; i < materials.Count; i++)
+        {
+            if (materials[i].HasProperty("_BaseColor"))
+                materials[i].SetColor("_BaseColor", originalColors[i]);
+            else if (materials[i].HasProperty("_Color"))
+                materials[i].SetColor("_Color", originalColors[i]);
+        }
+        electricPlayers.Remove(move); 
     }
 
     public void SetLaserActive(bool isActive)
