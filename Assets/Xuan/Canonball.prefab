@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 4111374372263410961}
   - component: {fileID: 7346198389334530}
   - component: {fileID: 6086693202447824787}
+  - component: {fileID: 6070616130144230038}
   m_Layer: 0
   m_Name: Canonball
   m_TagString: Bullet
@@ -68,7 +69,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9ba37111a647fc749bdead5e80c1f696, type: 2}
+  - {fileID: 2100000, guid: 08c2ed8f6cb24d949aac35a6529df388, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -140,3 +141,21 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &6070616130144230038
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6599934368548357464}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b42697dab29ab3f42b95ee95f32a2781, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BulletCanon
+  speed: 15
+  lifeTime: 4
+  explosionPrefab: {fileID: 1121192042590650, guid: e1b08032bec16ba4eb1ae23cbd572664, type: 3}
+  explosionDestroyTime: 2
+  explosionSound: {fileID: 8300000, guid: 7c2349e3a147bde46bdab3b43c610195, type: 3}
+  volume: 1
