@@ -342,7 +342,7 @@ public class UIManager : MonoBehaviour
     {
         canvas.SetActive(true);
 
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(3f);
 
         canvas.SetActive(false);
     }

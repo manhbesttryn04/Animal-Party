@@ -9,7 +9,7 @@ public class PlayerAttack : MonoBehaviour
     public BoxCollider kickCollider;
     public float attackCooldown = 2f;
     public float aimDistance = 3f;
-
+    public bool hasAttack;
     private bool canAttack = true;
 
     private void Start()
@@ -22,21 +22,24 @@ public class PlayerAttack : MonoBehaviour
     {
         bool attackPressed = false;
 
-        // Player 1
-        if (!playerManager.playerType.isPlayer2)
+        if (hasAttack)
         {
-            attackPressed = Input.GetKeyDown(KeyCode.J);
-        }
-        // Player 2
-        else
-        {
-            attackPressed = Input.GetKeyDown(KeyCode.Keypad1);
-        }
+            if (!playerManager.playerType.isPlayer2)
+            {
+                attackPressed = Input.GetKeyDown(KeyCode.J);
+            }
+            // Player 2
+            else
+            {
+                attackPressed = Input.GetKeyDown(KeyCode.Keypad1);
+            }
 
-        if (attackPressed && canAttack)
-        {
-            Attack();
+            if (attackPressed && canAttack)
+            {
+                Attack();
+            }
         }
+        
     }
 
     private void Attack()
@@ -59,7 +62,7 @@ public class PlayerAttack : MonoBehaviour
                 }
             }
         }
-        else Debug.Log("Ko");
+        else //Debug.Log("Ko");
 
             canAttack = false;
 
@@ -74,9 +77,15 @@ public class PlayerAttack : MonoBehaviour
 
     private Transform FindTarget()
     {
-        GameObject[] players = GameObject.FindGameObjectsWithTag("Player 1");
+        GameObject[] players;
+        if (playerManager.playerType.isPlayer2)
+        {
+            players = GameObject.FindGameObjectsWithTag("Player 1");
+        }
+        else players = GameObject.FindGameObjectsWithTag("Player 2");
 
-        Transform nearest = null;
+
+            Transform nearest = null;
         float nearestDistance = Mathf.Infinity;
 
         foreach (GameObject p in players)

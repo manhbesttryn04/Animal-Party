@@ -174,7 +174,7 @@ public class AutoFitLaser : MonoBehaviour
         if (move.manager != null &&
             move.manager.playerAnimator != null)
         {
-            move.manager.playerAnimator.playerAnimator.SetTrigger("Jump");
+            move.manager.playerAnimator.playerAnimator.SetTrigger("Lie");
         }
 
         yield return new WaitForSeconds(stunTime);

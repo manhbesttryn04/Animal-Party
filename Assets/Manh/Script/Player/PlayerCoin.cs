@@ -24,7 +24,7 @@ public class PlayerCoin : MonoBehaviour
     }
     public void AddCoin(int i)
     {
-        coinEndMiniGame +=i;
+        coinMiniGame +=i;
     }
 
 }

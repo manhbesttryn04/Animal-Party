@@ -51,22 +51,8 @@ public class MiniGame4 : MonoBehaviour
     }
 
     public void StartMiniGame()
-    { 
-        PlayerManager p1 = manager.currentPlayer1.GetComponent<PlayerManager>();
-        PlayerManager p2 = manager.currentPlayer2.GetComponent<PlayerManager>();
-        if(p1 != null && p2 != null)
-        {
-            //Set speed
-            p1.playerMove.speed = 0.4f;
-            p2.playerMove.speed = 0.4f;
-            //Set funny
-            p1.playerFunnyItem.isBoxFunny = true;
-            p2.playerFunnyItem.isBoxFunny = true;
-            
-
-
-        }
-
+    {
+        SetUpAllPlayer();
         if (isRunning)
             return;
 
@@ -324,5 +310,20 @@ public class MiniGame4 : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
 
         muzzleFlash.SetActive(false);
+    }
+    public void SetUpAllPlayer()
+    {
+        PlayerManager p1 = manager.currentPlayer1.GetComponent<PlayerManager>();
+        PlayerManager p2 = manager.currentPlayer2.GetComponent<PlayerManager>();
+        if (p1 != null && p2 != null)
+        {
+            //Set speed
+            p1.playerMove.speed = 0.4f;
+            p2.playerMove.speed = 0.4f;
+            //Set funny
+            p1.playerFunnyItem.isBoxFunny = true;
+            p2.playerFunnyItem.isBoxFunny = true;
+        }
+
     }
 }

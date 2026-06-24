@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMove : MonoBehaviour
@@ -15,6 +16,16 @@ public class PlayerMove : MonoBehaviour
     public bool isJumpAndMove, isMove, isJump = true;
     public bool IsMoving { get; private set; }
 
+    [Header("Lie Settings")]
+    public bool hasLie = false;
+    private bool canLie = true;
+
+    public float lieHeight = 0.5f;
+    public Vector3 lieCenter = new Vector3(0f, 0.25f, 0f);
+
+    private float normalHeight;
+    private Vector3 normalCenter;
+
     public CharacterController controller;
     private Vector3 velocity;
 
@@ -22,21 +33,23 @@ public class PlayerMove : MonoBehaviour
     {
         controller = GetComponent<CharacterController>();
         manager = GetComponent<PlayerManager>();
+        normalHeight = controller.height;
+        normalCenter = controller.center;
     }
 
     void Update()
     {
+        CheckLieInput();
+
         if (isJumpAndMove)
         {
             if (isMove)
-            {
                 Move();
-            }
 
             if (isJump)
-            {
-                JumpAndGravity();
-            }
+                JumpInput();
+
+            ApplyGravity();
         }
     }
     void Move()
@@ -72,18 +85,12 @@ public class PlayerMove : MonoBehaviour
         manager.playerAnimator.playerAnimator.SetFloat("Run", move.magnitude);
     }
 
-    void JumpAndGravity()
+    void JumpInput()
     {
-        
-
-        if (isGround && velocity.y < 0)
-        {
-            velocity.y = -2f;
-        }
-
         bool jumpPressed =
-            !manager.playerType.isPlayer2 ? Input.GetKeyDown(KeyCode.Space)
-                      : Input.GetKeyDown(KeyCode.Keypad0); // hoặc Alpha0
+            !manager.playerType.isPlayer2
+            ? Input.GetKeyDown(KeyCode.Space)
+            : Input.GetKeyDown(KeyCode.Keypad0);
 
         if (isGround && jumpPressed)
         {
@@ -91,10 +98,67 @@ public class PlayerMove : MonoBehaviour
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
             isGround = false;
         }
+    }
+    void ApplyGravity()
+    {
+        if (isGround && velocity.y < 0)
+        {
+            velocity.y = -2f;
+        }
 
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
     }
+
+    void CheckLieInput()
+    {
+        if (!hasLie) return;
+        if (!canLie) return;
+        if (!isGround || velocity.y > 0.1f)
+            return;
+
+        bool liePressed = !manager.playerType.isPlayer2
+            ? Input.GetKeyDown(KeyCode.K)
+            : Input.GetKeyDown(KeyCode.Keypad3);
+
+        if (liePressed)
+        {
+            canLie = false;
+            manager.playerAnimator.playerAnimator.SetTrigger("Lie");
+        }
+    }
+
+    // Animation Event: frame bắt đầu nằm
+    public void StartLie()
+    {
+        if (!isGround) return;
+        isMove = false;
+        isJump = false;
+
+        if (manager.playerAttack != null)
+            manager.playerAttack.hasAttack = false;
+
+        controller.height = lieHeight;
+        controller.center = lieCenter;
+
+        manager.playerAnimator.playerAnimator.SetFloat("Run", 0f);
+    }
+
+    // Animation Event: frame đứng dậy / hết nằm
+    public void StopLie()
+    {
+        isMove = true;
+        isJump = true;
+
+        if (manager.playerAttack != null)
+            manager.playerAttack.hasAttack = true;
+
+        controller.height = normalHeight;
+        controller.center = normalCenter;
+
+        canLie = true;
+    }
+  
     public void OnControllerColliderHit(ControllerColliderHit hit)
     {
         if (hit.gameObject.CompareTag("Ground"))

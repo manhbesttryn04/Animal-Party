@@ -10,6 +10,9 @@ public class MiniGame3 : MonoBehaviour
         Random, Alternating, DoubleAlternating, Burst, BothAtSameTime, AutoMixed
     }
 
+    [Header("MiniGame Manager")]
+    public MiniGameManager manager;
+
     [Header("--- Phase & Game Timings ---")]
     public float totalGameTime = 120f;
     public float timeToPhase2 = 30f;
@@ -63,6 +66,7 @@ public class MiniGame3 : MonoBehaviour
 
     public void StartMiniGame()
     {
+        SetUpAllPlayer();
         StopAllCoroutines();
         ClearAllLasers();
         ResetMiniGameState();
@@ -329,5 +333,14 @@ public class MiniGame3 : MonoBehaviour
 
         foreach (LaserSpamObject laser in remainingLasers)
             Destroy(laser.gameObject);
+    }
+
+    public void SetUpAllPlayer()
+    {
+        PlayerManager p1 = manager.currentPlayer1.GetComponent<PlayerManager>();
+        PlayerManager p2 = manager.currentPlayer2.GetComponent<PlayerManager>();
+
+        p1.playerMove.hasLie = true;
+        p2.playerMove.hasLie = true;
     }
 }

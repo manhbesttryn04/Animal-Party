@@ -276,6 +276,7 @@ public class PlayerMoveAI : MonoBehaviour
         if (trap.hasCoin)
         {
             trap.CoinActivated(manager.playerType.isPlayer2 ? 1 : 0);
+            manager.playerCoin.coinEndMiniGame += 100;
 
             yield return new WaitForSeconds(0.5f);
         }

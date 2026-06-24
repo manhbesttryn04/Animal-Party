@@ -170,7 +170,7 @@ public class PummelLaserHub : MonoBehaviour
             if (laser != null)
                 laser.SetLaserActive(false);
         }
-
+        MiniGameAudioManager.Instance.StopLaserLoop();
         float duration = 1.5f;
         Vector3 startPos = transform.position;
         Vector3 endPos = originalPosition - new Vector3(0, depth, 0);
