@@ -402,7 +402,7 @@ public class PlayerMoveAI : MonoBehaviour
     //==================================================
     public void FindPonit()
     {
-        for (int i = 0; i < 34; i++)
+        for (int i = 0; i < 33; i++)
         {
             pointCheck[i] = GameObject.Find($"Point {i + 1}");
         }

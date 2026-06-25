@@ -318,8 +318,8 @@ public class MiniGame4 : MonoBehaviour
         if (p1 != null && p2 != null)
         {
             //Set speed
-            p1.playerMove.speed = 0.4f;
-            p2.playerMove.speed = 0.4f;
+            p1.playerMove.speed = 10f;
+            p2.playerMove.speed = 10f;
             //Set funny
             p1.playerFunnyItem.isBoxFunny = true;
             p2.playerFunnyItem.isBoxFunny = true;
