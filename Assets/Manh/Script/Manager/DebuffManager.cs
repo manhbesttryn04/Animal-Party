@@ -4,8 +4,16 @@ using UnityEngine.UI;
 
 public class DebuffManager : MonoBehaviour
 {
+    // =========================================================
+    // SINGLETON
+    // =========================================================
+
     public static DebuffManager _instance;
     public static DebuffManager Instance => _instance;
+
+    // =========================================================
+    // UI CANVAS
+    // =========================================================
 
     [Header("Canvas")]
     public GameObject leftCanvas;
@@ -18,6 +26,10 @@ public class DebuffManager : MonoBehaviour
     public GameObject[] leftCards;
     public GameObject[] rightCards;
 
+    // =========================================================
+    // CARD INDEX / ACTIVE STATE
+    // =========================================================
+
     [Header("Index")]
     private int leftIndex;
     private int rightIndex;
@@ -25,22 +37,47 @@ public class DebuffManager : MonoBehaviour
     private bool leftActive;
     private bool rightActive;
 
+    // =========================================================
+    // PREFAB / NOTIFY
+    // =========================================================
+
     [Header("Prefab")]
     public GameObject cannonPrefab;
     public GameObject panelNotiifiChooseDebuff;
 
+    // =========================================================
+    // UNITY FUNCTIONS
+    // =========================================================
+
     private void Awake()
     {
+        // Tạo singleton cho DebuffManager
         if (_instance == null)
         {
             _instance = this;
+
+            // Không bị hủy khi đổi scene
             DontDestroyOnLoad(gameObject);
         }
         else
         {
+            // Nếu đã có DebuffManager thì xóa bản mới
             Destroy(gameObject);
         }
     }
+
+    private void Update()
+    {
+        // Nếu đang chọn bên trái thì xử lý input Player 1
+        if (leftActive) HandleLeft();
+
+        // Nếu đang chọn bên phải thì xử lý input Player 2
+        if (rightActive) HandleRight();
+    }
+
+    // =========================================================
+    // OPEN DEBUFF UI
+    // =========================================================
 
     public static void Open(int winner)
     {
@@ -49,125 +86,174 @@ public class DebuffManager : MonoBehaviour
 
     public void OpenDebuffInternal(int playerIndex)
     {
+        // Tắt cả 2 canvas trước
         leftCanvas.SetActive(false);
         rightCanvas.SetActive(false);
 
+        // Ẩn toàn bộ card cũ
         HideAllCards();
+
+        // Hiện panel thông báo chọn debuff
         StartCoroutine(ShowPanelChoose());
 
+        // =========================
+        // PLAYER 1 CHỌN DEBUFF
+        // =========================
         if (playerIndex == 0)
         {
             leftCanvas.SetActive(true);
+
             leftActive = true;
             rightActive = false;
 
+            // Reset card bên trái
             Reset(leftCards, ref leftIndex);
+
+            // Highlight card đầu tiên
             SetHighlight(leftCards, leftIndex, true);
         }
+
+        // =========================
+        // PLAYER 2 CHỌN DEBUFF
+        // =========================
         else
         {
             rightCanvas.SetActive(true);
+
             rightActive = true;
             leftActive = false;
 
+            // Reset card bên phải
             Reset(rightCards, ref rightIndex);
+
+            // Highlight card đầu tiên
             SetHighlight(rightCards, rightIndex, true);
         }
     }
+
     IEnumerator ShowPanelChoose()
     {
         panelNotiifiChooseDebuff.SetActive(true);
+
         yield return new WaitForSeconds(2f);
+
         panelNotiifiChooseDebuff.SetActive(false);
     }
 
-    private void Update()
-    {
-        if (leftActive) HandleLeft();
-        if (rightActive) HandleRight();
-    }
+    // =========================================================
+    // LEFT INPUT - PLAYER 1
+    // =========================================================
 
-    // =========================
-    // LEFT INPUT
-    // =========================
     private void HandleLeft()
     {
         IndexItem current = leftCards[leftIndex].GetComponent<IndexItem>();
 
+        // Di chuyển chọn sang trái
         if (Input.GetKeyDown(KeyCode.A))
             MoveLeft(current.left);
 
+        // Di chuyển chọn sang phải
         if (Input.GetKeyDown(KeyCode.D))
             MoveLeft(current.right);
 
+        // Chọn card
         if (Input.GetKeyDown(KeyCode.J))
             Select(leftCards[leftIndex], 0);
     }
 
     private void MoveLeft(int newIndex)
     {
+        // Nếu index không hợp lệ thì bỏ qua
         if (newIndex < 0 || newIndex >= leftCards.Length) return;
 
+        // Phát âm thanh di chuyển chọn item
         AudioManager.Instance.PlaySFX(AudioManager.Instance.movechooseItemClip);
 
+        // Tắt highlight card cũ
         SetHighlight(leftCards, leftIndex, false);
+
+        // Cập nhật index mới
         leftIndex = newIndex;
+
+        // Bật highlight card mới
         SetHighlight(leftCards, leftIndex, true);
     }
 
-    // =========================
-    // RIGHT INPUT
-    // =========================
+    // =========================================================
+    // RIGHT INPUT - PLAYER 2
+    // =========================================================
+
     private void HandleRight()
     {
         IndexItem current = rightCards[rightIndex].GetComponent<IndexItem>();
 
+        // Di chuyển chọn sang trái
         if (Input.GetKeyDown(KeyCode.LeftArrow))
             MoveRight(current.left);
 
+        // Di chuyển chọn sang phải
         if (Input.GetKeyDown(KeyCode.RightArrow))
             MoveRight(current.right);
 
+        // Chọn card
         if (Input.GetKeyDown(KeyCode.Keypad1))
             Select(rightCards[rightIndex], 1);
     }
 
     private void MoveRight(int newIndex)
     {
+        // Nếu index không hợp lệ thì bỏ qua
         if (newIndex < 0 || newIndex >= rightCards.Length) return;
+
+        // Phát âm thanh di chuyển chọn item
         AudioManager.Instance.PlaySFX(AudioManager.Instance.movechooseItemClip);
+
+        // Tắt highlight card cũ
         SetHighlight(rightCards, rightIndex, false);
+
+        // Cập nhật index mới
         rightIndex = newIndex;
+
+        // Bật highlight card mới
         SetHighlight(rightCards, rightIndex, true);
     }
 
-    // =========================
-    // SELECT
-    // =========================
+    // =========================================================
+    // SELECT CARD
+    // =========================================================
+
     private void Select(GameObject cardObj, int playerIndex)
     {
+        // Lấy RandomCard từ card đang chọn
         RandomCard card = cardObj.GetComponent<RandomCard>();
         if (card == null) return;
 
+        // Lấy image của card
         Image img = card.image;
         if (img == null) return;
 
+        // Đổi sprite card thành sprite debuff tương ứng
         img.sprite = debuffSprite[card.itemIndex];
 
+        // itemIndex 0 = Magic Debuff
         if (card.itemIndex == 0)
             StartCoroutine(ApplyMagicDebuff(playerIndex));
 
+        // itemIndex 1 = Cannon Debuff
         if (card.itemIndex == 1)
             StartCoroutine(ApplyCannonDebuff(playerIndex));
 
+        // Kết thúc giao diện chọn
         StartCoroutine(End());
     }
 
-    // =========================
+    // =========================================================
     // MAGIC DEBUFF
-    // =========================
+    // =========================================================
+
     private IEnumerator ApplyMagicDebuff(int playerIndex)
     {
+        // Nếu Player 1 chọn thì target là Player 2, ngược lại
         string targetTag = playerIndex == 0 ? "Player 2" : "Player 1";
 
         GameObject targetPlayer =
@@ -182,33 +268,38 @@ public class DebuffManager : MonoBehaviour
         if (player == null)
             yield break;
 
-        // 🎥 CAMERA MOVE
+        // Camera di chuyển tới player bị nhắm
         yield return StartCoroutine(
             CameraManager.Instance.MoveToTarget(targetPlayer.transform, 1f)
         );
 
-        // 🛡️ MAGIC SHIELD
+        // Nếu player có buff khiên phép thì chặn debuff
         if (player.playerBuff.isBuffMagic)
         {
             yield return StartCoroutine(player.playerBuff.ShowMagicShield());
+
             yield return new WaitForSeconds(1.5f);
+
             yield return StartCoroutine(
                 CameraManager.Instance.FlyUp(15f, 1.2f)
             );
 
             ShopManager.Instance.Open();
+
             yield break;
         }
 
-        // ❄️ APPLY DEBUFF
+        // Lấy PlayerDebuff của target
         PlayerDebuff debuff =
             targetPlayer.GetComponent<PlayerDebuff>();
 
+        // Nếu có debuff thì áp dụng magic rock
         if (debuff != null)
         {
             debuff.ApplyMagicRock();
 
             yield return new WaitForSeconds(1.5f);
+
             yield return StartCoroutine(
                 CameraManager.Instance.FlyUp(15f, 1.2f)
             );
@@ -217,11 +308,13 @@ public class DebuffManager : MonoBehaviour
         }
     }
 
-    // =========================
+    // =========================================================
     // CANNON DEBUFF
-    // =========================
+    // =========================================================
+
     private IEnumerator ApplyCannonDebuff(int playerIndex)
     {
+        // Player chọn là owner, player còn lại là target
         string ownerTag = playerIndex == 0 ? "Player 1" : "Player 2";
         string targetTag = playerIndex == 0 ? "Player 2" : "Player 1";
 
@@ -234,6 +327,7 @@ public class DebuffManager : MonoBehaviour
         if (owner == null || target == null)
             yield break;
 
+        // Tạo cannon phía trước owner
         GameObject cannon =
             Instantiate(
                 cannonPrefab,
@@ -241,44 +335,51 @@ public class DebuffManager : MonoBehaviour
                 Quaternion.identity
             );
 
+        // Cannon nhìn về target
         cannon.transform.LookAt(target.transform);
 
-        // 🎥 CAMERA TO CANNON
+        // Camera di chuyển tới cannon
         yield return StartCoroutine(
             CameraManager.Instance.MoveToTarget(cannon.transform, 1f)
         );
 
         yield return new WaitForSeconds(1.5f);
 
+        // Lấy script CannonDebuff
         CannonDebuff cannonScript =
             cannon.GetComponent<CannonDebuff>();
 
         if (cannonScript == null)
             yield break;
+
+        // Nếu owner có buff cannon thì hiện thông báo
         if (owner.GetComponent<PlayerBuff>().isBuffCanon)
         {
-           
             UIManager.Instance.SendNotifi("Canon Buff");
         }
+
         yield return new WaitForSeconds(1f);
+
+        // Bắn bomb tới target
         BombDebuff bomb =
             cannonScript.Fire(target.transform);
+
+        // Tăng power cho bomb
         bomb.power += 1; // Bomb không
 
+        // Xóa cannon sau khi bắn
         Destroy(cannon, 0.5f);
 
         if (bomb != null)
         {
-         
-
-               // Follow bomb tới khi bomb nổ
-                yield return StartCoroutine(
+            // Camera follow bomb tới khi bomb nổ
+            yield return StartCoroutine(
                 FollowBomb(bomb.transform)
             );
-            
+
             yield return new WaitForSeconds(2f);
 
-            // Nhìn player bị trúng đạn
+            // Camera nhìn player bị trúng đạn
             yield return StartCoroutine(
                 CameraManager.Instance.MoveToTarget(
                     target.transform,
@@ -286,10 +387,10 @@ public class DebuffManager : MonoBehaviour
                 )
             );
 
-            // Giữ camera nhìn player 1 giây
+            // Giữ camera nhìn player một chút
             yield return new WaitForSeconds(1f);
 
-            // Bay lên trời
+            // Camera bay lên lại
             yield return StartCoroutine(
                 CameraManager.Instance.FlyUp(
                     15f,
@@ -301,11 +402,13 @@ public class DebuffManager : MonoBehaviour
         }
     }
 
-    // =========================
-    // BOMB FOLLOW CAMERA (MINI)
-    // =========================
+    // =========================================================
+    // BOMB FOLLOW CAMERA
+    // =========================================================
+
     private IEnumerator FollowBomb(Transform bomb)
     {
+        // Camera đi theo bomb cho tới khi bomb bị destroy
         while (bomb != null)
         {
             Camera cam = Camera.main;
@@ -322,20 +425,24 @@ public class DebuffManager : MonoBehaviour
         }
     }
 
-    // =========================
-    // END
-    // =========================
+    // =========================================================
+    // END SELECT
+    // =========================================================
+
     private IEnumerator End()
     {
         yield return new WaitForSeconds(1f);
+
         HideAll();
     }
 
-    // =========================
-    // RESET UI
-    // =========================
+    // =========================================================
+    // RESET UI / CARD
+    // =========================================================
+
     private void Reset(GameObject[] cards, ref int index)
     {
+        // Reset index về card đầu tiên
         index = 0;
 
         // Random xem lá nào là 0, lá nào là 1
@@ -344,6 +451,7 @@ public class DebuffManager : MonoBehaviour
         cards[0].GetComponent<RandomCard>().itemIndex = swap ? 0 : 1;
         cards[1].GetComponent<RandomCard>().itemIndex = swap ? 1 : 0;
 
+        // Reset sprite các card về sprite dấu sao
         for (int i = 0; i < cards.Length; i++)
         {
             RandomCard rc = cards[i].GetComponent<RandomCard>();
@@ -355,16 +463,30 @@ public class DebuffManager : MonoBehaviour
 
     private void SetHighlight(GameObject[] cards, int index, bool state)
     {
+        // Child 1 là object highlight của card
         cards[index].transform.GetChild(1).gameObject.SetActive(state);
     }
 
-    private void HideAllCards() { }
+    private void HideAllCards()
+    {
+        for (int i = 0; i < leftCards.Length; i++)
+        {
+            leftCards[i].transform.GetChild(1).gameObject.SetActive(false);
+        }
+
+        for (int i = 0; i < rightCards.Length; i++)
+        {
+            rightCards[i].transform.GetChild(1).gameObject.SetActive(false);
+        }
+    }
 
     private void HideAll()
     {
+        // Tắt trạng thái chọn của cả 2 bên
         leftActive = false;
         rightActive = false;
 
+        // Tắt canvas chọn debuff
         leftCanvas.SetActive(false);
         rightCanvas.SetActive(false);
     }

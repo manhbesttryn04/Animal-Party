@@ -7,8 +7,16 @@ using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
+    // =========================================================
+    // SINGLETON
+    // =========================================================
+
     // Singleton để các script khác có thể gọi UIManager.Instance
     public static UIManager Instance { get; private set; }
+
+    // =========================================================
+    // RESULT PANEL
+    // =========================================================
 
     #region Result Panel
 
@@ -25,6 +33,10 @@ public class UIManager : MonoBehaviour
 
     #endregion
 
+    // =========================================================
+    // NOTIFICATION
+    // =========================================================
+
     #region Notification
 
     // Panel thông báo
@@ -34,6 +46,10 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI textNotifi;
 
     #endregion
+
+    // =========================================================
+    // PLAYER STATUS PANEL
+    // =========================================================
 
     #region Player Status Panel
 
@@ -52,10 +68,11 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI indexTextP1;
     public TextMeshProUGUI indexTextP2;
 
-    //Buff hiện có
+    // Ảnh buff hiện tại của Player 1 và Player 2
     public Image imageCurrentBuffP1;
     public Image imageCurrentBuffP2;
-    //List Image Buff
+
+    // Danh sách sprite buff
     public List<Sprite> buffImageList;
 
     // Bonus Coin UI
@@ -64,12 +81,24 @@ public class UIManager : MonoBehaviour
 
     #endregion
 
+    // =========================================================
+    // BONUS PANEL
+    // =========================================================
+
     // Panel thưởng
     public GameObject bonusPanel;
+
+    // =========================================================
+    // PLAYER REFERENCES
+    // =========================================================
 
     // Tham chiếu tới PlayerManager
     public PlayerManager playerManager1;
     public PlayerManager playerManager2;
+
+    // =========================================================
+    // UNITY FUNCTIONS
+    // =========================================================
 
     private void Awake()
     {
@@ -82,13 +111,20 @@ public class UIManager : MonoBehaviour
 
     public void Start()
     {
-        // Tìm Player theo Tag
-        playerManager1 = GameObject.FindGameObjectWithTag("Player 1").GetComponent<PlayerManager>();
-        playerManager2 = GameObject.FindGameObjectWithTag("Player 2").GetComponent<PlayerManager>();
+        // Tìm Player 1 theo Tag
+        playerManager1 =
+            GameObject.FindGameObjectWithTag("Player 1")
+            .GetComponent<PlayerManager>();
+
+        // Tìm Player 2 theo Tag
+        playerManager2 =
+            GameObject.FindGameObjectWithTag("Player 2")
+            .GetComponent<PlayerManager>();
     }
+
     private void Update()
     {
-        // Nếu panel đang mở thì cập nhật liên tục
+        // Nếu panel thông tin đang mở thì cập nhật liên tục
         if (notifiPlay.activeSelf)
         {
             UpdateCoinPowerUI();
@@ -97,8 +133,14 @@ public class UIManager : MonoBehaviour
             UpdateCurrentBuffPlayer();
         }
         else
+        {
             return;
+        }
     }
+
+    // =========================================================
+    // COIN POWER UI
+    // =========================================================
 
     /// <summary>
     /// Cập nhật số lượng Coin Power hiển thị trên UI.
@@ -121,7 +163,10 @@ public class UIManager : MonoBehaviour
             .GetChild(2)
             .GetChild(0);
 
-        // Player 1
+        // =========================
+        // PLAYER 1 COIN POWER
+        // =========================
+
         for (int i = 0; i < coinRoot.childCount; i++)
         {
             // Panel đen che icon
@@ -132,15 +177,24 @@ public class UIManager : MonoBehaviour
             blackPanel.gameObject.SetActive(i >= p1.countCoinPower);
         }
 
-        // Player 2
+        // =========================
+        // PLAYER 2 COIN POWER
+        // =========================
+
         for (int i = 0; i < coinRoot2.childCount; i++)
         {
+            // Panel đen che icon
             Transform blackPanel =
                 coinRoot2.GetChild(i).GetChild(0);
 
+            // Nếu đã có Coin Power thì tắt panel đen
             blackPanel.gameObject.SetActive(i >= p2.countCoinPower);
         }
     }
+
+    // =========================================================
+    // COIN UI
+    // =========================================================
 
     /// <summary>
     /// Cập nhật số coin của cả hai người chơi.
@@ -154,6 +208,10 @@ public class UIManager : MonoBehaviour
         coinTextNotP2.text = p2.coinEndMiniGame.ToString();
     }
 
+    // =========================================================
+    // PLAYER BOARD INDEX UI
+    // =========================================================
+
     /// <summary>
     /// Cập nhật vị trí hiện tại trên bàn cờ.
     /// </summary>
@@ -165,28 +223,45 @@ public class UIManager : MonoBehaviour
         indexTextP1.text = $"{p1.currentIndex}/33";
         indexTextP2.text = $"{p2.currentIndex}/33";
     }
+
+    // =========================================================
+    // CURRENT BUFF UI
+    // =========================================================
+
     public void UpdateCurrentBuffPlayer()
     {
-        PlayerBuff p1 = playerManager1 .playerBuff;
+        PlayerBuff p1 = playerManager1.playerBuff;
         PlayerBuff p2 = playerManager2.playerBuff;
+
+        // =========================
+        // PLAYER 1 CURRENT BUFF
+        // =========================
 
         if (p1.isBuffDeffense)
         {
             imageCurrentBuffP1.sprite = buffImageList[1];
-        }else if (p1.isBuffMagic)
+        }
+        else if (p1.isBuffMagic)
         {
-            imageCurrentBuffP1.sprite= buffImageList[2];
-        }else if (p1.isBuffCanon)
+            imageCurrentBuffP1.sprite = buffImageList[2];
+        }
+        else if (p1.isBuffCanon)
         {
             imageCurrentBuffP1.sprite = buffImageList[3];
-        }else if(p1.isBuffDice>0 || p1.isBuffDiceNext > 0)
+        }
+        else if (p1.isBuffDice > 0 || p1.isBuffDiceNext > 0)
         {
-            imageCurrentBuffP1 .sprite = buffImageList[4];
-        }else imageCurrentBuffP1.sprite = buffImageList[0];
+            imageCurrentBuffP1.sprite = buffImageList[4];
+        }
+        else
+        {
+            imageCurrentBuffP1.sprite = buffImageList[0];
+        }
 
+        // =========================
+        // PLAYER 2 CURRENT BUFF
+        // =========================
 
-        //p2
-        // Player 2
         if (p2.isBuffDeffense)
         {
             imageCurrentBuffP2.sprite = buffImageList[1];
@@ -209,75 +284,16 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    // =========================================================
+    // NOTIFICATION PANEL
+    // =========================================================
+
     /// <summary>
     /// Hiện hoặc ẩn panel thông báo.
     /// </summary>
     public void HidePlayerPlayPanel(bool i)
     {
         notifiPanel.gameObject.SetActive(i);
-    }
-
-   
-
-    /// <summary>
-    /// Hiển thị bảng kết quả cuối game.
-    /// </summary>
-    public void UpdateResultPanel(int coinP1, int coinP2)
-    {
-        if (resultPanel != null)
-        {
-            // Hiện panel
-            resultPanel.SetActive(true);
-
-            // Phát âm thanh mở panel
-            AudioManager.Instance.PlaySFX(AudioManager.Instance.openResultPanel);
-
-            // Hiển thị coin
-            if (coinTextP1 != null)
-                coinTextP1.text = $"{coinP1}";
-
-            if (coinTextP2 != null)
-                coinTextP2.text = $"{coinP2}";
-
-            // Player 1 thắng
-            if (coinP1 > coinP2)
-            {
-                player1ResultUI.transform.GetChild(0).gameObject.SetActive(true);   // Win
-                player1ResultUI.transform.GetChild(1).gameObject.SetActive(false);  // Lose
-
-                player2ResultUI.transform.GetChild(0).gameObject.SetActive(false);
-                player2ResultUI.transform.GetChild(1).gameObject.SetActive(true);
-            }
-            // Player 2 thắng
-            else if (coinP1 < coinP2)
-            {
-                player1ResultUI.transform.GetChild(0).gameObject.SetActive(false);
-                player1ResultUI.transform.GetChild(1).gameObject.SetActive(true);
-
-                player2ResultUI.transform.GetChild(0).gameObject.SetActive(true);
-                player2ResultUI.transform.GetChild(1).gameObject.SetActive(false);
-            }
-            // Hòa
-            else
-            {
-                player1ResultUI.transform.GetChild(0).gameObject.SetActive(true);
-                player1ResultUI.transform.GetChild(1).gameObject.SetActive(false);
-
-                player2ResultUI.transform.GetChild(0).gameObject.SetActive(true);
-                player2ResultUI.transform.GetChild(1).gameObject.SetActive(false);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Ẩn bảng kết quả.
-    /// </summary>
-    public void HideResultPanel()
-    {
-        if (resultPanel != null)
-        {
-            resultPanel.SetActive(false);
-        }
     }
 
     /// <summary>
@@ -306,6 +322,87 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    // =========================================================
+    // RESULT PANEL
+    // =========================================================
+
+    /// <summary>
+    /// Hiển thị bảng kết quả cuối game.
+    /// </summary>
+    public void UpdateResultPanel(int coinP1, int coinP2)
+    {
+        if (resultPanel != null)
+        {
+            // Hiện panel kết quả
+            resultPanel.SetActive(true);
+
+            // Phát âm thanh mở panel kết quả
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.openResultPanel);
+
+            // Cập nhật coin Player 1
+            if (coinTextP1 != null)
+                coinTextP1.text = $"{coinP1}";
+
+            // Cập nhật coin Player 2
+            if (coinTextP2 != null)
+                coinTextP2.text = $"{coinP2}";
+
+            // =========================
+            // PLAYER 1 THẮNG
+            // =========================
+
+            if (coinP1 > coinP2)
+            {
+                player1ResultUI.transform.GetChild(0).gameObject.SetActive(true);   // Win
+                player1ResultUI.transform.GetChild(1).gameObject.SetActive(false);  // Lose
+
+                player2ResultUI.transform.GetChild(0).gameObject.SetActive(false);
+                player2ResultUI.transform.GetChild(1).gameObject.SetActive(true);
+            }
+
+            // =========================
+            // PLAYER 2 THẮNG
+            // =========================
+
+            else if (coinP1 < coinP2)
+            {
+                player1ResultUI.transform.GetChild(0).gameObject.SetActive(false);
+                player1ResultUI.transform.GetChild(1).gameObject.SetActive(true);
+
+                player2ResultUI.transform.GetChild(0).gameObject.SetActive(true);
+                player2ResultUI.transform.GetChild(1).gameObject.SetActive(false);
+            }
+
+            // =========================
+            // HÒA
+            // =========================
+
+            else
+            {
+                player1ResultUI.transform.GetChild(0).gameObject.SetActive(true);
+                player1ResultUI.transform.GetChild(1).gameObject.SetActive(false);
+
+                player2ResultUI.transform.GetChild(0).gameObject.SetActive(true);
+                player2ResultUI.transform.GetChild(1).gameObject.SetActive(false);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Ẩn bảng kết quả.
+    /// </summary>
+    public void HideResultPanel()
+    {
+        if (resultPanel != null)
+        {
+            resultPanel.SetActive(false);
+        }
+    }
+
+    // =========================================================
+    // PLAYER PLAY PANEL
+    // =========================================================
+
     /// <summary>
     /// Hiện hoặc ẩn bảng thông tin người chơi.
     /// </summary>
@@ -313,6 +410,10 @@ public class UIManager : MonoBehaviour
     {
         notifiPlay.gameObject.SetActive(i);
     }
+
+    // =========================================================
+    // BONUS PANEL
+    // =========================================================
 
     /// <summary>
     /// Hiển thị panel Bonus trong 1 giây rồi tự tắt.
@@ -328,10 +429,13 @@ public class UIManager : MonoBehaviour
 
     public void ShowBonusCoin(int playerID)
     {
+        // Player 1 bonus coin UI
         if (playerID == 0)
         {
             StartCoroutine(ShowUIBonusCoin(bonusCoinTextP1));
         }
+
+        // Player 2 bonus coin UI
         else if (playerID == 1)
         {
             StartCoroutine(ShowUIBonusCoin(bonusCoinTextP2));
@@ -340,10 +444,12 @@ public class UIManager : MonoBehaviour
 
     IEnumerator ShowUIBonusCoin(GameObject canvas)
     {
+        // Hiện UI bonus coin
         canvas.SetActive(true);
 
         yield return new WaitForSeconds(3f);
 
+        // Ẩn UI bonus coin
         canvas.SetActive(false);
     }
 }

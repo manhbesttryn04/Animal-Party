@@ -2,26 +2,44 @@
 using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class GameManager : MonoBehaviour
 {
-    // Singleton
+    // =========================================================
+    // SINGLETON
+    // =========================================================
+
     public static GameManager instance;
     public static GameManager Instance => instance;
 
+    // =========================================================
+    // WINNER DATA
+    // =========================================================
+
     [Header("Winner")]
 
-    // Lưu người thắng vòng hiện tại
+    // Lưu tên người thắng vòng hiện tại
     public string playerWinRound;
 
     // Object chính của Player 1 và Player 2
     public GameObject player1Main, player2Main;
 
-    // Tham chiếu tới các manager khác
+    // =========================================================
+    // MANAGER REFERENCES
+    // =========================================================
+
+    // Quản lý mini game
     MiniGameManager miniGameManager;
+
+    // Quản lý trạng thái vòng chơi / story game
     StateStoryGame stateGame;
+
+    // Cho phép bắt đầu vòng tiếp theo hay chưa
     public bool canStartNextRound = false;
+
+    // =========================================================
+    // UNITY FUNCTIONS
+    // =========================================================
 
     private void Awake()
     {
@@ -55,53 +73,54 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        // Nếu chưa qua vòng đầu tiên
+        // Nếu chưa qua vòng đầu tiên thì kiểm tra điều kiện bắt đầu minigame đầu
         if (!stateGame.isFistRound)
         {
-            // Kiểm tra điều kiện bắt đầu minigame
             FistRoundMiniGame();
         }
-        WaitPlayer1RollDice();
-        StartNextRound();
 
+        // Chờ Player 1 đi xong để tới lượt Player 2
+        WaitPlayer1RollDice();
+
+        // Nếu cả 2 player đã xong lượt thì bắt đầu minigame tiếp theo
+        StartNextRound();
     }
 
-    // Kiểm tra ai thắng vòng
+    // =========================================================
+    // ROUND RESULT
+    // =========================================================
+
+    // Kiểm tra ai thắng vòng dựa trên coin kiếm được trong minigame
     public void CheckPlayerWinRound(int playerCoin1, int playerCoin2)
     {
-
-        // Player 1 nhiều coin hơn
         if (playerCoin1 > playerCoin2)
         {
             playerWinRound = "Player 1";
         }
-        // Player 2 nhiều coin hơn
         else if (playerCoin2 > playerCoin1)
         {
             playerWinRound = "Player 2";
         }
-        // Hòa
         else
         {
             playerWinRound = "Draw";
         }
 
-        // Bắt đầu cộng coin và xử lý kết quả
+        // Bắt đầu cộng coin và xử lý kết quả sau vòng
         StartCoroutine(AddCoinToPlayer(playerCoin1, playerCoin2));
     }
 
     IEnumerator AddCoinToPlayer(int playerCoin1, int playerCoin2)
     {
+        // Chờ một chút trước khi cộng coin
         yield return new WaitForSeconds(2f);
 
-        PlayerCoin player1 =
-            player1Main.GetComponent<PlayerCoin>();
+        PlayerCoin player1 = player1Main.GetComponent<PlayerCoin>();
+        PlayerCoin player2 = player2Main.GetComponent<PlayerCoin>();
 
-        PlayerCoin player2 =
-            player2Main.GetComponent<PlayerCoin>();
-
-        player1.AddCoin(playerCoin1);
-        player2.AddCoin(playerCoin2);
+        // Cộng coin từ minigame vào coin chính của từng player
+        player1.AddCoinToPlayerMain(playerCoin1);
+        player2.AddCoinToPlayerMain(playerCoin2);
 
         yield return new WaitForSeconds(2f);
 
@@ -117,6 +136,7 @@ public class GameManager : MonoBehaviour
                 )
             );
 
+            // Mở debuff cho Player 1 chọn
             DebuffManager.Instance.OpenDebuffInternal(0);
         }
 
@@ -132,6 +152,7 @@ public class GameManager : MonoBehaviour
                 )
             );
 
+            // Mở debuff cho Player 2 chọn
             DebuffManager.Instance.OpenDebuffInternal(1);
         }
 
@@ -147,9 +168,14 @@ public class GameManager : MonoBehaviour
                 )
             );
 
+            // Nếu hòa thì mở shop
             ShopManager.Instance.Open();
         }
     }
+
+    // =========================================================
+    // MINI GAME CONTROL
+    // =========================================================
 
     // Bắt đầu minigame ngẫu nhiên
     public void JoinRandomMiniGame()
@@ -159,37 +185,42 @@ public class GameManager : MonoBehaviour
         {
             stateGame.isFistRound = true;
         }
-         
-       /* var randomIndex = Random.Range(0, 2);
-            if(randomIndex == 0)
-            {
-                miniGameManager.indexMiniGame = 0
-                +4;
-        }
-            else if(randomIndex == 1)
+
+        /*
+        var randomIndex = Random.Range(0, 2);
+
+        if(randomIndex == 0)
         {
-                miniGameManager.indexMiniGame = 0
-                +4;
-        }*/
+            miniGameManager.indexMiniGame = 0 + 4;
+        }
+        else if(randomIndex == 1)
+        {
+            miniGameManager.indexMiniGame = 0 + 4;
+        }
+        */
+
         // Chạy minigame
         miniGameManager.StartMiniGame();
     }
 
-    // Kiểm tra cả 2 người đã tới vòng 1 chưa
+    // Kiểm tra cả 2 người chơi đã tới vòng 1 chưa
     public void FistRoundMiniGame()
     {
-        // Lấy thông tin vòng chơi
         PlayerRound r1 = player1Main.GetComponent<PlayerRound>();
         PlayerRound r2 = player2Main.GetComponent<PlayerRound>();
 
-        // Nếu cả 2 đều ở vòng 1
+        // Nếu cả 2 đều ở vòng 1 thì bắt đầu minigame đầu tiên
         if (r1.isRound1 && r2.isRound1)
         {
-            // Bắt đầu minigame
             JoinRandomMiniGame();
         }
     }
 
+    // =========================================================
+    // RESET BUFF / DEBUFF
+    // =========================================================
+
+    // Reset debuff phép của cả 2 player
     public void ResetMagicDebuffAllPlayer()
     {
         PlayerManager p1 = player1Main.GetComponent<PlayerManager>();
@@ -203,36 +234,48 @@ public class GameManager : MonoBehaviour
         if (p2 != null && p2.playerBuff != null)
         {
             p2.playerDebuff.ResetDebuff();
-
         }
     }
+
+    // Reset buff của cả 2 player
     public void ResetBuffAllPlayer()
     {
         PlayerManager p1 = player1Main.GetComponent<PlayerManager>();
         PlayerManager p2 = player2Main.GetComponent<PlayerManager>();
+
         if (p1 != null && p1.playerBuff != null)
         {
             p1.playerBuff.ResetBuff();
         }
+
         if (p2 != null && p2.playerBuff != null)
         {
             p2.playerBuff.ResetBuff();
-
         }
     }
+
+    // Chuyển buff xúc xắc của cả 2 player
     public void ConvertBuffDiceAllPlayer()
     {
         PlayerManager p1 = player1Main.GetComponent<PlayerManager>();
         PlayerManager p2 = player2Main.GetComponent<PlayerManager>();
+
         if (p1 != null && p1.playerBuff != null)
         {
             p1.playerBuff.ConvertBuffDice();
         }
+
         if (p2 != null && p2.playerBuff != null)
         {
             p2.playerBuff.ConvertBuffDice();
         }
     }
+
+    // =========================================================
+    // GAME LOOP / NEXT ROUND
+    // =========================================================
+
+    // Reset trạng thái vòng chơi để chuẩn bị lượt mới
     public void ResetGameLoop()
     {
         canStartNextRound = false;
@@ -240,11 +283,14 @@ public class GameManager : MonoBehaviour
 
         PlayerManager p1 = player1Main.GetComponent<PlayerManager>();
         PlayerManager p2 = player2Main.GetComponent<PlayerManager>();
+
         p1.playerRound.ResetNextRound();
         p2.playerRound.ResetNextRound();
-      //  ConvertBuffDiceAllPlayer();
 
+        // ConvertBuffDiceAllPlayer();
     }
+
+    // Thoát màn hình next round và bắt đầu lượt Player 1 đổ xúc xắc
     public void ExitNextRound()
     {
         ResetGameLoop();
@@ -252,73 +298,138 @@ public class GameManager : MonoBehaviour
         StartCoroutine(Player1Dice());
     }
 
+    // =========================================================
+    // PLAYER 1 DICE TURN
+    // =========================================================
+
     public IEnumerator Player1Dice()
     {
         PlayerManager p1 = player1Main.GetComponent<PlayerManager>();
+
+        // Nếu Player 1 không bị debuff cấm roll dice
         if (!p1.playerDebuff.isNoRollDice)
         {
             yield return new WaitForSeconds(0.5f);
+
+            // Camera follow Player 1
             p1.playerCamera.isFllow2 = true;
+
             yield return new WaitForSeconds(2f);
+
+            // Tắt follow sau khi camera đã tới
             p1.playerCamera.isFllow2 = false;
-           yield return (StartCoroutine(player1Main.GetComponent<PlayerManager>().playerNotifi.SetNotifi()));
+
+            // Hiện thông báo roll dice
+            yield return StartCoroutine(
+                player1Main.GetComponent<PlayerManager>().playerNotifi.SetNotifi()
+            );
+
+            // Cho phép Player 1 bấm xúc xắc
             p1.GetComponent<PlayerManager>().playerInputDice.isClick = false;
         }
         else
         {
             yield return new WaitForSeconds(0.5f);
+
+            // Camera vẫn bay tới Player 1 để báo lượt
             p1.playerCamera.isFllow2 = true;
+
             yield return new WaitForSeconds(2f);
+
             p1.playerCamera.isFllow2 = false;
+
             yield return new WaitForSeconds(1f);
+
+            // Bị cấm roll dice nên bỏ lượt và đánh dấu đã xong lượt
             p1.playerRound.nextRound = true;
         }
-
-
     }
+
+    // =========================================================
+    // PLAYER 2 DICE TURN
+    // =========================================================
+
     public IEnumerator Player2Dice()
     {
         PlayerManager p2 = player2Main.GetComponent<PlayerManager>();
+
+        // Nếu Player 2 không bị debuff cấm roll dice
         if (!p2.playerDebuff.isNoRollDice)
         {
             yield return new WaitForSeconds(0.5f);
+
+            // Camera follow Player 2
             p2.playerCamera.isFllow2 = true;
+
             yield return new WaitForSeconds(2f);
+
+            // Tắt follow sau khi camera đã tới
             p2.playerCamera.isFllow2 = false;
-           yield return (StartCoroutine(player2Main.GetComponent<PlayerManager>().playerNotifi.SetNotifi()));
+
+            // Hiện thông báo roll dice
+            yield return StartCoroutine(
+                player2Main.GetComponent<PlayerManager>().playerNotifi.SetNotifi()
+            );
+
+            // Cho phép Player 2 bấm xúc xắc
             p2.GetComponent<PlayerManager>().playerInputDice.isClick = false;
         }
         else
         {
             yield return new WaitForSeconds(0.5f);
+
+            // Camera vẫn bay tới Player 2 để báo lượt
             p2.playerCamera.isFllow2 = true;
+
             yield return new WaitForSeconds(2f);
+
             p2.playerCamera.isFllow2 = false;
+
             yield return new WaitForSeconds(1f);
+
+            // Bị cấm roll dice nên bỏ lượt và đánh dấu đã xong lượt
             p2.playerRound.nextRound = true;
         }
-
     }
 
+    // =========================================================
+    // TURN FLOW CHECK
+    // =========================================================
+
+    // Chờ Player 1 đi xong, sau đó chuyển sang Player 2
     public void WaitPlayer1RollDice()
     {
-       PlayerManager p1 = player1Main.GetComponent<PlayerManager>();
-       PlayerManager p2 = player2Main.GetComponent<PlayerManager>();
-      
-        if(p1.playerRound.nextRound && !p2.playerRound.nextRound&& !stateGame.isNextRound)
+        PlayerManager p1 = player1Main.GetComponent<PlayerManager>();
+        PlayerManager p2 = player2Main.GetComponent<PlayerManager>();
+
+        if (
+            p1.playerRound.nextRound &&
+            !p2.playerRound.nextRound &&
+            !stateGame.isNextRound
+        )
         {
-           
             StartCoroutine(Player2Dice());
+
+            // Khóa để không gọi Player2Dice liên tục trong Update
             stateGame.isNextRound = true;
         }
     }
+
+    // Nếu cả 2 player đều xong lượt thì bắt đầu minigame tiếp theo
     public void StartNextRound()
     {
         PlayerManager p1 = player1Main.GetComponent<PlayerManager>();
         PlayerManager p2 = player2Main.GetComponent<PlayerManager>();
-        if(p1.playerRound.nextRound && p2.playerRound.nextRound&& !canStartNextRound)
+
+        if (
+            p1.playerRound.nextRound &&
+            p2.playerRound.nextRound &&
+            !canStartNextRound
+        )
         {
             JoinRandomMiniGame();
+
+            // Khóa để tránh gọi minigame nhiều lần trong Update
             canStartNextRound = true;
         }
     }

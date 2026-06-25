@@ -6,8 +6,6 @@ public class PlayerMiniGame: MonoBehaviour
 
     public float waterHeight = -5f;
 
-  
-
     public void Respawn()
     {
         CharacterController cc =
@@ -37,6 +35,5 @@ public class PlayerMiniGame: MonoBehaviour
             PlayerCoin coin = GetComponent<PlayerCoin>();
             coin.AddCoin(aa);
         }
-    }
-       
+    } 
 }

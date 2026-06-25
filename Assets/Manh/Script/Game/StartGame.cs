@@ -22,8 +22,6 @@ public class StartGame : MonoBehaviour
             StartCoroutine(FistRoundPlayer2());
             isFistRoundSussce=true;
         }
-        
-        
     }
 
     // Update is called once per frame

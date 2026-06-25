@@ -10,7 +10,7 @@ public class CharacterManager : MonoBehaviour
     public List<GameObject> player1List;
     public List<GameObject> player2List;
     public List<GameObject> playerPlaylist;
-
+    public bool isExitManager;
     private void Awake()
     {
         if (Instance == null)
@@ -22,11 +22,13 @@ public class CharacterManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
-        
-     //  indexPlayer1 = SendIndexCharacter.Instance.player1Index;
-       //indexPlayer2 = SendIndexCharacter.Instance.player2Index;
-       SetUpPlayer();
-        
+        if (isExitManager)
+        {
+            indexPlayer1 = SendIndexCharacter.Instance.player1Index;
+            indexPlayer2 = SendIndexCharacter.Instance.player2Index;
+        }
+   
+       SetUpPlayer(); 
     }
 
     public void SetUpPlayer()
