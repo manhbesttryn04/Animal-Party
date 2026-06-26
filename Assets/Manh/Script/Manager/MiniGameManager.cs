@@ -685,7 +685,7 @@ public class MiniGameManager : MonoBehaviour
         switch (indexMiniGame)
         {
             case 1:
-                countDownTime = 30f;
+                countDownTime = 0f;
                 break;
 
             case 2:

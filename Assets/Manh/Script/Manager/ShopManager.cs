@@ -83,7 +83,6 @@ public class ShopManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
-
     #endregion
 
     // =========================================================
@@ -305,29 +304,40 @@ public class ShopManager : MonoBehaviour
         ResetShop();
         UpdateCoin();
 
-        // Sau 2 giây hiện panel lượt Player 1
-        Invoke("ShowPlayer1Turn", 2f);
-
-        // Reset index chọn item của Player 1 và Player 2
-        inputChooseItem.player1Index = 0;
-        inputChooseItem.player2Index = 0;
-
-        // Cho Player 1 chọn trước
-        inputChooseItem.isPlayer1Choose = true;
+        // Khóa input trước, không cho mua khi panel chưa hiện xong
+        inputChooseItem.isPlayer1Choose = false;
         inputChooseItem.isPlayer2Choose = false;
 
-        // Tắt toàn bộ highlight chọn item của cả 2 player
+        // Tắt toàn bộ highlight
         for (int i = 0; i < inputChooseItem.items.Length; i++)
         {
             inputChooseItem.items[i].transform.GetChild(1).gameObject.SetActive(false);
             inputChooseItem.items[i].transform.GetChild(2).gameObject.SetActive(false);
         }
 
-        // Bật highlight item đầu tiên cho Player 1
-        inputChooseItem.items[0].transform.GetChild(1).gameObject.SetActive(true);
+        // Sau 2 giây mới hiện panel Player 1
+        Invoke(nameof(StartPlayer1Turn), 1f );
 
         // Bắt đầu đếm giờ shop
         StartShopTimer();
+    }
+    private void StartPlayer1Turn()
+    {
+        StartCoroutine(Player1TurnRoutine());
+    }
+
+    private IEnumerator Player1TurnRoutine()
+    {
+        ShowPlayer1Turn();
+
+        yield return new WaitForSeconds(0.6f);
+
+        inputChooseItem.isPlayer1Choose = true;
+        inputChooseItem.isPlayer2Choose = false;
+
+        inputChooseItem.items[inputChooseItem.player1Index]
+            .transform.GetChild(1)
+            .gameObject.SetActive(true);
     }
 
     public void CloseShop()
@@ -345,6 +355,8 @@ public class ShopManager : MonoBehaviour
         // Thoát shop và bắt đầu vòng tiếp theo
         GameManager.Instance.ExitNextRound();
     }
+
+
 
     #endregion
 

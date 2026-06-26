@@ -328,13 +328,16 @@ public class DebuffManager : MonoBehaviour
             yield break;
 
         // Tạo cannon phía trước owner
-        GameObject cannon =
-            Instantiate(
-                cannonPrefab,
-                owner.transform.position + owner.transform.forward * 2f,
-                Quaternion.identity
-            );
+        Vector3 spawnPos =
+      owner.transform.position +
+      owner.transform.forward * 1.5f +
+      Vector3.down * 0.3f;
 
+        GameObject cannon = Instantiate(
+       cannonPrefab,
+       spawnPos,
+       cannonPrefab.transform.rotation
+   );
         // Cannon nhìn về target
         cannon.transform.LookAt(target.transform);
 

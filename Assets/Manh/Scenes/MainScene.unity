@@ -16774,7 +16774,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f5c43531b7774c45ba1db7013ef8a54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  indexMiniGame: 4
+  indexMiniGame: 1
   miniGameList: {fileID: 288627989}
   intrusTextList: {fileID: 288627990}
   videoInstructList: {fileID: 288627991}
@@ -69179,7 +69179,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2e9b24bd4a4ad343a0f4fa0bd8a1383, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  player1: {fileID: 1324390462}
+  player1: {fileID: 0}
   player2: {fileID: 0}
 --- !u!4 &1201610635
 Transform:
@@ -81795,6 +81795,37 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 805abbe58d8af624d8b8b49035cb0bf4, type: 3}
+--- !u!1 &1406469297
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1406469298}
+  m_Layer: 0
+  m_Name: Fire Point
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1406469298
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1406469297}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.000000089406925, y: 0.000000029802308, z: -0, w: 1}
+  m_LocalPosition: {x: -0.0029, y: 0.0604, z: 0.353}
+  m_LocalScale: {x: 0.014509743, y: 0.014509742, z: 0.014509742}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 248873717}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1406765977
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -82708,7 +82739,7 @@ MonoBehaviour:
   rightCards:
   - {fileID: 490140662}
   - {fileID: 22019719}
-  cannonPrefab: {fileID: 7079854273152598458, guid: a431b8616de1e13499a24f6fbadcaa08, type: 3}
+  cannonPrefab: {fileID: 3025485861563049401, guid: 545d4b28a12fa654e99574cc0bf88887, type: 3}
   panelNotiifiChooseDebuff: {fileID: 610134593}
 --- !u!4 &1427530311
 Transform:
@@ -113072,6 +113103,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2004911892}
   - component: {fileID: 2004911893}
+  - component: {fileID: 2004911895}
   - component: {fileID: 2004911894}
   m_Layer: 0
   m_Name: Environment
@@ -113205,9 +113237,9 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 8e8e42b5fa0f68f4da3da7928b47706c, type: 3}
+  m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
-  m_Volume: 0.3
+  m_Volume: 0.2
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -113291,6 +113323,26 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &2004911895
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2004911891}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e839df38ce979844af6ba81aa6c5a20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  birdClip: {fileID: 8300000, guid: 8e8e42b5fa0f68f4da3da7928b47706c, type: 3}
+  minDelay: 10
+  maxDelay: 25
+  minPitch: 0.95
+  maxPitch: 1.05
+  minVolume: 0.2
+  maxVolume: 0.6
+  audioSource: {fileID: 2004911894}
 --- !u!4 &2005312606 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5520556933773855253, guid: 58fb5f8a0f14c45dbb82c1b62a5c0e0d, type: 3}
@@ -117061,6 +117113,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5446169564259161618, guid: c05f1db52954eaf429350eb0d9c555a1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1562842204}
+    - targetCorrespondingSourceObject: {fileID: 5446169564259161618, guid: c05f1db52954eaf429350eb0d9c555a1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1406469298}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c05f1db52954eaf429350eb0d9c555a1, type: 3}
 --- !u!1001 &2065245731
@@ -133158,7 +133213,7 @@ GameObject:
   - component: {fileID: 7726325503316364367}
   - component: {fileID: 7726325503316364368}
   m_Layer: 0
-  m_Name: MiniGame 4
+  m_Name: Pirates King
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -133178,10 +133233,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   manager: {fileID: 288627986}
   animator: {fileID: 7491744360742360974}
-  firstWaitTime: 1
-  watchTime: 5
+  firstWaitTime: 0
+  watchTime: 3.5
   rotateSpeed: 5
-  respawnDelay: 1.5
+  fastAimSpeed: 25
+  startMoveSpeed: 0.4
+  detectedMoveSpeed: 0.3
+  speedIncreaseAfterRespawn: 0.2
+  maxMoveSpeed: 1
+  moveTolerance: 0.01
+  laughDelay: 0.15
+  shootDelay: 0.25
   finishLineZ: -11550.86
   audioSource: {fileID: 7726325503316364367}
   environmentAudioSource: {fileID: 7726325503316364368}

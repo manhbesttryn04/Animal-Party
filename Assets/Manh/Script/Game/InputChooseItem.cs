@@ -16,8 +16,8 @@ public class InputChooseItem : MonoBehaviour
     public int player1Index = 0;
     public int player2Index = 0;
 
-    public bool isPlayer1Choose = true;
-    public bool isPlayer2Choose = true;
+    public bool isPlayer1Choose = false;
+    public bool isPlayer2Choose = false;
 
     #endregion
 
@@ -29,13 +29,10 @@ public class InputChooseItem : MonoBehaviour
 
     #endregion
 
-    #region Unity
-
     private void Start()
     {
         InitHighlight();
     }
-
     private void Update()
     {
         if (isChoosingRandomCard)
@@ -47,25 +44,28 @@ public class InputChooseItem : MonoBehaviour
         HandlePlayerInput();
     }
 
-    #endregion
-
-    #region Init
+  
 
     private void InitHighlight()
     {
-        for (int i = 1; i < items.Length; i++)
+        for (int i = 0; i < items.Length; i++)
         {
             items[i].transform.GetChild(1).gameObject.SetActive(false);
             items[i].transform.GetChild(2).gameObject.SetActive(false);
         }
 
-        items[player1Index].transform.GetChild(1).gameObject.SetActive(true);
-        items[player2Index].transform.GetChild(2).gameObject.SetActive(true);
+        isPlayer1Choose = false;
+        isPlayer2Choose = false;
+        isChoosingRandomCard = false;
     }
 
-    #endregion
-
-    #region Player Input Router
+    private void ClearRandomCardHighlight()
+    {
+        for (int i = 0; i < itemCardRandom.Length; i++)
+        {
+            itemCardRandom[i].transform.GetChild(1).gameObject.SetActive(false);
+        }
+    }
 
     private void HandlePlayerInput()
     {
@@ -92,8 +92,6 @@ public class InputChooseItem : MonoBehaviour
         }
     }
 
-    #endregion
-
     #region Player 1
 
     private void HandlePlayer1Input()
@@ -109,10 +107,13 @@ public class InputChooseItem : MonoBehaviour
     private void ChangePlayer1(int newIndex)
     {
         if (newIndex < 0 || newIndex >= items.Length) return;
+
         AudioManager.Instance.PlaySFX(AudioManager.Instance.movechooseItemClip);
 
         items[player1Index].transform.GetChild(1).gameObject.SetActive(false);
+
         player1Index = newIndex;
+
         items[player1Index].transform.GetChild(1).gameObject.SetActive(true);
     }
 
@@ -133,33 +134,18 @@ public class InputChooseItem : MonoBehaviour
         if (shopManager.BuyItem(0, player1Index, item.price))
         {
             isPlayer1Choose = false;
-            isPlayer2Choose = true;
-
-            shopManager.ShowPlayer2Turn();
-
             items[player1Index].transform.GetChild(1).gameObject.SetActive(false);
-            CheckAllPlayersFinished();
+
+            StartCoroutine(ShowPlayer2TurnDelay());
         }
     }
+
     private void SkipPlayer1()
     {
         isPlayer1Choose = false;
-        isPlayer2Choose = true;
-
         items[player1Index].transform.GetChild(1).gameObject.SetActive(false);
 
-        shopManager.ShowPlayer2Turn();
-
-        items[player2Index].transform.GetChild(2).gameObject.SetActive(true);
-    }
-
-    private void SkipPlayer2()
-    {
-        isPlayer2Choose = false;
-
-        items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
-
-        CheckAllPlayersFinished();
+        StartCoroutine(ShowPlayer2TurnDelay());
     }
 
     #endregion
@@ -176,14 +162,16 @@ public class InputChooseItem : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.RightArrow)) ChangePlayer2(current.right);
     }
 
-
     private void ChangePlayer2(int newIndex)
     {
         if (newIndex < 0 || newIndex >= items.Length) return;
+
         AudioManager.Instance.PlaySFX(AudioManager.Instance.movechooseItemClip);
 
         items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
+
         player2Index = newIndex;
+
         items[player2Index].transform.GetChild(2).gameObject.SetActive(true);
     }
 
@@ -195,8 +183,8 @@ public class InputChooseItem : MonoBehaviour
         if (player2Index == 1)
         {
             if (!shopManager.BuyItem(1, player2Index, item.price))
-
                 return;
+
             OpenRandomCard(1);
             return;
         }
@@ -205,8 +193,39 @@ public class InputChooseItem : MonoBehaviour
         {
             isPlayer2Choose = false;
             items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
+
             CheckAllPlayersFinished();
         }
+    }
+
+    private void SkipPlayer2()
+    {
+        isPlayer2Choose = false;
+        items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
+
+        CheckAllPlayersFinished();
+    }
+
+    #endregion
+
+    #region Turn Delay
+
+  
+
+    private IEnumerator ShowPlayer2TurnDelay()
+    {
+        isPlayer1Choose = false;
+        isPlayer2Choose = false;
+
+        items[player1Index].transform.GetChild(1).gameObject.SetActive(false);
+        items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
+
+        shopManager.ShowPlayer2Turn();
+
+        yield return new WaitForSeconds(0.6f);
+
+        isPlayer2Choose = true;
+        items[player2Index].transform.GetChild(2).gameObject.SetActive(true);
     }
 
     #endregion
@@ -216,7 +235,6 @@ public class InputChooseItem : MonoBehaviour
     private void OpenRandomCard(int playerIndex)
     {
         shopManager.canvasRandomCard.SetActive(true);
-      
 
         randomCardPlayer = playerIndex;
         randomCardIndex = 0;
@@ -226,10 +244,11 @@ public class InputChooseItem : MonoBehaviour
         isPlayer2Choose = false;
 
         RandomizeCards();
+        ClearRandomCardHighlight();
 
-        int child = playerIndex == 0 ? 1 : 2;
-
-        itemCardRandom[0].transform.GetChild(child).gameObject.SetActive(true);
+        itemCardRandom[randomCardIndex]
+            .transform.GetChild(1)
+            .gameObject.SetActive(true);
     }
 
     private void RandomizeCards()
@@ -240,7 +259,8 @@ public class InputChooseItem : MonoBehaviour
         {
             int rand = Random.Range(i, randomItems.Length);
 
-            (randomItems[i], randomItems[rand]) = (randomItems[rand], randomItems[i]);
+            (randomItems[i], randomItems[rand]) =
+            (randomItems[rand], randomItems[i]);
         }
 
         for (int i = 0; i < itemCardRandom.Length; i++)
@@ -273,12 +293,19 @@ public class InputChooseItem : MonoBehaviour
     private void ChangeRandomCard(int newIndex)
     {
         if (newIndex < 0 || newIndex >= itemCardRandom.Length) return;
+
         AudioManager.Instance.PlaySFX(AudioManager.Instance.movechooseItemClip);
-        itemCardRandom[randomCardIndex].transform.GetChild(1).gameObject.SetActive(false);
+
+
+        itemCardRandom[randomCardIndex]
+            .transform.GetChild(1)
+            .gameObject.SetActive(false);
 
         randomCardIndex = newIndex;
 
-        itemCardRandom[randomCardIndex].transform.GetChild(1).gameObject.SetActive(true);
+        itemCardRandom[randomCardIndex]
+            .transform.GetChild(1)
+            .gameObject.SetActive(true);
     }
 
     private IEnumerator ChooseRandomCard()
@@ -287,43 +314,53 @@ public class InputChooseItem : MonoBehaviour
 
         RandomCard card = itemCardRandom[randomCardIndex].GetComponent<RandomCard>();
 
-        itemCardRandom[randomCardIndex].transform.GetChild(2).gameObject.SetActive(true);
+       // int child = randomCardPlayer == 0 ? 1 : 2;
+
+        itemCardRandom[randomCardIndex]
+            .transform.GetChild(1)
+            .gameObject.SetActive(true);
 
         card.image.sprite = shopManager.itemSprites[card.itemIndex];
+
         AudioManager.Instance.PlaySFX(AudioManager.Instance.buyItemClip);
 
         shopManager.ShowPlayerItem(randomCardPlayer, card.itemIndex);
 
         yield return new WaitForSeconds(2f);
 
+        ClearRandomCardHighlight();
+
         shopManager.canvasRandomCard.SetActive(false);
 
         if (randomCardPlayer == 0)
         {
-            isPlayer1Choose = false;
-            isPlayer2Choose = true;
-
-            shopManager.ShowPlayer2Turn();
-
-            items[player2Index].transform.GetChild(2).gameObject.SetActive(true);
+            StartCoroutine(ShowPlayer2TurnDelay());
         }
         else
         {
             isPlayer2Choose = false;
+            items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
+
             CheckAllPlayersFinished();
         }
     }
+
+    #endregion
+
+    #region Close Shop
+
     private void CheckAllPlayersFinished()
     {
-        if (!isPlayer1Choose && !isPlayer2Choose)
+        if (!isPlayer1Choose && !isPlayer2Choose && !isChoosingRandomCard)
         {
-
             StartCoroutine(CloseShop());
         }
     }
+
     public IEnumerator CloseShop()
     {
         yield return new WaitForSeconds(2f);
+
         ShopManager.Instance.CloseShop();
     }
 

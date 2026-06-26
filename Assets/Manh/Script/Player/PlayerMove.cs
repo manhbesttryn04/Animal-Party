@@ -48,9 +48,8 @@ public class PlayerMove : MonoBehaviour
 
             if (isJump)
                 JumpInput();
-
-            ApplyGravity();
         }
+        ApplyGravity();
     }
     void Move()
     {
