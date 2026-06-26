@@ -15,9 +15,14 @@ public class IslandGameManager : MonoBehaviour
     public List<Transform> cannonPositions = new List<Transform>();
     public float bulletSpeed = 15f;
 
-    [Header("Cấu hình Quay Nòng Pháo (Mới)")]
+    [Header("Cấu hình Quay Nòng Pháo")]
     [Tooltip("Góc quay tối đa sang trái hoặc phải (Ví dụ: 25 độ)")]
     public float maxSpreadAngle = 25f;
+
+    // 🛠️ BỔ SUNG: Cấu hình âm thanh khi đại bác bắn
+    [Header("Cấu hình Âm thanh Bắn Pháo")]
+    public AudioClip cannonShotSound;       // Kéo file âm thanh (.mp3, .wav) vào đây
+    [Range(0f, 1f)] public float shotVolume = 0.8f; // Điều chỉnh âm lượng (0 đến 1)
 
     [Header("UI Giao diện")]
     public TextMeshProUGUI timerText;
@@ -240,11 +245,10 @@ public class IslandGameManager : MonoBehaviour
         }
     }
 
-    // HÀM XỬ LÝ TRỒI LÊN - XOAY QUÉT GÓC - BẮN ĐẠN - LẶN XUỐNG
     IEnumerator AnimateAndShoot(Transform cannonTransform)
     {
         Vector3 upPos = cannonTransform.position;
-        Quaternion originalRot = transform.rotation; // Góc xoay dự phòng
+        Quaternion originalRot = transform.rotation;
 
         if (cannonOriginalPositions.ContainsKey(cannonTransform)) upPos = cannonOriginalPositions[cannonTransform];
         if (cannonOriginalRotations.ContainsKey(cannonTransform)) originalRot = cannonOriginalRotations[cannonTransform];
@@ -261,12 +265,12 @@ public class IslandGameManager : MonoBehaviour
         }
         cannonTransform.position = upPos;
 
-        // 2. MỚI: Tính toán góc lệch ngẫu nhiên trái/phải và xoay pháo qua góc đó
+        // 2. Tính toán góc lệch ngẫu nhiên trái/phải và xoay pháo
         float randomAngle = Random.Range(-maxSpreadAngle, maxSpreadAngle);
         Quaternion targetRotation = originalRot * Quaternion.Euler(0f, randomAngle, 0f);
 
         elapsed = 0f;
-        while (elapsed < 0.2f) // Thời gian xoay nòng mất 0.2 giây
+        while (elapsed < 0.2f)
         {
             cannonTransform.rotation = Quaternion.Slerp(originalRot, targetRotation, elapsed / 0.2f);
             elapsed += Time.deltaTime;
@@ -276,7 +280,7 @@ public class IslandGameManager : MonoBehaviour
 
         yield return new WaitForSeconds(0.1f);
 
-        // 3. Tiến hành bắn đạn từ đầu nòng FirePoint (Theo góc đã xoay)
+        // 3. Tiến hành bắn đạn từ đầu nòng FirePoint
         Vector3 spawnPosition = cannonTransform.position;
         Quaternion spawnRotation = cannonTransform.rotation;
 
@@ -289,6 +293,12 @@ public class IslandGameManager : MonoBehaviour
         else
         {
             spawnPosition = cannonTransform.position + (cannonTransform.forward * 1.2f);
+        }
+
+        // 🛠️ BỔ SUNG: Phát âm thanh bắn pháo 3D ngay tại điểm nòng súng vừa khai hỏa
+        if (cannonShotSound != null)
+        {
+            AudioSource.PlayClipAtPoint(cannonShotSound, spawnPosition, shotVolume);
         }
 
         GameObject bullet = Instantiate(bulletPrefab, spawnPosition, spawnRotation);
@@ -305,7 +315,7 @@ public class IslandGameManager : MonoBehaviour
 
         yield return new WaitForSeconds(0.3f);
 
-        // 4. Lặn xuống đồng thời trả góc xoay súng về vị trí ban đầu chuẩn xác
+        // 4. Lặn xuống đồng thời trả góc xoay súng về vị trí ban đầu
         elapsed = 0f;
         while (elapsed < 0.4f)
         {
