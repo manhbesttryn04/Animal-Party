@@ -34,6 +34,12 @@ public class CutScene2 : MonoBehaviour
     public TMP_Text subtitleText;
     public Outline subtitleOutline;
 
+    [Header("--- SKIP UI ---")]
+    [Tooltip("GameObject chứa chữ 'Press Space to Skip'")]
+    public GameObject skipHintObject;
+    [Tooltip("TMP Text của skip hint")]
+    public TMP_Text skipHintText;
+
     [Header("--- GRADIENT PRESET ---")]
     [Tooltip("NormalGradient: trái #5C2E00, phải #1A0A00")]
     public TMP_ColorGradient normalGradient;
@@ -50,30 +56,23 @@ public class CutScene2 : MonoBehaviour
     [Range(0f, 1f)] public float narratorVolume = 0.9f;
 
     [Header("--- TIMING ---")]
-    public float typeSpeed = 0.05f;       // chậm hơn chút → chữ ra từ từ hơn
-    public float fadeOutDuration = 0.4f;  // fade out mượt hơn
-    public float betweenLineFade = 0.5f;  // chờ lâu hơn giữa 2 câu
+    public float typeSpeed = 0.05f;
+    public float fadeOutDuration = 0.4f;
+    public float betweenLineFade = 0.5f;
 
-    // Nội dung giới thiệu Animal Party
     private string[] storyLines = new string[]
     {
-        // [0] — Point 0
         "Welcome to Party Land — where the fun never stops!",
-        // [1] — Point 2
         "The wildest party on the island is about to begin!",
-        // [2] — Point 3
         "Roll the dice — your fate is in the hands of luck!",
-        // [3] — Point 5
         "Survive the craziest mini-games this island has to offer!",
-        // [4] — Point 7
         "33 steps or a bag full of Pirate Coins — first one wins!",
-        // [5] — Point 8
         "No cheating, no crying — just pure chaotic fun!",
-        // [6] — Point 9: câu cuối đỏ son
         "Two players. One island. Who will claim victory?"
     };
 
     private AudioSource narratorSource;
+    private bool isSkipped = false;
 
     private void Start()
     {
@@ -84,9 +83,55 @@ public class CutScene2 : MonoBehaviour
 
         if (subtitlePanel) subtitlePanel.SetActive(false);
         if (subtitleText) { subtitleText.text = ""; subtitleText.alpha = 1f; }
+        if (skipHintObject) skipHintObject.SetActive(false);
 
         StartCoroutine(CutScene());
         StartCoroutine(CheckShipStop());
+        StartCoroutine(ShowSkipHint());
+    }
+
+    private void Update()
+    {
+        if (!isSkipped && (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)))
+            SkipCutscene();
+    }
+
+    private void SkipCutscene()
+    {
+        isSkipped = true;
+        StopAllCoroutines();
+        if (narratorSource) narratorSource.Stop();
+        HideSubtitleImmediate();
+        if (skipHintObject) skipHintObject.SetActive(false);
+
+        // Khi skip: dọn dẹp và load thẳng MainScene
+        StartCoroutine(SkipToEnd());
+    }
+
+    IEnumerator SkipToEnd()
+    {
+        blackClosePanel.gameObject.SetActive(true);
+        StartCoroutine(FadeOutAudio(1f));
+        yield return new WaitForSeconds(1f);
+        yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
+        SceneManager.LoadScene("MainScene");
+    }
+
+    IEnumerator ShowSkipHint()
+    {
+        yield return new WaitForSeconds(1f);
+        if (skipHintObject) skipHintObject.SetActive(true);
+        if (skipHintText)
+        {
+            skipHintText.alpha = 0f;
+            float t = 0f;
+            while (t < 0.5f)
+            {
+                t += Time.deltaTime;
+                skipHintText.alpha = Mathf.Lerp(0f, 0.7f, t / 0.5f);
+                yield return null;
+            }
+        }
     }
 
     IEnumerator CutScene()
@@ -132,12 +177,15 @@ public class CutScene2 : MonoBehaviour
         yield return new WaitForSeconds(3f);
         moveSpeed = 100f;
 
-        // Move -> 9 + câu 6 (câu cuối đỏ son — chờ 2 nhân vật xuất hiện trước)
-        yield return new WaitForSeconds(2f); // chờ 2 nhân vật xuất hiện
-        typeSpeed = 0.08f;                   // chữ ra chậm hơn cho câu cuối
+        // Ẩn skip hint trước câu cuối
+        if (skipHintObject) skipHintObject.SetActive(false);
+
+        // Move -> 9 + câu 6 (câu cuối đỏ son)
+        yield return new WaitForSeconds(2f);
+        typeSpeed = 0.08f;
         yield return StartCoroutine(ShowSubtitleWithVoice(storyLines[6], 6, true));
         yield return MoveToTransform(transVideos[9]);
-        yield return new WaitForSeconds(5f); // giữ câu cuối lâu hơn
+        yield return new WaitForSeconds(5f);
 
         HideSubtitleImmediate();
         set.StartMovePlayer();
@@ -151,12 +199,10 @@ public class CutScene2 : MonoBehaviour
         Debug.Log("CutScene Finished");
     }
 
-    // Hiện subtitle + phát voice + typewriter
     IEnumerator ShowSubtitleWithVoice(string line, int voiceIndex, bool isFinal)
     {
         if (narratorSource) narratorSource.Stop();
 
-        // Fade out câu cũ
         if (subtitleText && subtitleText.text != "")
         {
             yield return StartCoroutine(FadeOutLine());
@@ -166,21 +212,17 @@ public class CutScene2 : MonoBehaviour
         if (subtitlePanel) subtitlePanel.SetActive(true);
         if (subtitleText) subtitleText.alpha = 1f;
 
-        // Áp gradient
         if (subtitleText)
         {
             subtitleText.enableVertexGradient = true;
             subtitleText.colorGradientPreset = isFinal ? finalGradient : normalGradient;
         }
 
-        // Đổi outline
         if (subtitleOutline)
             subtitleOutline.effectColor = isFinal ? finalOutlineColor : normalOutlineColor;
 
-        // Phát voice
         PlayVoice(voiceIndex);
 
-        // Typewriter
         if (subtitleText) subtitleText.text = "";
         foreach (char c in line)
         {
@@ -188,12 +230,10 @@ public class CutScene2 : MonoBehaviour
             yield return new WaitForSeconds(typeSpeed);
         }
 
-        // Chờ voice xong
         if (narratorSource && narratorSource.isPlaying)
             yield return new WaitWhile(() => narratorSource.isPlaying);
     }
 
-    // Hiện subtitle ngay (không typewriter) — dùng cho điểm đầu
     void ShowSubtitleImmediate(string line, bool isFinal)
     {
         if (subtitlePanel) subtitlePanel.SetActive(true);
@@ -237,7 +277,6 @@ public class CutScene2 : MonoBehaviour
         if (subtitlePanel) subtitlePanel.SetActive(false);
     }
 
-    // ====== Logic gốc giữ nguyên ======
     IEnumerator CheckShipStop()
     {
         while (Vector3.Distance(ship.transform.position, shipStopPosition) > shipStopDistance)
