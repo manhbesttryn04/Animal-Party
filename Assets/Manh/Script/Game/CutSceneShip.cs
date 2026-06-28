@@ -131,7 +131,7 @@ public class CutSceneShip : MonoBehaviour
         // Point 2
         StartCoroutine(ShowSubtitleWithVoice(1, false));
         yield return StartCoroutine(MoveAndRotate(transVideoList[1]));
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(3f);
 
         // Point 3
         StartCoroutine(ShowSubtitleWithVoice(2, false));
@@ -141,7 +141,7 @@ public class CutSceneShip : MonoBehaviour
         // Point 4
         StartCoroutine(ShowSubtitleWithVoice(3, false));
         yield return StartCoroutine(MoveAndRotate(transVideoList[3]));
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(2f);
 
         // Point 5 — flash đen + teleport
         if (narratorSource) narratorSource.Stop();

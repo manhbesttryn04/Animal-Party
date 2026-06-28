@@ -45,6 +45,8 @@ public class ShopManager : MonoBehaviour
     [Header("Shop Timer")]
     public int timeToBuy = 99;
 
+    private bool[] canErrorCoin = { true, true };
+
     #endregion
 
     // =========================================================
@@ -84,6 +86,7 @@ public class ShopManager : MonoBehaviour
         }
     }
     #endregion
+  
 
     // =========================================================
     // OPEN SHOP FLOW
@@ -200,6 +203,8 @@ public class ShopManager : MonoBehaviour
             text.color = originalColor;
             yield return new WaitForSeconds(0.08f);
         }
+        // Cho phép phát lại âm thanh và hiệu ứng
+        canErrorCoin[playerIndex] = true;
     }
 
     #endregion
@@ -224,11 +229,20 @@ public class ShopManager : MonoBehaviour
         // Nếu không đủ coin thì báo lỗi và không mua
         if (player.playerCoin.coinEndMiniGame < price)
         {
-            AudioManager.Instance.PlaySFX(AudioManager.Instance.noCoinBuyItemClip);
+            if (player.playerCoin.coinEndMiniGame < price)
+            {
+                if (canErrorCoin[playerIndex])
+                {
+                    canErrorCoin[playerIndex] = false;
 
-            StartCoroutine(FlashCoinText(playerIndex));
+                    AudioManager.Instance.PlaySFX(AudioManager.Instance.noCoinBuyItemClip);
+                    StartCoroutine(FlashCoinText(playerIndex));
+                }
 
+                return false;
+            }
             return false;
+
         }
 
         // Nếu itemIndex là 1 thì phát âm thanh mở card random

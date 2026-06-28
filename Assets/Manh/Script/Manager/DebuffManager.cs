@@ -78,7 +78,6 @@ public class DebuffManager : MonoBehaviour
     // =========================================================
     // OPEN DEBUFF UI
     // =========================================================
-
     public static void Open(int winner)
     {
         Instance.OpenDebuffInternal(winner);
@@ -86,47 +85,56 @@ public class DebuffManager : MonoBehaviour
 
     public void OpenDebuffInternal(int playerIndex)
     {
-        // Tắt cả 2 canvas trước
         leftCanvas.SetActive(false);
         rightCanvas.SetActive(false);
 
-        // Ẩn toàn bộ card cũ
         HideAllCards();
 
-        // Hiện panel thông báo chọn debuff
         StartCoroutine(ShowPanelChoose());
 
-        // =========================
-        // PLAYER 1 CHỌN DEBUFF
-        // =========================
+        // Chưa cho chọn
+        leftActive = false;
+        rightActive = false;
+
         if (playerIndex == 0)
         {
             leftCanvas.SetActive(true);
 
-            leftActive = true;
-            rightActive = false;
-
-            // Reset card bên trái
             Reset(leftCards, ref leftIndex);
 
-            // Highlight card đầu tiên
-            SetHighlight(leftCards, leftIndex, true);
+            StartCoroutine(WaitOpenDebuffAnimation(0));
         }
-
-        // =========================
-        // PLAYER 2 CHỌN DEBUFF
-        // =========================
         else
         {
             rightCanvas.SetActive(true);
 
-            rightActive = true;
-            leftActive = false;
-
-            // Reset card bên phải
             Reset(rightCards, ref rightIndex);
 
-            // Highlight card đầu tiên
+            StartCoroutine(WaitOpenDebuffAnimation(1));
+        }
+    }
+    private IEnumerator WaitOpenDebuffAnimation(int playerIndex)
+    {
+        Animator animator = playerIndex == 0
+            ? leftCanvas.GetComponent<Animator>()
+            : rightCanvas.GetComponent<Animator>();
+
+        // Đợi Animator cập nhật state
+        yield return null;
+
+        // Đợi animation mở chạy xong
+        yield return new WaitForSeconds(
+            animator.GetCurrentAnimatorStateInfo(0).length + 0.1f
+        );
+
+        if (playerIndex == 0)
+        {
+            leftActive = true;
+            SetHighlight(leftCards, leftIndex, true);
+        }
+        else
+        {
+            rightActive = true;
             SetHighlight(rightCards, rightIndex, true);
         }
     }

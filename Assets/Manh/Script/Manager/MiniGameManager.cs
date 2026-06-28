@@ -685,16 +685,16 @@ public class MiniGameManager : MonoBehaviour
         switch (indexMiniGame)
         {
             case 1:
-                countDownTime = 0f;
+                countDownTime = 60f;
                 break;
 
             case 2:
-                countDownTime = 30f;
+                countDownTime = 60f;
                 VolumeManager.Instance.SetBloomIntensity(1);
                 break;
 
             case 3:
-                countDownTime = 30f;
+                countDownTime = 60f;
                 break;
 
             case 4:
@@ -702,7 +702,7 @@ public class MiniGameManager : MonoBehaviour
                 break;
 
             case 5:
-                countDownTime = 30f;
+                countDownTime = 90f;
                 VolumeManager.Instance.SetBloomIntensity(1);
                 break;
 

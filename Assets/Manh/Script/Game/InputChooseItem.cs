@@ -239,18 +239,37 @@ public class InputChooseItem : MonoBehaviour
         randomCardPlayer = playerIndex;
         randomCardIndex = 0;
 
-        isChoosingRandomCard = true;
+        // Chưa cho chọn ngay
+        isChoosingRandomCard = false;
         isPlayer1Choose = false;
         isPlayer2Choose = false;
 
         RandomizeCards();
         ClearRandomCardHighlight();
 
+        StartCoroutine(WaitOpenAnimation());
+    }
+
+    private IEnumerator WaitOpenAnimation()
+    {
+        Animator animator = shopManager.canvasRandomCard.GetComponent<Animator>();
+
+        // Đợi Animator cập nhật sang state Open
+        yield return null;
+
+        // Đợi animation chạy xong
+        yield return new WaitForSeconds(
+            animator.GetCurrentAnimatorStateInfo(0).length + 0.1f
+        );
+        
+
+        // Bây giờ mới cho chọn
+        isChoosingRandomCard = true;
+
         itemCardRandom[randomCardIndex]
             .transform.GetChild(1)
             .gameObject.SetActive(true);
     }
-
     private void RandomizeCards()
     {
         int[] randomItems = { 0, 2, 3, 5 };

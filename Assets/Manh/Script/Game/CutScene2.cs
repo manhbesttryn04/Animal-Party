@@ -11,6 +11,7 @@ public class CutScene2 : MonoBehaviour
     public ShipPatrol ship;
     public SetUpPlayerCutScene set;
     public Camera cam;
+    public GameObject teleport;
 
     [Header("CutScene Points")]
     public List<Transform> transVideos;
@@ -65,7 +66,7 @@ public class CutScene2 : MonoBehaviour
         "Welcome to Party Land — where the fun never stops!",
         "The wildest party on the island is about to begin!",
         "Roll the dice — your fate is in the hands of luck!",
-        "Survive the craziest mini-games this island has to offer!",
+        "Survive the craziest mini-games",
         "33 steps or a bag full of Pirate Coins — first one wins!",
         "No cheating, no crying — just pure chaotic fun!",
         "Two players. One island. Who will claim victory?"
@@ -119,7 +120,7 @@ public class CutScene2 : MonoBehaviour
 
     IEnumerator ShowSkipHint()
     {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0f);
         if (skipHintObject) skipHintObject.SetActive(true);
         if (skipHintText)
         {
@@ -128,7 +129,7 @@ public class CutScene2 : MonoBehaviour
             while (t < 0.5f)
             {
                 t += Time.deltaTime;
-                skipHintText.alpha = Mathf.Lerp(0f, 0.7f, t / 0.5f);
+                skipHintText.alpha = Mathf.Lerp(0f, 1f, t / 0.5f);
                 yield return null;
             }
         }
@@ -141,24 +142,25 @@ public class CutScene2 : MonoBehaviour
         PlayVoice(0);
         yield return MoveToTransform(transVideos[0]);
 
-        // Teleport -> 1
+        // Teleport -> 1 + câu 1
         TeleportToTransform(transVideos[1]);
         nameMapPanel.SetActive(true);
-        yield return new WaitForSeconds(0.5f);
-
-        // Teleport -> 2 + câu 1
-        TeleportToTransform(transVideos[2]);
+        yield return new WaitForSeconds(0.1f);
         yield return StartCoroutine(ShowSubtitleWithVoice(storyLines[1], 1, false));
+        //yield return new WaitForSeconds(0.5f);
+
+        // Teleport -> 2 
+        TeleportToTransform(transVideos[2]);
 
         // Move -> 3 + câu 2
-        yield return StartCoroutine(ShowSubtitleWithVoice(storyLines[2], 2, false));
+      StartCoroutine(ShowSubtitleWithVoice(storyLines[2], 2, false));
         yield return MoveToTransform(transVideos[3]);
 
         // Teleport -> 4
         TeleportToTransform(transVideos[4]);
 
         // Move -> 5 + câu 3
-        yield return StartCoroutine(ShowSubtitleWithVoice(storyLines[3], 3, false));
+        StartCoroutine(ShowSubtitleWithVoice(storyLines[3], 3, false));
         yield return MoveToTransform(transVideos[5]);
 
         // Teleport -> 6
@@ -167,12 +169,13 @@ public class CutScene2 : MonoBehaviour
         set.StartCutScene();
 
         // Move -> 7 + câu 4
-        yield return StartCoroutine(ShowSubtitleWithVoice(storyLines[4], 4, false));
+        StartCoroutine(ShowSubtitleWithVoice(storyLines[4], 4, false));
         yield return MoveToTransform(transVideos[7]);
 
         // Teleport -> 8 + câu 5
-        TeleportToTransform(transVideos[10]);
-        yield return StartCoroutine(ShowSubtitleWithVoice(storyLines[5], 5, false));
+        teleport.gameObject.SetActive(true);
+        TeleportToTransform(transVideos[8]);
+        StartCoroutine(ShowSubtitleWithVoice(storyLines[5], 5, false));
         nameMapPanel.SetActive(false);
         yield return new WaitForSeconds(3f);
         moveSpeed = 100f;
@@ -183,7 +186,7 @@ public class CutScene2 : MonoBehaviour
         // Move -> 9 + câu 6 (câu cuối đỏ son)
         yield return new WaitForSeconds(2f);
         typeSpeed = 0.08f;
-        yield return StartCoroutine(ShowSubtitleWithVoice(storyLines[6], 6, true));
+        StartCoroutine(ShowSubtitleWithVoice(storyLines[6], 6, true));
         yield return MoveToTransform(transVideos[9]);
         yield return new WaitForSeconds(5f);
 
@@ -192,7 +195,7 @@ public class CutScene2 : MonoBehaviour
         StartCoroutine(FadeOutAudio(4f));
         blackClosePanel.gameObject.SetActive(true);
         TeleportToTransform(transVideos[10]);
-        yield return new WaitForSeconds(4f);
+        yield return new WaitForSeconds(4.5f);
         yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
         SceneManager.LoadScene("MainScene");
 
