@@ -17,13 +17,17 @@ public class StartGame : MonoBehaviour
     }
     private void Update()
     {
-        if(!isFistRoundSussce && player1.GetComponent<PlayerManager>().playerRound.isRound1)
-        {
-            StartCoroutine(FistRoundPlayer2());
-            isFistRoundSussce=true;
-        }
     }
 
+     public void CheckNextPlayer2()
+    {
+
+        if (!isFistRoundSussce && player1.GetComponent<PlayerManager>().playerRound.isRound1)
+        {
+            StartCoroutine(FistRoundPlayer2());
+            isFistRoundSussce = true;
+        }
+    }
     // Update is called once per frame
     public IEnumerator FistRoundPlayer1()
     {
