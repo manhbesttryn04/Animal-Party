@@ -99,6 +99,8 @@ public class UIManager : MonoBehaviour
     // =========================================================
     // UNITY FUNCTIONS
     // =========================================================
+    public float updateUITime = 0.25f;
+    private float updateTimer;
 
     private void Awake()
     {
@@ -124,19 +126,25 @@ public class UIManager : MonoBehaviour
 
     private void Update()
     {
-        // Nếu panel thông tin đang mở thì cập nhật liên tục
-        if (notifiPlay.activeSelf)
+        if (!notifiPlay.activeSelf) return;
+
+        updateTimer += Time.deltaTime;
+
+        if (updateTimer >= updateUITime)
         {
-            UpdateCoinPowerUI();
-            UpdateCoinAllPlayer();
-            UpdateIndexPlayerWalk();
-            UpdateCurrentBuffPlayer();
-        }
-        else
-        {
-            return;
+            updateTimer = 0f;
+            UpdateAllPlayMainUI();
         }
     }
+
+    public void UpdateAllPlayMainUI()
+    {
+        UpdateCoinPowerUI();
+        UpdateCoinAllPlayer();
+        UpdateIndexPlayerWalk();
+        UpdateCurrentBuffPlayer();
+    }
+
 
     // =========================================================
     // COIN POWER UI

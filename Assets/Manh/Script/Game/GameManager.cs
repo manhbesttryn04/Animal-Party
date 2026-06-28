@@ -37,6 +37,11 @@ public class GameManager : MonoBehaviour
     // Cho phép bắt đầu vòng tiếp theo hay chưa
     public bool canStartNextRound = false;
 
+    public bool canCheckPlayer2 = true;
+    public bool canCheckMiniGame = true;
+
+    private float timer;
+
     // =========================================================
     // UNITY FUNCTIONS
     // =========================================================
@@ -78,12 +83,20 @@ public class GameManager : MonoBehaviour
         {
             FistRoundMiniGame();
         }
+        timer += Time.deltaTime;
+
+        if (timer < 1f)
+            return;
+
+        timer = 0f;
 
         // Chờ Player 1 đi xong để tới lượt Player 2
-        WaitPlayer1RollDice();
+        if (canCheckPlayer2)
+            WaitPlayer1RollDice();
 
         // Nếu cả 2 player đã xong lượt thì bắt đầu minigame tiếp theo
-        StartNextRound();
+        if (canCheckMiniGame)
+            StartNextRound();
     }
 
     // =========================================================
@@ -280,6 +293,8 @@ public class GameManager : MonoBehaviour
     {
         canStartNextRound = false;
         stateGame.isNextRound = false;
+        canCheckPlayer2 = true;
+        canCheckMiniGame = true;
 
         PlayerManager p1 = player1Main.GetComponent<PlayerManager>();
         PlayerManager p2 = player2Main.GetComponent<PlayerManager>();
@@ -408,6 +423,7 @@ public class GameManager : MonoBehaviour
             !stateGame.isNextRound
         )
         {
+            canCheckPlayer2 = false;
             StartCoroutine(Player2Dice());
 
             // Khóa để không gọi Player2Dice liên tục trong Update
@@ -427,6 +443,7 @@ public class GameManager : MonoBehaviour
             !canStartNextRound
         )
         {
+            canCheckMiniGame = false;
             JoinRandomMiniGame();
 
             // Khóa để tránh gọi minigame nhiều lần trong Update

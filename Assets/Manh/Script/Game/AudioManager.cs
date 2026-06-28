@@ -8,6 +8,7 @@ public class AudioManager : MonoBehaviour
     public AudioSource musicSource;   // Nhạc nền
     public AudioSource sfxSource;     // Hiệu ứng
 
+
     [Header("SFX")]
     [Header("Player SFX")]
     public AudioClip walkPlayerClip;

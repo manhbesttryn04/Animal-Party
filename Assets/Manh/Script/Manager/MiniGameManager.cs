@@ -25,6 +25,8 @@ public class MiniGameManager : MonoBehaviour
 
     public GameObject mainMap;
 
+    public GameObject playersMain;
+
     // =========================================================
     // CAMERA
     // =========================================================
@@ -201,6 +203,7 @@ public class MiniGameManager : MonoBehaviour
 
         // Tắt map chính
         mainMap.SetActive(false);
+        playersMain.SetActive(false);
 
         // Bật map minigame theo index
         mapMiniGameList.mapMiniGameList[miniGameIndex].SetActive(true);
@@ -492,6 +495,7 @@ public class MiniGameManager : MonoBehaviour
         // Hiện loading khi quay về map chính
         yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
 
+        playersMain.SetActive(true);
         // Bật lại map chính
         mainMap.SetActive(true);
         // riset lightt
