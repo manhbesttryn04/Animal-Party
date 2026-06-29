@@ -24,10 +24,14 @@ public class MiniGame4 : MonoBehaviour
 
     [Header("Detect")]
     public float moveTolerance = 0.05f;
+    public float freezeDelayAfterDetected = 0.18f;
 
-    [Header("Shoot")]
-    public float laughDelay = 0.15f;
-    public float shootDelay = 0.25f;
+    [Header("Shoot Fake Bullet")]
+    public Transform firePoint;
+    public GameObject bulletPrefab;
+    public float bulletSpeed = 80f;
+    public float bulletHitDistance = 0.15f;
+    public float bulletTargetHeight = 1.0f;
 
     [Header("Finish Line")]
     public float finishLineZ;
@@ -35,18 +39,29 @@ public class MiniGame4 : MonoBehaviour
     [Header("Audio")]
     public AudioSource audioSource;
     public AudioSource environmentAudioSource;
+    public AudioSource pirateVoiceSource;
     public AudioClip scanSound;
     public AudioClip laughSound;
     public AudioClip gunShotSound;
     public AudioClip rainSound;
 
+    [Header("Pirate Singing")]
+    public AudioClip[] pirateSingSounds;
+    public float minVoicePitchClamp = 0.5f;
+    public float maxVoicePitchClamp = 3f;
+
     [Header("VFX")]
     public GameObject muzzleFlash;
+    public float blinkTime = 1f;
+    public float blinkSpeed = 0.12f;
 
     private bool isRunning;
     private bool isWatching;
     private bool isAttacking;
     private bool hasLaughThisWatch;
+
+    private GameObject currentAttackTarget;
+    private bool isWaitingAttackEvent;
 
     private Quaternion backRotation;
     private Quaternion lookRotation;
@@ -74,7 +89,6 @@ public class MiniGame4 : MonoBehaviour
         if (isRunning) return;
 
         SetUpAllPlayer();
-
         isRunning = true;
         StartCoroutine(PirateRoutine());
     }
@@ -84,17 +98,24 @@ public class MiniGame4 : MonoBehaviour
         isRunning = false;
         StopAllCoroutines();
 
+        if (audioSource != null)
+            audioSource.Stop();
+
+        if (pirateVoiceSource != null)
+            pirateVoiceSource.Stop();
+
+        // Tính thưởng trước khi Clear
+        CheckFinishReward(manager.currentPlayer1);
+        CheckFinishReward(manager.currentPlayer2);
+
         attackQueue.Clear();
         detectedPlayers.Clear();
         deadPlayers.Clear();
         finishedPlayers.Clear();
         redStartPositions.Clear();
 
-        if (audioSource != null)
-            audioSource.Stop();
-
-        CheckFinishReward(manager.currentPlayer1);
-        CheckFinishReward(manager.currentPlayer2);
+        currentAttackTarget = null;
+        isWaitingAttackEvent = false;
 
         transform.rotation = backRotation;
     }
@@ -102,9 +123,7 @@ public class MiniGame4 : MonoBehaviour
     IEnumerator PirateRoutine()
     {
         if (environmentAudioSource != null && rainSound != null)
-        {
             environmentAudioSource.PlayOneShot(rainSound);
-        }
 
         transform.rotation = backRotation;
 
@@ -112,10 +131,6 @@ public class MiniGame4 : MonoBehaviour
 
         while (isRunning)
         {
-            // =========================
-            // ĐÈN ĐỎ - CƯỚP BIỂN QUAY LẠI
-            // =========================
-
             attackQueue.Clear();
             detectedPlayers.Clear();
             redStartPositions.Clear();
@@ -146,9 +161,7 @@ public class MiniGame4 : MonoBehaviour
                 CheckPlayer(manager.currentPlayer2);
 
                 if (!isAttacking && attackQueue.Count > 0)
-                {
                     StartCoroutine(ProcessAttackQueue());
-                }
 
                 timer += Time.deltaTime;
                 yield return null;
@@ -156,43 +169,32 @@ public class MiniGame4 : MonoBehaviour
 
             isWatching = false;
 
-            while (isAttacking)
+            while (isAttacking || attackQueue.Count > 0)
             {
+                if (!isAttacking && attackQueue.Count > 0)
+                    StartCoroutine(ProcessAttackQueue());
+
                 yield return null;
             }
 
             if (audioSource != null && audioSource.clip == scanSound)
-            {
                 audioSource.Stop();
-            }
-
-            // =========================
-            // ĐÈN XANH - CƯỚP BIỂN QUAY LƯNG
-            // =========================
 
             yield return StartCoroutine(RotateTo(backRotation, rotateSpeed));
 
             RespawnDeadPlayers();
 
             float randomGreenTime = Random.Range(1f, 4f);
+            PlayRandomPirateVoice(randomGreenTime);
+
             yield return new WaitForSeconds(randomGreenTime);
         }
-    }
-
-    void SaveRedStartPosition(GameObject playerObj)
-    {
-        if (playerObj == null) return;
-        if (finishedPlayers.Contains(playerObj)) return;
-        if (deadPlayers.Contains(playerObj)) return;
-
-        redStartPositions[playerObj] = playerObj.transform.position;
     }
 
     void CheckPlayer(GameObject playerObj)
     {
         if (playerObj == null) return;
         if (!isWatching) return;
-
         if (finishedPlayers.Contains(playerObj)) return;
         if (deadPlayers.Contains(playerObj)) return;
         if (detectedPlayers.Contains(playerObj)) return;
@@ -212,50 +214,25 @@ public class MiniGame4 : MonoBehaviour
             attackQueue.Enqueue(playerObj);
 
             if (!isAttacking)
-            {
                 StartCoroutine(ProcessAttackQueue());
-            }
         }
-    }
-
-    bool HasMovedFromRedStart(GameObject playerObj)
-    {
-        if (!redStartPositions.ContainsKey(playerObj))
-            return false;
-
-        Vector3 startPos = redStartPositions[playerObj];
-        Vector3 currentPos = playerObj.transform.position;
-
-        startPos.y = 0f;
-        currentPos.y = 0f;
-
-        float distance = Vector3.Distance(startPos, currentPos);
-
-        return distance > moveTolerance;
     }
 
     IEnumerator ProcessAttackQueue()
     {
         isAttacking = true;
 
-        // Cười 1 lần khi phát hiện người đầu tiên
-        // Nhưng KHÔNG chờ cười xong mới bắn
         if (!hasLaughThisWatch)
         {
             hasLaughThisWatch = true;
 
             if (audioSource != null && audioSource.clip == scanSound)
-            {
                 audioSource.Stop();
-            }
 
             if (audioSource != null && laughSound != null)
-            {
                 audioSource.PlayOneShot(laughSound);
-            }
         }
 
-        // Bắn liên tục các player trong hàng chờ
         while (attackQueue.Count > 0)
         {
             GameObject target = attackQueue.Dequeue();
@@ -264,30 +241,30 @@ public class MiniGame4 : MonoBehaviour
                 !deadPlayers.Contains(target) &&
                 !finishedPlayers.Contains(target))
             {
-                yield return StartCoroutine(AttackPlayerCowboy(target));
+                yield return StartCoroutine(AttackPlayerPirate(target));
             }
         }
 
         isAttacking = false;
     }
 
-    IEnumerator AttackPlayerCowboy(GameObject target)
+    IEnumerator AttackPlayerPirate(GameObject target)
     {
-        if (target == null)
-            yield break;
+        if (target == null) yield break;
 
         PlayerMove move = target.GetComponent<PlayerMove>();
         PlayerAnimator playerAnimator = target.GetComponent<PlayerAnimator>();
 
         if (move != null)
-        {
             move.speed = detectedMoveSpeed;
-        }
+
+        yield return new WaitForSeconds(freezeDelayAfterDetected);
+
+        if (move != null)
+            move.isJumpAndMove = false;
 
         if (playerAnimator != null && playerAnimator.playerAnimator != null)
-        {
             playerAnimator.playerAnimator.SetFloat("Run", 0f);
-        }
 
         Vector3 dir = target.transform.position - transform.position;
         dir.y = 0f;
@@ -310,36 +287,99 @@ public class MiniGame4 : MonoBehaviour
             transform.rotation = targetRot;
         }
 
+        currentAttackTarget = target;
+        isWaitingAttackEvent = true;
+
         if (animator != null)
-        {
             animator.SetTrigger("Attack");
+        else
+            PiraterAttack();
+
+        while (isWaitingAttackEvent)
+            yield return null;
+
+        currentAttackTarget = null;
+    }
+
+    // GỌI HÀM NÀY TRONG ANIMATION EVENT ATTACK
+    public void PiraterAttack()
+    {
+        StartCoroutine(ShowMuzzleFlash());
+
+        if (currentAttackTarget != null)
+            ShootFakeBullet(currentAttackTarget);
+
+        isWaitingAttackEvent = false;
+    }
+
+    void ShootFakeBullet(GameObject target)
+    {
+        if (target == null)
+            return;
+
+        if (bulletPrefab == null || firePoint == null)
+        {
+            KillFakePlayer(target);
+            return;
         }
 
-        yield return new WaitForSeconds(shootDelay);
+        Vector3 targetPos =
+            target.transform.position + Vector3.up * bulletTargetHeight;
 
+        GameObject bullet = Instantiate(
+            bulletPrefab,
+            firePoint.position,
+            Quaternion.identity
+        );
+
+        StartCoroutine(FakeBulletFly(bullet, target, targetPos));
+    }
+
+    IEnumerator FakeBulletFly(GameObject bullet, GameObject target, Vector3 targetPos)
+    {
+        if (bullet == null)
+        {
+            KillFakePlayer(target);
+            yield break;
+        }
+
+        while (Vector3.Distance(bullet.transform.position, targetPos) > bulletHitDistance)
+        {
+            Vector3 dir = targetPos - bullet.transform.position;
+
+            if (dir != Vector3.zero)
+                bullet.transform.rotation = Quaternion.LookRotation(dir);
+
+            bullet.transform.position = Vector3.MoveTowards(
+                bullet.transform.position,
+                targetPos,
+                bulletSpeed * Time.deltaTime
+            );
+
+            yield return null;
+        }
+
+        Destroy(bullet);
         KillFakePlayer(target);
     }
 
     void KillFakePlayer(GameObject target)
     {
         if (target == null) return;
-
-        if (finishedPlayers.Contains(target))
-            return;
+        if (finishedPlayers.Contains(target)) return;
+        if (deadPlayers.Contains(target)) return;
 
         deadPlayers.Add(target);
 
         PlayerMove move = target.GetComponent<PlayerMove>();
         if (move != null)
-        {
             move.isJumpAndMove = false;
-        }
 
         PlayerAnimator playerAnimator = target.GetComponent<PlayerAnimator>();
         if (playerAnimator != null && playerAnimator.playerAnimator != null)
         {
             playerAnimator.playerAnimator.SetFloat("Run", 0f);
-            //playerAnimator.playerAnimator.SetTrigger("Dead");
+            playerAnimator.playerAnimator.SetBool("Die", true);
         }
     }
 
@@ -351,20 +391,22 @@ public class MiniGame4 : MonoBehaviour
 
             PlayerMiniGame mini = player.GetComponent<PlayerMiniGame>();
             PlayerMove move = player.GetComponent<PlayerMove>();
+            PlayerAnimator playerAnimator = player.GetComponent<PlayerAnimator>();
 
             if (mini != null)
-            {
                 mini.Respawn();
-            }
+
+            if (playerAnimator != null && playerAnimator.playerAnimator != null)
+                playerAnimator.playerAnimator.SetBool("Die", false);
+
+            StartCoroutine(BlinkPlayer(player));
 
             if (move != null)
             {
                 move.isJumpAndMove = true;
 
                 if (!playerCurrentSpeeds.ContainsKey(player))
-                {
                     playerCurrentSpeeds[player] = startMoveSpeed;
-                }
 
                 playerCurrentSpeeds[player] = Mathf.Min(
                     playerCurrentSpeeds[player] + speedIncreaseAfterRespawn,
@@ -378,6 +420,57 @@ public class MiniGame4 : MonoBehaviour
         deadPlayers.Clear();
     }
 
+    IEnumerator BlinkPlayer(GameObject player)
+    {
+        Renderer[] renderers = player.GetComponentsInChildren<Renderer>();
+
+        float timer = 0f;
+        bool visible = true;
+
+        while (timer < blinkTime)
+        {
+            visible = !visible;
+
+            foreach (Renderer r in renderers)
+            {
+                if (r != null)
+                    r.enabled = visible;
+            }
+
+            timer += blinkSpeed;
+            yield return new WaitForSeconds(blinkSpeed);
+        }
+
+        foreach (Renderer r in renderers)
+        {
+            if (r != null)
+                r.enabled = true;
+        }
+    }
+
+    void SaveRedStartPosition(GameObject playerObj)
+    {
+        if (playerObj == null) return;
+        if (finishedPlayers.Contains(playerObj)) return;
+        if (deadPlayers.Contains(playerObj)) return;
+
+        redStartPositions[playerObj] = playerObj.transform.position;
+    }
+
+    bool HasMovedFromRedStart(GameObject playerObj)
+    {
+        if (!redStartPositions.ContainsKey(playerObj))
+            return false;
+
+        Vector3 startPos = redStartPositions[playerObj];
+        Vector3 currentPos = playerObj.transform.position;
+
+        startPos.y = 0f;
+        currentPos.y = 0f;
+
+        return Vector3.Distance(startPos, currentPos) > moveTolerance;
+    }
+
     void CheckFinish(GameObject player)
     {
         if (player == null) return;
@@ -385,6 +478,7 @@ public class MiniGame4 : MonoBehaviour
         if (detectedPlayers.Contains(player)) return;
         if (deadPlayers.Contains(player)) return;
 
+        // Nếu player chạy theo hướng Z giảm
         if (player.transform.position.z >= finishLineZ)
         {
             finishedPlayers.Add(player);
@@ -394,8 +488,19 @@ public class MiniGame4 : MonoBehaviour
             {
                 move.isJumpAndMove = false;
             }
+
+            PlayerAnimator playerAnimator = player.GetComponent<PlayerAnimator>();
+            if (playerAnimator != null && playerAnimator.playerAnimator != null)
+            {
+                playerAnimator.playerAnimator.SetFloat("Run", 0f);
+                playerAnimator.playerAnimator.SetBool("Die", false);
+            }
+
+            // Quay player về phía sau
+            player.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
         }
     }
+
 
     void CheckFinishReward(GameObject player)
     {
@@ -405,13 +510,9 @@ public class MiniGame4 : MonoBehaviour
         if (mini == null) return;
 
         if (finishedPlayers.Contains(player))
-        {
             mini.UpCoin(1, 100);
-        }
         else
-        {
             mini.UpCoin(0, 100);
-        }
     }
 
     IEnumerator RotateTo(Quaternion targetRotation, float speed)
@@ -430,29 +531,35 @@ public class MiniGame4 : MonoBehaviour
         transform.rotation = targetRotation;
     }
 
-    public void PiraterAttack()
+    void PlayRandomPirateVoice(float greenTime)
     {
-        StartCoroutine(ShowMuzzleFlash());
+        if (pirateVoiceSource == null) return;
+        if (pirateSingSounds == null || pirateSingSounds.Length == 0) return;
+
+        AudioClip clip = pirateSingSounds[Random.Range(0, pirateSingSounds.Length)];
+        if (clip == null) return;
+
+        pirateVoiceSource.Stop();
+
+        float pitch = clip.length / greenTime;
+        pitch = Mathf.Clamp(pitch, minVoicePitchClamp, maxVoicePitchClamp);
+
+        pirateVoiceSource.pitch = pitch;
+        pirateVoiceSource.PlayOneShot(clip);
     }
 
     IEnumerator ShowMuzzleFlash()
     {
         if (muzzleFlash != null)
-        {
             muzzleFlash.SetActive(true);
-        }
 
         if (audioSource != null && gunShotSound != null)
-        {
             audioSource.PlayOneShot(gunShotSound);
-        }
 
         yield return new WaitForSeconds(0.15f);
 
         if (muzzleFlash != null)
-        {
             muzzleFlash.SetActive(false);
-        }
     }
 
     public void SetUpAllPlayer()
@@ -465,16 +572,17 @@ public class MiniGame4 : MonoBehaviour
     {
         if (playerObj == null) return;
 
-        PlayerManager playerManager = playerObj.GetComponent<PlayerManager>();
         PlayerMove move = playerObj.GetComponent<PlayerMove>();
+        PlayerAnimator playerAnimator = playerObj.GetComponent<PlayerAnimator>();
 
         if (move != null)
         {
             move.speed = startMoveSpeed;
             move.isJumpAndMove = true;
-
             playerCurrentSpeeds[playerObj] = startMoveSpeed;
         }
 
+        if (playerAnimator != null && playerAnimator.playerAnimator != null)
+            playerAnimator.playerAnimator.SetBool("Die", false);
     }
 }

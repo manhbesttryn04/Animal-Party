@@ -108,8 +108,8 @@ public class MiniGame5 : MonoBehaviour
         isPlaying = true;
         isPlayer1Frozen = false;
         isPlayer2Frozen = false;
-
-        if (resultText != null) resultText.text = "Minigame Start";
+        resultText.text = "";
+        // if (resultText != null) resultText.text = "Minigame Start";
 
         foreach (PaintPadData pad in allPads)
         {
@@ -156,12 +156,33 @@ public class MiniGame5 : MonoBehaviour
 
         isPlaying = false;
 
-        if (timerText != null)
-            timerText.text = "End Time";
+       // if (timerText != null) timerText.text = "End Time";
 
         ClearCurrentSpawnedItem();
 
         CalculateFinalScore();
+
+        StartCoroutine(ResetPadsAfterResult());
+    }
+    IEnumerator ResetPadsAfterResult()
+    {
+        yield return new WaitForSeconds(3.5f);
+
+        ResetAllPadsToDefault();
+    }
+    void ResetAllPadsToDefault()    
+    {
+        foreach (PaintPadData pad in allPads)
+        {
+            pad.ResetColor();
+            pad.RemoveSpawnedBomb();
+        }
+
+        ClearCurrentSpawnedItem();
+
+        isPlayer1Frozen = false;
+        isPlayer2Frozen = false;
+       
     }
 
     IEnumerator SpawnHazardsRoutine()
@@ -373,52 +394,46 @@ public class MiniGame5 : MonoBehaviour
         else
             isPlayer2Frozen = true;
 
-        CharacterController cc = playerObj.GetComponent<CharacterController>();
-        if (cc != null) cc.enabled = false;
+        // Tìm IceBlock trong Player (kể cả đang tắt)
+        Transform iceBlock = null;
 
-        Rigidbody rb = playerObj.GetComponent<Rigidbody>();
-        Vector3 originalVelocity = Vector3.zero;
-
-        if (rb != null)
+        foreach (Transform t in playerObj.GetComponentsInChildren<Transform>(true))
         {
-            originalVelocity = rb.linearVelocity;
-            rb.linearVelocity = Vector3.zero;
-            rb.isKinematic = true;
-        }
-
-        MonoBehaviour[] scripts = playerObj.GetComponents<MonoBehaviour>();
-        List<MonoBehaviour> disabledScripts = new List<MonoBehaviour>();
-
-        foreach (MonoBehaviour script in scripts)
-        {
-            if (script != null &&
-                script.GetType() != typeof(PlayerType) &&
-                (
-                    script.GetType().Name.Contains("Move") ||
-                    script.GetType().Name.Contains("Controller") ||
-                    script.GetType().Name.Contains("Input")
-                ))
+            if (t.name == "IceBlock")
             {
-                script.enabled = false;
-                disabledScripts.Add(script);
+                iceBlock = t;
+                break;
             }
         }
 
+        // Lấy PlayerMove và PlayerManager
+        PlayerMove move = playerObj.GetComponent<PlayerMove>();
+        PlayerAnimator manager = playerObj.GetComponent<PlayerAnimator>();
+
+        // Hiện khối băng
+        if (iceBlock != null)
+            iceBlock.gameObject.SetActive(true);
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.bebuffRockMagicClip);
+
+        // Đóng băng người chơi
+        if (move != null)
+            move.isJumpAndMove = false;
+
+        if (manager != null)
+            manager.playerAnimator.speed = 0f;
+
         yield return new WaitForSeconds(2f);
 
-        if (cc != null) cc.enabled = true;
+        // Bỏ đóng băng
+        if (move != null)
+            move.isJumpAndMove = true;
 
-        if (rb != null)
-        {
-            rb.isKinematic = false;
-            rb.linearVelocity = originalVelocity;
-        }
+        if (manager != null)
+            manager.playerAnimator.speed = 1f;
 
-        foreach (MonoBehaviour script in disabledScripts)
-        {
-            if (script != null)
-                script.enabled = true;
-        }
+        // Ẩn khối băng
+        if (iceBlock != null)
+            iceBlock.gameObject.SetActive(false);
 
         if (playerNumber == 1)
             isPlayer1Frozen = false;
@@ -429,7 +444,7 @@ public class MiniGame5 : MonoBehaviour
     public void OnGrowItemPickedUp(bool isPlayer2, GameObject playerObj)
     {
         if (!isPlaying) return;
-
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.buffBigClip);
         if (itemDestroyCoroutine != null)
         {
             StopCoroutine(itemDestroyCoroutine);
@@ -545,11 +560,11 @@ public class MiniGame5 : MonoBehaviour
             else
             {
                 resultText.text = $"Draw! ({p1Count} vs {p2Count})";
-                resultText.color = Color.white;
+                resultText.color = Color.yellow;
             }
         }
 
-        Debug.Log("Điểm P1: " + p1Count + " | P2: " + p2Count);
+     //   Debug.Log("Điểm P1: " + p1Count + " | P2: " + p2Count);
 
         ExitResultAllPlayer(p1Count, p2Count);
     }

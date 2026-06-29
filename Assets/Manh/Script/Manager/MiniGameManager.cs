@@ -706,8 +706,8 @@ public class MiniGameManager : MonoBehaviour
                 break;
 
             case 5:
-                countDownTime = 90f;
-                VolumeManager.Instance.SetBloomIntensity(1);
+                countDownTime = 20f;
+                VolumeManager.Instance.SetBloomIntensity(0.5f);
                 break;
 
             case 6:

@@ -262,9 +262,7 @@ public class PlayerMoveAI : MonoBehaviour
         if (trap.hasBom)
         {
             trap.BomActivated();
-
             yield return new WaitForSeconds(1f);
-
             yield return StartCoroutine(BoomHitEffect(3));
 
             yield break;
@@ -314,6 +312,7 @@ public class PlayerMoveAI : MonoBehaviour
         navMeshAgent.acceleration = 999f;
 
         navMeshAgent.SetDestination(finalPos);
+        yield return StartCoroutine(CheckCurrentTile());
 
         while (navMeshAgent.pathPending ||
                navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance)
@@ -321,7 +320,7 @@ public class PlayerMoveAI : MonoBehaviour
             yield return null;
         }
 
-        yield return new WaitForSeconds(0.5f);
+        //yield return new WaitForSeconds(0.5f);
 
         // Trả tốc độ về bình thường
         navMeshAgent.speed = 4f;
@@ -329,7 +328,7 @@ public class PlayerMoveAI : MonoBehaviour
 
         navMeshAgent.ResetPath();
         navMeshAgent.Warp(transform.position);
-        yield return StartCoroutine(CheckCurrentTile());
+       
         isMoving = false;
     }
 

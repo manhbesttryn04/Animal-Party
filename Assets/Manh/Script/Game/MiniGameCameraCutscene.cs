@@ -13,25 +13,27 @@ public class MiniGameCameraCutscene : MonoBehaviour
 
     [Header("Move Setting")]
     public float moveSpeed = 3f;
+    public float rotateSpeed = 240f;
 
     [Header("Wait Time")]
     public float waitAtPoint = 2f;
 
     public IEnumerator PlayCutscene()
     {
-        // QUAY QUA TỪNG ĐIỂM
+        if (cam == null) yield break;
+        if (defaultPoint == null) yield break;
+
         for (int i = 0; i < cameraPoints.Length; i++)
         {
+            if (cameraPoints[i] == null) continue;
+
             yield return StartCoroutine(
                 MoveCamera(cameraPoints[i])
             );
 
-            yield return new WaitForSeconds(
-                waitAtPoint
-            );
+            yield return new WaitForSeconds(waitAtPoint);
         }
 
-        // QUAY VỀ CAMERA GAMEPLAY
         yield return StartCoroutine(
             MoveCamera(defaultPoint)
         );
@@ -39,37 +41,31 @@ public class MiniGameCameraCutscene : MonoBehaviour
 
     IEnumerator MoveCamera(Transform target)
     {
+        if (target == null) yield break;
+
         while (
-            Vector3.Distance(
-                cam.transform.position,
-                target.position
-            ) > 0.05f
+            Vector3.Distance(cam.transform.position, target.position) > 0.05f ||
+            Quaternion.Angle(cam.transform.rotation, target.rotation) > 0.5f
         )
         {
-            // MOVE
             cam.transform.position =
-                Vector3.Lerp(
+                Vector3.MoveTowards(
                     cam.transform.position,
                     target.position,
                     moveSpeed * Time.deltaTime
                 );
 
-            // ROTATE
             cam.transform.rotation =
-                Quaternion.Lerp(
+                Quaternion.RotateTowards(
                     cam.transform.rotation,
                     target.rotation,
-                    moveSpeed * Time.deltaTime
+                    rotateSpeed * Time.deltaTime
                 );
 
             yield return null;
         }
 
-        // SNAP CHÍNH XÁC
-        cam.transform.position =
-            target.position;
-
-        cam.transform.rotation =
-            target.rotation;
+        cam.transform.position = target.position;
+        cam.transform.rotation = target.rotation;
     }
 }
