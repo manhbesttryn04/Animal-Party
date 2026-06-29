@@ -4400,6 +4400,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7289283eb5c19454190971ad21dddabe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiniGamePaint
+  manager: {fileID: 0}
   isPlaying: 0
   allPadRenderers:
   - {fileID: 2032971889}
@@ -4702,20 +4703,25 @@ MonoBehaviour:
   - {fileID: 368733872}
   - {fileID: 1167762833}
   - {fileID: 168563794}
-  player1Color: {r: 0, g: 0, b: 1, a: 1}
-  player2Color: {r: 1, g: 0, b: 0, a: 1}
-  bombColor: {r: 0.2830189, g: 0.2830189, b: 0.2830189, a: 1}
+  defaultMaterial: {fileID: 0}
+  player1Material: {fileID: 0}
+  player2Material: {fileID: 0}
+  bombMaterial: {fileID: 0}
+  freezeMaterial: {fileID: 0}
+  bombPrefab: {fileID: 0}
+  bombSpawnHeight: 0.6
   bombFlashColor: {r: 1, g: 0.61754346, b: 0.2320754, a: 1}
   bombFlashSpeed: 5
-  freezeColor: {r: 0, g: 1, b: 1, a: 1}
   hazardResetInterval: 5
   growItemPrefab: {fileID: 4399692281173012721, guid: 48357fb10ae355c46ab682c47ab69ab2, type: 3}
   growDuration: 5
+  itemExistDuration: 5
   growMultiplier: 3
   itemSpawnHeight: 0.5
   timerText: {fileID: 1710017145}
   resultText: {fileID: 1707130849}
   gameDuration: 120
+  source: {fileID: 0}
 --- !u!4 &430577494
 Transform:
   m_ObjectHideFlags: 0
