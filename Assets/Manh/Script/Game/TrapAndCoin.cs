@@ -1,13 +1,16 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using NUnit.Framework.Internal.Commands;
+using System.Collections;
 using UnityEngine;
 
 public class TrapAndCoin : MonoBehaviour
 {
     public GameObject bom;
     public GameObject coin;
+    public ParticleSystem teleport;
     public bool hasBom;
     public bool hasCoin;
+    public bool hasTelep;
 
     public void Start()
     {
@@ -26,6 +29,12 @@ public class TrapAndCoin : MonoBehaviour
         {
             coin.SetActive(true);
         }else coin.SetActive(false);
+
+        if (hasTelep)
+        {
+            teleport.gameObject.SetActive(true);
+            teleport.Play();
+        }else teleport.gameObject.SetActive(false);
     }
 
     public void BomActivated()
@@ -45,5 +54,25 @@ public class TrapAndCoin : MonoBehaviour
             c.TriggerCoin(i);
             hasCoin = false;
         }
+    }
+    public void TelepActivated()
+    {
+        if (!hasTelep || teleport == null) return;
+
+        hasTelep = false;
+
+        StartCoroutine(TeleportOff());
+    }
+
+    private IEnumerator TeleportOff()
+    {
+        // Không phát lại vòng lặp
+        teleport.loop = false;
+
+        // Chờ 1 giây
+        yield return new WaitForSeconds(1f);
+
+        // Tắt GameObject
+        teleport.gameObject.SetActive(false);
     }
 }
