@@ -12,12 +12,6 @@ public class MiniGame2 : MonoBehaviour
     public CameraShake cameraShake;
     public float shakeDuration = 1.2f;
     public float shakeStrength = 0.25f;
-    [Header("Audio")]
-    public AudioSource source;
-    public AudioClip brickFallClip;
-    public AudioSource javaSource;
-
-
     [Header("Danh sách ô màu")]
     public List<ColorPad> allPads = new List<ColorPad>();
 
@@ -50,6 +44,7 @@ public class MiniGame2 : MonoBehaviour
     {
         if (isRunning)
             return;
+        AudioManager.Instance.PlayEnvironment(AudioManager.Instance.javaLoopClip);
         if (canvasMiniGame != null)
         {
             canvasMiniGame.SetActive(true);
@@ -57,7 +52,7 @@ public class MiniGame2 : MonoBehaviour
 
         if (allPads.Count == 0)
         {
-            Debug.LogError("Bạn chưa kéo các ô vào danh sách allPads!");
+           // Debug.LogError("Bạn chưa kéo các ô vào danh sách allPads!");
             return;
         }
 
@@ -67,7 +62,7 @@ public class MiniGame2 : MonoBehaviour
     public void StopMiniGame()
     {
         isRunning = false;
-        javaSource.enabled = false;
+        AudioManager.Instance.StopEnvironment();
         StopAllCoroutines();
 
         if (canvasMiniGame != null)
@@ -113,7 +108,6 @@ public class MiniGame2 : MonoBehaviour
     IEnumerator ColorGameLoop()
     {
         isRunning = true;
-        javaSource.enabled = true;
         currentRound = 1;
 
         yield return new WaitForSeconds(startDelay);
@@ -239,7 +233,7 @@ public class MiniGame2 : MonoBehaviour
             }
 
             // âm thanh sập
-            source.PlayOneShot(brickFallClip);
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.brickFallClip);
             if (cameraShake != null)
             {
                 cameraShake.Shake(shakeDuration, shakeStrength);

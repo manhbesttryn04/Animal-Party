@@ -1,4 +1,3 @@
-using AnimalParty.Audio;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -196,8 +195,7 @@ namespace AnimalParty.Obstacles
 
         private void HitPlayer(Collider targetCollider)
         {
-            if (MiniGameAudioManager.Instance != null)
-                MiniGameAudioManager.Instance.PlayHitLaserSound();
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.laserHitClip);
 
             PlayerMiniGame miniGame =
                 targetCollider.GetComponent<PlayerMiniGame>();

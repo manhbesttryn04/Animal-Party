@@ -1,4 +1,3 @@
-using AnimalParty.Audio;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -320,8 +319,7 @@ public class MiniGame3 : MonoBehaviour
         if (newLaser.TryGetComponent<LaserSpamObject>(out var laserScript))
             laserScript.speed = currentLaserSpeed;
 
-        if (MiniGameAudioManager.Instance != null)
-            MiniGameAudioManager.Instance.PlayLaserSound();
+        AudioManager.Instance.PlayEnvironment(AudioManager.Instance.laserMoveClip);
 
         // Debug.Log("Spawn Laser: " + newLaser.name);
     }

@@ -1,12 +1,18 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class AudioManager : MonoBehaviour
 {
     public static AudioManager Instance;
 
+    [Header("Audio Setup List")]
+    public List<AudioSetup> audioSetupList = new List<AudioSetup>();
+
     [Header("Audio Sources")]
     public AudioSource musicSource;   // Nhạc nền
     public AudioSource sfxSource;     // Hiệu ứng
+    public AudioSource environmentSource; // Môi trường
+    public AudioSource specialSource; // Âm thanh đặc biệt
 
 
     [Header("SFX")]
@@ -24,8 +30,8 @@ public class AudioManager : MonoBehaviour
     public AudioClip buffDeffClip;
     public AudioClip buffMagicClip;
     public AudioClip bonusBuffClip;
-    public AudioClip coinClip;  
-
+    public AudioClip coinClip;
+  
     
     [Header("Shop SFX")]
     public AudioClip openShopClip;
@@ -56,7 +62,28 @@ public class AudioManager : MonoBehaviour
     public AudioClip musicMiniGame9;
     public AudioClip musicMiniGame10;
 
-    
+    [Header("Minigame 1")]
+    public AudioClip loadBrickClip;
+    public AudioClip sharkAttackClip;
+    public AudioClip warningClip;
+    [Header("Minigame 2")]
+    public AudioClip brickFallClip;
+    public AudioClip javaLoopClip;
+    [Header("Minigam 3")]
+    public AudioClip laserHitClip;
+    public AudioClip laserMoveClip;
+    [Header("Minigame 4")]
+    public AudioClip scanPiratesClip;
+    public AudioClip laughPiratesClip;
+    public AudioClip gunShotPiratesClip;
+    public AudioClip seaGullClip;
+    public AudioClip[] piratesSingClipList;
+    [Header("Minigame 5")]
+    public AudioClip snowFallClip;
+    public AudioClip buffBigClip;
+
+
+
 
     private void Awake()
     {
@@ -72,6 +99,8 @@ public class AudioManager : MonoBehaviour
 
         musicSource.loop = true;
         sfxSource.loop = false;
+        specialSource.loop = false;
+        environmentSource.loop = true;
     }
 
    
@@ -103,9 +132,57 @@ public class AudioManager : MonoBehaviour
     {
         musicSource.Stop();
     }
-
-    public void OpenMusicminiGame(int indexMiniGame)
+    public void PlayEnvironment(AudioClip clip)
     {
+
+        if (clip == null) return;
+
+        if (environmentSource.clip == clip)
+            return;
+
+        environmentSource.clip = clip;
+        environmentSource.Play();
+    }
+    public void StopEnvironment()
+    {
+        if (environmentSource == null) return;
+
+        environmentSource.Stop();
+        environmentSource.clip = null;
+    }
+    public void PlaySpecial(AudioClip clip, bool loop = false)
+    {
+        if (clip == null) return;
+
+        if (specialSource.clip == clip &&
+            specialSource.isPlaying &&
+            specialSource.loop == loop)
+            return;
+
+        specialSource.Stop();
+
+        specialSource.clip = clip;
+        specialSource.loop = loop;
+        specialSource.Play();
+    }
+    public void StopSpecial()
+    {
+        specialSource.Stop();
+        specialSource.clip = null;
+        specialSource.loop = false;
+    }
+    public void PlaySpecialOneShot(AudioClip clip)
+    {
+        if (clip == null) return;
+
+        specialSource.PlayOneShot(clip);
+    }
+
+    public void SetupMusicMiniGame(int indexMiniGame)
+    {
+
+        SetupAudioByMiniGame(indexMiniGame);
+
         if (indexMiniGame == 1)
         {
             PlayMusic(AudioManager.Instance.musicMiniGame1);
@@ -147,5 +224,22 @@ public class AudioManager : MonoBehaviour
             AudioManager.Instance.PlayMusic(AudioManager.Instance.musicMiniGame10);
         }
     }
-    
+
+    public void SetupAudioByMiniGame(int indexMiniGame)
+    {
+        int index = indexMiniGame - 1;
+
+        if (index < 0 || index >= audioSetupList.Count)
+        {
+            Debug.LogWarning("AudioSetup index out of range: " + indexMiniGame);
+            return;
+        }
+
+        AudioSetup setup = audioSetupList[index];
+
+        musicSource.volume = setup.musicVolume;
+        sfxSource.volume = setup.sfxVolume;
+        environmentSource.volume = setup.environmentVolume;
+        specialSource.volume = setup.specialVolume;
+    }
 }

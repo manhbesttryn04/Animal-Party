@@ -1,4 +1,3 @@
-using AnimalParty.Audio;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -151,8 +150,7 @@ public class AutoFitLaser : MonoBehaviour
 
     private void HitPlayer(PlayerMove move)
     {
-        if (MiniGameAudioManager.Instance != null)
-            MiniGameAudioManager.Instance.PlayHitLaserSound();
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.laserHitClip);
 
         PlayerMiniGame mini = move.GetComponent<PlayerMiniGame>();
 

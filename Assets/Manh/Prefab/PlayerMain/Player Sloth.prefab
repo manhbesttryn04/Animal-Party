@@ -202,7 +202,6 @@ GameObject:
   - component: {fileID: 1950344395626103872}
   - component: {fileID: 8980693353806017411}
   - component: {fileID: 1570804706280578483}
-  - component: {fileID: 2568858816319850791}
   m_Layer: 3
   m_Name: Shield Magic
   m_TagString: Untagged
@@ -258,7 +257,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9650a8a2a9d2a8947bdce4f0a2b76a0e, type: 2}
+  - {fileID: 2100000, guid: 76f2d30002623b84eb5f97e7cb828565, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -282,27 +281,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!135 &2568858816319850791
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1522900872828380002}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 0
-  serializedVersion: 3
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &1524356702761064391
 GameObject:
   m_ObjectHideFlags: 0
@@ -945,6 +923,7 @@ MonoBehaviour:
   playerBuff: {fileID: 0}
   playerDebuff: {fileID: 0}
   playerFunnyItem: {fileID: 0}
+  playerMiniGame: {fileID: 0}
 --- !u!114 &5959015988804722164
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1223,7 +1202,6 @@ GameObject:
   - component: {fileID: 986415778624303724}
   - component: {fileID: 3227635966991931677}
   - component: {fileID: 2518972862439725272}
-  - component: {fileID: 1319278301593725701}
   m_Layer: 0
   m_Name: Magic Rock
   m_TagString: Untagged
@@ -1279,7 +1257,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 772d9d9117eab56479d2738f542c054c, type: 2}
+  - {fileID: 2100000, guid: 76f2d30002623b84eb5f97e7cb828565, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1303,28 +1281,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &1319278301593725701
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3392562167485230980}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 0
-  serializedVersion: 5
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -2497679977114400626, guid: 1dc2ce7af7a959b4e81997ee9f222d80, type: 3}
 --- !u!1 &3456182129419425689
 GameObject:
   m_ObjectHideFlags: 0
@@ -2440,7 +2396,6 @@ GameObject:
   - component: {fileID: 8379288594678325259}
   - component: {fileID: 5414684423681604947}
   - component: {fileID: 3576288963044843802}
-  - component: {fileID: 4985234465097247430}
   m_Layer: 0
   m_Name: Shield Deff Cannon
   m_TagString: Untagged
@@ -2522,29 +2477,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &4985234465097247430
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6424888837300057288}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 0
-  serializedVersion: 2
-  m_Radius: 0.5000001
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
 --- !u!1 &6550983326560241470
 GameObject:
   m_ObjectHideFlags: 0
@@ -3051,7 +2983,6 @@ GameObject:
   - component: {fileID: 8044826966046294376}
   - component: {fileID: 5039336254411173957}
   - component: {fileID: 8879982802581299265}
-  - component: {fileID: 3473255640674720513}
   m_Layer: 0
   m_Name: Cylinder (1)
   m_TagString: Untagged
@@ -3131,29 +3062,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &3473255640674720513
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8864511990061892667}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 0
-  serializedVersion: 2
-  m_Radius: 0.5000001
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
 --- !u!1 &9179691386465356459
 GameObject:
   m_ObjectHideFlags: 0
@@ -3165,7 +3073,6 @@ GameObject:
   - component: {fileID: 2756008517512251696}
   - component: {fileID: 6159949805113536480}
   - component: {fileID: 6673576684664000840}
-  - component: {fileID: 5168451291906115688}
   m_Layer: 0
   m_Name: Capsule
   m_TagString: Untagged
@@ -3245,26 +3152,3 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &5168451291906115688
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9179691386465356459}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 0
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}

@@ -64,7 +64,7 @@ public class DebuffManager : MonoBehaviour
             // Nếu đã có DebuffManager thì xóa bản mới
             Destroy(gameObject);
         }
-    }
+    }      
 
     private void Update()
     {

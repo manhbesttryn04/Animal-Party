@@ -95,9 +95,6 @@ public class BombDebuff : MonoBehaviour
             StartCoroutine(player.playerBuff.ShowDefenseShield());
 
             player.playerBuff.isBuffDeffense = false;
-
-            Debug.Log(player.name + " blocked the bomb!");
-
             Destroy(gameObject);
             return;
         }
@@ -113,8 +110,6 @@ public class BombDebuff : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-
-        Debug.Log(player.name + " hit by bomb! Knockback " + power);
 
         StartCoroutine(moveAI.BoomHitEffect(power));
 

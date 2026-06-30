@@ -229,7 +229,7 @@ public class MiniGameManager : MonoBehaviour
             blackPanel.SetActive(true);
 
         // Mở nhạc minigame
-        OpenMusicMiniGame();
+        SetupMusicMiniGame();
 
         // =====================================================
         // ENABLE CAMERA
@@ -672,10 +672,10 @@ public class MiniGameManager : MonoBehaviour
     // OPEN MUSIC MINIGAME
     // =========================================================
 
-    public void OpenMusicMiniGame()
+    public void SetupMusicMiniGame()
     {
         // Mở nhạc theo index minigame
-        AudioManager.Instance.OpenMusicminiGame(indexMiniGame);
+        AudioManager.Instance.SetupMusicMiniGame(indexMiniGame);
     }
 
     // =========================================================
@@ -706,8 +706,8 @@ public class MiniGameManager : MonoBehaviour
                 break;
 
             case 5:
-                countDownTime = 90f;
-                VolumeManager.Instance.SetBloomIntensity(1);
+                countDownTime = 20f;
+                VolumeManager.Instance.SetBloomIntensity(0.5f);
                 break;
 
             case 6:

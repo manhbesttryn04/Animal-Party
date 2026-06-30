@@ -140,10 +140,10 @@ public class TrapRow : MonoBehaviour
                 RestoreSingleBrick(bricks[i])
               
             );
-            mini1.source.PlayOneShot(mini1.loadBrickAudio);
-
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.loadBrickClip);
+ 
             // Delay giữa từng cục
-            yield return new WaitForSeconds(0.2f);
+             yield return new WaitForSeconds(0.2f);
         }
     }
     IEnumerator RestoreSingleBrick(GameObject brick)

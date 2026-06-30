@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -42,8 +43,8 @@ public class ShopManager : MonoBehaviour
     public GameObject panelPlayer1Turn;
     public GameObject panelPlayer2Turn;
 
-    [Header("Shop Timer")]
-    public int timeToBuy = 99;
+    [Header("Turn Timer")]
+    public int timePerTurn = 20;
 
     private bool[] canErrorCoin = { true, true };
 
@@ -55,11 +56,8 @@ public class ShopManager : MonoBehaviour
 
     #region Private Variables
 
-    // Coroutine đếm thời gian shop
-    private Coroutine shopTimerCoroutine;
-
-    // Thời gian bắt đầu đếm ngược
-    private int startTime;
+    private Coroutine turnTimerCoroutine;
+    private int currentTime;
 
     #endregion
 
@@ -71,22 +69,19 @@ public class ShopManager : MonoBehaviour
 
     private void Awake()
     {
-        // Tạo singleton cho ShopManager
         if (_instance == null)
         {
             _instance = this;
-
-            // Không bị hủy khi đổi scene
             DontDestroyOnLoad(gameObject);
         }
         else
         {
-            // Nếu đã có ShopManager thì xóa bản mới
             Destroy(gameObject);
         }
     }
+
+
     #endregion
-  
 
     // =========================================================
     // OPEN SHOP FLOW
@@ -96,16 +91,12 @@ public class ShopManager : MonoBehaviour
 
     public void Open()
     {
-        // Phát âm thanh mở shop
         AudioManager.Instance.PlaySFX(AudioManager.Instance.openShopClip);
 
-        // Tìm và setup player
         SetupPlayers();
 
-        // Setup lại UI shop
         SetupUI();
 
-        // Mở shop
         OpenShop();
     }
 
@@ -119,11 +110,9 @@ public class ShopManager : MonoBehaviour
 
     private void SetupPlayers()
     {
-        // Nếu mảng players chưa có hoặc chưa đủ 2 phần tử thì tạo lại
         if (players == null || players.Length < 2)
             players = new PlayerManager[2];
 
-        // Tìm Player 1 theo tag
         GameObject p1 = GameObject.FindGameObjectWithTag("Player 1");
 
         if (p1 != null)
@@ -131,7 +120,6 @@ public class ShopManager : MonoBehaviour
         else
             Debug.LogError("Không tìm thấy Player 1");
 
-        // Tìm Player 2 theo tag
         GameObject p2 = GameObject.FindGameObjectWithTag("Player 2");
 
         if (p2 != null)
@@ -139,24 +127,26 @@ public class ShopManager : MonoBehaviour
         else
             Debug.LogError("Không tìm thấy Player 2");
 
-        // Reset buff cho tất cả người chơi trước khi mở shop
         GameManager.Instance.ResetBuffAllPlayer();
     }
 
     private void SetupUI()
     {
-        // Cập nhật coin hiện tại của player lên UI
         UpdateCoin();
 
-        // Ẩn toàn bộ icon item đang hiển thị
         foreach (Image img in playerItemImages)
         {
             if (img != null)
                 img.gameObject.SetActive(false);
         }
 
-        // Tắt canvas shop trước khi mở lại
         canvasShop?.SetActive(false);
+
+        if (canvasRandomCard != null)
+            canvasRandomCard.SetActive(false);
+
+        if (timerText != null)
+            timerText.text = timePerTurn.ToString();
     }
 
     #endregion
@@ -169,7 +159,6 @@ public class ShopManager : MonoBehaviour
 
     public void UpdateCoin()
     {
-        // Cập nhật số coin của từng player lên text UI
         for (int i = 0; i < players.Length; i++)
         {
             if (players[i] == null || playerCoinTexts[i] == null)
@@ -182,7 +171,6 @@ public class ShopManager : MonoBehaviour
 
     private IEnumerator FlashCoinText(int playerIndex)
     {
-        // Kiểm tra index player hợp lệ
         if (playerIndex < 0 || playerIndex >= playerCoinTexts.Length)
             yield break;
 
@@ -191,10 +179,8 @@ public class ShopManager : MonoBehaviour
         if (text == null)
             yield break;
 
-        // Lưu màu gốc của text coin
         Color originalColor = text.color;
 
-        // Nhấp nháy đỏ 3 lần khi không đủ coin
         for (int i = 0; i < 3; i++)
         {
             text.color = Color.red;
@@ -203,7 +189,7 @@ public class ShopManager : MonoBehaviour
             text.color = originalColor;
             yield return new WaitForSeconds(0.08f);
         }
-        // Cho phép phát lại âm thanh và hiệu ứng
+
         canErrorCoin[playerIndex] = true;
     }
 
@@ -217,7 +203,6 @@ public class ShopManager : MonoBehaviour
 
     public bool BuyItem(int playerIndex, int itemIndex, int price)
     {
-        // Kiểm tra index player hợp lệ
         if (playerIndex < 0 || playerIndex >= players.Length)
             return false;
 
@@ -226,26 +211,19 @@ public class ShopManager : MonoBehaviour
         if (player == null)
             return false;
 
-        // Nếu không đủ coin thì báo lỗi và không mua
         if (player.playerCoin.coinEndMiniGame < price)
         {
-            if (player.playerCoin.coinEndMiniGame < price)
+            if (canErrorCoin[playerIndex])
             {
-                if (canErrorCoin[playerIndex])
-                {
-                    canErrorCoin[playerIndex] = false;
+                canErrorCoin[playerIndex] = false;
 
-                    AudioManager.Instance.PlaySFX(AudioManager.Instance.noCoinBuyItemClip);
-                    StartCoroutine(FlashCoinText(playerIndex));
-                }
-
-                return false;
+                AudioManager.Instance.PlaySFX(AudioManager.Instance.noCoinBuyItemClip);
+                StartCoroutine(FlashCoinText(playerIndex));
             }
-            return false;
 
+            return false;
         }
 
-        // Nếu itemIndex là 1 thì phát âm thanh mở card random
         if (itemIndex == 1)
         {
             AudioManager.Instance.PlaySFX(AudioManager.Instance.openCardRamdomClip);
@@ -255,17 +233,13 @@ public class ShopManager : MonoBehaviour
             AudioManager.Instance.PlaySFX(AudioManager.Instance.buyItemClip);
         }
 
-        // Trừ tiền player sau khi mua
         player.playerCoin.coinEndMiniGame -= price;
 
-        // Cập nhật lại UI coin
         UpdateCoin();
 
-        // Nếu là random card thì trả true và không show item trực tiếp
         if (itemIndex == 1)
             return true;
 
-        // Hiện item player đã mua
         ShowPlayerItem(playerIndex, itemIndex);
 
         return true;
@@ -273,27 +247,21 @@ public class ShopManager : MonoBehaviour
 
     public void ShowPlayerItem(int playerIndex, int itemIndex)
     {
-        // Kiểm tra index player hợp lệ
         if (playerIndex < 0 || playerIndex >= playerItemImages.Length)
             return;
 
-        // Kiểm tra index item hợp lệ
         if (itemIndex < 0 || itemIndex >= itemSprites.Length)
             return;
 
-        // Gán sprite item vào UI của player
         playerItemImages[playerIndex].sprite = itemSprites[itemIndex];
 
-        // Hiện icon item
         playerItemImages[playerIndex].gameObject.SetActive(true);
 
-        // Gửi buff cho player tương ứng
         SendBuffToPlayer(playerIndex, itemIndex);
     }
 
     public void ResetShop()
     {
-        // Reset icon item của cả 2 player
         foreach (Image img in playerItemImages)
         {
             img.sprite = null;
@@ -311,30 +279,35 @@ public class ShopManager : MonoBehaviour
 
     public void OpenShop()
     {
-        // Bật canvas shop
+        StopTurnTimer();
+
         canvasShop.SetActive(true);
 
-        // Reset item hiển thị và cập nhật coin
         ResetShop();
         UpdateCoin();
 
-        // Khóa input trước, không cho mua khi panel chưa hiện xong
         inputChooseItem.isPlayer1Choose = false;
         inputChooseItem.isPlayer2Choose = false;
 
-        // Tắt toàn bộ highlight
         for (int i = 0; i < inputChooseItem.items.Length; i++)
         {
             inputChooseItem.items[i].transform.GetChild(1).gameObject.SetActive(false);
             inputChooseItem.items[i].transform.GetChild(2).gameObject.SetActive(false);
         }
 
-        // Sau 2 giây mới hiện panel Player 1
-        Invoke(nameof(StartPlayer1Turn), 1f );
+        if (canvasRandomCard != null)
+            canvasRandomCard.SetActive(false);
 
-        // Bắt đầu đếm giờ shop
-        StartShopTimer();
+        if (timerText != null)
+        {
+            timerText.text = "";
+            timerText.gameObject.SetActive(false);
+        }
+
+        CancelInvoke(nameof(StartPlayer1Turn));
+        Invoke(nameof(StartPlayer1Turn), 1f);
     }
+
     private void StartPlayer1Turn()
     {
         StartCoroutine(Player1TurnRoutine());
@@ -352,64 +325,79 @@ public class ShopManager : MonoBehaviour
         inputChooseItem.items[inputChooseItem.player1Index]
             .transform.GetChild(1)
             .gameObject.SetActive(true);
+
+        StartTurnTimer(inputChooseItem.TimeOutPlayer1);
     }
 
     public void CloseShop()
     {
-        // Dừng timer shop nếu đang chạy
-        if (shopTimerCoroutine != null)
-        {
-            StopCoroutine(shopTimerCoroutine);
-            shopTimerCoroutine = null;
-        }
+        StopTurnTimer();
+        CancelInvoke(nameof(StartPlayer1Turn));
 
-        // Tắt shop
         canvasShop.SetActive(false);
 
-        // Thoát shop và bắt đầu vòng tiếp theo
         GameManager.Instance.ExitNextRound();
     }
-
-
 
     #endregion
 
     // =========================================================
-    // TIMER
+    // TURN TIMER
     // =========================================================
 
-    #region Timer
+    #region Turn Timer
 
-    private void StartShopTimer()
+    public void StartTurnTimer(Action onTimeOut)
     {
-        // Reset thời gian shop về thời gian ban đầu
-        startTime = timeToBuy;
+        StopTurnTimer();
 
-        // Nếu timer cũ đang chạy thì dừng lại
-        if (shopTimerCoroutine != null)
-            StopCoroutine(shopTimerCoroutine);
+        currentTime = timePerTurn;
 
-        // Chạy timer mới
-        shopTimerCoroutine = StartCoroutine(ShopTimerRoutine());
+        if (timerText != null)
+        {
+            timerText.gameObject.SetActive(true);
+            timerText.text = currentTime.ToString();
+        }
+
+        turnTimerCoroutine = StartCoroutine(TurnTimerRoutine(onTimeOut));
     }
 
-    private IEnumerator ShopTimerRoutine()
+    public void StopTurnTimer()
     {
-        // Đếm ngược thời gian shop
-        while (startTime > 0)
+        if (turnTimerCoroutine != null)
         {
-            timerText.text = startTime.ToString();
+            StopCoroutine(turnTimerCoroutine);
+            turnTimerCoroutine = null;
+        }
+
+        if (timerText != null)
+        {
+            timerText.text = "";
+            timerText.gameObject.SetActive(false);
+        }
+    }
+
+    private IEnumerator TurnTimerRoutine(Action onTimeOut)
+    {
+        while (currentTime > 0)
+        {
+            if (timerText != null)
+                timerText.text = currentTime.ToString();
 
             yield return new WaitForSeconds(1f);
 
-            startTime--;
+            currentTime--;
         }
 
-        // Hết giờ thì set text về 0
-        timerText.text = "0";
+        if (timerText != null)
+        {
+            timerText.text = "";
+            timerText.gameObject.SetActive(false);
+        }
 
-        // Đóng shop
-        CloseShop();
+        turnTimerCoroutine = null;
+
+        onTimeOut?.Invoke();
     }
 
     #endregion
@@ -432,16 +420,13 @@ public class ShopManager : MonoBehaviour
 
     private IEnumerator ShowPlayerTurn(GameObject panel)
     {
-        // Tắt cả 2 panel trước
         panelPlayer1Turn.SetActive(false);
         panelPlayer2Turn.SetActive(false);
 
-        // Bật panel lượt hiện tại
         panel.SetActive(true);
 
         yield return new WaitForSeconds(0.9f);
 
-        // Tắt panel sau khi hiện xong
         panel.SetActive(false);
     }
 
@@ -455,7 +440,6 @@ public class ShopManager : MonoBehaviour
 
     public void SendBuffToPlayer(int playerIndex, int itemIndex)
     {
-        // Kiểm tra index player hợp lệ
         if (playerIndex < 0 || playerIndex >= players.Length)
             return;
 
@@ -464,7 +448,6 @@ public class ShopManager : MonoBehaviour
         if (p == null)
             return;
 
-        // Gửi buff theo itemIndex
         p.ApplyBuff(itemIndex);
     }
 

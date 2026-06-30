@@ -27,12 +27,16 @@ public class InputChooseItem : MonoBehaviour
     private int randomCardIndex = 0;
     private int randomCardPlayer = -1; // 0 = P1, 1 = P2
 
+    private Coroutine randomCardCoroutine;
+    private bool isChoosingCardRoutine = false;
+
     #endregion
 
     private void Start()
     {
         InitHighlight();
     }
+
     private void Update()
     {
         if (isChoosingRandomCard)
@@ -44,8 +48,6 @@ public class InputChooseItem : MonoBehaviour
         HandlePlayerInput();
     }
 
-  
-
     private void InitHighlight()
     {
         for (int i = 0; i < items.Length; i++)
@@ -54,9 +56,12 @@ public class InputChooseItem : MonoBehaviour
             items[i].transform.GetChild(2).gameObject.SetActive(false);
         }
 
+        ClearRandomCardHighlight();
+
         isPlayer1Choose = false;
         isPlayer2Choose = false;
         isChoosingRandomCard = false;
+        isChoosingCardRoutine = false;
     }
 
     private void ClearRandomCardHighlight()
@@ -91,6 +96,31 @@ public class InputChooseItem : MonoBehaviour
                 SkipPlayer2();
         }
     }
+
+    #region Timeout
+
+    public void TimeOutPlayer1()
+    {
+        if (!isPlayer1Choose) return;
+
+        SkipPlayer1();
+    }
+
+    public void TimeOutPlayer2()
+    {
+        if (!isPlayer2Choose) return;
+
+        SkipPlayer2();
+    }
+
+    public void TimeOutRandomCard()
+    {
+        if (!isChoosingRandomCard) return;
+
+        StartChooseRandomCard();
+    }
+
+    #endregion
 
     #region Player 1
 
@@ -127,12 +157,19 @@ public class InputChooseItem : MonoBehaviour
             if (!shopManager.BuyItem(0, player1Index, item.price))
                 return;
 
+            shopManager.StopTurnTimer();
+
+            isPlayer1Choose = false;
+            items[player1Index].transform.GetChild(1).gameObject.SetActive(false);
+
             OpenRandomCard(0);
             return;
         }
 
         if (shopManager.BuyItem(0, player1Index, item.price))
         {
+            shopManager.StopTurnTimer();
+
             isPlayer1Choose = false;
             items[player1Index].transform.GetChild(1).gameObject.SetActive(false);
 
@@ -142,6 +179,8 @@ public class InputChooseItem : MonoBehaviour
 
     private void SkipPlayer1()
     {
+        shopManager.StopTurnTimer();
+
         isPlayer1Choose = false;
         items[player1Index].transform.GetChild(1).gameObject.SetActive(false);
 
@@ -185,12 +224,19 @@ public class InputChooseItem : MonoBehaviour
             if (!shopManager.BuyItem(1, player2Index, item.price))
                 return;
 
+            shopManager.StopTurnTimer();
+
+            isPlayer2Choose = false;
+            items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
+
             OpenRandomCard(1);
             return;
         }
 
         if (shopManager.BuyItem(1, player2Index, item.price))
         {
+            shopManager.StopTurnTimer();
+
             isPlayer2Choose = false;
             items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
 
@@ -200,6 +246,8 @@ public class InputChooseItem : MonoBehaviour
 
     private void SkipPlayer2()
     {
+        shopManager.StopTurnTimer();
+
         isPlayer2Choose = false;
         items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
 
@@ -210,12 +258,11 @@ public class InputChooseItem : MonoBehaviour
 
     #region Turn Delay
 
-  
-
     private IEnumerator ShowPlayer2TurnDelay()
     {
         isPlayer1Choose = false;
         isPlayer2Choose = false;
+        isChoosingRandomCard = false;
 
         items[player1Index].transform.GetChild(1).gameObject.SetActive(false);
         items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
@@ -225,7 +272,10 @@ public class InputChooseItem : MonoBehaviour
         yield return new WaitForSeconds(0.6f);
 
         isPlayer2Choose = true;
+
         items[player2Index].transform.GetChild(2).gameObject.SetActive(true);
+
+        shopManager.StartTurnTimer(TimeOutPlayer2);
     }
 
     #endregion
@@ -239,37 +289,46 @@ public class InputChooseItem : MonoBehaviour
         randomCardPlayer = playerIndex;
         randomCardIndex = 0;
 
-        // Chưa cho chọn ngay
         isChoosingRandomCard = false;
         isPlayer1Choose = false;
         isPlayer2Choose = false;
+        isChoosingCardRoutine = false;
 
         RandomizeCards();
         ClearRandomCardHighlight();
 
-        StartCoroutine(WaitOpenAnimation());
+        if (randomCardCoroutine != null)
+            StopCoroutine(randomCardCoroutine);
+
+        randomCardCoroutine = StartCoroutine(WaitOpenAnimation());
     }
 
     private IEnumerator WaitOpenAnimation()
     {
         Animator animator = shopManager.canvasRandomCard.GetComponent<Animator>();
 
-        // Đợi Animator cập nhật sang state Open
         yield return null;
 
-        // Đợi animation chạy xong
-        yield return new WaitForSeconds(
-            animator.GetCurrentAnimatorStateInfo(0).length + 0.1f
-        );
-        
+        if (animator != null)
+        {
+            yield return new WaitForSeconds(
+                animator.GetCurrentAnimatorStateInfo(0).length + 0.1f
+            );
+        }
+        else
+        {
+            yield return new WaitForSeconds(0.6f);
+        }
 
-        // Bây giờ mới cho chọn
         isChoosingRandomCard = true;
 
         itemCardRandom[randomCardIndex]
             .transform.GetChild(1)
             .gameObject.SetActive(true);
+
+        shopManager.StartTurnTimer(TimeOutRandomCard);
     }
+
     private void RandomizeCards()
     {
         int[] randomItems = { 0, 2, 3, 5 };
@@ -299,13 +358,17 @@ public class InputChooseItem : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.A)) ChangeRandomCard(current.left);
             if (Input.GetKeyDown(KeyCode.D)) ChangeRandomCard(current.right);
-            if (Input.GetKeyDown(KeyCode.J)) StartCoroutine(ChooseRandomCard());
+
+            if (Input.GetKeyDown(KeyCode.J))
+                StartChooseRandomCard();
         }
         else
         {
             if (Input.GetKeyDown(KeyCode.LeftArrow)) ChangeRandomCard(current.left);
             if (Input.GetKeyDown(KeyCode.RightArrow)) ChangeRandomCard(current.right);
-            if (Input.GetKeyDown(KeyCode.Keypad1)) StartCoroutine(ChooseRandomCard());
+
+            if (Input.GetKeyDown(KeyCode.Keypad1))
+                StartChooseRandomCard();
         }
     }
 
@@ -314,7 +377,6 @@ public class InputChooseItem : MonoBehaviour
         if (newIndex < 0 || newIndex >= itemCardRandom.Length) return;
 
         AudioManager.Instance.PlaySFX(AudioManager.Instance.movechooseItemClip);
-
 
         itemCardRandom[randomCardIndex]
             .transform.GetChild(1)
@@ -327,13 +389,22 @@ public class InputChooseItem : MonoBehaviour
             .gameObject.SetActive(true);
     }
 
+    private void StartChooseRandomCard()
+    {
+        if (isChoosingCardRoutine) return;
+
+        StartCoroutine(ChooseRandomCard());
+    }
+
     private IEnumerator ChooseRandomCard()
     {
+        isChoosingCardRoutine = true;
+
+        shopManager.StopTurnTimer();
+
         isChoosingRandomCard = false;
 
         RandomCard card = itemCardRandom[randomCardIndex].GetComponent<RandomCard>();
-
-       // int child = randomCardPlayer == 0 ? 1 : 2;
 
         itemCardRandom[randomCardIndex]
             .transform.GetChild(1)
@@ -350,6 +421,8 @@ public class InputChooseItem : MonoBehaviour
         ClearRandomCardHighlight();
 
         shopManager.canvasRandomCard.SetActive(false);
+
+        isChoosingCardRoutine = false;
 
         if (randomCardPlayer == 0)
         {
@@ -378,6 +451,8 @@ public class InputChooseItem : MonoBehaviour
 
     public IEnumerator CloseShop()
     {
+        shopManager.StopTurnTimer();
+
         yield return new WaitForSeconds(2f);
 
         ShopManager.Instance.CloseShop();

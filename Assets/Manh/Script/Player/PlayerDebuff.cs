@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class PlayerDebuff : MonoBehaviour
 {
+    public PlayerManager manager;
     [Header("Debuff State")]
     public bool isNoRollDice;
 
@@ -9,11 +10,13 @@ public class PlayerDebuff : MonoBehaviour
     public GameObject rockMagic;
 
     private Vector3 originalScale;
+    
 
     private void Awake()
     {
         if (rockMagic != null)
             originalScale = rockMagic.transform.localScale;
+        manager = GetComponent<PlayerManager>();
     }
 
     public void ApplyMagicRock()
@@ -23,6 +26,7 @@ public class PlayerDebuff : MonoBehaviour
         if (rockMagic != null)
         {
             rockMagic.SetActive(true);
+            manager.playerAnimator.playerAnimator.speed = 0;
             AudioManager.Instance.PlaySFX(AudioManager.Instance.bebuffRockMagicClip);
             rockMagic.transform.localScale =
                 originalScale * 2f;
@@ -36,6 +40,7 @@ public class PlayerDebuff : MonoBehaviour
         if (rockMagic != null)
         {
             rockMagic.SetActive(false);
+            manager.playerAnimator.playerAnimator.speed = 1;
 
             rockMagic.transform.localScale =
                 originalScale;

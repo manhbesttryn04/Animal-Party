@@ -1,8 +1,6 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using AnimalParty.Player;
-using AnimalParty.Audio;
 
 [RequireComponent(typeof(Collider))]
 public class PummelLaserHub : MonoBehaviour
@@ -101,7 +99,7 @@ public class PummelLaserHub : MonoBehaviour
             if (laser != null)
                 laser.SetLaserActive(true);
         }
-        MiniGameAudioManager.Instance.StartLaserLoop();
+        AudioManager.Instance.PlayEnvironment(AudioManager.Instance.laserMoveClip);
         StartCoroutine(VIPPatternRoutine());
     }
 
@@ -170,7 +168,7 @@ public class PummelLaserHub : MonoBehaviour
             if (laser != null)
                 laser.SetLaserActive(false);
         }
-        MiniGameAudioManager.Instance.StopLaserLoop();
+        AudioManager.Instance.StopEnvironment();
         float duration = 1.5f;
         Vector3 startPos = transform.position;
         Vector3 endPos = originalPosition - new Vector3(0, depth, 0);

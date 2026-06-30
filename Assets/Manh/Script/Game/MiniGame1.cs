@@ -26,12 +26,6 @@ public class MiniGame1 : MonoBehaviour
     // Thời gian chờ trước khi game bắt đầu
     public float startDelay = 5f;
 
-    [Header("Audio")]
-    public AudioSource source;
-    public AudioClip warningAudio;
-    public AudioClip sharkAttackAudio;
-    public AudioClip loadBrickAudio;
-
     // Kiểm tra game đang chạy hay không
     bool isRunning = false;
 
@@ -117,7 +111,7 @@ public class MiniGame1 : MonoBehaviour
             foreach (TrapRow row in selectedRows)
             {
                 row.ShowWarning();
-                source.PlayOneShot(warningAudio);
+                AudioManager.Instance.PlaySFX(AudioManager.Instance.warningClip);
 
                 yield return new WaitForSeconds(0.4f);
 
@@ -134,7 +128,7 @@ public class MiniGame1 : MonoBehaviour
                 StartCoroutine(
                     row.RowRoutine()
                 );
-                source.PlayOneShot(sharkAttackAudio);
+                AudioManager.Instance.PlaySFX(AudioManager.Instance.sharkAttackClip);
             }
          
 
