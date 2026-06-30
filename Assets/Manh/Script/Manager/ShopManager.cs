@@ -79,7 +79,7 @@ public class ShopManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
-  
+
 
     #endregion
 

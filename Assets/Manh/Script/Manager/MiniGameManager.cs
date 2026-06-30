@@ -229,7 +229,7 @@ public class MiniGameManager : MonoBehaviour
             blackPanel.SetActive(true);
 
         // Mở nhạc minigame
-        OpenMusicMiniGame();
+        SetupMusicMiniGame();
 
         // =====================================================
         // ENABLE CAMERA
@@ -672,10 +672,10 @@ public class MiniGameManager : MonoBehaviour
     // OPEN MUSIC MINIGAME
     // =========================================================
 
-    public void OpenMusicMiniGame()
+    public void SetupMusicMiniGame()
     {
         // Mở nhạc theo index minigame
-        AudioManager.Instance.OpenMusicminiGame(indexMiniGame);
+        AudioManager.Instance.SetupMusicMiniGame(indexMiniGame);
     }
 
     // =========================================================
