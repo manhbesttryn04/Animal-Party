@@ -36,17 +36,6 @@ public class MiniGame4 : MonoBehaviour
     [Header("Finish Line")]
     public float finishLineZ;
 
-    [Header("Audio")]
-    public AudioSource audioSource;
-    public AudioSource environmentAudioSource;
-    public AudioSource pirateVoiceSource;
-    public AudioClip scanSound;
-    public AudioClip laughSound;
-    public AudioClip gunShotSound;
-    public AudioClip rainSound;
-
-    [Header("Pirate Singing")]
-    public AudioClip[] pirateSingSounds;
     public float minVoicePitchClamp = 0.5f;
     public float maxVoicePitchClamp = 3f;
 
@@ -98,11 +87,8 @@ public class MiniGame4 : MonoBehaviour
         isRunning = false;
         StopAllCoroutines();
 
-        if (audioSource != null)
-            audioSource.Stop();
+        AudioManager.Instance.StopEnvironment();
 
-        if (pirateVoiceSource != null)
-            pirateVoiceSource.Stop();
 
         // Tính thưởng trước khi Clear
         CheckFinishReward(manager.currentPlayer1);
@@ -122,8 +108,6 @@ public class MiniGame4 : MonoBehaviour
 
     IEnumerator PirateRoutine()
     {
-        if (environmentAudioSource != null && rainSound != null)
-            environmentAudioSource.PlayOneShot(rainSound);
 
         transform.rotation = backRotation;
 
@@ -135,14 +119,8 @@ public class MiniGame4 : MonoBehaviour
             detectedPlayers.Clear();
             redStartPositions.Clear();
             hasLaughThisWatch = false;
-
-            if (audioSource != null && scanSound != null)
-            {
-                audioSource.clip = scanSound;
-                audioSource.loop = true;
-                audioSource.Play();
-            }
-
+            AudioManager.Instance.PlayEnvironment(AudioManager.Instance.scanPiratesClip);
+          
             yield return StartCoroutine(RotateTo(lookRotation, rotateSpeed));
 
             isWatching = true;
@@ -176,9 +154,7 @@ public class MiniGame4 : MonoBehaviour
 
                 yield return null;
             }
-
-            if (audioSource != null && audioSource.clip == scanSound)
-                audioSource.Stop();
+            AudioManager.Instance.StopEnvironment();
 
             yield return StartCoroutine(RotateTo(backRotation, rotateSpeed));
 
@@ -226,11 +202,9 @@ public class MiniGame4 : MonoBehaviour
         {
             hasLaughThisWatch = true;
 
-            if (audioSource != null && audioSource.clip == scanSound)
-                audioSource.Stop();
+            AudioManager.Instance.StopEnvironment();
 
-            if (audioSource != null && laughSound != null)
-                audioSource.PlayOneShot(laughSound);
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.gunShotPiratesClip);
         }
 
         while (attackQueue.Count > 0)
@@ -533,19 +507,15 @@ public class MiniGame4 : MonoBehaviour
 
     void PlayRandomPirateVoice(float greenTime)
     {
-        if (pirateVoiceSource == null) return;
-        if (pirateSingSounds == null || pirateSingSounds.Length == 0) return;
 
-        AudioClip clip = pirateSingSounds[Random.Range(0, pirateSingSounds.Length)];
-        if (clip == null) return;
 
-        pirateVoiceSource.Stop();
+       // AudioManager.Instance.StopEnvironment();
 
-        float pitch = clip.length / greenTime;
-        pitch = Mathf.Clamp(pitch, minVoicePitchClamp, maxVoicePitchClamp);
+      //  float pitch = clip.length / greenTime;
+       // pitch = Mathf.Clamp(pitch, minVoicePitchClamp, maxVoicePitchClamp);
 
-        pirateVoiceSource.pitch = pitch;
-        pirateVoiceSource.PlayOneShot(clip);
+      // AudioManager.Instance.pitch = pitch;
+       //AudioManager
     }
 
     IEnumerator ShowMuzzleFlash()
@@ -553,8 +523,7 @@ public class MiniGame4 : MonoBehaviour
         if (muzzleFlash != null)
             muzzleFlash.SetActive(true);
 
-        if (audioSource != null && gunShotSound != null)
-            audioSource.PlayOneShot(gunShotSound);
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.gunShotPiratesClip);
 
         yield return new WaitForSeconds(0.15f);
 

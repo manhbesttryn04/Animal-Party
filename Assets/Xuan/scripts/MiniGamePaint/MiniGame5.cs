@@ -43,9 +43,6 @@ public class MiniGame5 : MonoBehaviour
     public TextMeshProUGUI resultText;
     public float gameDuration = 57f;
 
-    [Header("Audio")]
-    public AudioSource source;
-
     private bool isPlayer1Frozen = false;
     private bool isPlayer2Frozen = false;
 
@@ -99,7 +96,7 @@ public class MiniGame5 : MonoBehaviour
 
     public void StartMiniGame()
     {
-        if (source != null) source.Play();
+        AudioManager.Instance.PlayEnvironment(AudioManager.Instance.snowFallClip);
 
         if (isPlaying) return;
 
@@ -125,7 +122,7 @@ public class MiniGame5 : MonoBehaviour
 
     public void StopMiniGame()
     {
-        if (source != null) source.Stop();
+        AudioManager.Instance.StopEnvironment();
 
         isPlaying = false;
         StopAllCoroutines();

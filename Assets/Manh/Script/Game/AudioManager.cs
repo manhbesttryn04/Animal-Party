@@ -7,6 +7,7 @@ public class AudioManager : MonoBehaviour
     [Header("Audio Sources")]
     public AudioSource musicSource;   // Nhạc nền
     public AudioSource sfxSource;     // Hiệu ứng
+    public AudioSource environmentSource;
 
 
     [Header("SFX")]
@@ -25,8 +26,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip buffMagicClip;
     public AudioClip bonusBuffClip;
     public AudioClip coinClip;
-    public AudioClip buffBigClip;
-
+  
     
     [Header("Shop SFX")]
     public AudioClip openShopClip;
@@ -57,7 +57,28 @@ public class AudioManager : MonoBehaviour
     public AudioClip musicMiniGame9;
     public AudioClip musicMiniGame10;
 
-    
+    [Header("Minigame 1")]
+    public AudioClip loadBrickClip;
+    public AudioClip sharkAttackClip;
+    public AudioClip warningClip;
+    [Header("Minigame 2")]
+    public AudioClip brickFallClip;
+    public AudioClip javaLoopClip;
+    [Header("Minigam 3")]
+    public AudioClip laserHitClip;
+    public AudioClip laserMoveClip;
+    [Header("Minigame 4")]
+    public AudioClip scanPiratesClip;
+    public AudioClip laughPiratesClip;
+    public AudioClip gunShotPiratesClip;
+    public AudioClip seaGullClip;
+    public AudioClip[] piratesSingClipList;
+    [Header("Minigame 5")]
+    public AudioClip snowFallClip;
+    public AudioClip buffBigClip;
+
+
+
 
     private void Awake()
     {
@@ -103,6 +124,24 @@ public class AudioManager : MonoBehaviour
     public void StopMusic()
     {
         musicSource.Stop();
+    }
+    public void PlayEnvironment(AudioClip clip)
+    {
+
+        if (clip == null) return;
+
+        if (environmentSource.clip == clip)
+            return;
+
+        environmentSource.clip = clip;
+        environmentSource.Play();
+    }
+    public void StopEnvironment()
+    {
+        if (environmentSource == null) return;
+
+        environmentSource.Stop();
+        environmentSource.clip = null;
     }
 
     public void OpenMusicminiGame(int indexMiniGame)
