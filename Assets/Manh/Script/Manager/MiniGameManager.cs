@@ -100,6 +100,7 @@ public class MiniGameManager : MonoBehaviour
 
     [Header("Countdown Time")]
     public float countDownTime = 99f;
+     public float timer;
 
     // =========================================================
     // STATE
@@ -425,7 +426,7 @@ public class MiniGameManager : MonoBehaviour
         // TIMER LOOP
         // =====================================================
 
-        float timer = countDownTime;
+        timer = countDownTime;
 
         while (timer > 0)
         {
