@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
@@ -14,6 +14,7 @@ public class PlayerMove : MonoBehaviour
     public float gravity = -9.81f;
     public bool isGround;
     public bool isJumpAndMove, isMove, isJump = true;
+    public bool isWalk = false;
     public bool IsMoving { get; private set; }
 
     [Header("Lie Settings")]
@@ -81,7 +82,16 @@ public class PlayerMove : MonoBehaviour
             controller.Move(move.normalized * speed * Time.deltaTime);
         }
 
-        manager.playerAnimator.playerAnimator.SetFloat("Run", move.magnitude);
+        if (!isWalk)
+        {
+            manager.playerAnimator.playerAnimator.SetFloat("Run", move.magnitude);
+            manager.playerAnimator.playerAnimator.SetFloat("Walk", 0f);
+        }
+        else
+        {
+            manager.playerAnimator.playerAnimator.SetFloat("Walk", move.magnitude);
+            manager.playerAnimator.playerAnimator.SetFloat("Run", 0f);
+        }
     }
 
     void JumpInput()

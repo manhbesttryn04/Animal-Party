@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -108,6 +108,8 @@ public class MiniGame5 : MonoBehaviour
         resultText.text = "";
         // if (resultText != null) resultText.text = "Minigame Start";
 
+        SetUpPlayer();
+
         foreach (PaintPadData pad in allPads)
         {
             pad.ResetColor();
@@ -132,6 +134,12 @@ public class MiniGame5 : MonoBehaviour
         foreach (PaintPadData pad in allPads)
         {
             pad.RemoveSpawnedBomb();
+        }
+
+        if (manager != null)
+        {
+            SetHighlightPlayer(manager.currentPlayer1, false);
+            SetHighlightPlayer(manager.currentPlayer2, false);
         }
 
         if (timerText != null) timerText.text = "-";
@@ -180,6 +188,28 @@ public class MiniGame5 : MonoBehaviour
         isPlayer1Frozen = false;
         isPlayer2Frozen = false;
        
+    }
+
+    public void SetUpPlayer()
+    {
+        if (manager == null) return;
+        
+        SetHighlightPlayer(manager.currentPlayer1, true);
+        SetHighlightPlayer(manager.currentPlayer2, true);
+    }
+
+    void SetHighlightPlayer(GameObject playerObj, bool isActive)
+    {
+        if (playerObj == null) return;
+
+        foreach (Transform t in playerObj.GetComponentsInChildren<Transform>(true))
+        {
+            if (t.name == "Hight Light Player")
+            {
+                t.gameObject.SetActive(isActive);
+                break;
+            }
+        }
     }
 
     IEnumerator SpawnHazardsRoutine()
