@@ -239,6 +239,7 @@ public class MiniGame4 : MonoBehaviour
             hasLaughThisWatch = true;
 
             AudioManager.Instance.StopEnvironment();
+            AudioManager.Instance.PlaySpecialOneShot(AudioManager.Instance.laughPiratesClip);
 
         }
 

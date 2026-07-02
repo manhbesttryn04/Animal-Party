@@ -168,7 +168,7 @@ MonoBehaviour:
   - {fileID: 4941376278353752160, guid: 02e7f2ec14d8466468ad0290b7c01def, type: 3}
   - {fileID: 1505682087016488576, guid: d87da0c0206d16b4b805f3c470453381, type: 3}
   - {fileID: 5201205047941676874, guid: 3b3d9080b00481d45b9d2f5e78ddf7c1, type: 3}
-  isExitManager: 0
+  isExitManager: 1
 --- !u!4 &21708515
 Transform:
   m_ObjectHideFlags: 0
@@ -2058,7 +2058,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8227564280047608387, guid: 81772fc8339a875489fdb0ef101666de, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 2876357978403032008, guid: 81772fc8339a875489fdb0ef101666de, type: 3}
@@ -4508,7 +4508,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f5c43531b7774c45ba1db7013ef8a54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  indexMiniGame: 4
+  indexMiniGame: 1
   miniGameList: {fileID: 288627989}
   intrusTextList: {fileID: 288627990}
   videoInstructList: {fileID: 288627991}
@@ -4639,9 +4639,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   videoInstructList:
   - {fileID: 32900000, guid: afec2e0c894d86246990dbcee59a8721, type: 3}
-  - {fileID: 32900000, guid: 5ee421f478a189149b75f5c861ffe7b4, type: 3}
+  - {fileID: 32900000, guid: c65c25085d650ee459938eaea379952b, type: 3}
   - {fileID: 32900000, guid: 480ec011a219ea04dbdf3d97710c0da0, type: 3}
-  - {fileID: 32900000, guid: 04ce0913764fbe14a8532b3ef00f7521, type: 3}
+  - {fileID: 32900000, guid: e1e6e055a322cfc408d671f9af6ef93e, type: 3}
   - {fileID: 32900000, guid: 709ba6303d269da4f92121cace358b75, type: 3}
 --- !u!114 &288627992
 MonoBehaviour:
@@ -39862,7 +39862,7 @@ PrefabInstance:
       objectReference: {fileID: 495022358}
     - target: {fileID: 4779576814512428424, guid: 8bf137949f257d34bb43024206c0cfd5, type: 3}
       propertyPath: bulletSpeed
-      value: 10
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 4779576814512428424, guid: 8bf137949f257d34bb43024206c0cfd5, type: 3}
       propertyPath: finishLineZ
@@ -39874,7 +39874,7 @@ PrefabInstance:
       objectReference: {fileID: 2367196335634088000, guid: e246717ef4ab5f6418bdb06f6ad39aa0, type: 3}
     - target: {fileID: 4779576814512428424, guid: 8bf137949f257d34bb43024206c0cfd5, type: 3}
       propertyPath: startMoveSpeed
-      value: 1
+      value: 0.6
       objectReference: {fileID: 0}
     - target: {fileID: 4779576814512428424, guid: 8bf137949f257d34bb43024206c0cfd5, type: 3}
       propertyPath: pirateVoiceSource
