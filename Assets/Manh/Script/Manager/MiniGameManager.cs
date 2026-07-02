@@ -392,6 +392,10 @@ public class MiniGameManager : MonoBehaviour
 
         // Tắt bảng hướng dẫn
         canvasInstruct.SetActive(false);
+        // riset video
+        videoIntrucs.Stop();
+        videoIntrucs.clip = null;
+        videoIntrucs.time = 0;
 
         // Tắt màn đen sau khi chuẩn bị xong
         if (blackPanel != null)

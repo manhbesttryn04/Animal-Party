@@ -25,6 +25,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip fallingBom;
     public AudioClip boomClip;
     public AudioClip bebuffRockMagicClip;
+    
 
     [Header("Buff SFX")]
     public AudioClip buffDeffClip;
@@ -39,6 +40,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip buyItemClip;
     public AudioClip openCardRamdomClip;
     public AudioClip noCoinBuyItemClip;
+    public AudioClip skipBuyClip;
 
     [Header("UI SFX")]
     public AudioClip openResultPanel;
@@ -81,6 +83,7 @@ public class AudioManager : MonoBehaviour
     [Header("Minigame 5")]
     public AudioClip snowFallClip;
     public AudioClip buffBigClip;
+    public AudioClip iceMagicClip;
 
 
 
