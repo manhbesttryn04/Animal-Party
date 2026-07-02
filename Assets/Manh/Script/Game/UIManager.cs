@@ -122,6 +122,7 @@ public class UIManager : MonoBehaviour
         playerManager2 =
             GameObject.FindGameObjectWithTag("Player 2")
             .GetComponent<PlayerManager>();
+        UpdateAllPlayMainUI();
     }
 
     private void Update()

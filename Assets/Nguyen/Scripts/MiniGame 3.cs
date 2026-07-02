@@ -319,7 +319,7 @@ public class MiniGame3 : MonoBehaviour
         if (newLaser.TryGetComponent<LaserSpamObject>(out var laserScript))
             laserScript.speed = currentLaserSpeed;
 
-        AudioManager.Instance.PlayEnvironment(AudioManager.Instance.laserMoveClip);
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.laserMoveClip);
 
         // Debug.Log("Spawn Laser: " + newLaser.name);
     }
@@ -340,5 +340,8 @@ public class MiniGame3 : MonoBehaviour
 
         p1.playerMove.hasLie = true;
         p2.playerMove.hasLie = true;
+        
+        p1.playerAttack.hasAttack = true;
+        p2.playerAttack.hasAttack = true;
     }
 }

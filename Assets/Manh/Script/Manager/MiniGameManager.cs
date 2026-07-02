@@ -695,7 +695,7 @@ public class MiniGameManager : MonoBehaviour
 
             case 2:
                 countDownTime = 60f;
-                VolumeManager.Instance.SetBloomIntensity(1);
+                VolumeManager.Instance.SetBloomIntensity(0.5f);
                 break;
 
             case 3:
@@ -708,7 +708,7 @@ public class MiniGameManager : MonoBehaviour
 
             case 5:
                 countDownTime = 90f;
-                VolumeManager.Instance.SetBloomIntensity(0.5f);
+                VolumeManager.Instance.SetBloomIntensity(0.1f);
                 break;
 
             case 6:

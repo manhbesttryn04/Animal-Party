@@ -9,23 +9,36 @@ public class VolumeManager : MonoBehaviour
     [Header("Volume")]
     public Volume volume;
 
+    [Header("Default Bloom")]
+    public float defaultBloomIntensity = 4f;
+
     private Bloom bloom;
 
     private void Awake()
     {
         if (Instance == null)
+        {
             Instance = this;
+        }
         else
         {
             Destroy(gameObject);
             return;
         }
 
-        // Tạo bản copy profile để chỉnh lúc runtime
+        // Tạo bản copy của Profile để chỉnh lúc runtime
         volume.profile = Instantiate(volume.sharedProfile);
 
         // Lấy Bloom
-        volume.profile.TryGet(out bloom);
+        if (volume.profile.TryGet(out bloom))
+        {
+            // Đảm bảo Bloom được bật
+            bloom.active = true;
+
+            // Đặt Intensity mặc định = 4
+            bloom.intensity.overrideState = true;
+            bloom.intensity.value = defaultBloomIntensity;
+        }
     }
 
     /// <summary>
@@ -35,6 +48,7 @@ public class VolumeManager : MonoBehaviour
     {
         if (bloom != null)
         {
+            bloom.intensity.overrideState = true;
             bloom.intensity.value = intensity;
         }
     }
