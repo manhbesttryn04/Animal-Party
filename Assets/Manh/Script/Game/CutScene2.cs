@@ -167,7 +167,6 @@ public class CutScene2 : MonoBehaviour
         TeleportToTransform(transVideos[6]);
         ship.gameObject.SetActive(false);
         set.StartCutScene();
-
         // Move -> 7 + câu 4
         StartCoroutine(ShowSubtitleWithVoice(storyLines[4], 4, false));
         yield return MoveToTransform(transVideos[7]);
@@ -192,7 +191,7 @@ public class CutScene2 : MonoBehaviour
 
         HideSubtitleImmediate();
         set.StartMovePlayer();
-        StartCoroutine(FadeOutAudio(4f));
+        StartCoroutine(FadeOutAudio(4.5f));
         blackClosePanel.gameObject.SetActive(true);
         TeleportToTransform(transVideos[10]);
         yield return new WaitForSeconds(4.5f);

@@ -440,7 +440,7 @@ public class MiniGame5 : MonoBehaviour
         // Hiện khối băng
         if (iceBlock != null)
             iceBlock.gameObject.SetActive(true);
-        AudioManager.Instance.PlaySFX(AudioManager.Instance.bebuffRockMagicClip);
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.iceMagicClip);
 
         // Đóng băng người chơi
         if (move != null)

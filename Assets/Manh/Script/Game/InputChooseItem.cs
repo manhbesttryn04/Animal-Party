@@ -179,6 +179,7 @@ public class InputChooseItem : MonoBehaviour
 
     private void SkipPlayer1()
     {
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.skipBuyClip);
         shopManager.StopTurnTimer();
 
         isPlayer1Choose = false;
@@ -246,6 +247,7 @@ public class InputChooseItem : MonoBehaviour
 
     private void SkipPlayer2()
     {
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.skipBuyClip);
         shopManager.StopTurnTimer();
 
         isPlayer2Choose = false;

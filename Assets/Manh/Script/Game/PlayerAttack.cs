@@ -72,6 +72,8 @@ public class PlayerAttack : MonoBehaviour
             playerManager.playerAnimator.playerAnimator.SetTrigger("Attack");
         }
 
+        canAttack = false;
+
         Invoke(nameof(ResetAttack), attackCooldown);
     }
 

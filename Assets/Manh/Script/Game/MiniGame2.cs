@@ -44,6 +44,7 @@ public class MiniGame2 : MonoBehaviour
     {
         if (isRunning)
             return;
+        SetUpAllPlayer();
         AudioManager.Instance.PlayEnvironment(AudioManager.Instance.javaLoopClip);
         if (canvasMiniGame != null)
         {
@@ -310,6 +311,7 @@ public class MiniGame2 : MonoBehaviour
             // Sang vòng tiếp theo
             currentRound++;
         }
+
     }
 
     // ---- ĐÃ CẬP NHẬT: HÀM QUÉT ĐẾM KHÔNG BỊ SÓT VÀ KHÔNG KÉN TAG ----
@@ -342,5 +344,14 @@ public class MiniGame2 : MonoBehaviour
             }
         }
         return count;
+    }
+    public void SetUpAllPlayer()
+    {
+        PlayerManager p1 = manager.currentPlayer1.GetComponent<PlayerManager>();
+        PlayerManager p2 = manager.currentPlayer2.GetComponent<PlayerManager>();
+
+
+        p1.playerAttack.hasAttack = true;
+        p2.playerAttack.hasAttack = true;
     }
 }

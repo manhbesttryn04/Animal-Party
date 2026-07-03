@@ -392,6 +392,10 @@ public class MiniGameManager : MonoBehaviour
 
         // Tắt bảng hướng dẫn
         canvasInstruct.SetActive(false);
+        // riset video
+        videoIntrucs.Stop();
+        videoIntrucs.clip = null;
+        videoIntrucs.time = 0;
 
         // Tắt màn đen sau khi chuẩn bị xong
         if (blackPanel != null)
@@ -695,7 +699,7 @@ public class MiniGameManager : MonoBehaviour
 
             case 2:
                 countDownTime = 60f;
-                VolumeManager.Instance.SetBloomIntensity(1);
+                VolumeManager.Instance.SetBloomIntensity(0.5f);
                 break;
 
             case 3:
@@ -703,12 +707,12 @@ public class MiniGameManager : MonoBehaviour
                 break;
 
             case 4:
-                countDownTime = 90;
+                countDownTime = 60f;
                 break;
 
             case 5:
-                countDownTime = 20f;
-                VolumeManager.Instance.SetBloomIntensity(0.5f);
+                countDownTime = 90f;
+                VolumeManager.Instance.SetBloomIntensity(0.1f);
                 break;
 
             case 6:

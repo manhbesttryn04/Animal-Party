@@ -383,12 +383,14 @@ public class DebuffManager : MonoBehaviour
 
         if (bomb != null)
         {
+            VolumeManager.Instance.SetMotionBlurIntensity(0.1f);
             // Camera follow bomb tới khi bomb nổ
             yield return StartCoroutine(
                 FollowBomb(bomb.transform)
             );
 
             yield return new WaitForSeconds(2f);
+            VolumeManager.Instance.ResetMotionBlur();
 
             // Camera nhìn player bị trúng đạn
             yield return StartCoroutine(

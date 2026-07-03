@@ -66,9 +66,11 @@ public class MiniGame4 : MonoBehaviour
 
     private Transform respawnPoint1;
     private Transform respawnPoint2;
+    private Quaternion startRotation;
 
     private void Start()
     {
+        startRotation = transform.rotation;
         backRotation = Quaternion.Euler(0f, 0f, 0f);
         lookRotation = backRotation * Quaternion.Euler(0f, 180f, 0f);
     }
@@ -103,11 +105,12 @@ public class MiniGame4 : MonoBehaviour
     public void StopMiniGame()
     {
         isRunning = false;
+
         StopAllCoroutines();
 
         AudioManager.Instance.StopEnvironment();
         AudioManager.Instance.StopSpecial();
-
+     
 
         // Tính thưởng trước khi Clear
         CheckFinishReward(manager.currentPlayer1);
@@ -122,7 +125,7 @@ public class MiniGame4 : MonoBehaviour
         currentAttackTarget = null;
         isWaitingAttackEvent = false;
 
-        transform.rotation = backRotation;
+        transform.rotation = startRotation;
 
         // Khôi phục Layer Overrides (xoá layer của người kia khỏi danh sách Exclude)
         if (manager.currentPlayer1 != null && manager.currentPlayer2 != null)
@@ -151,7 +154,7 @@ public class MiniGame4 : MonoBehaviour
             detectedPlayers.Clear();
             redStartPositions.Clear();
             hasLaughThisWatch = false;
-            AudioManager.Instance.PlaySpecial(AudioManager.Instance.scanPiratesClip, true);
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.scanPiratesClip);
 
             yield return StartCoroutine(RotateTo(lookRotation, rotateSpeed));
 
@@ -236,6 +239,7 @@ public class MiniGame4 : MonoBehaviour
             hasLaughThisWatch = true;
 
             AudioManager.Instance.StopEnvironment();
+            AudioManager.Instance.PlaySpecialOneShot(AudioManager.Instance.laughPiratesClip);
 
         }
 
@@ -571,6 +575,8 @@ public class MiniGame4 : MonoBehaviour
             return;
 
         AudioManager.Instance.PlaySpecialOneShot(clipList[clipIndex]);
+        Debug.Log(clipIndex);
+
     }
 
     IEnumerator ShowMuzzleFlash()
