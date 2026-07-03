@@ -31,10 +31,11 @@ public class TrapAndCoin : MonoBehaviour
         }else coin.SetActive(false);
 
         if (hasTelep)
-        {
+        { 
+            if (teleport == null) return;
             teleport.gameObject.SetActive(true);
             teleport.Play();
-        }else teleport.gameObject.SetActive(false);
+        }else if(teleport != null) teleport.gameObject.SetActive(false);
     }
 
     public void BomActivated()
