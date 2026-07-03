@@ -348,7 +348,7 @@ public class GameManager : MonoBehaviour
 
             // Camera vẫn bay tới Player 1 để báo lượt
             p1.playerCamera.isFllow2 = true;
-
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.skipDiceClip);
             yield return new WaitForSeconds(2f);
 
             p1.playerCamera.isFllow2 = false;
@@ -395,7 +395,7 @@ public class GameManager : MonoBehaviour
 
             // Camera vẫn bay tới Player 2 để báo lượt
             p2.playerCamera.isFllow2 = true;
-
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.skipDiceClip);
             yield return new WaitForSeconds(2f);
 
             p2.playerCamera.isFllow2 = false;

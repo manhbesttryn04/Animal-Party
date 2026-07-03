@@ -390,12 +390,17 @@ public class MiniGameManager : MonoBehaviour
         // Cho người chơi đọc hướng dẫn 5 giây
         yield return new WaitForSeconds(5f);
 
+
+        videoIntrucs.Stop();
+        videoIntrucs.time = 0;
+
+        if (videoIntrucs.targetTexture != null)
+        {
+            videoIntrucs.targetTexture.Release();
+        }
+        videoIntrucs.clip = null;
         // Tắt bảng hướng dẫn
         canvasInstruct.SetActive(false);
-        // riset video
-        videoIntrucs.Stop();
-        videoIntrucs.clip = null;
-        videoIntrucs.time = 0;
 
         // Tắt màn đen sau khi chuẩn bị xong
         if (blackPanel != null)
@@ -480,7 +485,7 @@ public class MiniGameManager : MonoBehaviour
         // =====================================================
         // SHOW RESULT
         // =====================================================
-
+        AudioManager.Instance.SetupMainGameAudio();
         // Hiện bảng kết quả coin của 2 player
         UIManager.Instance.UpdateResultPanel(
             coin1.coinMiniGame,
@@ -694,7 +699,7 @@ public class MiniGameManager : MonoBehaviour
         switch (indexMiniGame)
         {
             case 1:
-                countDownTime = 60f;
+                countDownTime = 70f;
                 break;
 
             case 2:
@@ -703,16 +708,16 @@ public class MiniGameManager : MonoBehaviour
                 break;
 
             case 3:
-                countDownTime = 60f;
+                countDownTime = 70f;
                 break;
 
             case 4:
-                countDownTime = 60f;
+                countDownTime = 70f;
                 break;
 
             case 5:
                 countDownTime = 90f;
-                VolumeManager.Instance.SetBloomIntensity(0.1f);
+                VolumeManager.Instance.SetBloomIntensity(1f);
                 break;
 
             case 6:

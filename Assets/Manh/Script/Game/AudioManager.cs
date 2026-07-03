@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using JetBrains.Annotations;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class AudioManager : MonoBehaviour
@@ -7,6 +8,7 @@ public class AudioManager : MonoBehaviour
 
     [Header("Audio Setup List")]
     public List<AudioSetup> audioSetupList = new List<AudioSetup>();
+    public AudioSetup mainGameAudioSetup;
 
     [Header("Audio Sources")]
     public AudioSource musicSource;   // Nhạc nền
@@ -25,7 +27,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip fallingBom;
     public AudioClip boomClip;
     public AudioClip bebuffRockMagicClip;
-    
+    public AudioClip skipDiceClip;
 
     [Header("Buff SFX")]
     public AudioClip buffDeffClip;
@@ -105,8 +107,11 @@ public class AudioManager : MonoBehaviour
         specialSource.loop = false;
         environmentSource.loop = true;
     }
+    private void Start()
+    {
+        SetupMainGameAudio();
+    }
 
-   
 
     /// <summary>
     /// Đổi nhạc nền
@@ -225,6 +230,20 @@ public class AudioManager : MonoBehaviour
         else if (indexMiniGame == 10)
         {
             AudioManager.Instance.PlayMusic(AudioManager.Instance.musicMiniGame10);
+        }
+    }
+    public void SetupMainGameAudio()
+    {
+        if (mainGameAudioSetup != null)
+        {
+            musicSource.volume = mainGameAudioSetup.musicVolume;
+            sfxSource.volume = mainGameAudioSetup.sfxVolume;
+            environmentSource.volume = mainGameAudioSetup.environmentVolume;
+            specialSource.volume = mainGameAudioSetup.specialVolume;
+        }
+        else
+        {
+            Debug.LogWarning("Main game audio setup is not assigned.");
         }
     }
 
