@@ -33,8 +33,6 @@ public class PlayerMoveAI : MonoBehaviour
     // Trạng thái đang di chuyển
     public bool isMoving = false;
 
-    public ParticleSystem teleportVFX;
-    public SkinnedMeshRenderer playerMesh;
     #endregion
 
     #region Unity Events
@@ -264,8 +262,20 @@ public class PlayerMoveAI : MonoBehaviour
         if (trap.hasBom)
         {
             trap.BomActivated();
+
             yield return new WaitForSeconds(1f);
+
             yield return StartCoroutine(BoomHitEffect(3));
+
+            yield break;
+        }
+
+        //==========================
+        // Teleport
+        //==========================
+        if (trap.hasTelep)
+        {
+            trap.TelepActivated(manager.playerType.isPlayer2);
 
             yield break;
         }
@@ -337,19 +347,6 @@ public class PlayerMoveAI : MonoBehaviour
     {
         isMoving = true;
 
-        // Hiệu ứng biến mất tại vị trí hiện tại
-        if (teleportVFX != null)
-        {
-            teleportVFX.gameObject.SetActive(true);
-            teleportVFX.Play();
-        }
-
-        yield return new WaitForSeconds(0.5f);
-
-        // Ẩn mesh
-        if (playerMesh != null)
-            playerMesh.enabled = false;
-
         currentIndex = Mathf.Clamp(targetIndex, 0, pointCheck.Count - 1);
 
         GameObject targetPoint = pointCheck[currentIndex];
@@ -365,22 +362,8 @@ public class PlayerMoveAI : MonoBehaviour
         navMeshAgent.enabled = true;
         navMeshAgent.Warp(finalPos);
 
-        // Hiệu ứng xuất hiện ở vị trí mới
-        if (teleportVFX != null)
-        {
-            teleportVFX.Clear();
-            teleportVFX.Play();
-        }
-
-        yield return new WaitForSeconds(0.5f);
-
-        // Hiện mesh lại
-        if (playerMesh != null)
-            playerMesh.enabled = true;
-
-        yield return StartCoroutine(CheckCurrentTile());
-
         isMoving = false;
+        yield return null;
     }
 
     //==================================================

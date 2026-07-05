@@ -119,6 +119,11 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!137 &9621330 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 995002863024821393, guid: 15e6aab9454c1f44e90f5dd4cbc031fc, type: 3}
+  m_PrefabInstance: {fileID: 363216603}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &21708513
 GameObject:
   m_ObjectHideFlags: 0
@@ -1128,11 +1133,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1985,7 +1990,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5275065371758096292, guid: 81772fc8339a875489fdb0ef101666de, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5745091426659694008, guid: 81772fc8339a875489fdb0ef101666de, type: 3}
       propertyPath: m_Controller
@@ -3616,7 +3621,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4004152328816559513, guid: 0c3e5e24e6938a343806a6f8b60ed8b3, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 4985234465097247430, guid: 0c3e5e24e6938a343806a6f8b60ed8b3, type: 3}
@@ -3875,11 +3880,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 248544399}
   m_CullTransparentMesh: 1
---- !u!1 &254139238 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8072579558294446686, guid: 2b35c1b656e276c449ef0cab9cb5ba19, type: 3}
-  m_PrefabInstance: {fileID: 1239339964}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &254139239 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8884547607843059940, guid: 2b35c1b656e276c449ef0cab9cb5ba19, type: 3}
@@ -5998,7 +5998,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6123939473933098529, guid: 15e6aab9454c1f44e90f5dd4cbc031fc, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6383170884262352192, guid: 15e6aab9454c1f44e90f5dd4cbc031fc, type: 3}
       propertyPath: m_Name
@@ -6008,6 +6008,22 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7685490174637318546, guid: 15e6aab9454c1f44e90f5dd4cbc031fc, type: 3}
+      propertyPath: iceTime
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7685490174637318546, guid: 15e6aab9454c1f44e90f5dd4cbc031fc, type: 3}
+      propertyPath: iceMaterial
+      value: 
+      objectReference: {fileID: 2100000, guid: fa706476275902a4e86f65a6cf418850, type: 2}
+    - target: {fileID: 7685490174637318546, guid: 15e6aab9454c1f44e90f5dd4cbc031fc, type: 3}
+      propertyPath: normalMaterial
+      value: 
+      objectReference: {fileID: 2100000, guid: ff05a3c5169249e4f945a2ada046d934, type: 2}
+    - target: {fileID: 7685490174637318546, guid: 15e6aab9454c1f44e90f5dd4cbc031fc, type: 3}
+      propertyPath: playerRenderer
+      value: 
+      objectReference: {fileID: 9621330}
     - target: {fileID: 8786602056682497213, guid: 15e6aab9454c1f44e90f5dd4cbc031fc, type: 3}
       propertyPath: m_LocalPosition.y
       value: 4.58
@@ -6509,11 +6525,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -6873,11 +6889,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!1 &415462088 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8072579558294446686, guid: 2b35c1b656e276c449ef0cab9cb5ba19, type: 3}
-  m_PrefabInstance: {fileID: 208145529}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &417927942
 GameObject:
   m_ObjectHideFlags: 0
@@ -8541,11 +8552,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -9701,11 +9712,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -10553,11 +10564,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -11372,7 +11383,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5275065371758096292, guid: 81772fc8339a875489fdb0ef101666de, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5745091426659694008, guid: 81772fc8339a875489fdb0ef101666de, type: 3}
       propertyPath: m_Controller
@@ -13235,11 +13246,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -14900,11 +14911,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -15208,11 +15219,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -15491,11 +15502,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -17207,11 +17218,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -17507,11 +17518,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -17743,11 +17754,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -18623,11 +18634,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -19802,11 +19813,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -20835,11 +20846,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -21271,11 +21282,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -21631,11 +21642,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -21705,11 +21716,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -22203,7 +22214,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   manager: {fileID: 0}
   isNoRollDice: 0
-  rockMagic: {fileID: 254139238}
+  playerRenderer: {fileID: 0}
+  iceMaterial: {fileID: 0}
+  iceTime: 1
 --- !u!114 &1260003738
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22345,8 +22358,6 @@ MonoBehaviour:
   pointCheck: []
   currentIndex: 0
   isMoving: 0
-  teleportVFX: {fileID: 0}
-  playerMesh: {fileID: 0}
 --- !u!114 &1260003746
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22400,6 +22411,7 @@ MonoBehaviour:
   playerDebuff: {fileID: 0}
   playerFunnyItem: {fileID: 0}
   playerMiniGame: {fileID: 0}
+  playerVFX: {fileID: 0}
 --- !u!95 &1260003749 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5533831327332223290, guid: 6a82e89f1e2344143bcb1c6c55a21721, type: 3}
@@ -23330,6 +23342,7 @@ MonoBehaviour:
   playerDebuff: {fileID: 0}
   playerFunnyItem: {fileID: 0}
   playerMiniGame: {fileID: 0}
+  playerVFX: {fileID: 0}
 --- !u!95 &1324390469 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5533831327332223290, guid: 6a82e89f1e2344143bcb1c6c55a21721, type: 3}
@@ -23376,8 +23389,6 @@ MonoBehaviour:
   - {fileID: 0}
   currentIndex: 0
   isMoving: 0
-  teleportVFX: {fileID: 0}
-  playerMesh: {fileID: 0}
 --- !u!195 &1324390475
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -23543,7 +23554,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   manager: {fileID: 0}
   isNoRollDice: 0
-  rockMagic: {fileID: 415462088}
+  playerRenderer: {fileID: 0}
+  iceMaterial: {fileID: 0}
+  iceTime: 1
 --- !u!1 &1332181338
 GameObject:
   m_ObjectHideFlags: 0
@@ -27605,11 +27618,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -28170,7 +28183,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4181251078618163184, guid: c6d0a1efa11874540b74891a6e77aa88, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8714995410918001877, guid: c6d0a1efa11874540b74891a6e77aa88, type: 3}
       propertyPath: m_IsActive
@@ -28514,11 +28527,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -29249,11 +29262,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -29617,11 +29630,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -31487,11 +31500,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -31556,11 +31569,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -32166,11 +32179,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -32235,11 +32248,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -33706,11 +33719,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -34004,11 +34017,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -35574,11 +35587,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -37428,7 +37441,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6123939473933098529, guid: 15e6aab9454c1f44e90f5dd4cbc031fc, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6383170884262352192, guid: 15e6aab9454c1f44e90f5dd4cbc031fc, type: 3}
       propertyPath: m_Name
@@ -37786,11 +37799,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -38543,7 +38556,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4181251078618163184, guid: c6d0a1efa11874540b74891a6e77aa88, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 4744360907307439865, guid: c6d0a1efa11874540b74891a6e77aa88, type: 3}
@@ -38699,7 +38712,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4004152328816559513, guid: 0c3e5e24e6938a343806a6f8b60ed8b3, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4622632661078031861, guid: 0c3e5e24e6938a343806a6f8b60ed8b3, type: 3}
       propertyPath: isPlayer2
@@ -38957,11 +38970,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasCoin
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -40787,7 +40800,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424247492557954106, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
       propertyPath: hasTelep
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

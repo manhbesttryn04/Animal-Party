@@ -17,6 +17,7 @@ public class PlayerManager : MonoBehaviour
     public PlayerDebuff playerDebuff;
     public PlayerFunnyItem playerFunnyItem;
     public PlayerMiniGame playerMiniGame;
+    public PlayerVFX playerVFX;
     private void Awake()
     {
         playerMove = GetComponent<PlayerMove>();
@@ -34,6 +35,7 @@ public class PlayerManager : MonoBehaviour
         playerAttack = GetComponent<PlayerAttack>();
         playerFunnyItem = GetComponent<PlayerFunnyItem>();
         playerMiniGame = GetComponent<PlayerMiniGame>();
+        playerVFX = GetComponent<PlayerVFX>();
 
     }
 }
