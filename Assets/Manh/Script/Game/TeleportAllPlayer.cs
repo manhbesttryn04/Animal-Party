@@ -51,7 +51,7 @@ public class TeleportAllPlayer : MonoBehaviour
     {
         // Camera theo player này
         player.playerCamera.SetCamera2();
-
+        yield return new WaitForSeconds(0.5f);
         // Hiện -> Ẩn
         yield return StartCoroutine(vfx.DissolveOutRoutine());
 

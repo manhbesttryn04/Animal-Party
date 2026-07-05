@@ -33,6 +33,8 @@ public class PlayerVFX : MonoBehaviour
     // Hiện -> Ẩn
     public IEnumerator DissolveOutRoutine()
     {
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.startLeteClip);
+        yield return new WaitForSeconds(1.2f);
         respawnRenderer.enabled = true;
         normalRenderer.gameObject.SetActive(false);
 
@@ -52,6 +54,7 @@ public class PlayerVFX : MonoBehaviour
     // Ẩn -> Hiện
     public IEnumerator DissolveInRoutine()
     {
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.endLeteClip);
         respawnRenderer.enabled = true;
         normalRenderer.gameObject.SetActive(false);
 
@@ -67,6 +70,8 @@ public class PlayerVFX : MonoBehaviour
 
         if (circleEffect != null)
             circleEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+     
+       ;
 
         respawnRenderer.enabled = false;
         normalRenderer.gameObject.SetActive(true);

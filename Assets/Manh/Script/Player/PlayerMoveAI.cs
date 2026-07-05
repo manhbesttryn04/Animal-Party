@@ -275,7 +275,8 @@ public class PlayerMoveAI : MonoBehaviour
         //==========================
         if (trap.hasTelep)
         {
-            trap.TelepActivated(manager.playerType.isPlayer2);
+            trap.TelepActivated();
+            yield return StartCoroutine(trap.TeleportRoutine(manager.playerType.isPlayer2));
 
             yield break;
         }

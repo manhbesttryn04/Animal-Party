@@ -34,6 +34,8 @@ public class AudioManager : MonoBehaviour
     public AudioClip buffMagicClip;
     public AudioClip bonusBuffClip;
     public AudioClip coinClip;
+    public AudioClip startLeteClip;
+    public AudioClip endLeteClip;
   
     
     [Header("Shop SFX")]

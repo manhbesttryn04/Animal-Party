@@ -65,17 +65,17 @@ public class TrapAndCoin : MonoBehaviour
         }
     }
 
-    public void TelepActivated(bool isPlayer2)
+    public void TelepActivated()
     {
         if (!hasTelep || teleport == null)
             return;
 
         hasTelep = false;
 
-        StartCoroutine(TeleportRoutine(isPlayer2));
+     
     }
 
-    private IEnumerator TeleportRoutine(bool isPlayer2)
+    public IEnumerator TeleportRoutine(bool isPlayer2)
     {
         TeleportAllPlayer teleportManager = teleport.GetComponent<TeleportAllPlayer>();
 
