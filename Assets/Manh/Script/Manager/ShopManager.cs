@@ -336,7 +336,7 @@ public class ShopManager : MonoBehaviour
 
         canvasShop.SetActive(false);
 
-        GameManager.Instance.ExitNextRound();
+     GameManager.Instance.CheckWinnerOrNextRound();
     }
 
     #endregion

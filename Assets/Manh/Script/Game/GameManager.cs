@@ -450,4 +450,41 @@ public class GameManager : MonoBehaviour
             canStartNextRound = true;
         }
     }
+  public bool CheckWinnerByPowerConP1()
+    {
+        PlayerManager p = player1Main.GetComponent<PlayerManager>();
+        int coinCount = p.playerBuff.countCoinPower;
+        bool i = CheckWinPlayer.Instance.CheckWinnerByCoinPower(coinCount);
+        if(i)
+        {
+            stateGame.SetOnePlayerWin(0);
+            return true;
+
+        }
+        return false;
+    }
+    public bool CheckWinnerByPowerConP2()
+    {
+        PlayerManager p = player2Main.GetComponent<PlayerManager>();
+        int coinCount = p.playerBuff.countCoinPower;
+        bool i = CheckWinPlayer.Instance.CheckWinnerByCoinPower(coinCount);
+        if(i)
+        {
+            stateGame.SetOnePlayerWin(1);
+            return true;
+        }
+        return false;
+    } 
+    public void CheckWinnerOrNextRound()
+    {
+        if(stateGame.hasPlayer1Win || stateGame.hasPlayer2Win)
+        {
+            // Nếu có người thắng thì hiển thị màn hình kết thúc game
+           // GameOverManager.Instance.ShowGameOverScreen();
+        }
+        else
+        {
+           ExitNextRound();
+        }
+    }
 }
