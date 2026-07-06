@@ -6,6 +6,7 @@ public class PlayerCamera : MonoBehaviour
     public Transform transFollow;
     public Transform transFollow2;
     public Transform transFollow3;
+    public Transform transFollow4;
 
     [Header("References")]
     public GameObject player;
@@ -19,7 +20,6 @@ public class PlayerCamera : MonoBehaviour
     public bool isFollow = false;
     public bool isFllow2 = false;
     public bool isFllow3 = false;
-    
     private void Start()
     {
         cameraMain = Camera.main;

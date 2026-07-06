@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -78,6 +79,8 @@ public class UIManager : MonoBehaviour
     // Bonus Coin UI
     public GameObject bonusCoinTextP1;
     public GameObject bonusCoinTextP2;
+   
+    public GameObject blackPanel;
 
     #endregion
 
@@ -460,5 +463,12 @@ public class UIManager : MonoBehaviour
 
         // Ẩn UI bonus coin
         canvas.SetActive(false);
+    }
+    public IEnumerator BlackPanelRoutine()
+    {
+        // Hiện panel
+        blackPanel.SetActive(true);
+
+        yield return null;
     }
 }

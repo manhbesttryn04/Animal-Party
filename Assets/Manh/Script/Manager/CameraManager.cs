@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
 public class CameraManager : MonoBehaviour
@@ -95,5 +95,67 @@ public class CameraManager : MonoBehaviour
     {
         cam.transform.position = pos;
         cam.transform.rotation = rot;
+    }
+    // =========================
+    // MOVE TO POINT
+    // Camera bay đến Transform có sẵn
+    // =========================
+    public IEnumerator MoveToPoint(Transform point, float duration)
+    {
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.moveCamera);
+
+        Vector3 startPos = cam.transform.position;
+        Quaternion startRot = cam.transform.rotation;
+
+        Vector3 endPos = point.position;
+        Quaternion endRot = point.rotation;
+
+        float t = 0f;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            float lerp = t / duration;
+
+            cam.transform.position = Vector3.Lerp(startPos, endPos, lerp);
+            cam.transform.rotation = Quaternion.Slerp(startRot, endRot, lerp);
+
+            yield return null;
+        }
+
+        cam.transform.position = endPos;
+        cam.transform.rotation = endRot;
+    }
+    // =========================
+    // TELEPORT TO POINT
+    // Dịch chuyển tức thì đến Transform
+    // =========================
+    public void TeleportToPoint(Transform point)
+    {
+        cam.transform.position = point.position;
+        cam.transform.rotation = point.rotation;
+    }
+    public IEnumerator MoveToPosition(Vector3 position, Quaternion rotation, float duration)
+    {
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.moveCamera);
+
+        Vector3 startPos = cam.transform.position;
+        Quaternion startRot = cam.transform.rotation;
+
+        float t = 0f;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            float lerp = t / duration;
+
+            cam.transform.position = Vector3.Lerp(startPos, position, lerp);
+            cam.transform.rotation = Quaternion.Slerp(startRot, rotation, lerp);
+
+            yield return null;
+        }
+
+        cam.transform.position = position;
+        cam.transform.rotation = rotation;
     }
 }

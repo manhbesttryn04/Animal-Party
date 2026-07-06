@@ -6,7 +6,8 @@ public class StateStoryGame : MonoBehaviour
     public bool isNextRound = false;
     public bool hasPlayer1Win = false;
     public bool hasPlayer2Win = false;
-
+    public bool hasWinByCoin = false;
+    public bool hasWinByIndex = false;
     public void SetOnePlayerWin(int playerNumber)
     {
         if (playerNumber == 0)

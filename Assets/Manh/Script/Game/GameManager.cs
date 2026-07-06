@@ -458,6 +458,7 @@ public class GameManager : MonoBehaviour
         if(i)
         {
             stateGame.SetOnePlayerWin(0);
+            stateGame.hasWinByCoin = true;
             return true;
 
         }
@@ -471,6 +472,7 @@ public class GameManager : MonoBehaviour
         if(i)
         {
             stateGame.SetOnePlayerWin(1);
+            stateGame.hasWinByCoin = true;
             return true;
         }
         return false;
@@ -479,12 +481,30 @@ public class GameManager : MonoBehaviour
     {
         if(stateGame.hasPlayer1Win || stateGame.hasPlayer2Win)
         {
-            // Nếu có người thắng thì hiển thị màn hình kết thúc game
-           // GameOverManager.Instance.ShowGameOverScreen();
+            StartCutSceneWinner();
         }
         else
         {
            ExitNextRound();
+        }
+    }
+    public void StartCutSceneWinner()
+    {
+        if (stateGame.hasWinByCoin)
+        {
+            if (stateGame.hasPlayer1Win)
+            {
+                CutScenePowerCoin.Instance.PlayCutScene(player1Main);
+            }
+            else if (stateGame.hasPlayer2Win)
+            {
+                CutScenePowerCoin.Instance.PlayCutScene(player2Main);
+            }
+        }
+        else if (stateGame.hasWinByIndex)
+        {
+
+
         }
     }
 }
