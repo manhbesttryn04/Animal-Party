@@ -1658,6 +1658,7 @@ GameObject:
   - component: {fileID: 7685490174637318546}
   - component: {fileID: 3374457763631145659}
   - component: {fileID: 6932236325927383214}
+  - component: {fileID: 3244722395684098332}
   m_Layer: 3
   m_Name: Player Rabbit
   m_TagString: Untagged
@@ -1786,12 +1787,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   manager: {fileID: 4458419278865405068}
+  playerTrapState: {fileID: 0}
   navMeshAgent: {fileID: 0}
   pointCheck: []
   currentIndex: 0
   isMoving: 0
-  teleportVFX: {fileID: 0}
-  playerMesh: {fileID: 0}
 --- !u!114 &7747535825622794880
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1933,8 +1933,6 @@ MonoBehaviour:
   playerRenderer: {fileID: 995002863024821393}
   iceMaterial: {fileID: 2100000, guid: fa706476275902a4e86f65a6cf418850, type: 2}
   iceTime: 1.5
-  testApplyDebuff: 0
-  testResetDebuff: 0
 --- !u!195 &3374457763631145659
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -1971,10 +1969,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerVFX
   normalRenderer: {fileID: 995002863024821393}
   respawnRenderer: {fileID: 3964026782223243966}
-  testRespawnEffect: 0
   circleEffect: {fileID: 4046299599381717349}
   dissolveOutTime: 2
   dissolveInTime: 2
+--- !u!114 &3244722395684098332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6383170884262352192}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30f7443e4ba380f49b7250439cc26330, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerTrapState
+  manager: {fileID: 0}
 --- !u!1 &6791763365937713733
 GameObject:
   m_ObjectHideFlags: 0

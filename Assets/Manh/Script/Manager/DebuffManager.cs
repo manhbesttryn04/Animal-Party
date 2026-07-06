@@ -389,8 +389,10 @@ public class DebuffManager : MonoBehaviour
                 FollowBomb(bomb.transform)
             );
 
-            yield return new WaitForSeconds(2f);
+          PlayerTrapState trapState = target.GetComponent<PlayerTrapState>();
+            yield return new  WaitUntil(()=> !trapState.isTrapActive);
             VolumeManager.Instance.ResetMotionBlur();
+
 
             // Camera nhìn player bị trúng đạn
             yield return StartCoroutine(

@@ -16,6 +16,7 @@ public class PlayerMoveAI : MonoBehaviour
 
     // Quản lý toàn bộ Player
     public PlayerManager manager;
+    public PlayerTrapState playerTrapState;
 
     // NavMeshAgent dùng để điều khiển di chuyển
     public NavMeshAgent navMeshAgent;
@@ -42,6 +43,7 @@ public class PlayerMoveAI : MonoBehaviour
     //==================================================
     private void Start()
     {
+        playerTrapState = GetComponent<PlayerTrapState>();
         // Lấy NavMeshAgent
         navMeshAgent = GetComponent<NavMeshAgent>();
 
@@ -145,8 +147,9 @@ public class PlayerMoveAI : MonoBehaviour
         }
         else
         {
+
             // Không có Bonus thì kiểm tra Bomb/Coin
-            yield return StartCoroutine(CheckCurrentTile());
+            yield return StartCoroutine( playerTrapState.CheckCurrentTile());
 
             // Camera Follow
             manager.playerCamera.isFllow2 = false;
@@ -208,7 +211,7 @@ public class PlayerMoveAI : MonoBehaviour
             transform.LookAt(pointCheck[currentIndex + 1].transform.position);
         }
         // Kiểm tra ô vừa đến
-        yield return StartCoroutine(CheckCurrentTile());
+        yield return StartCoroutine(playerTrapState.CheckCurrentTile());
         // Camera Follow Bonus
         manager.playerCamera.isFllow2 = false;
         manager.playerCamera.isFllow3 = true;
@@ -249,49 +252,6 @@ public class PlayerMoveAI : MonoBehaviour
     //      ↓
     //      Kích hoạt Coin
     //==================================================
-    IEnumerator CheckCurrentTile()
-    {
-        TrapAndCoin trap = pointCheck[currentIndex].GetComponentInChildren<TrapAndCoin>();
-
-        if (trap == null)
-            yield break;
-
-        //==========================
-        // Bomb
-        //==========================
-        if (trap.hasBom)
-        {
-            trap.BomActivated();
-
-            yield return new WaitForSeconds(1f);
-
-            yield return StartCoroutine(BoomHitEffect(3));
-
-            yield break;
-        }
-
-        //==========================
-        // Teleport
-        //==========================
-        if (trap.hasTelep)
-        {
-            trap.TelepActivated();
-            yield return StartCoroutine(trap.TeleportRoutine(manager.playerType.isPlayer2));
-
-            yield break;
-        }
-
-        //==========================
-        // Coin
-        //==========================
-        if (trap.hasCoin)
-        {
-            trap.CoinActivated(manager.playerType.isPlayer2 ? 1 : 0);
-            manager.playerCoin.coinEndMiniGame += 100;
-
-            yield return new WaitForSeconds(0.5f);
-        }
-    }
 
     #endregion
 
@@ -325,7 +285,7 @@ public class PlayerMoveAI : MonoBehaviour
         navMeshAgent.acceleration = 999f;
 
         navMeshAgent.SetDestination(finalPos);
-        yield return StartCoroutine(CheckCurrentTile());
+        yield return StartCoroutine(playerTrapState.CheckCurrentTile());
 
         while (navMeshAgent.pathPending ||
                navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance)

@@ -749,6 +749,7 @@ GameObject:
   - component: {fileID: 1540690627825620198}
   - component: {fileID: 7234349350403617919}
   - component: {fileID: 2152421477538899298}
+  - component: {fileID: 5750149674889927831}
   m_Layer: 3
   m_Name: Player Sloth
   m_TagString: Untagged
@@ -877,12 +878,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   manager: {fileID: 3074742290475038302}
+  playerTrapState: {fileID: 0}
   navMeshAgent: {fileID: 0}
   pointCheck: []
   currentIndex: 0
   isMoving: 0
-  teleportVFX: {fileID: 0}
-  playerMesh: {fileID: 0}
 --- !u!114 &9011795502230674689
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1024,8 +1024,6 @@ MonoBehaviour:
   playerRenderer: {fileID: 8654372606270599348}
   iceMaterial: {fileID: 2100000, guid: fa706476275902a4e86f65a6cf418850, type: 2}
   iceTime: 1.5
-  testApplyDebuff: 0
-  testResetDebuff: 0
 --- !u!195 &7234349350403617919
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -1062,10 +1060,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerVFX
   normalRenderer: {fileID: 8654372606270599348}
   respawnRenderer: {fileID: 547436901972406441}
-  testRespawnEffect: 0
   circleEffect: {fileID: 6578168995539565277}
   dissolveOutTime: 2
   dissolveInTime: 2
+--- !u!114 &5750149674889927831
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2981559740274172891}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30f7443e4ba380f49b7250439cc26330, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerTrapState
+  manager: {fileID: 0}
 --- !u!1 &3116350454469029091
 GameObject:
   m_ObjectHideFlags: 0

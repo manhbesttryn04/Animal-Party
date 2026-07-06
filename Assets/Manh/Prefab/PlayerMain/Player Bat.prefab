@@ -2325,6 +2325,7 @@ GameObject:
   - component: {fileID: 3229499870862263614}
   - component: {fileID: 2132799995419411170}
   - component: {fileID: 3224379677900977750}
+  - component: {fileID: 2623694218369040710}
   m_Layer: 3
   m_Name: Player Bat
   m_TagString: Untagged
@@ -2457,8 +2458,6 @@ MonoBehaviour:
   pointCheck: []
   currentIndex: 0
   isMoving: 0
-  teleportVFX: {fileID: 0}
-  playerMesh: {fileID: 0}
 --- !u!114 &2169407639131681665
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2600,8 +2599,6 @@ MonoBehaviour:
   playerRenderer: {fileID: 6844975242311250878}
   iceMaterial: {fileID: 2100000, guid: fa706476275902a4e86f65a6cf418850, type: 2}
   iceTime: 1.5
-  testApplyDebuff: 0
-  testResetDebuff: 0
 --- !u!195 &2132799995419411170
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -2638,10 +2635,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerVFX
   normalRenderer: {fileID: 6844975242311250878}
   respawnRenderer: {fileID: 7223545959963124771}
-  testRespawnEffect: 0
   circleEffect: {fileID: 2733419495857017056}
   dissolveOutTime: 2
   dissolveInTime: 2
+--- !u!114 &2623694218369040710
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8227564280047608387}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30f7443e4ba380f49b7250439cc26330, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerTrapState
 --- !u!1 &8312435199000842809
 GameObject:
   m_ObjectHideFlags: 0
