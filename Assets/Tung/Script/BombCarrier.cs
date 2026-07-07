@@ -1,75 +1,85 @@
+using System.Collections;
 using UnityEngine;
 
-// Gắn script này lên MỖI Player, chung với PlayerType đã có
-[RequireComponent(typeof(PlayerType))]
 public class BombCarrier : MonoBehaviour
 {
-    [Header("Tham chiếu")]
-    public Transform bombAnchor;   // Điểm rỗng đặt trên đầu nhân vật - bomb prefab sẽ dính vào đây khi cầm
+    [Header("--- BOM VISUAL ---")]
+    [Tooltip("Điểm gắn bom trên đầu nhân vật")]
+    public Transform bombAnchor;
 
-    private PlayerType playerType;
-    private PlayerMove playerMove;
-
+    [Header("--- COOLDOWN ---")]
+    private float cooldownTimer = 0f;
     private bool isHoldingBomb = false;
     private bool isEliminated = false;
-    private float cooldownTimer = 0f;
 
-    void Awake()
+    // ====== BẬT/TẮT CARRIER ======
+    // Chỉ hoạt động khi miniGame đang chạy
+    private bool isActive = false;
+
+    public void Activate()
     {
-        playerType = GetComponent<PlayerType>();
-        playerMove = GetComponent<PlayerMove>();
+        isActive = true;
+        isEliminated = false;
+        cooldownTimer = 0f;
     }
 
-    void Update()
+    public void Deactivate()
     {
-        if (cooldownTimer > 0f)
-            cooldownTimer -= Time.deltaTime;
+        isActive = false;
+        SetHoldingBomb(false);
     }
 
-    // Va chạm - chỉ nhận diện đối tượng có tag "Player 1" hoặc "Player 2"
-    void OnTriggerEnter(Collider other)
+    public bool IsActive => isActive;
+
+    // ====== BOM ======
+    public void SetHoldingBomb(bool value)
     {
-        if (isEliminated || !isHoldingBomb) return;
-
-        // Vừa nhận bom xong thì phải giữ ít nhất passCooldown giây mới được truyền tiếp,
-        // tránh trường hợp đứng sát nhau bị trả bom qua lại ngay lập tức
-        if (IsOnCooldown()) return;
-
-        if (!other.CompareTag("Player 1") && !other.CompareTag("Player 2"))
-            return;
-
-        BombCarrier otherCarrier = other.GetComponent<BombCarrier>();
-        if (otherCarrier == null || otherCarrier == this || otherCarrier.isEliminated)
-            return;
-
-        BombGameManager.Instance.TransferBomb(this, otherCarrier);
+        isHoldingBomb = value;
     }
 
-    public void SetHoldingBomb(bool holding)
-    {
-        isHoldingBomb = holding;
-    }
+    public bool IsHoldingBomb => isHoldingBomb;
 
-    public bool IsHoldingBomb() => isHoldingBomb;
-
+    // ====== COOLDOWN (miễn nhiễm sau khi vừa nhận bom) ======
     public void StartCooldown(float duration)
     {
         cooldownTimer = duration;
+        StartCoroutine(CooldownRoutine());
     }
 
     public bool IsOnCooldown() => cooldownTimer > 0f;
 
-    public void SetEliminated(bool eliminated)
+    IEnumerator CooldownRoutine()
     {
-        isEliminated = eliminated;
-
-        if (playerMove != null)
+        while (cooldownTimer > 0f)
         {
-            // Khóa di chuyển/nhảy nhưng KHÔNG tắt object, để animation thua/ngã (nếu có) vẫn chạy được
-            playerMove.isMove = !eliminated;
-            playerMove.isJump = !eliminated;
+            cooldownTimer -= Time.deltaTime;
+            yield return null;
         }
+        cooldownTimer = 0f;
+    }
 
-        // TODO: nếu muốn chơi animation thua, gọi trigger animator ở đây
+    // ====== LOẠI ======
+    public void SetEliminated(bool value)
+    {
+        isEliminated = value;
+        if (value) Deactivate();
+    }
+
+    public bool IsEliminated => isEliminated;
+
+    // ====== TRIGGER - chạm vào player khác để truyền bom ======
+    private void OnTriggerEnter(Collider other)
+    {
+        if (!isActive) return;
+        if (!isHoldingBomb) return;
+
+        BombCarrier other_carrier = other.GetComponent<BombCarrier>();
+        if (other_carrier == null) return;
+        if (!other_carrier.IsActive) return;
+        if (other_carrier.IsEliminated) return;
+        if (other_carrier.IsOnCooldown()) return;
+        if (other_carrier.IsHoldingBomb) return;
+
+        BombGameManager.Instance?.TransferBomb(this, other_carrier);
     }
 }

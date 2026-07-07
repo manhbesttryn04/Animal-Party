@@ -1,67 +1,188 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro; // Nếu dùng TextMeshPro. Nếu dùng UI.Text thường thì đổi lại using UnityEngine.UI;
+using TMPro;
 
 public class BombGameManager : MonoBehaviour
 {
     public static BombGameManager Instance;
 
-    [Header("Người chơi")]
-    public List<BombCarrier> players = new List<BombCarrier>(); // Kéo Player1, Player2 vào đây
+    [Header("--- MANAGER ---")]
+    public MiniGameManager manager;
 
-    [Header("Cấu hình vòng chơi")]
-    public float roundDuration = 15f;      // Thời gian mỗi vòng (giây) trước khi bom nổ
-    public float passCooldown = 0.5f;      // Thời gian miễn nhiễm sau khi vừa nhận bom
+    [Header("--- CẤU HÌNH VÒNG CHƠI ---")]
+    public float roundDuration = 15f;
+    public float passCooldown = 0.5f;
+    public float firstWaitTime = 3f;   // đếm ngược trước khi bắt đầu
 
-    [Header("UI")]
-    public TMP_Text timerText;
-    public TMP_Text messageText;
-
-    [Header("Bomb Prefab")]
+    [Header("--- BOMB PREFAB ---")]
     public GameObject bombPrefab;
     public float bombFlyDuration = 0.25f;
-    private GameObject bombInstance;
-    private Renderer bombRenderer;
-    private float blinkTimer = 0f;
-    private Coroutine flyCoroutine;
+
+    [Header("--- UI ---")]
+    public TMP_Text timerText;
+    public TMP_Text messageText;
+    public TMP_Text countdownText;
+    public TMP_Text p1NameText;
+    public TMP_Text p2NameText;
+    public TMP_Text resultText;
+    public GameObject resultPanel;
+
+    [Header("--- AUDIO ---")]
+    public AudioSource audioSource;
+    public AudioClip tickBombClip;    // tiếng tích tắc
+    public AudioClip explodeBombClip; // tiếng nổ
+
+    [Header("--- VFX ---")]
+    public GameObject explosionVFX;
+
+    // Internal
+    private BombCarrier carrier1;
+    private BombCarrier carrier2;
+    private List<BombCarrier> activePlayers = new List<BombCarrier>();
 
     private BombCarrier currentBombHolder;
-    private float timeLeft;
-    private bool roundActive = false;
+    private GameObject bombInstance;
+    private Renderer bombRenderer;
+    private Coroutine flyCoroutine;
 
-    void Start()
+    private float timeLeft;
+    private float blinkTimer;
+    private bool roundActive = false;
+    private bool isRunning = false;
+
+    private void Awake()
     {
         Instance = this;
+    }
 
+    // ====== GỌI TỪ MINIGAME MANAGER ĐỂ BẮT ĐẦU ======
+    public void StartMiniGame()
+    {
+        if (isRunning) return;
+
+        // Lấy BombCarrier từ currentPlayer1/2
+        carrier1 = manager.currentPlayer1?.GetComponent<BombCarrier>();
+        carrier2 = manager.currentPlayer2?.GetComponent<BombCarrier>();
+
+        if (carrier1 == null || carrier2 == null)
+        {
+            Debug.LogWarning("[BOMB] currentPlayer1 hoặc currentPlayer2 thiếu BombCarrier!");
+            return;
+        }
+
+        // Kích hoạt carrier
+        carrier1.Activate();
+        carrier2.Activate();
+
+        activePlayers.Clear();
+        activePlayers.Add(carrier1);
+        activePlayers.Add(carrier2);
+
+        // Setup player movement
+        SetUpAllPlayer();
+
+        // Spawn bomb
         if (bombPrefab != null)
         {
             bombInstance = Instantiate(bombPrefab);
+            bombInstance.SetActive(false);
             bombRenderer = bombInstance.GetComponentInChildren<Renderer>();
-            Debug.Log($"[BOMB] Đã spawn bomb prefab. Renderer tìm thấy: {(bombRenderer != null)}");
-        }
-        else
-        {
-            Debug.LogWarning("[BOMB] bombPrefab chưa được kéo vào BombGameManager trong Inspector!");
         }
 
+        if (messageText) messageText.text = "";
+        if (timerText) timerText.text = "";
+        if (countdownText) countdownText.text = "";
+        if (resultPanel) resultPanel.SetActive(false);
+
+        // Hiện tên 2 player
+        if (p1NameText) p1NameText.text = "PLAYER 1";
+        if (p2NameText) p2NameText.text = "PLAYER 2";
+
+        isRunning = true;
+        StartCoroutine(GameRoutine());
+    }
+
+    // ====== GỌI TỪ MINIGAME MANAGER ĐỂ DỪNG ======
+    public void StopMiniGame()
+    {
+        isRunning = false;
+        roundActive = false;
+
+        StopAllCoroutines();
+
+        // Tắt carrier
+        carrier1?.Deactivate();
+        carrier2?.Deactivate();
+
+        // Dọn bom
+        if (flyCoroutine != null) StopCoroutine(flyCoroutine);
+        if (bombInstance != null) Destroy(bombInstance);
+
+        // Trao thưởng
+        CheckFinishReward(manager.currentPlayer1);
+        CheckFinishReward(manager.currentPlayer2);
+
+        activePlayers.Clear();
+    }
+
+    // ====== GAME ROUTINE ======
+    IEnumerator GameRoutine()
+    {
+        // ---- ĐẾM NGƯỢC 3,2,1 GO ----
+        for (int i = (int)firstWaitTime; i > 0; i--)
+        {
+            if (countdownText) countdownText.text = i.ToString();
+            yield return new WaitForSeconds(1f);
+        }
+        if (countdownText) countdownText.text = "GO!";
+        yield return new WaitForSeconds(0.5f);
+        if (countdownText) countdownText.text = "";
+
+        // ---- BẮT ĐẦU VÒNG ĐẦU ----
         StartNewRound();
     }
 
-    void Update()
+    void StartNewRound()
     {
-        if (!roundActive) return;
+        if (!isRunning) return;
+
+        if (activePlayers.Count <= 1)
+        {
+            EndGame();
+            return;
+        }
+
+        // Random người cầm bom
+        int index = Random.Range(0, activePlayers.Count);
+        AssignBomb(activePlayers[index]);
+
+        timeLeft = roundDuration;
+        roundActive = true;
+
+        if (messageText) messageText.text = "";
+    }
+
+    private void Update()
+    {
+        if (!roundActive || !isRunning) return;
 
         timeLeft -= Time.deltaTime;
-        if (timerText != null)
-            timerText.text = Mathf.CeilToInt(timeLeft).ToString();
 
+        if (timerText) timerText.text = Mathf.CeilToInt(timeLeft).ToString();
+
+        // Bom nhấp nháy nhanh dần khi gần nổ
         UpdateBombBlink(timeLeft / roundDuration);
 
-        if (timeLeft <= 0f)
+        // Tiếng tích tắc khi còn 5 giây
+        if (timeLeft <= 5f && tickBombClip != null && audioSource != null)
         {
-            Explode();
+            if (!audioSource.isPlaying)
+                audioSource.PlayOneShot(tickBombClip);
         }
+
+        if (timeLeft <= 0f)
+            StartCoroutine(ExplodeBomb());
     }
 
     void UpdateBombBlink(float progressLeft)
@@ -77,37 +198,20 @@ public class BombGameManager : MonoBehaviour
         bombRenderer.material.color = c;
     }
 
-    void StartNewRound()
-    {
-        if (players.Count <= 1)
-        {
-            EndGame();
-            return;
-        }
-
-        int index = Random.Range(0, players.Count);
-        AssignBomb(players[index]);
-
-        timeLeft = roundDuration;
-        roundActive = true;
-        Debug.Log($"[ROUND] Bắt đầu vòng mới. {players[index].name} cầm bom.");
-        if (messageText != null) messageText.text = "";
-    }
-
+    // ====== TRUYỀN BOM ======
     public void TransferBomb(BombCarrier from, BombCarrier to)
     {
-        if (!roundActive) return;
+        if (!roundActive || !isRunning) return;
         if (from != currentBombHolder) return;
         if (to.IsOnCooldown()) return;
 
-        Debug.Log($"[BOMB] Truyền từ {from.name} sang {to.name}");
         AssignBomb(to);
     }
 
     void AssignBomb(BombCarrier holder)
     {
-        if (currentBombHolder != null)
-            currentBombHolder.SetHoldingBomb(false);
+        // Tắt bom ở người cũ
+        currentBombHolder?.SetHoldingBomb(false);
 
         currentBombHolder = holder;
         currentBombHolder.SetHoldingBomb(true);
@@ -116,18 +220,8 @@ public class BombGameManager : MonoBehaviour
         if (bombInstance != null && holder.bombAnchor != null)
         {
             bombInstance.SetActive(true);
-
-            if (flyCoroutine != null)
-                StopCoroutine(flyCoroutine);
-
+            if (flyCoroutine != null) StopCoroutine(flyCoroutine);
             flyCoroutine = StartCoroutine(FlyBombTo(holder.bombAnchor));
-        }
-        else
-        {
-            if (bombInstance == null)
-                Debug.LogWarning("[BOMB] bombInstance NULL - kiểm tra Bomb Prefab đã kéo vào chưa!");
-            if (holder.bombAnchor == null)
-                Debug.LogWarning($"[BOMB] {holder.name} chưa có Bomb Anchor!");
         }
     }
 
@@ -138,8 +232,6 @@ public class BombGameManager : MonoBehaviour
         Vector3 startPos = bombInstance.transform.position;
         Quaternion startRot = bombInstance.transform.rotation;
         float t = 0f;
-
-        Debug.Log($"[BOMB FLY] Từ {startPos} -> {targetAnchor.name} tại {targetAnchor.position} (khoảng cách: {Vector3.Distance(startPos, targetAnchor.position):F2})");
 
         while (t < bombFlyDuration)
         {
@@ -160,45 +252,118 @@ public class BombGameManager : MonoBehaviour
         bombInstance.transform.localRotation = Quaternion.identity;
     }
 
-    void Explode()
+    // ====== BOM NỔ ======
+    IEnumerator ExplodeBomb()
     {
         roundActive = false;
+        if (flyCoroutine != null) StopCoroutine(flyCoroutine);
 
-        if (flyCoroutine != null)
-            StopCoroutine(flyCoroutine);
+        // VFX nổ
+        if (explosionVFX != null && currentBombHolder != null)
+            Instantiate(explosionVFX, currentBombHolder.transform.position, Quaternion.identity);
 
-        if (bombInstance != null)
-            bombInstance.SetActive(false);
+        // SFX nổ
+        if (explodeBombClip != null && audioSource != null)
+            audioSource.PlayOneShot(explodeBombClip);
 
-        if (messageText != null)
-            messageText.text = currentBombHolder.name + " đã bị loại!";
+        if (bombInstance != null) bombInstance.SetActive(false);
 
+        // Hiện tên người thua
+        if (messageText != null && currentBombHolder != null)
+            messageText.text = $"{currentBombHolder.name} bị loại!";
+
+        // Animation chết
+        PlayDeadAnimation(currentBombHolder.gameObject);
+
+        // Loại player
         EliminatePlayer(currentBombHolder);
 
-        Invoke(nameof(StartNewRound), 2f);
+        yield return new WaitForSeconds(2f);
+
+        StartNewRound();
     }
 
-    void EliminatePlayer(BombCarrier player)
+    void PlayDeadAnimation(GameObject playerObj)
     {
-        Debug.Log($"[ELIMINATED] {player.name} bị loại vì bom nổ.");
-        players.Remove(player);
-        player.SetEliminated(true);
+        PlayerAnimator playerAnimator = playerObj?.GetComponent<PlayerAnimator>();
+        if (playerAnimator != null && playerAnimator.playerAnimator != null)
+            playerAnimator.playerAnimator.SetBool("Die", true);
+
+        PlayerMove move = playerObj?.GetComponent<PlayerMove>();
+        if (move != null) move.isJumpAndMove = false;
     }
 
+    void EliminatePlayer(BombCarrier carrier)
+    {
+        activePlayers.Remove(carrier);
+        carrier.SetEliminated(true);
+        carrier.Deactivate();
+    }
+
+    // ====== KẾT THÚC ======
     void EndGame()
     {
         roundActive = false;
-        if (players.Count == 1)
-            Debug.Log($"[GAME OVER] {players[0].name} CHIẾN THẮNG!");
-        else
-            Debug.Log("[GAME OVER] Game kết thúc.");
+        isRunning = false;
 
-        if (messageText != null)
+        if (resultPanel) resultPanel.SetActive(true);
+
+        if (activePlayers.Count == 1)
         {
-            if (players.Count == 1)
-                messageText.text = players[0].name + " CHIẾN THẮNG!";
-            else
-                messageText.text = "Game kết thúc.";
+            string winnerName = activePlayers[0] == carrier1 ? "PLAYER 1" : "PLAYER 2";
+            string color = activePlayers[0] == carrier1 ? "red" : "green";
+            if (resultText)
+                resultText.text = $"<color={color}>{winnerName} CHIẾN THẮNG!</color>";
+            if (messageText)
+                messageText.text = $"{winnerName} CHIẾN THẮNG!";
         }
+        else
+        {
+            if (resultText) resultText.text = "<color=yellow>HÒA!</color>";
+            if (messageText) messageText.text = "Hòa!";
+        }
+
+        CheckFinishReward(manager.currentPlayer1);
+        CheckFinishReward(manager.currentPlayer2);
+    }
+
+    void CheckFinishReward(GameObject playerObj)
+    {
+        if (playerObj == null) return;
+
+        PlayerMiniGame mini = playerObj.GetComponent<PlayerMiniGame>();
+        BombCarrier carrier = playerObj.GetComponent<BombCarrier>();
+        if (mini == null || carrier == null) return;
+
+        // Người không bị loại = thắng
+        if (!carrier.IsEliminated)
+            mini.UpCoin(1, 100);
+        else
+            mini.UpCoin(0, 100);
+    }
+
+    // ====== SETUP PLAYER (giống MiniGame4) ======
+    void SetUpAllPlayer()
+    {
+        SetUpPlayer(manager.currentPlayer1);
+        SetUpPlayer(manager.currentPlayer2);
+    }
+
+    void SetUpPlayer(GameObject playerObj)
+    {
+        if (playerObj == null) return;
+
+        PlayerMove move = playerObj.GetComponent<PlayerMove>();
+        PlayerAnimator anim = playerObj.GetComponent<PlayerAnimator>();
+
+        if (move != null)
+        {
+            move.speed = 1f;
+            move.isJumpAndMove = true;
+            move.isWalk = true;
+        }
+
+        if (anim != null && anim.playerAnimator != null)
+            anim.playerAnimator.SetBool("Die", false);
     }
 }
