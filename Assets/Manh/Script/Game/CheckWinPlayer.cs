@@ -18,7 +18,7 @@ public class CheckWinPlayer : MonoBehaviour
 
     public bool CheckWinnerByIndex(int index)
     {
-        if (index >= 33)
+        if (index >= 32)
         {
             Debug.Log("Player Win");
             return true;

@@ -21,6 +21,7 @@ public class AudioManager : MonoBehaviour
     [Header("Player SFX")]
     public AudioClip walkPlayerClip;
     public AudioClip diceRollClip;
+    public AudioClip playerTeleport;
 
     [Header("Debuff SFX")]
     public AudioClip cannonClip;
@@ -45,15 +46,23 @@ public class AudioManager : MonoBehaviour
     public AudioClip openCardRamdomClip;
     public AudioClip noCoinBuyItemClip;
     public AudioClip skipBuyClip;
-
+    
     [Header("UI SFX")]
     public AudioClip openResultPanel;
     public AudioClip nextRound;
     [Header("Camera SFX")]
     public AudioClip moveCamera;
 
+    [Header("Winner")]
+    public AudioClip winnerClip;
+    public AudioClip winnerMiniGameClip;
+    public AudioClip fourPowerCoinClip;
+    public AudioClip threethirtyIndexClip;
 
-    
+    [Header("Teleport")]
+    public AudioClip openTeleportClip;
+    public AudioClip closeTeleportClip;
+
 
     [Header("MusicGame")]
     public AudioClip musicMainClip;

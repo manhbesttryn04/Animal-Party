@@ -18,6 +18,7 @@ public class UIManager : MonoBehaviour
     // =========================================================
     // RESULT PANEL
     // =========================================================
+    public GameObject uiMain;
 
     #region Result Panel
 
@@ -232,8 +233,8 @@ public class UIManager : MonoBehaviour
         PlayerMoveAI p1 = playerManager1.playerMoveAI;
         PlayerMoveAI p2 = playerManager2.playerMoveAI;
 
-        indexTextP1.text = $"{p1.currentIndex}/33";
-        indexTextP2.text = $"{p2.currentIndex}/33";
+        indexTextP1.text = $"{p1.currentIndex +1}/33";
+        indexTextP2.text = $"{p2.currentIndex +1}/33";
     }
 
     // =========================================================
@@ -470,5 +471,9 @@ public class UIManager : MonoBehaviour
         blackPanel.SetActive(true);
 
         yield return null;
+    }
+    public void HideUIMain()
+    {
+        uiMain.SetActive(false);
     }
 }

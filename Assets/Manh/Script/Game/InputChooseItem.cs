@@ -173,7 +173,7 @@ public class InputChooseItem : MonoBehaviour
             isPlayer1Choose = false;
             items[player1Index].transform.GetChild(1).gameObject.SetActive(false);
 
-            bool win1 = GameManager.Instance.CheckWinnerByPowerConP1();
+            bool win1 = GameManager.Instance.CheckWinnerByPowerCoinP1();
             if(win1)
             {
                 StartCoroutine(CloseShop());
@@ -246,7 +246,7 @@ public class InputChooseItem : MonoBehaviour
             isPlayer2Choose = false;
             items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
 
-            bool win2 = GameManager.Instance.CheckWinnerByPowerConP2();
+            bool win2 = GameManager.Instance.CheckWinnerByPowerCoinP2();
             StartCoroutine(CloseShop());
         }
     }
@@ -461,7 +461,7 @@ public class InputChooseItem : MonoBehaviour
     {
         shopManager.StopTurnTimer();
 
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(2f);
 
         ShopManager.Instance.CloseShop();
     }

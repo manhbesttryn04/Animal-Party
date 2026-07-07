@@ -34,7 +34,6 @@ public class PlayerVFX : MonoBehaviour
     public IEnumerator DissolveOutRoutine()
     {
         AudioManager.Instance.PlaySFX(AudioManager.Instance.startLeteClip);
-        yield return new WaitForSeconds(1.2f);
         respawnRenderer.enabled = true;
         normalRenderer.gameObject.SetActive(false);
 
@@ -92,5 +91,20 @@ public class PlayerVFX : MonoBehaviour
         }
 
         respawnMat.SetFloat("_Progress", end);
+    }
+    // Hiện -> Ẩn, không dùng Particle
+    public IEnumerator DissolveOutNoParticleRoutine()
+    {
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.startLeteClip);
+
+        respawnRenderer.enabled = true;
+        normalRenderer.gameObject.SetActive(false);
+
+        respawnMat.SetFloat("_Progress", 1f);
+
+        yield return StartCoroutine(SetProgress(1f, -1f, 1f));
+
+        respawnRenderer.enabled = false;
+        normalRenderer.gameObject.SetActive(false);
     }
 }

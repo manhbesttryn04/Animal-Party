@@ -74,8 +74,10 @@ public class CutScenePowerCoin : MonoBehaviour
 
         yield return new WaitForSeconds(waitTime);
 
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.closeTeleportClip);
         // 2. Thu nhỏ cổng
         yield return StartCoroutine(ScaleTeleport(Vector3.zero, scaleTime));
+      
 
         yield return new WaitForSeconds(waitTime);
 
@@ -113,30 +115,44 @@ public class CutScenePowerCoin : MonoBehaviour
         yield return new WaitForSeconds(waitTime);
 
         // 5. Mở cổng
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.openTeleportClip);
         yield return StartCoroutine(
             ScaleTeleport(teleportOriginalScale, scaleTime)
         );
-
+       
         yield return new WaitForSeconds(waitTime);
 
         // 6. Player dùng NavMeshAgent đi qua cổng
         if (transPlayerToWalk != null)
         {
-            yield return StartCoroutine(
+            StartCoroutine(
                 MovePlayerToPoint(player, transPlayerToWalk.position)
             );
         }
+         yield return new WaitForSeconds(4.5f);
 
-        // 7. Player biến mất ngay
-        SetPlayerMeshActive(player, false);
+        // 7. Player biến mất  từ từ
+        PlayerVFX playerVFX = player.GetComponent<PlayerVFX>();
+
+        if (playerVFX != null)
+        {
+            yield return StartCoroutine(playerVFX.DissolveOutNoParticleRoutine());
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.playerTeleport);
+        }
+        else
+        {
+            SetPlayerMeshActive(player, false);
+        }
 
         yield return new WaitForSeconds(waitTime);
-
         // 8. Đóng cổng
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.closeTeleportClip);
         yield return StartCoroutine(
             ScaleTeleport(Vector3.zero, scaleTime)
         );
-       yield return new WaitForSeconds(waitTime);
+       
+
+        yield return new WaitForSeconds(waitTime);
         VolumeManager.Instance.ResetVignette();
         yield return StartCoroutine(UIManager.Instance.BlackPanelRoutine());
         

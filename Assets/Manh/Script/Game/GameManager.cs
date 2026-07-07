@@ -450,7 +450,7 @@ public class GameManager : MonoBehaviour
             canStartNextRound = true;
         }
     }
-  public bool CheckWinnerByPowerConP1()
+  public bool CheckWinnerByPowerCoinP1()
     {
         PlayerManager p = player1Main.GetComponent<PlayerManager>();
         int coinCount = p.playerBuff.countCoinPower;
@@ -458,19 +458,21 @@ public class GameManager : MonoBehaviour
         if(i)
         {
             stateGame.SetOnePlayerWin(0);
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.fourPowerCoinClip);
             stateGame.hasWinByCoin = true;
             return true;
 
         }
         return false;
     }
-    public bool CheckWinnerByPowerConP2()
+    public bool CheckWinnerByPowerCoinP2()
     {
         PlayerManager p = player2Main.GetComponent<PlayerManager>();
         int coinCount = p.playerBuff.countCoinPower;
         bool i = CheckWinPlayer.Instance.CheckWinnerByCoinPower(coinCount);
         if(i)
         {
+            AudioManager.Instance.PlaySpecialOneShot(AudioManager.Instance.fourPowerCoinClip);
             stateGame.SetOnePlayerWin(1);
             stateGame.hasWinByCoin = true;
             return true;
@@ -480,13 +482,50 @@ public class GameManager : MonoBehaviour
     public void CheckWinnerOrNextRound()
     {
         if(stateGame.hasPlayer1Win || stateGame.hasPlayer2Win)
-        {
+        {   
+            UIManager.Instance.HideUIMain();
+            AudioManager.Instance.StopMusic();
+            AudioManager.Instance.musicSource.volume = 0.9f;
+            AudioManager.Instance.PlayMusic(AudioManager.Instance.winnerMiniGameClip);
+            PointCheck.Instance.HideAllTraps();
             StartCutSceneWinner();
         }
         else
         {
            ExitNextRound();
         }
+    }
+    public bool CheckWinnerByIndex(bool isPlayer, int index)
+    {
+        bool i = CheckWinPlayer.Instance.CheckWinnerByIndex(index);
+
+        if (i)
+        {
+            if (isPlayer)
+            {
+                stateGame.SetOnePlayerWin(0);
+            }
+            else
+            {
+                stateGame.SetOnePlayerWin(1);
+            }
+
+            stateGame.hasWinByIndex = true;
+
+            // Khóa flow game lại
+            canCheckPlayer2 = false;
+            canCheckMiniGame = false;
+            canStartNextRound = true;
+            stateGame.isNextRound = true;
+
+            AudioManager.Instance.PlaySpecialOneShot(AudioManager.Instance.threethirtyIndexClip);
+
+            CheckWinnerOrNextRound();
+
+            return true;
+        }
+
+        return false;
     }
     public void StartCutSceneWinner()
     {
@@ -503,7 +542,14 @@ public class GameManager : MonoBehaviour
         }
         else if (stateGame.hasWinByIndex)
         {
-
+            if (stateGame.hasPlayer1Win)
+            {
+               CutSceneToIndex.Instance.PlayCutScene(player1Main);
+            }
+            else if (stateGame.hasPlayer2Win)
+            {
+               CutSceneToIndex.Instance.PlayCutScene(player2Main);
+            }
 
         }
     }
