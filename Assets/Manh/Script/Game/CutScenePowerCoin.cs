@@ -65,7 +65,6 @@ public class CutScenePowerCoin : MonoBehaviour
         if (player == null || teleport == null)
             yield break;
         VolumeManager.Instance.StartVignette();
-        SceneManager.LoadSceneAsync("Word 2", LoadSceneMode.Additive);
         // 1. Camera tới điểm đầu
         if (transformsCutScene.Length > 0 && transformsCutScene[0] != null)
         {
@@ -157,7 +156,9 @@ public class CutScenePowerCoin : MonoBehaviour
         yield return new WaitForSeconds(waitTime);
         VolumeManager.Instance.ResetVignette();
         yield return StartCoroutine(UIManager.Instance.BlackPanelRoutine());
-        
+        yield return new WaitForSeconds(3f);
+        SceneManager.LoadScene(5);
+
     }
 
     private IEnumerator ScaleTeleport(Vector3 targetScale, float duration)

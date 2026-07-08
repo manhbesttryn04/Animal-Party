@@ -20,7 +20,7 @@ public class PlayerVFX : MonoBehaviour
     {
         respawnMat = respawnRenderer.material;
 
-        normalRenderer.gameObject.SetActive(true);
+       // normalRenderer.gameObject.SetActive(true);
         respawnRenderer.enabled = false;
 
         respawnMat.SetFloat("_Speed", 0f);
@@ -106,5 +106,26 @@ public class PlayerVFX : MonoBehaviour
 
         respawnRenderer.enabled = false;
         normalRenderer.gameObject.SetActive(false);
+    }
+    //==================================================
+    // Hiện lại (không dùng Particle)
+    //==================================================
+    public IEnumerator DissolveInNoParticleRoutine()
+    {
+        //AudioManager.Instance.PlaySFX(AudioManager.Instance.endLeteClip);
+
+        // Chỉ hiển thị renderer shader
+        respawnRenderer.enabled = true;
+        normalRenderer.gameObject.SetActive(false);
+
+        // Bắt đầu từ trạng thái đã biến mất
+        respawnMat.SetFloat("_Progress", -1f);
+
+        // Không Play() particle
+        yield return StartCoroutine(SetProgress(-1f, 1f, 2f));
+
+        // Trả về renderer bình thường
+        respawnRenderer.enabled = false;
+        normalRenderer.gameObject.SetActive(true);
     }
 }
