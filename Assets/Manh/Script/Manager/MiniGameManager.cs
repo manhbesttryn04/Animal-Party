@@ -708,7 +708,7 @@ public class MiniGameManager : MonoBehaviour
                 break;
 
             case 3:
-                countDownTime = 70f;
+                countDownTime = 160;
                 break;
 
             case 4:
