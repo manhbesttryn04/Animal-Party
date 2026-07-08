@@ -5,23 +5,41 @@ using System.Collections;
 public class MathManager : MonoBehaviour
 {
     [Header("UI Màn Hình Chính")]
-    public TextMeshProUGUI questionText;    // Hiện phép tính (VD: 1 + 1 = ?)
-    public TextMeshProUGUI timerText;       // Chỉ hiện con số thời gian đếm ngược
+    public TextMeshProUGUI questionText;
+    public TextMeshProUGUI timerText;
 
     [Header("UI Thông Báo Riêng Biệt")]
-    public TextMeshProUGUI p1StatusText;    // Hiện trạng thái/kết quả riêng của P1
-    public TextMeshProUGUI p2StatusText;    // Hiện trạng thái/kết quả riêng của P2
+    public TextMeshProUGUI p1StatusText;
+    public TextMeshProUGUI p2StatusText;
 
     [Header("UI Đáp Án Dưới Mặt Đất")]
-    public TextMeshProUGUI[] answerTexts;   // Kéo thả 4 TMP nằm trên bề mặt 4 ô chọn vào đây
+    public TextMeshProUGUI[] answerTexts;
+
+    [Header("Vách Ngăn Khóa Player")]
+    [Tooltip("Kéo thả 4 GameObject vách ngăn quanh 4 ô vào đây.")]
+    public GameObject[] answerWalls;
+
+    [Header("Hiệu Ứng Trừng Phạt")]
+    public GameObject explosionPrefab;
+    public float knockbackForce = 15f;
+    public float knockbackDuration = 0.4f;
+
+    [Header("Cấu hình Thời gian")]
+    public float selectionDuration = 6f;
+    public float lockThreshold = 2f;
+    public float resultViewDuration = 4f;
 
     private int correctAnswer;
     private int correctPadIndex;
 
-    // Biến lưu trữ đáp án đã khóa (-1 có nghĩa là chưa chọn)
     private int p1Choice = -1;
     private int p2Choice = -1;
-    private bool isAnsweringState = true;   // Trạng thái kiểm soát thời gian bấm chọn
+    private bool isAnsweringState = false;
+    private bool isLockedState = false;
+    private bool hasPunished = false; // Cờ bảo hiểm chống nổ trùng lặp 2 lần
+
+    private GameObject player1Obj;
+    private GameObject player2Obj;
 
     void Start()
     {
@@ -30,6 +48,11 @@ public class MathManager : MonoBehaviour
             Debug.LogError("Vui lòng kéo đầy đủ các thành phần UI vào MathManager trong Inspector!");
             return;
         }
+
+        player1Obj = GameObject.Find("Player Play 1");
+        player2Obj = GameObject.Find("Player Play 2");
+
+        UnlockAllWalls();
         StartCoroutine(GameLoop());
     }
 
@@ -37,32 +60,48 @@ public class MathManager : MonoBehaviour
     {
         while (true)
         {
-            // ---- BƯỚC 1: KHỞI TẠO LƯỢT CHƠI & PHÉP TOÁN MỚI ----
+            // ---- BƯỚC 1: KHỞI TẠO LƯỢT CHƠI MỚI ----
+            UnlockAllWalls();
             GenerateQuestion();
             isAnsweringState = true;
+            isLockedState = false;
+            hasPunished = false; // Reset cờ nổ
             p1Choice = -1;
             p2Choice = -1;
 
-            // Xóa rỗng nội dung thông báo lượt cũ
             p1StatusText.text = "";
             p2StatusText.text = "";
 
-            // ---- BƯỚC 2: 10 GIÂY ĐẾM NGƯỢC CHO PHÉP CHỌN ĐÁP ÁN ----
-            float timeLeft = 3f;
+            // ---- BƯỚC 2: ĐẾM NGƯỢC 6 GIÂY ----
+            float timeLeft = selectionDuration;
             while (timeLeft > 0)
             {
-                // Chỉ hiển thị số thời gian nguyên, không kèm chữ
                 timerText.text = Mathf.CeilToInt(timeLeft).ToString();
-                yield return new WaitForSeconds(1.0f);
-                timeLeft -= 1f;
+
+                // FIX LỖI 2 LẦN: Kiểm tra thêm điều kiện phụ để không gọi trùng lặp hàm khóa
+                if (timeLeft <= lockThreshold && !isLockedState)
+                {
+                    isLockedState = true; // Gán cờ ngay lập tức để chặn luồng chạy song song
+                    LockPlayersInsideBox();
+                }
+
+                yield return new WaitForSeconds(0.1f);
+                timeLeft -= 0.1f;
             }
 
-            // ---- BƯỚC 3: HẾT GIỜ -> KHÓA NHẬN LỆNH & KIỂM TRA ĐÚNG SAI ----
+            // ---- BƯỚC 3: HẾT GIỜ -> TÍNH TOÁN KẾT QUẢ & KÍCH NỔ ----
             isAnsweringState = false;
-            CheckFinalResults();
+            UnlockAllWalls();
 
-            // ---- BƯỚC 4: 10 GIÂY ĐÓNG BĂNG ĐỢI XEM KẾT QUẢ TRƯỚC KHI ĐỔI CÂU ----
-            float waitTimeLeft = 5f;
+            // Chỉ chạy tính toán kết quả nếu chưa từng thực hiện kích nổ cho lượt này
+            if (!hasPunished)
+            {
+                hasPunished = true;
+                CheckFinalResults();
+            }
+
+            // ---- BƯỚC 4: XEM KẾT QUẢ VÀ CHỜ ĐỔI LƯỢT ----
+            float waitTimeLeft = resultViewDuration;
             while (waitTimeLeft > 0)
             {
                 timerText.text = Mathf.CeilToInt(waitTimeLeft).ToString();
@@ -98,13 +137,8 @@ public class MathManager : MonoBehaviour
 
         for (int i = 0; i < 4; i++)
         {
-            // Thiết lập lại màu chữ đáp án về màu trắng mặc định ban đầu
             answerTexts[i].color = Color.white;
-
-            if (i == correctPadIndex)
-            {
-                answerTexts[i].text = correctAnswer.ToString();
-            }
+            if (i == correctPadIndex) answerTexts[i].text = correctAnswer.ToString();
             else
             {
                 int wrongAnswer = correctAnswer + Random.Range(-5, 6);
@@ -114,58 +148,165 @@ public class MathManager : MonoBehaviour
         }
     }
 
-    // Hàm nhận tín hiệu xử lý dậm chân được kích hoạt từ AnswerPad
+    // Hàm nhận diện va chạm từ các ô đáp án dậm chân
     public void OnPlayerStepOnPad(bool isPlayer2, int padIndex)
     {
-        // Nếu không nằm trong 10s thời gian trả lời thì không ghi nhận
+        // Vẫn nhận phản hồi trong suốt 6 giây chơi game (kể cả 2 giây cuối)
         if (!isAnsweringState) return;
 
-        if (!isPlayer2) // Xử lý Player 1
+        if (!isPlayer2)
         {
-            // KHÓA ĐÁP ÁN: Nếu đã chọn rồi (khác -1) thì không cho đổi ô khác
-            if (p1Choice != -1) return;
+            // Nếu đã bị khóa tường, không cho phép đổi sang ô khác khi đang đứng ở ô cũ
+            if (isLockedState && p1Choice != -1 && p1Choice != padIndex) return;
 
             p1Choice = padIndex;
-            p1StatusText.text = "P1: Đã khóa!";
-            Debug.Log("Player 1 đã chốt ô số: " + padIndex);
+            if (!isLockedState) p1StatusText.text = "P1 đang chọn ô: " + (padIndex + 1);
         }
-        else // Xử lý Player 2
+        else
         {
-            // KHÓA ĐÁP ÁN: Nếu đã chọn rồi thì không cho đổi ô khác
-            if (p2Choice != -1) return;
+            if (isLockedState && p2Choice != -1 && p2Choice != padIndex) return;
 
             p2Choice = padIndex;
-            p2StatusText.text = "P2: Đã khóa!";
-            Debug.Log("Player 2 đã chốt ô số: " + padIndex);
+            if (!isLockedState) p2StatusText.text = "P2 đang chọn ô: " + (padIndex + 1);
+        }
+    }
+
+    // Cơ chế kích hoạt vách ngăn bao quanh ô chọn tại 2s cuối
+    void LockPlayersInsideBox()
+    {
+        // Xử lý thông báo và kích hoạt tường P1
+        if (p1Choice == -1)
+        {
+            p1StatusText.text = "P1: Chưa chọn - TỰ DO!";
+        }
+        else
+        {
+            p1StatusText.text = "P1: ĐÃ KHÓA TRONG Ô " + (p1Choice + 1) + "!";
+            if (answerWalls != null && p1Choice < answerWalls.Length && answerWalls[p1Choice] != null)
+            {
+                answerWalls[p1Choice].SetActive(true);
+            }
+        }
+
+        // Xử lý thông báo và kích hoạt tường P2
+        if (p2Choice == -1)
+        {
+            p2StatusText.text = "P2: Chưa chọn - TỰ DO!";
+        }
+        else
+        {
+            p2StatusText.text = "P2: ĐÃ KHÓA TRONG Ô " + (p2Choice + 1) + "!";
+            if (answerWalls != null && p2Choice < answerWalls.Length && answerWalls[p2Choice] != null)
+            {
+                answerWalls[p2Choice].SetActive(true);
+            }
+        }
+
+        Debug.Log("Hệ thống: Đã chốt vị trí và kích hoạt vách ngăn.");
+    }
+
+    void UnlockAllWalls()
+    {
+        if (answerWalls == null) return;
+        for (int i = 0; i < answerWalls.Length; i++)
+        {
+            if (answerWalls[i] != null) answerWalls[i].SetActive(false);
         }
     }
 
     void CheckFinalResults()
     {
-        // 1. Phân tích & Thông báo trạng thái lên TMP riêng của Player 1
-        if (p1Choice == -1) p1StatusText.text = "P1: Không trả lời!";
-        else if (p1Choice == correctPadIndex) p1StatusText.text = "P1: CHÍNH XÁC!";
-        else p1StatusText.text = "P1: SAI RỒI!";
-
-        // 2. Phân tích & Thông báo trạng thái lên TMP riêng của Player 2
-        if (p2Choice == -1) p2StatusText.text = "P2: Không trả lời!";
-        else if (p2Choice == correctPadIndex) p2StatusText.text = "P2: CHÍNH XÁC!";
-        else p2StatusText.text = "P2: SAI RỒI!";
-
-        // 3. Xử lý logic nhuộm màu chữ đáp án dưới mặt đất
-        for (int i = 0; i < 4; i++)
+        // 1. Kiểm tra kết quả Player 1
+        if (p1Choice == -1)
         {
-            if (i == correctPadIndex)
-            {
-                answerTexts[i].color = Color.yellow; // Ô đúng chuyển thành màu VÀNG
-            }
-            else if (i == p1Choice || i == p2Choice)
-            {
-                answerTexts[i].color = Color.red;    // Ô bị chọn sai chuyển thành màu ĐỎ
-            }
+            p1StatusText.text = "P1: Không trả lời!";
+            ExecutePunishment(player1Obj, Vector3.back);
+        }
+        else if (p1Choice == correctPadIndex)
+        {
+            p1StatusText.text = "P1: CHÍNH XÁC!";
+        }
+        else
+        {
+            p1StatusText.text = "P1: SAI RỒI!";
+            ExecutePunishment(player1Obj, GetKnockbackDirection(p1Choice, player1Obj));
         }
 
-        // Hiện kết quả chính xác lên màn hình đề bài chính
-        questionText.text = "Đáp án đúng: " + correctAnswer;
+        // 2. Kiểm tra kết quả Player 2
+        if (p2Choice == -1)
+        {
+            p2StatusText.text = "P2: Không trả lời!";
+            ExecutePunishment(player2Obj, Vector3.back);
+        }
+        else if (p2Choice == correctPadIndex)
+        {
+            p2StatusText.text = "P2: CHÍNH XÁC!";
+        }
+        else
+        {
+            p2StatusText.text = "P2: SAI RỒI!";
+            ExecutePunishment(player2Obj, GetKnockbackDirection(p2Choice, player2Obj));
+        }
+
+        // Đổi màu UI chữ dưới nền đất
+        for (int i = 0; i < 4; i++)
+        {
+            if (i == correctPadIndex) answerTexts[i].color = Color.yellow;
+            else if (i == p1Choice || i == p2Choice) answerTexts[i].color = Color.red;
+        }
+
+        questionText.text = "Đáp án đúng là: " + correctAnswer;
+    }
+
+    Vector3 GetKnockbackDirection(int padIndex, GameObject player)
+    {
+        if (player == null || answerTexts == null || padIndex >= answerTexts.Length || answerTexts[padIndex] == null)
+            return Vector3.up;
+
+        Vector3 padPosition = answerTexts[padIndex].transform.position;
+        Vector3 pushDir = player.transform.position - padPosition;
+        pushDir.y = 0;
+
+        if (pushDir == Vector3.zero) pushDir = Vector3.forward;
+        return pushDir.normalized;
+    }
+
+    void ExecutePunishment(GameObject player, Vector3 direction)
+    {
+        if (player == null) return;
+
+        if (explosionPrefab != null)
+        {
+            GameObject explosion = Instantiate(explosionPrefab, player.transform.position, Quaternion.identity);
+            Destroy(explosion, 3f);
+        }
+
+        StartCoroutine(KnockbackRoutine(player, direction));
+    }
+
+    IEnumerator KnockbackRoutine(GameObject player, Vector3 direction)
+    {
+        if (player == null) yield break;
+
+        CharacterController cc = player.GetComponent<CharacterController>();
+        float elapsed = 0f;
+        Vector3 finalDirection = (direction + Vector3.up * 0.5f).normalized;
+
+        while (elapsed < knockbackDuration && player != null)
+        {
+            Vector3 moveAmount = finalDirection * knockbackForce * Time.deltaTime;
+
+            if (cc != null && cc.enabled)
+            {
+                cc.Move(moveAmount);
+            }
+            else
+            {
+                player.transform.position += moveAmount;
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
     }
 }
