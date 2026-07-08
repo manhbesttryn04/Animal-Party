@@ -4,43 +4,82 @@ using UnityEngine;
 
 public class MiniGame3 : MonoBehaviour
 {
+    [System.Serializable]
+    public class Phase1_LaserHub
+    {
+        [Tooltip("Giây thứ mấy thì bắt đầu màn Trụ Quay? (Mặc định là 0)")]
+        public float startTime = 0f;
+    }
+
+    [System.Serializable]
+    public class Phase2_Flamethrower
+    {
+        [Tooltip("Giây thứ mấy thì Trụ Quay chìm xuống và Bắt đầu khạc lửa?")]
+        public float startTime = 30f;
+    }
+
+    [System.Serializable]
+    public class Phase3_LaserSpam
+    {
+        [Tooltip("Giây thứ mấy thì Tắt Lửa, bắt đầu Lazer Bay?")]
+        public float startTime = 60f;
+        
+        [Header("Độ Khó (Difficulty)")]
+        public float laserSpeed = 6f;
+        [Tooltip("Số lượng Lazer bắn ra trong 1 đợt (Wave)")]
+        public int lasersPerWave = 4;
+        [Tooltip("Thời gian nghỉ giữa 2 đợt bắn (Wave Delay)")]
+        public float waveDelay = 3.5f;
+        [Tooltip("Độ trễ nhịp bắn liên thanh giữa các tia trong cùng 1 đợt")]
+        public float delayBetweenLasers = 1.2f;
+    }
+
+    [System.Serializable]
+    public class Phase4_LaserHard
+    {
+        [Tooltip("Giây thứ mấy thì Lazer Bay tăng tốc Ép Xung?")]
+        public float startTime = 90f;
+        
+        [Header("Độ Khó (Difficulty)")]
+        public float laserSpeed = 8.5f;
+        public int lasersPerWave = 5;
+        public float waveDelay = 3f;
+        public float delayBetweenLasers = 0.8f;
+    }
+
     public enum SpawnMode
     {
         Random, Alternating, DoubleAlternating, Burst, BothAtSameTime, AutoMixed
     }
 
+    // ==========================================
+    // CÁC BIẾN CHÍNH TRÊN INSPECTOR
+    // ==========================================
     [Header("MiniGame Manager")]
     public MiniGameManager manager;
 
-    [Header("--- Phase & Game Timings ---")]
+    [Header("--- TỔNG THỜI GIAN GAME ---")]
+    [Tooltip("Tổng thời gian sinh tồn (Giây)")]
     public float totalGameTime = 120f;
-    public float timeToPhase2 = 30f;
-    public float timeToPhase3 = 60f;
-    public float timeToPhase4 = 90f;
 
-    [Header("Phase 2 Difficulty")]
-    public float p2_LaserSpeed = 4f;
-    public int p2_LasersPerWave = 3;
-    public float p2_WaveDelay = 4f;
+    [Header("--- THIẾT LẬP KỊCH BẢN (TIMELINE) ---")]
+    public Phase1_LaserHub phase1_Hub;
+    public Phase2_Flamethrower phase2_Fire;
+    public Phase3_LaserSpam phase3_Spam;
+    public Phase4_LaserHard phase4_Hard;
 
-    [Header("Phase 3 Difficulty")]
-    public float p3_LaserSpeed = 6f;
-    public int p3_LasersPerWave = 4;
-    public float p3_WaveDelay = 3.5f;
-
-    [Header("Phase 4 Difficulty")]
-    public float p4_LaserSpeed = 8.5f;
-    public int p4_LasersPerWave = 5;
-    public float p4_WaveDelay = 3f;
-
-    [Header("References")]
+    [Header("--- THÀNH PHẦN KẾT NỐI (REFERENCES) ---")]
     public PummelLaserHub centralHub;
     public GameObject spamLaserPrefab;
     public List<Transform> spawnPoints = new List<Transform>();
 
+    [Header("--- BẪY LỬA ---")]
+    public GameObject[] flamethrowerTraps;
+
     [Header("Team Integration")]
     public bool isRunning = false;
 
+    // Các biến chạy ngầm quản lý state
     private float timeBetweenWaves;
     private int lasersPerWave;
     private float delayBetweenLasers;
@@ -61,6 +100,8 @@ public class MiniGame3 : MonoBehaviour
 
         if (centralHub != null)
             centralHub.gameObject.SetActive(false);
+
+        ToggleFlamethrowers(false);
     }
 
     public void StartMiniGame()
@@ -80,24 +121,21 @@ public class MiniGame3 : MonoBehaviour
         }
 
         UpdateDifficultyPhase();
-
-        Debug.Log("MiniGame3 START");
     }
 
     public void StopMiniGame()
     {
-        if (!isRunning && isGameOver) return;
+        if (!isRunning || isGameOver) return;
 
         isRunning = false;
         isGameOver = true;
 
         StopAllCoroutines();
         ClearAllLasers();
+        ToggleFlamethrowers(false);
 
         if (centralHub != null && centralHub.gameObject.activeInHierarchy)
             centralHub.EndMinigameAndSink();
-
-        Debug.Log("MiniGame3 STOP");
     }
 
     private void Update()
@@ -114,12 +152,15 @@ public class MiniGame3 : MonoBehaviour
 
         UpdateDifficultyPhase();
 
-        waveTimer -= Time.deltaTime;
-
-        if (waveTimer <= 0f && !isSpawningWave)
+        if (lasersPerWave > 0)
         {
-            StartCoroutine(SpawnSpamWave());
-            waveTimer = timeBetweenWaves;
+            waveTimer -= Time.deltaTime;
+
+            if (waveTimer <= 0f && !isSpawningWave)
+            {
+                StartCoroutine(SpawnSpamWave());
+                waveTimer = timeBetweenWaves;
+            }
         }
     }
 
@@ -141,6 +182,8 @@ public class MiniGame3 : MonoBehaviour
 
         isRunning = false;
         isGameOver = false;
+
+        ToggleFlamethrowers(false);
     }
 
     private void CompleteMiniGame()
@@ -150,65 +193,74 @@ public class MiniGame3 : MonoBehaviour
 
         StopAllCoroutines();
         ClearAllLasers();
+        ToggleFlamethrowers(false);
 
         if (centralHub != null && centralHub.gameObject.activeInHierarchy)
             centralHub.EndMinigameAndSink();
-
-      //  Debug.Log("MiniGame3 COMPLETE");
     }
 
+    // --- HỆ THỐNG NÃO CHỈNH NHỊP ĐỘ (ĐÃ LINK VỚI INSPECTOR) ---
     private void UpdateDifficultyPhase()
     {
-        if (survivalTime < timeToPhase2 && currentPhase != 1)
+        // Phase 1 (Bắt đầu từ thời điểm startTime của Phase 1)
+        if (survivalTime >= phase1_Hub.startTime && survivalTime < phase2_Fire.startTime && currentPhase != 1)
         {
             currentPhase = 1;
-
             lasersPerWave = 0;
-            waveTimer = timeBetweenWaves;
-
-           // Debug.Log("Phase 1: Central Hub");
+            ToggleFlamethrowers(false);
         }
-        else if (survivalTime >= timeToPhase2 && survivalTime < timeToPhase3 && currentPhase != 2)
+        // Phase 2
+        else if (survivalTime >= phase2_Fire.startTime && survivalTime < phase3_Spam.startTime && currentPhase != 2)
         {
             currentPhase = 2;
 
             if (centralHub != null && centralHub.gameObject.activeInHierarchy)
                 centralHub.EndMinigameAndSink();
 
-            currentMode = SpawnMode.Alternating;
-            currentLaserSpeed = p2_LaserSpeed;
-            lasersPerWave = p2_LasersPerWave;
-            timeBetweenWaves = p2_WaveDelay;
-            delayBetweenLasers = 1.2f;
-            waveTimer = timeBetweenWaves;
-
-            ///Debug.Log("Phase 2");
+            ToggleFlamethrowers(true);
+            lasersPerWave = 0;
         }
-        else if (survivalTime >= timeToPhase3 && survivalTime < timeToPhase4 && currentPhase != 3)
+        // Phase 3 
+        else if (survivalTime >= phase3_Spam.startTime && survivalTime < phase4_Hard.startTime && currentPhase != 3)
         {
             currentPhase = 3;
+            ToggleFlamethrowers(false);
 
-            currentMode = SpawnMode.Random;
-            currentLaserSpeed = p3_LaserSpeed;
-            lasersPerWave = p3_LasersPerWave;
-            timeBetweenWaves = p3_WaveDelay;
-            delayBetweenLasers = 1.0f;
+            currentMode = SpawnMode.Alternating;
+            
+            // Gán thông số từ Inspector
+            currentLaserSpeed = phase3_Spam.laserSpeed;
+            lasersPerWave = phase3_Spam.lasersPerWave;
+            timeBetweenWaves = phase3_Spam.waveDelay;
+            delayBetweenLasers = phase3_Spam.delayBetweenLasers; 
+            
             waveTimer = timeBetweenWaves;
-
-          //  Debug.Log("Phase 3");
         }
-        else if (survivalTime >= timeToPhase4 && currentPhase != 4)
+        // Phase 4
+        else if (survivalTime >= phase4_Hard.startTime && currentPhase != 4)
         {
             currentPhase = 4;
+            ToggleFlamethrowers(false);
 
             currentMode = SpawnMode.AutoMixed;
-            currentLaserSpeed = p4_LaserSpeed;
-            lasersPerWave = p4_LasersPerWave;
-            timeBetweenWaves = p4_WaveDelay;
-            delayBetweenLasers = 0.8f;
+            
+            // Gán thông số từ Inspector
+            currentLaserSpeed = phase4_Hard.laserSpeed;
+            lasersPerWave = phase4_Hard.lasersPerWave;
+            timeBetweenWaves = phase4_Hard.waveDelay;
+            delayBetweenLasers = phase4_Hard.delayBetweenLasers; 
+            
             waveTimer = timeBetweenWaves;
+        }
+    }
 
-            //Debug.Log("Phase 4");
+    private void ToggleFlamethrowers(bool state)
+    {
+        if (flamethrowerTraps == null || flamethrowerTraps.Length == 0) return;
+
+        foreach (GameObject trap in flamethrowerTraps)
+        {
+            if (trap != null) trap.SetActive(state);
         }
     }
 
@@ -222,11 +274,7 @@ public class MiniGame3 : MonoBehaviour
             yield break;
         }
 
-        SpawnMode waveMode =
-            currentMode == SpawnMode.AutoMixed
-                ? (SpawnMode)Random.Range(0, 6)
-                : currentMode;
-
+        SpawnMode waveMode = currentMode == SpawnMode.AutoMixed ? (SpawnMode)Random.Range(0, 5) : currentMode;
         spawnCounter = 0;
 
         for (int i = 0; i < lasersPerWave; i++)
@@ -239,22 +287,15 @@ public class MiniGame3 : MonoBehaviour
 
             if (waveMode == SpawnMode.BothAtSameTime)
             {
-                foreach (Transform sp in spawnPoints)
-                    SpawnSingleLaser(sp);
+                foreach (Transform sp in spawnPoints) SpawnSingleLaser(sp);
             }
             else
             {
                 Transform selectedPoint = GetSpawnPoint(waveMode);
-
-                if (selectedPoint != null)
-                    SpawnSingleLaser(selectedPoint);
+                if (selectedPoint != null) SpawnSingleLaser(selectedPoint);
             }
 
-            float actualDelay =
-                waveMode == SpawnMode.Burst
-                    ? delayBetweenLasers * 0.5f
-                    : delayBetweenLasers;
-
+            float actualDelay = waveMode == SpawnMode.Burst ? delayBetweenLasers * 0.5f : delayBetweenLasers;
             yield return new WaitForSeconds(actualDelay);
         }
 
@@ -268,33 +309,22 @@ public class MiniGame3 : MonoBehaviour
     {
         switch (mode)
         {
-            case SpawnMode.Random:
-                return spawnPoints[Random.Range(0, spawnPoints.Count)];
-
+            case SpawnMode.Random: return spawnPoints[Random.Range(0, spawnPoints.Count)];
             case SpawnMode.Alternating:
             case SpawnMode.Burst:
                 Transform pt = spawnPoints[lastSpawnIndex];
-
-                if (mode == SpawnMode.Alternating)
-                    lastSpawnIndex = (lastSpawnIndex + 1) % spawnPoints.Count;
-
+                if (mode == SpawnMode.Alternating) lastSpawnIndex = (lastSpawnIndex + 1) % spawnPoints.Count;
                 return pt;
-
             case SpawnMode.DoubleAlternating:
                 Transform dPt = spawnPoints[lastSpawnIndex];
-
                 spawnCounter++;
-
                 if (spawnCounter >= 2)
                 {
                     lastSpawnIndex = (lastSpawnIndex + 1) % spawnPoints.Count;
                     spawnCounter = 0;
                 }
-
                 return dPt;
-
-            default:
-                return spawnPoints[0];
+            default: return spawnPoints[0];
         }
     }
 
@@ -308,10 +338,8 @@ public class MiniGame3 : MonoBehaviour
             camRight.y = 0f;
             camRight.Normalize();
 
-            if (sp.name.Contains("Left"))
-                finalRotation = Quaternion.LookRotation(camRight);
-            else if (sp.name.Contains("Right"))
-                finalRotation = Quaternion.LookRotation(-camRight);
+            if (sp.name.Contains("Left")) finalRotation = Quaternion.LookRotation(camRight);
+            else if (sp.name.Contains("Right")) finalRotation = Quaternion.LookRotation(-camRight);
         }
 
         GameObject newLaser = Instantiate(spamLaserPrefab, sp.position, finalRotation);
@@ -319,28 +347,36 @@ public class MiniGame3 : MonoBehaviour
         if (newLaser.TryGetComponent<LaserSpamObject>(out var laserScript))
             laserScript.speed = currentLaserSpeed;
 
-        AudioManager.Instance.PlaySFX(AudioManager.Instance.laserMoveClip);
-
-        // Debug.Log("Spawn Laser: " + newLaser.name);
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.laserMoveClip);
     }
 
     private void ClearAllLasers()
     {
-        LaserSpamObject[] remainingLasers =
-            FindObjectsByType<LaserSpamObject>(FindObjectsSortMode.None);
-
-        foreach (LaserSpamObject laser in remainingLasers)
-            Destroy(laser.gameObject);
+        LaserSpamObject[] remainingLasers = FindObjectsByType<LaserSpamObject>(FindObjectsSortMode.None);
+        foreach (LaserSpamObject laser in remainingLasers) Destroy(laser.gameObject);
     }
 
     public void SetUpAllPlayer()
     {
+        if (manager == null || manager.currentPlayer1 == null || manager.currentPlayer2 == null)
+        {
+            Debug.LogWarning("[MiniGame3] SetUpAllPlayer: manager or player references are missing.");
+            return;
+        }
+
         PlayerManager p1 = manager.currentPlayer1.GetComponent<PlayerManager>();
         PlayerManager p2 = manager.currentPlayer2.GetComponent<PlayerManager>();
 
+        if (p1 == null || p2 == null)
+        {
+            Debug.LogWarning("[MiniGame3] SetUpAllPlayer: PlayerManager component missing on a player.");
+            return;
+        }
+
         p1.playerMove.hasLie = true;
         p2.playerMove.hasLie = true;
-        
+
         p1.playerAttack.hasAttack = true;
         p2.playerAttack.hasAttack = true;
     }

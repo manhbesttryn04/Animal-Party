@@ -51,6 +51,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PummelLaserHub
   moveSpeed: 2
   depth: 2
+  startDelay: 3
   minSpeed: 40
   maxSpeed: 150
   acceleration: 250
@@ -350,13 +351,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5e0fb46534f5a049bfc562fc87d6536, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AutoFitLaser
+  line: {fileID: 0}
   laserWidth: 0.13
   maxLaserDistance: 100
   fadeSpeed: 5
-  knockbackForce: 15
-  hitLayer:
+  obstacleLayer:
     serializedVersion: 2
-    m_Bits: 8
+    m_Bits: 0
+  targetLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  coinPenalty: 5
+  hitCooldown: 0.5
+  stunTime: 0.2
+  playerShakeAmount: 0.08
+  flashDuration: 0.4
+  flashInterval: 0.05
+  wallImpact: {fileID: 0}
+  impactOffset: 0.05
+  currentWidthMultiplier: 0
+  targetWidthMultiplier: 0
 --- !u!65 &2383310138714615576
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -543,13 +557,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5e0fb46534f5a049bfc562fc87d6536, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AutoFitLaser
+  line: {fileID: 0}
   laserWidth: 0.13
   maxLaserDistance: 100
   fadeSpeed: 5
-  knockbackForce: 15
-  hitLayer:
+  obstacleLayer:
     serializedVersion: 2
-    m_Bits: 8
+    m_Bits: 0
+  targetLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  coinPenalty: 5
+  hitCooldown: 0.5
+  stunTime: 0.2
+  playerShakeAmount: 0.08
+  flashDuration: 0.4
+  flashInterval: 0.05
+  wallImpact: {fileID: 0}
+  impactOffset: 0.05
+  currentWidthMultiplier: 0
+  targetWidthMultiplier: 0
 --- !u!65 &8029052131657014913
 BoxCollider:
   m_ObjectHideFlags: 0
