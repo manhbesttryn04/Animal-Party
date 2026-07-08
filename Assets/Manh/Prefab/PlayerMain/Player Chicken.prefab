@@ -1875,6 +1875,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 680b36b9f8c4f824692a8472049936d9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2564961254228053921}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 680b36b9f8c4f824692a8472049936d9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8410318204289167232}
   m_SourcePrefab: {fileID: 100100000, guid: 680b36b9f8c4f824692a8472049936d9, type: 3}
 --- !u!4 &103159998450265736 stripped
 Transform:
@@ -2064,6 +2067,7 @@ MonoBehaviour:
   playerFunnyItem: {fileID: 0}
   playerMiniGame: {fileID: 0}
   playerVFX: {fileID: 0}
+  playerTrapState: {fileID: 0}
 --- !u!114 &5056787652224114927
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2156,6 +2160,7 @@ MonoBehaviour:
   transFollow: {fileID: 4785428652792506319}
   transFollow2: {fileID: 6793065113979405986}
   transFollow3: {fileID: 7582244509782581990}
+  transFollow4: {fileID: 0}
   player: {fileID: 0}
   cameraMain: {fileID: 0}
   smoothTime: 0.3
@@ -2313,6 +2318,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerTrapState
   manager: {fileID: 0}
   isTrapActive: 0
+--- !u!114 &8410318204289167232
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6208376203378758326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8977b2293eb34a544a1bd5e51bd8e1bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInfo
+  avatarCharacter: {fileID: 0}
+  characterName: Seagull
 --- !u!4 &6729299164792965132 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 680b36b9f8c4f824692a8472049936d9, type: 3}

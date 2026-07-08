@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.SceneManagement;
 
 public class CutSceneToIndex : MonoBehaviour
 {
@@ -134,6 +135,7 @@ public class CutSceneToIndex : MonoBehaviour
 
         // 9. Hiện black panel
         yield return StartCoroutine(UIManager.Instance.BlackPanelRoutine());
+        SceneManager.LoadScene(5);
     }
 
     private IEnumerator ScaleTeleport(Vector3 targetScale, float duration)

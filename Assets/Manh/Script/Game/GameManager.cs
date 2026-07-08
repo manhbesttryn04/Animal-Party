@@ -460,6 +460,7 @@ public class GameManager : MonoBehaviour
             stateGame.SetOnePlayerWin(0);
             AudioManager.Instance.PlaySFX(AudioManager.Instance.fourPowerCoinClip);
             stateGame.hasWinByCoin = true;
+            SendPlayerWinner.Instance.SetInforPlayerWinner(player1Main);
             return true;
 
         }
@@ -475,6 +476,7 @@ public class GameManager : MonoBehaviour
             AudioManager.Instance.PlaySpecialOneShot(AudioManager.Instance.fourPowerCoinClip);
             stateGame.SetOnePlayerWin(1);
             stateGame.hasWinByCoin = true;
+            SendPlayerWinner.Instance.SetInforPlayerWinner(player2Main);
             return true;
         }
         return false;
@@ -486,8 +488,15 @@ public class GameManager : MonoBehaviour
             UIManager.Instance.HideUIMain();
             AudioManager.Instance.StopMusic();
             AudioManager.Instance.musicSource.volume = 0.9f;
-            AudioManager.Instance.PlayMusic(AudioManager.Instance.winnerMiniGameClip);
-            PointCheck.Instance.HideAllTraps();
+            if (stateGame.hasWinByCoin)
+            {
+                AudioManager.Instance.PlayMusic(AudioManager.Instance.winnerMiniGameClip1);
+            }else if (stateGame.hasWinByIndex)
+            {
+                AudioManager.Instance.PlayMusic(AudioManager.Instance.winnerMiniGameClip2);
+            }
+
+                PointCheck.Instance.HideAllTraps();
             StartCutSceneWinner();
         }
         else
@@ -495,19 +504,21 @@ public class GameManager : MonoBehaviour
            ExitNextRound();
         }
     }
-    public bool CheckWinnerByIndex(bool isPlayer, int index)
+    public bool CheckWinnerByIndex(bool isPlayer2, int index)
     {
         bool i = CheckWinPlayer.Instance.CheckWinnerByIndex(index);
 
         if (i)
         {
-            if (isPlayer)
+            if (!isPlayer2)
             {
                 stateGame.SetOnePlayerWin(0);
+                SendPlayerWinner.Instance.SetInforPlayerWinner(player1Main);
             }
             else
             {
                 stateGame.SetOnePlayerWin(1);
+                SendPlayerWinner.Instance.SetInforPlayerWinner(player2Main);
             }
 
             stateGame.hasWinByIndex = true;
@@ -553,4 +564,5 @@ public class GameManager : MonoBehaviour
 
         }
     }
+
 }

@@ -172,9 +172,9 @@ public class PlayerMoveAI : MonoBehaviour
         {
             currentIndex = finishIndex;
 
-            bool isPlayer1 = !manager.playerType.isPlayer2;
+            bool isPlayer2 = manager.playerType.isPlayer2;
 
-            bool hasWin = GameManager.Instance.CheckWinnerByIndex(isPlayer1, currentIndex);
+            bool hasWin = GameManager.Instance.CheckWinnerByIndex(isPlayer2, currentIndex);
 
             if (hasWin)
             {
@@ -293,12 +293,9 @@ public class PlayerMoveAI : MonoBehaviour
 
         Vector3 startPos = transform.position;
 
+        // Phát animation Jump
+        manager.playerAnimator.playerAnimator.ResetTrigger("Jump");
         manager.playerAnimator.playerAnimator.SetTrigger("Jump");
-
-        while (!manager.playerAnimator.playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("Jump"))
-        {
-            yield return null;
-        }
 
         float duration = 0.4f;
         float height = 0.8f;
@@ -320,13 +317,7 @@ public class PlayerMoveAI : MonoBehaviour
 
         transform.position = targetPos;
 
-        while (manager.playerAnimator.playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("Jump"))
-        {
-            yield return null;
-        }
-
-        yield return new WaitForSeconds(0.5f);
-
+        // Không đợi animation kết thúc
         navMeshAgent.enabled = true;
         navMeshAgent.Warp(targetPos);
     }

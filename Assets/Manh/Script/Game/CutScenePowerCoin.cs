@@ -156,7 +156,6 @@ public class CutScenePowerCoin : MonoBehaviour
         yield return new WaitForSeconds(waitTime);
         VolumeManager.Instance.ResetVignette();
         yield return StartCoroutine(UIManager.Instance.BlackPanelRoutine());
-        yield return new WaitForSeconds(3f);
         SceneManager.LoadScene(5);
 
     }

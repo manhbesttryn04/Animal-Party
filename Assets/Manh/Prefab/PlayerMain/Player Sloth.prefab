@@ -750,6 +750,7 @@ GameObject:
   - component: {fileID: 7234349350403617919}
   - component: {fileID: 2152421477538899298}
   - component: {fileID: 5750149674889927831}
+  - component: {fileID: 1530308813084415060}
   m_Layer: 3
   m_Name: Player Sloth
   m_TagString: Untagged
@@ -839,6 +840,7 @@ MonoBehaviour:
   playerFunnyItem: {fileID: 0}
   playerMiniGame: {fileID: 0}
   playerVFX: {fileID: 0}
+  playerTrapState: {fileID: 0}
 --- !u!114 &5959015988804722164
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -920,6 +922,7 @@ MonoBehaviour:
   transFollow: {fileID: 4545787375821315378}
   transFollow2: {fileID: 3762765025572285474}
   transFollow3: {fileID: 5222564037590101379}
+  transFollow4: {fileID: 0}
   player: {fileID: 0}
   cameraMain: {fileID: 0}
   smoothTime: 0.3
@@ -1076,6 +1079,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerTrapState
   manager: {fileID: 0}
+  isTrapActive: 0
+--- !u!114 &1530308813084415060
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2981559740274172891}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8977b2293eb34a544a1bd5e51bd8e1bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInfo
+  avatarCharacter: {fileID: 0}
+  characterName: Sloth
 --- !u!1 &3116350454469029091
 GameObject:
   m_ObjectHideFlags: 0

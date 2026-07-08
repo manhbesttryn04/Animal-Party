@@ -13,10 +13,21 @@ public class CharacterWinManager : MonoBehaviour
     public bool isBatUnlocked;
     public bool isRabbitUnlocked;
 
+    public bool isPlayer2 = false;
+    public bool isUseManager = false;
+
 
 
     public void Awake()
     {
+        if(isUseManager)
+        {
+            string characterName = SendPlayerWinner.Instance.characterName;
+            bool isPlayer2 = SendPlayerWinner.Instance.isPlayer2;
+            SetCharacterWinner(characterName, isPlayer2);
+        }
+       
+
         UnLockedCharacterWinner();
     }
 
@@ -43,4 +54,30 @@ public class CharacterWinManager : MonoBehaviour
             slothCharacter.SetActive(true);
         }
     }
+   
+   public void SetCharacterWinner(string name, bool isPlayer2)
+   {
+       switch (name)
+       {
+           case "Seagull":
+               isSeaGullUnlocked = true;
+               break;
+           case "Bat":
+               isBatUnlocked = true;
+               break;
+           case "Rabbit":
+               isRabbitUnlocked = true;
+               break;
+           case "Leopard":
+               isLeoPardUnlocked = true;
+               break;
+           case "Sloth":
+               isSlothUnlocked = true;
+               break;
+           default:
+               Debug.LogWarning("Character name not recognized: " + name);
+               break;
+       }
+       this.isPlayer2 = isPlayer2;
+   }
 }

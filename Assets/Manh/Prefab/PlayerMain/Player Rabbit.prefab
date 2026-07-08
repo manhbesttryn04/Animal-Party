@@ -1659,6 +1659,7 @@ GameObject:
   - component: {fileID: 3374457763631145659}
   - component: {fileID: 6932236325927383214}
   - component: {fileID: 3244722395684098332}
+  - component: {fileID: 6519358709244795771}
   m_Layer: 3
   m_Name: Player Rabbit
   m_TagString: Untagged
@@ -1748,6 +1749,7 @@ MonoBehaviour:
   playerFunnyItem: {fileID: 0}
   playerMiniGame: {fileID: 0}
   playerVFX: {fileID: 0}
+  playerTrapState: {fileID: 0}
 --- !u!114 &4759128115085428764
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1829,6 +1831,7 @@ MonoBehaviour:
   transFollow: {fileID: 7998173175887187848}
   transFollow2: {fileID: 8786602056682497213}
   transFollow3: {fileID: 6900498625667009209}
+  transFollow4: {fileID: 0}
   player: {fileID: 0}
   cameraMain: {fileID: 0}
   smoothTime: 0.3
@@ -1985,6 +1988,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerTrapState
   manager: {fileID: 0}
+  isTrapActive: 0
+--- !u!114 &6519358709244795771
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6383170884262352192}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8977b2293eb34a544a1bd5e51bd8e1bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInfo
+  avatarCharacter: {fileID: 0}
+  characterName: Rabbit
 --- !u!1 &6791763365937713733
 GameObject:
   m_ObjectHideFlags: 0

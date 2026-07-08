@@ -55,7 +55,8 @@ public class AudioManager : MonoBehaviour
 
     [Header("Winner")]
     public AudioClip winnerClip;
-    public AudioClip winnerMiniGameClip;
+    public AudioClip winnerMiniGameClip1;
+    public AudioClip winnerMiniGameClip2;
     public AudioClip fourPowerCoinClip;
     public AudioClip threethirtyIndexClip;
 

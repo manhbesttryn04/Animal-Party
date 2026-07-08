@@ -969,6 +969,7 @@ GameObject:
   - component: {fileID: 8180917532241154464}
   - component: {fileID: 3708264822579720142}
   - component: {fileID: 4473154357462292566}
+  - component: {fileID: 1246469672268772475}
   m_Layer: 3
   m_Name: Player Leopard
   m_TagString: Untagged
@@ -1058,6 +1059,7 @@ MonoBehaviour:
   playerFunnyItem: {fileID: 0}
   playerMiniGame: {fileID: 0}
   playerVFX: {fileID: 0}
+  playerTrapState: {fileID: 0}
 --- !u!114 &1221501537199553981
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1139,6 +1141,7 @@ MonoBehaviour:
   transFollow: {fileID: 6488033488161841855}
   transFollow2: {fileID: 832662470147948942}
   transFollow3: {fileID: 7976761281974137334}
+  transFollow4: {fileID: 0}
   player: {fileID: 0}
   cameraMain: {fileID: 0}
   smoothTime: 0.3
@@ -1295,6 +1298,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerTrapState
   manager: {fileID: 0}
+  isTrapActive: 0
+--- !u!114 &1246469672268772475
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3831907772420449350}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8977b2293eb34a544a1bd5e51bd8e1bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInfo
+  avatarCharacter: {fileID: 0}
+  characterName: Leopard
 --- !u!1 &3875177763687208274
 GameObject:
   m_ObjectHideFlags: 0

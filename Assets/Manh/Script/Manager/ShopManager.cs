@@ -80,7 +80,6 @@ public class ShopManager : MonoBehaviour
         }
     }
    
-
     #endregion
 
     // =========================================================

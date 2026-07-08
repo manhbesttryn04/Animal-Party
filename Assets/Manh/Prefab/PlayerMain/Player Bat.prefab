@@ -2326,6 +2326,7 @@ GameObject:
   - component: {fileID: 2132799995419411170}
   - component: {fileID: 3224379677900977750}
   - component: {fileID: 2623694218369040710}
+  - component: {fileID: 2656138512721306608}
   m_Layer: 3
   m_Name: Player Bat
   m_TagString: Untagged
@@ -2415,6 +2416,7 @@ MonoBehaviour:
   playerFunnyItem: {fileID: 0}
   playerMiniGame: {fileID: 0}
   playerVFX: {fileID: 0}
+  playerTrapState: {fileID: 0}
 --- !u!114 &5323853250264109155
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2454,6 +2456,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   manager: {fileID: 2763609384600980252}
+  playerTrapState: {fileID: 0}
   navMeshAgent: {fileID: 0}
   pointCheck: []
   currentIndex: 0
@@ -2495,6 +2498,7 @@ MonoBehaviour:
   transFollow: {fileID: 5329316482708802458}
   transFollow2: {fileID: 5794123409220517830}
   transFollow3: {fileID: 1770820175304497226}
+  transFollow4: {fileID: 0}
   player: {fileID: 0}
   cameraMain: {fileID: 0}
   smoothTime: 0.3
@@ -2650,6 +2654,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30f7443e4ba380f49b7250439cc26330, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerTrapState
+  manager: {fileID: 0}
+  isTrapActive: 0
+--- !u!114 &2656138512721306608
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8227564280047608387}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8977b2293eb34a544a1bd5e51bd8e1bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInfo
+  avatarCharacter: {fileID: 0}
+  characterName: Bat
 --- !u!1 &8312435199000842809
 GameObject:
   m_ObjectHideFlags: 0

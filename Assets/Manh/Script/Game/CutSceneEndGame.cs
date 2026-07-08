@@ -28,11 +28,13 @@ public class CutSceneEndGame : MonoBehaviour
 
     private void Awake()
     {
+        FindPlayerWinner();
         if (teleport != null)
         {
             teleportOriginalScale = teleport.transform.localScale;
             teleport.transform.localScale = Vector3.zero;
         }
+      
     }
     private void Start()
     {
@@ -48,11 +50,20 @@ public class CutSceneEndGame : MonoBehaviour
         if (player == null || teleport == null)
             yield break;
         // StartCoroutine(ShowBlackPanelRoutine());
-        AudioManager.Instance.PlayEnvironment(AudioManager.Instance.javaLoopClip);
+       AudioManager audio = AudioManager.Instance;
+        if(audio != null)
+        {
+            audio.PlayEnvironment(audio.javaLoopClip);
+        }
+       
+        
         //==============================
         // 1. Mở cổng từ từ
         //==============================
-        AudioManager.Instance.PlaySFX(AudioManager.Instance.openTeleportClip);
+       if(audio != null)
+        {
+            audio.PlaySFX(audio.openTeleportClip);
+        }
         yield return StartCoroutine(ScaleTeleport(teleportOriginalScale, teleportOpenTime));
 
         yield return new WaitForSeconds(waitTime);
@@ -77,7 +88,10 @@ public class CutSceneEndGame : MonoBehaviour
             // Sau 1 giây thì đóng cổng
             yield return new WaitForSeconds(3f);
 
-            AudioManager.Instance.PlaySFX(AudioManager.Instance.closeTeleportClip);
+           if(audio != null)
+            {
+                audio.PlaySFX(audio.closeTeleportClip);
+            }
             yield return StartCoroutine(
                 ScaleTeleport(Vector3.zero, 1)
             );
@@ -340,5 +354,9 @@ public class CutSceneEndGame : MonoBehaviour
         yield return new WaitForSeconds(1.6f);
 
         blackPanel.SetActive(false);
+    }
+    public void FindPlayerWinner()
+    {
+        player = GameObject.FindGameObjectWithTag("Player");
     }
 }
