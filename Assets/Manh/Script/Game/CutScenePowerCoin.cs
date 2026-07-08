@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.SceneManagement;
 
 public class CutScenePowerCoin : MonoBehaviour
 {
@@ -64,6 +65,7 @@ public class CutScenePowerCoin : MonoBehaviour
         if (player == null || teleport == null)
             yield break;
         VolumeManager.Instance.StartVignette();
+        SceneManager.LoadSceneAsync("Word 2", LoadSceneMode.Additive);
         // 1. Camera tới điểm đầu
         if (transformsCutScene.Length > 0 && transformsCutScene[0] != null)
         {
