@@ -331,6 +331,7 @@ public class PlayerMoveAI : MonoBehaviour
         navMeshAgent.Warp(targetPos);
     }
 
+
     #endregion
 
     #region Utility
