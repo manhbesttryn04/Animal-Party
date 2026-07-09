@@ -293,9 +293,12 @@ public class PlayerMoveAI : MonoBehaviour
 
         Vector3 startPos = transform.position;
 
-        // Phát animation Jump
-        manager.playerAnimator.playerAnimator.ResetTrigger("Jump");
         manager.playerAnimator.playerAnimator.SetTrigger("Jump");
+
+        while (!manager.playerAnimator.playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("Jump"))
+        {
+            yield return null;
+        }
 
         float duration = 0.4f;
         float height = 0.8f;
@@ -317,7 +320,13 @@ public class PlayerMoveAI : MonoBehaviour
 
         transform.position = targetPos;
 
-        // Không đợi animation kết thúc
+        while (manager.playerAnimator.playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("Jump"))
+        {
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(0.5f);
+
         navMeshAgent.enabled = true;
         navMeshAgent.Warp(targetPos);
     }
