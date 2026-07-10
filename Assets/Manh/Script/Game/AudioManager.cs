@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -99,6 +100,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip buffBigClip;
     public AudioClip iceMagicClip;
 
+    private Coroutine fadeAllAudioCoroutine;
 
 
 
@@ -275,5 +277,48 @@ public class AudioManager : MonoBehaviour
         sfxSource.volume = setup.sfxVolume;
         environmentSource.volume = setup.environmentVolume;
         specialSource.volume = setup.specialVolume;
+    }
+
+
+    /// <summary>
+    /// Giảm toàn bộ AudioSource về 0 theo thời gian.
+    /// </summary>
+    public void FadeOutAllAudio(float fadeTime)
+    {
+        if (fadeAllAudioCoroutine != null)
+            StopCoroutine(fadeAllAudioCoroutine);
+
+        fadeAllAudioCoroutine = StartCoroutine(FadeOutAllAudioRoutine(fadeTime));
+    }
+
+    private IEnumerator FadeOutAllAudioRoutine(float fadeTime)
+    {
+        float musicStart = musicSource.volume;
+        float sfxStart = sfxSource.volume;
+        float environmentStart = environmentSource.volume;
+        float specialStart = specialSource.volume;
+
+        float time = 0f;
+
+        while (time < fadeTime)
+        {
+            time += Time.deltaTime;
+
+            float t = time / fadeTime;
+
+            musicSource.volume = Mathf.Lerp(musicStart, 0f, t);
+            sfxSource.volume = Mathf.Lerp(sfxStart, 0f, t);
+            environmentSource.volume = Mathf.Lerp(environmentStart, 0f, t);
+            specialSource.volume = Mathf.Lerp(specialStart, 0f, t);
+
+            yield return null;
+        }
+
+        musicSource.volume = 0f;
+        sfxSource.volume = 0f;
+        environmentSource.volume = 0f;
+        specialSource.volume = 0f;
+
+        fadeAllAudioCoroutine = null;
     }
 }

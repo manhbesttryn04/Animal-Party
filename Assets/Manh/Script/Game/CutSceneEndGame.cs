@@ -180,6 +180,10 @@ public class CutSceneEndGame : MonoBehaviour
             // Đợi player đi xong nếu player chưa tới
             yield return playerMoveRoutine;
             blackStopPanel.SetActive(true);
+            if(audio != null)
+            {
+                audio.FadeOutAllAudio(4.18f);
+            }
             yield return new WaitForSeconds(7f);
             SceneManager.LoadScene(6);
         }

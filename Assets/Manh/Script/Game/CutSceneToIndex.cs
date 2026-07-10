@@ -134,7 +134,7 @@ public class CutSceneToIndex : MonoBehaviour
         VolumeManager.Instance.ResetVignette();
 
         // 9. Hiện black panel
-        yield return StartCoroutine(UIManager.Instance.BlackPanelRoutine());
+         StartCoroutine(UIManager.Instance.BlackPanelRoutine());
         SceneManager.LoadScene(5);
     }
 
