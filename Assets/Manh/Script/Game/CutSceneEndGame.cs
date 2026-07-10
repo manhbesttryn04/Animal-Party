@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.SceneManagement;
 
 public class CutSceneEndGame : MonoBehaviour
 {
@@ -25,6 +26,7 @@ public class CutSceneEndGame : MonoBehaviour
 
     private Vector3 teleportOriginalScale;
     public GameObject blackPanel;
+    public GameObject blackStopPanel;
 
     private void Awake()
     {
@@ -114,7 +116,7 @@ public class CutSceneEndGame : MonoBehaviour
         // Mượt đến cut 2
         yield return StartCoroutine(MoveCameraToPoint(2));
        // yield return new WaitForSeconds(waitTime);
-
+        
         // Mượt đến cut 3
         yield return StartCoroutine(MoveCameraToPoint(3));
        // yield return new WaitForSeconds(0.2f);
@@ -177,6 +179,9 @@ public class CutSceneEndGame : MonoBehaviour
 
             // Đợi player đi xong nếu player chưa tới
             yield return playerMoveRoutine;
+            blackStopPanel.SetActive(true);
+            yield return new WaitForSeconds(7f);
+            SceneManager.LoadScene(6);
         }
         else
         {
