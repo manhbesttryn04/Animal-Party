@@ -4480,7 +4480,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f5c43531b7774c45ba1db7013ef8a54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  indexMiniGame: 6
+  indexMiniGame: 3
   miniGameList: {fileID: 288627989}
   intrusTextList: {fileID: 288627990}
   videoInstructList: {fileID: 288627991}
@@ -11056,6 +11056,7 @@ MonoBehaviour:
   brickFallClip: {fileID: 8300000, guid: 857f9862e97e5324cae2f005a7f3bdbe, type: 3}
   javaLoopClip: {fileID: 8300000, guid: b2be09b970b464747871f8b5c01d7b69, type: 3}
   laserHitClip: {fileID: 8300000, guid: f4310c6a89d9c624586c2b41d199d696, type: 3}
+  fireHitClip: {fileID: 8300000, guid: 8cdd267af135c1c4eb28c5e911c4f374, type: 3}
   laserMoveClip: {fileID: 8300000, guid: f17b9e4883751c949bf851f1c76fc7bd, type: 3}
   scanPiratesClip: {fileID: 8300000, guid: 0b58ea4de3f0958469a6df5aeff3a2c8, type: 3}
   laughPiratesClip: {fileID: 8300000, guid: 7dccd73180f7cc04e8cdacb2c140da9b, type: 3}
@@ -50742,7 +50743,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!23 &6265748706398472638
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -51415,11 +51416,35 @@ PrefabInstance:
       objectReference: {fileID: 288627986}
     - target: {fileID: 243000555435908583, guid: be209fedaaf98dd45b5aeeae493e3b70, type: 3}
       propertyPath: totalGameTime
-      value: 160
+      value: 120
+      objectReference: {fileID: 0}
+    - target: {fileID: 243000555435908583, guid: be209fedaaf98dd45b5aeeae493e3b70, type: 3}
+      propertyPath: phase2_Fire.startTime
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 243000555435908583, guid: be209fedaaf98dd45b5aeeae493e3b70, type: 3}
+      propertyPath: phase3_Spam.startTime
+      value: 70
+      objectReference: {fileID: 0}
+    - target: {fileID: 243000555435908583, guid: be209fedaaf98dd45b5aeeae493e3b70, type: 3}
+      propertyPath: phase4_Hard.startTime
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 280739154884813348, guid: be209fedaaf98dd45b5aeeae493e3b70, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1129350372315995593, guid: be209fedaaf98dd45b5aeeae493e3b70, type: 3}
+      propertyPath: coinPenalty
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1968767699480728643, guid: be209fedaaf98dd45b5aeeae493e3b70, type: 3}
+      propertyPath: coinPenalty
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3924095441903326591, guid: be209fedaaf98dd45b5aeeae493e3b70, type: 3}
+      propertyPath: coinPenalty
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4237812240865113896, guid: be209fedaaf98dd45b5aeeae493e3b70, type: 3}
       propertyPath: m_LocalPosition.x
@@ -51461,13 +51486,25 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5547223021197048762, guid: be209fedaaf98dd45b5aeeae493e3b70, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6446608831677825456, guid: be209fedaaf98dd45b5aeeae493e3b70, type: 3}
       propertyPath: moveSpeed
       value: 5
       objectReference: {fileID: 0}
+    - target: {fileID: 8147022206366202924, guid: be209fedaaf98dd45b5aeeae493e3b70, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8586582966760187573, guid: be209fedaaf98dd45b5aeeae493e3b70, type: 3}
       propertyPath: m_Name
       value: MiniGame 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744407749009134987, guid: be209fedaaf98dd45b5aeeae493e3b70, type: 3}
+      propertyPath: coinPenalty
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:

@@ -6,7 +6,7 @@ namespace AnimalParty.Obstacles
 {
     [RequireComponent(typeof(Collider))]
     [DisallowMultipleComponent]
-    public class LaserTrap : MonoBehaviour
+    public class DamegeTrap : MonoBehaviour
     {
         public enum TrapType { Laser, Fire }
 
@@ -134,11 +134,14 @@ namespace AnimalParty.Obstacles
         private void HitPlayer(Collider targetCollider)
         {
             PlayerMiniGame miniGame = targetCollider.GetComponentInParent<PlayerMiniGame>();
-            if (miniGame != null) miniGame.UpCoin(0, -coinPenalty);
+            if (miniGame != null) miniGame.UpCoin(0, coinPenalty);
 
             PlayerMove move = targetCollider.GetComponentInParent<PlayerMove>();
             if (move != null)
             {
+                // Phát âm thanh theo loại bẫy
+                PlayTrapHitSound();
+
                 StartCoroutine(StunRoutine(move));
                 
                 if (!effectPlayers.Contains(move)) 
@@ -244,5 +247,31 @@ namespace AnimalParty.Obstacles
 
             Destroy(fireVFX);
         }
+        private void PlayTrapHitSound()
+        {
+            AudioManager audio = AudioManager.Instance;
+
+            if (audio == null)
+                return;
+
+            AudioClip clip = null;
+
+            switch (trapType)
+            {
+                case TrapType.Laser:
+                    clip = audio.laserHitClip;
+                    break;
+
+                case TrapType.Fire:
+                    clip = audio.fireHitClip;
+                    break;
+            }
+
+            if (clip != null)
+            {
+                audio.PlaySFX(clip);
+            }
+        }
     }
+
 }

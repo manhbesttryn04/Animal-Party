@@ -88,6 +88,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip javaLoopClip;
     [Header("Minigam 3")]
     public AudioClip laserHitClip;
+    public AudioClip fireHitClip;
     public AudioClip laserMoveClip;
     [Header("Minigame 4")]
     public AudioClip scanPiratesClip;
