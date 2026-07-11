@@ -1,7 +1,8 @@
 ﻿using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.AI;
-using TMPro;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class CutSceneEndGame : MonoBehaviour
@@ -25,7 +26,9 @@ public class CutSceneEndGame : MonoBehaviour
     public float playerMoveSpeed = 1f;
     public float playerSlowMoveSpeed = 0.4f;
 
+    [Header("Black Panels")]
     public GameObject blackPanel;
+    public GameObject blackStopPanel;
 
     [Header("--- SUBTITLE NARRATOR ---")]
     public GameObject subtitlePanel;
@@ -37,33 +40,40 @@ public class CutSceneEndGame : MonoBehaviour
     public TMP_ColorGradient finalGradient;
 
     [Header("--- OUTLINE COLOR ---")]
-    public Color normalOutlineColor = new Color(1f, 1f, 1f, 0.2f);
-    public Color finalOutlineColor = new Color(1f, 1f, 1f, 0.31f);
+    public Color normalOutlineColor =
+        new Color(1f, 1f, 1f, 0.2f);
+
+    public Color finalOutlineColor =
+        new Color(1f, 1f, 1f, 0.31f);
 
     [Header("--- NARRATOR VOICE ---")]
     public AudioClip[] narratorVoices;
-    [Range(0f, 1f)] public float narratorVolume = 0.9f;
 
-    [Header("--- TIMING ---")]
+    [Range(0f, 1f)]
+    public float narratorVolume = 0.9f;
+
+    [Header("--- SUBTITLE TIMING ---")]
     public float typeSpeed = 0.04f;
     public float fadeOutDuration = 0.3f;
     public float betweenLineFade = 0.3f;
 
-    private string[] storyLines = new string[]
+    private readonly string[] storyLines =
     {
-        "A gateway to glory... it finally appears.",           // [0] mở cổng
-        "The winner walks into legend.",                       // [1] player bước vào
-        "Behold... the island that legends are made of.",      // [2] camera khám phá
-        "Riches untold, claimed by only the worthy.",          // [3] camera tiếp tục
-        "This is what it was all for.",                        // [4] camera cut 8->11
-        "The Animal Party has found its true champion!"        // [5] câu cuối đỏ son
+        "A gateway to glory... it finally appears.",
+        "The winner walks into legend.",
+        "Behold... the island that legends are made of.",
+        "Riches untold, claimed by only the worthy.",
+        "This is what it was all for.",
+        "The Animal Party has found its true champion!"
     };
 
-    private AudioSource narratorSource;
     private Vector3 teleportOriginalScale;
+    private AudioSource narratorSource;
 
     private void Awake()
     {
+        FindPlayerWinner();
+
         if (teleport != null)
         {
             teleportOriginalScale = teleport.transform.localScale;
@@ -73,216 +83,588 @@ public class CutSceneEndGame : MonoBehaviour
 
     private void Start()
     {
+        SetupNarrator();
+        PlayCutScene();
+    }
+
+    //==================================================
+    // SETUP NARRATOR
+    //==================================================
+    private void SetupNarrator()
+    {
         narratorSource = gameObject.AddComponent<AudioSource>();
+
         narratorSource.playOnAwake = false;
         narratorSource.loop = false;
         narratorSource.volume = narratorVolume;
 
-        if (subtitlePanel) subtitlePanel.SetActive(false);
-        if (subtitleText) { subtitleText.text = ""; subtitleText.alpha = 1f; }
+        if (subtitlePanel != null)
+        {
+            subtitlePanel.SetActive(false);
+        }
 
-        PlayCutScene();
+        if (subtitleText != null)
+        {
+            subtitleText.text = "";
+            subtitleText.alpha = 1f;
+        }
     }
 
+    //==================================================
+    // PLAY CUTSCENE
+    //==================================================
     public void PlayCutScene()
     {
         StartCoroutine(CutSceneRoutine());
     }
 
+    //==================================================
+    // MAIN CUTSCENE
+    //==================================================
     private IEnumerator CutSceneRoutine()
     {
-        if (player == null || teleport == null) yield break;
-
-        AudioManager.Instance.PlayEnvironment(AudioManager.Instance.javaLoopClip);
-
-        // 1. Mở cổng + câu 0
-        ShowSubtitleImmediate(storyLines[0], 0, false);
-        AudioManager.Instance.PlaySFX(AudioManager.Instance.openTeleportClip);
-        yield return StartCoroutine(ScaleTeleport(teleportOriginalScale, teleportOpenTime));
-        yield return new WaitForSeconds(waitTime);
-
-        // 2. Player đi tới Walk 0 + câu 1
-        if (transPlayerToWalk.Length > 0 && transPlayerToWalk[0] != null)
+        if (player == null || teleport == null)
         {
-            yield return StartCoroutine(ShowSubtitleWithVoice(storyLines[1], 1, false));
+            yield break;
+        }
 
-            PlayerVFX playerVFX = player.GetComponent<PlayerVFX>();
+        AudioManager audio = AudioManager.Instance;
+
+        if (audio != null)
+        {
+            audio.PlayEnvironment(audio.javaLoopClip);
+        }
+
+        //==================================================
+        // 1. MỞ CỔNG + PHỤ ĐỀ CÂU 0
+        //==================================================
+        ShowSubtitleImmediate(
+            storyLines[0],
+            0,
+            false
+        );
+
+        if (audio != null)
+        {
+            audio.PlaySFX(audio.openTeleportClip);
+        }
+
+        yield return StartCoroutine(
+            ScaleTeleport(
+                teleportOriginalScale,
+                teleportOpenTime
+            )
+        );
+
+        yield return new WaitForSeconds(2f);
+
+        //==================================================
+        // 2. PLAYER ĐI TỚI WALK 0 + PHỤ ĐỀ CÂU 1
+        //==================================================
+        if (transPlayerToWalk != null &&
+            transPlayerToWalk.Length > 0 &&
+            transPlayerToWalk[0] != null)
+        {
+           StartCoroutine(
+                ShowSubtitleWithVoice(
+                    storyLines[1],
+                    1,
+                    false
+                )
+            );
+
+            PlayerVFX playerVFX =
+                player.GetComponent<PlayerVFX>();
+
             if (playerVFX != null)
-                StartCoroutine(playerVFX.DissolveInNoParticleRoutine());
+            {
+                StartCoroutine(
+                    playerVFX.DissolveInNoParticleRoutine()
+                );
+            }
 
             Coroutine playerMoveRoutine = StartCoroutine(
-                MovePlayerToPoint(player, transPlayerToWalk[0].position, playerMoveSpeed));
+                MovePlayerToPoint(
+                    player,
+                    transPlayerToWalk[0].position,
+                    playerMoveSpeed
+                )
+            );
 
             yield return new WaitForSeconds(3f);
 
-            AudioManager.Instance.PlaySFX(AudioManager.Instance.closeTeleportClip);
-            yield return StartCoroutine(ScaleTeleport(Vector3.zero, 1));
+            if (audio != null)
+            {
+                audio.PlaySFX(audio.closeTeleportClip);
+            }
+
+            yield return StartCoroutine(
+                ScaleTeleport(
+                    Vector3.zero,
+                    1f
+                )
+            );
+
             yield return playerMoveRoutine;
         }
 
-        // 3. Camera 0->3 + câu 2
+        //==================================================
+        // 3. CAMERA CUT 0 -> 3 + PHỤ ĐỀ CÂU 2
+        //==================================================
         SetCameraToPoint(0);
-        yield return StartCoroutine(ShowSubtitleWithVoice(storyLines[2], 2, false));
-        yield return StartCoroutine(MoveCameraToPoint(1));
-        yield return StartCoroutine(MoveCameraToPoint(2));
-        yield return StartCoroutine(MoveCameraToPoint(3));
 
-        // Camera 4->7 + câu 3
+        StartCoroutine(
+            ShowSubtitleWithVoice(
+                storyLines[2],
+                2,
+                false
+            )
+        );
+
+        yield return StartCoroutine(
+            MoveCameraToPoint(1)
+        );
+
+        yield return StartCoroutine(
+            MoveCameraToPoint(2)
+        );
+
+        yield return StartCoroutine(
+            MoveCameraToPoint(3)
+        );
+
+        //==================================================
+        // CAMERA CUT 4 -> 7 + PHỤ ĐỀ CÂU 3
+        //==================================================
         SetCameraToPoint(4);
-        yield return StartCoroutine(ShowSubtitleWithVoice(storyLines[3], 3, false));
-        yield return StartCoroutine(MoveCameraToPoint(5));
-        yield return new WaitForSeconds(waitTime);
-        SetCameraToPoint(6);
-        yield return StartCoroutine(MoveCameraToPoint(7));
 
-        // Camera 8->11 + câu 4
+         StartCoroutine(
+            ShowSubtitleWithVoice(
+                storyLines[3],
+                3,
+                false
+            )
+        );
+
+        yield return StartCoroutine(
+            MoveCameraToPoint(5)
+        );
+
+        yield return new WaitForSeconds(waitTime);
+
+        SetCameraToPoint(6);
+
+        yield return StartCoroutine(
+            MoveCameraToPoint(7)
+        );
+
+        //==================================================
+        // CAMERA CUT 8 -> 12 + PHỤ ĐỀ CÂU 4
+        //==================================================
         SetCameraToPoint(8);
-        yield return StartCoroutine(ShowSubtitleWithVoice(storyLines[4], 4, false));
-        yield return StartCoroutine(MoveCameraToPoint(9));
+
+       StartCoroutine(
+            ShowSubtitleWithVoice(
+                storyLines[4],
+                4,
+                false
+            )
+        );
+
+        yield return StartCoroutine(
+            MoveCameraToPoint(9)
+        );
+
         SetCameraToPoint(10);
+
         yield return new WaitForSeconds(waitTime);
-        yield return StartCoroutine(MoveCameraToPoint(11));
+
+        yield return StartCoroutine(
+            MoveCameraToPoint(11)
+        );
+
         yield return new WaitForSeconds(waitTime);
+
         SetCameraToPoint(12);
 
-        // 4. Player đi chậm + câu cuối đỏ son
-        if (transPlayerToWalk.Length > 1 && transPlayerToWalk[1] != null)
+        //==================================================
+        // 4. PLAYER ĐI CHẬM + CÂU CUỐI
+        //==================================================
+        if (transPlayerToWalk != null &&
+            transPlayerToWalk.Length > 1 &&
+            transPlayerToWalk[1] != null)
         {
             Coroutine playerMoveRoutine = StartCoroutine(
-                MovePlayerToPoint(player, transPlayerToWalk[1].position, playerSlowMoveSpeed));
+                MovePlayerToPoint(
+                    player,
+                    transPlayerToWalk[1].position,
+                    playerSlowMoveSpeed
+                )
+            );
+          
+            // Camera 12 -> 13
+            yield return StartCoroutine(
+                MoveCameraToPoint(13)
+            );
 
-            yield return StartCoroutine(MoveCameraToPoint(13));
+            // Dịch chuyển tới camera 14
             SetCameraToPoint(14);
 
-            yield return StartCoroutine(ShowSubtitleWithVoice(storyLines[5], 5, true));
+            // Hiện câu cuối
+           
 
-            yield return StartCoroutine(MoveCameraToPoint(15));
+            // Camera 14 -> 15
+            yield return StartCoroutine(
+                MoveCameraToPoint(15)
+            );
+
             yield return new WaitForSeconds(0.2f);
+
+            // Dịch chuyển tới camera 16
             SetCameraToPoint(16);
+
+            // Đợi player đi xong
             yield return playerMoveRoutine;
+           yield return StartCoroutine(
+            ShowSubtitleWithVoice(
+                storyLines[5],
+                5,
+                true
+            )
+        );
+
+            HideSubtitleImmediate();
+
+            // Hiện panel đen cuối game
+            if (blackStopPanel != null)
+            {
+                blackStopPanel.SetActive(true);
+            }
+
+            // Fade toàn bộ âm thanh
+            if (audio != null)
+            {
+                audio.FadeOutAllAudio(4.18f);
+            }
+
+            yield return new WaitForSeconds(7f);
+
+            // Chuyển scene
+            SceneManager.LoadScene(6);
         }
         else
         {
-            yield return StartCoroutine(MoveCameraToPoint(13));
-            SetCameraToPoint(14);
-            yield return StartCoroutine(ShowSubtitleWithVoice(storyLines[5], 5, true));
-            yield return StartCoroutine(MoveCameraToPoint(15));
-        }
+            yield return StartCoroutine(
+                MoveCameraToPoint(13)
+            );
 
-        HideSubtitleImmediate();
+            SetCameraToPoint(14);
+
+            yield return StartCoroutine(
+                ShowSubtitleWithVoice(
+                    storyLines[5],
+                    5,
+                    true
+                )
+            );
+
+            yield return StartCoroutine(
+                MoveCameraToPoint(15)
+            );
+
+            HideSubtitleImmediate();
+        }
     }
 
-    // ====== SUBTITLE ======
-    IEnumerator ShowSubtitleWithVoice(string line, int voiceIndex, bool isFinal)
+    //==================================================
+    // HIỆN PHỤ ĐỀ + GIỌNG KỂ
+    //==================================================
+    private IEnumerator ShowSubtitleWithVoice(
+        string line,
+        int voiceIndex,
+        bool isFinal
+    )
     {
-        if (narratorSource) narratorSource.Stop();
-
-        if (subtitleText && subtitleText.text != "")
+        if (narratorSource != null)
         {
-            yield return StartCoroutine(FadeOutLine());
-            yield return new WaitForSeconds(betweenLineFade);
+            narratorSource.Stop();
         }
 
-        if (subtitlePanel) subtitlePanel.SetActive(true);
-        if (subtitleText) subtitleText.alpha = 1f;
+        // Nếu câu cũ còn hiện thì fade ra
+        if (subtitleText != null &&
+            subtitleText.text != "")
+        {
+            yield return StartCoroutine(
+                FadeOutLine()
+            );
+
+            yield return new WaitForSeconds(
+                betweenLineFade
+            );
+        }
+
+        if (subtitlePanel != null)
+        {
+            subtitlePanel.SetActive(true);
+        }
+
+        if (subtitleText != null)
+        {
+            subtitleText.alpha = 1f;
+            subtitleText.text = "";
+        }
 
         ApplyGradient(isFinal);
+
         PlayVoice(voiceIndex);
 
-        if (subtitleText) subtitleText.text = "";
-        foreach (char c in line)
+        // Hiệu ứng chữ chạy
+        foreach (char character in line)
         {
-            if (subtitleText) subtitleText.text += c;
+            if (subtitleText != null)
+            {
+                subtitleText.text += character;
+            }
+
             yield return new WaitForSeconds(typeSpeed);
         }
 
-        if (narratorSource && narratorSource.isPlaying)
-            yield return new WaitWhile(() => narratorSource.isPlaying);
+        // Đợi giọng kể chạy xong
+        if (narratorSource != null &&
+            narratorSource.isPlaying)
+        {
+            yield return new WaitWhile(
+                () => narratorSource.isPlaying
+            );
+        }
     }
 
-    void ShowSubtitleImmediate(string line, int voiceIndex, bool isFinal)
+    //==================================================
+    // HIỆN PHỤ ĐỀ NGAY
+    //==================================================
+    private void ShowSubtitleImmediate(
+        string line,
+        int voiceIndex,
+        bool isFinal
+    )
     {
-        if (subtitlePanel) subtitlePanel.SetActive(true);
-        if (subtitleText) { subtitleText.alpha = 1f; subtitleText.text = line; }
+        if (subtitlePanel != null)
+        {
+            subtitlePanel.SetActive(true);
+        }
+
+        if (subtitleText != null)
+        {
+            subtitleText.alpha = 1f;
+            subtitleText.text = line;
+        }
+
         ApplyGradient(isFinal);
+
         PlayVoice(voiceIndex);
     }
 
-    void ApplyGradient(bool isFinal)
+    //==================================================
+    // ÁP DỤNG GRADIENT VÀ OUTLINE
+    //==================================================
+    private void ApplyGradient(bool isFinal)
     {
-        if (subtitleText)
+        if (subtitleText != null)
         {
             subtitleText.enableVertexGradient = true;
-            subtitleText.colorGradientPreset = isFinal ? finalGradient : normalGradient;
+
+            subtitleText.colorGradientPreset =
+                isFinal
+                    ? finalGradient
+                    : normalGradient;
         }
-        if (subtitleOutline)
-            subtitleOutline.effectColor = isFinal ? finalOutlineColor : normalOutlineColor;
+
+        if (subtitleOutline != null)
+        {
+            subtitleOutline.effectColor =
+                isFinal
+                    ? finalOutlineColor
+                    : normalOutlineColor;
+        }
     }
 
-    void PlayVoice(int index)
+    //==================================================
+    // PHÁT GIỌNG KỂ
+    //==================================================
+    private void PlayVoice(int index)
     {
-        if (narratorSource && narratorVoices != null &&
-            narratorVoices.Length > index && narratorVoices[index] != null)
-            narratorSource.PlayOneShot(narratorVoices[index], narratorVolume);
+        if (narratorSource == null)
+        {
+            return;
+        }
+
+        if (narratorVoices == null)
+        {
+            return;
+        }
+
+        if (index < 0 ||
+            index >= narratorVoices.Length)
+        {
+            return;
+        }
+
+        if (narratorVoices[index] == null)
+        {
+            return;
+        }
+
+        narratorSource.PlayOneShot(
+            narratorVoices[index],
+            narratorVolume
+        );
     }
 
-    void HideSubtitleImmediate()
+    //==================================================
+    // FADE OUT PHỤ ĐỀ
+    //==================================================
+    private IEnumerator FadeOutLine()
     {
-        if (narratorSource) narratorSource.Stop();
-        if (subtitleText) { subtitleText.alpha = 1f; subtitleText.text = ""; }
-        if (subtitlePanel) subtitlePanel.SetActive(false);
-    }
+        if (subtitleText == null)
+        {
+            yield break;
+        }
 
-    IEnumerator FadeOutLine()
-    {
-        if (subtitleText == null) yield break;
         float startAlpha = subtitleText.alpha;
         float time = 0f;
+
         while (time < fadeOutDuration)
         {
             time += Time.deltaTime;
-            if (subtitleText) subtitleText.alpha = Mathf.Lerp(startAlpha, 0f, time / fadeOutDuration);
+
+            subtitleText.alpha = Mathf.Lerp(
+                startAlpha,
+                0f,
+                time / fadeOutDuration
+            );
+
             yield return null;
         }
-        if (subtitleText) { subtitleText.alpha = 1f; subtitleText.text = ""; }
-        if (subtitlePanel) subtitlePanel.SetActive(false);
+
+        subtitleText.alpha = 1f;
+        subtitleText.text = "";
+
+        if (subtitlePanel != null)
+        {
+            subtitlePanel.SetActive(false);
+        }
     }
 
-    // ====== TELEPORT ======
-    private IEnumerator ScaleTeleport(Vector3 targetScale, float duration)
+    //==================================================
+    // ẨN PHỤ ĐỀ NGAY
+    //==================================================
+    private void HideSubtitleImmediate()
     {
-        Vector3 startScale = teleport.transform.localScale;
-        float t = 0f;
-        while (t < duration)
+        if (narratorSource != null)
         {
-            t += Time.deltaTime;
-            teleport.transform.localScale = Vector3.Lerp(startScale, targetScale, t / duration);
+            narratorSource.Stop();
+        }
+
+        if (subtitleText != null)
+        {
+            subtitleText.alpha = 1f;
+            subtitleText.text = "";
+        }
+
+        if (subtitlePanel != null)
+        {
+            subtitlePanel.SetActive(false);
+        }
+    }
+
+    //==================================================
+    // TELEPORT SCALE
+    //==================================================
+    private IEnumerator ScaleTeleport(
+        Vector3 targetScale,
+        float duration
+    )
+    {
+        if (teleport == null)
+        {
+            yield break;
+        }
+
+        if (duration <= 0f)
+        {
+            teleport.transform.localScale = targetScale;
+            yield break;
+        }
+
+        Vector3 startScale =
+            teleport.transform.localScale;
+
+        float time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+
+            teleport.transform.localScale =
+                Vector3.Lerp(
+                    startScale,
+                    targetScale,
+                    time / duration
+                );
+
             yield return null;
         }
+
         teleport.transform.localScale = targetScale;
     }
 
-    // ====== PLAYER MOVE ======
-    private IEnumerator MovePlayerToPoint(GameObject playerObj, Vector3 targetPos, float speed)
+    //==================================================
+    // PLAYER MOVE
+    //==================================================
+    private IEnumerator MovePlayerToPoint(
+        GameObject playerObj,
+        Vector3 targetPos,
+        float speed
+    )
     {
-        if (playerObj == null) yield break;
+        if (playerObj == null)
+        {
+            yield break;
+        }
 
-        PlayerManager playerManager = playerObj.GetComponent<PlayerManager>();
-        NavMeshAgent agent = playerObj.GetComponent<NavMeshAgent>();
+        PlayerManager playerManager =
+            playerObj.GetComponent<PlayerManager>();
 
-        targetPos.y = playerObj.transform.position.y;
+        NavMeshAgent agent =
+            playerObj.GetComponent<NavMeshAgent>();
+
+        // Giữ nguyên Y của player
+        targetPos.y =
+            playerObj.transform.position.y;
+
         SetPlayerWalk(playerManager, 1f);
 
         if (agent != null)
         {
-            agent.enabled = true;
+            if (!agent.enabled)
+            {
+                agent.enabled = true;
+            }
+
             agent.isStopped = false;
             agent.speed = speed;
+
             agent.SetDestination(targetPos);
 
-            while (agent.pathPending || agent.remainingDistance > agent.stoppingDistance)
+            while (agent.pathPending ||
+                   agent.remainingDistance >
+                   agent.stoppingDistance)
             {
-                SetPlayerWalk(playerManager, agent.velocity.magnitude);
+                SetPlayerWalk(
+                    playerManager,
+                    agent.velocity.magnitude
+                );
+
                 yield return null;
             }
 
@@ -291,67 +673,162 @@ public class CutSceneEndGame : MonoBehaviour
         }
         else
         {
-            while (Vector3.Distance(playerObj.transform.position, targetPos) > 0.05f)
+            while (Vector3.Distance(
+                       playerObj.transform.position,
+                       targetPos
+                   ) > 0.05f)
             {
-                Vector3 dir = targetPos - playerObj.transform.position;
-                dir.y = 0f;
-                if (dir != Vector3.zero)
+                Vector3 direction =
+                    targetPos -
+                    playerObj.transform.position;
+
+                direction.y = 0f;
+
+                if (direction != Vector3.zero)
                 {
-                    dir.Normalize();
-                    playerObj.transform.position += dir * speed * Time.deltaTime;
-                    playerObj.transform.rotation = Quaternion.Slerp(
-                        playerObj.transform.rotation,
-                        Quaternion.LookRotation(dir),
-                        Time.deltaTime * 5f);
+                    direction.Normalize();
+
+                    playerObj.transform.position +=
+                        direction *
+                        speed *
+                        Time.deltaTime;
+
+                    Quaternion targetRotation =
+                        Quaternion.LookRotation(direction);
+
+                    playerObj.transform.rotation =
+                        Quaternion.Slerp(
+                            playerObj.transform.rotation,
+                            targetRotation,
+                            Time.deltaTime * 5f
+                        );
                 }
+
                 yield return null;
             }
-            playerObj.transform.position = new Vector3(targetPos.x, playerObj.transform.position.y, targetPos.z);
+
+            playerObj.transform.position =
+                new Vector3(
+                    targetPos.x,
+                    playerObj.transform.position.y,
+                    targetPos.z
+                );
         }
 
         SetPlayerWalk(playerManager, 0f);
     }
 
-    private void SetPlayerWalk(PlayerManager playerManager, float value)
+    //==================================================
+    // PLAYER WALK ANIMATION
+    //==================================================
+    private void SetPlayerWalk(
+        PlayerManager playerManager,
+        float value
+    )
     {
         if (playerManager != null &&
             playerManager.playerAnimator != null &&
             playerManager.playerAnimator.playerAnimator != null)
-            playerManager.playerAnimator.playerAnimator.SetFloat("Walk", value);
+        {
+            playerManager.playerAnimator
+                .playerAnimator
+                .SetFloat(
+                    "Walk",
+                    value
+                );
+        }
     }
 
-    // ====== CAMERA ======
+    //==================================================
+    // SET CAMERA NGAY
+    //==================================================
     private void SetCameraToPoint(int index)
     {
-        if (!IsValidCameraPoint(index)) return;
-        StartCoroutine(ShowBlackPanelRoutine());
-        Camera.main.transform.position = transCameraCutSceneList[index].position;
-        Camera.main.transform.rotation = transCameraCutSceneList[index].rotation;
+        if (!IsValidCameraPoint(index))
+        {
+            return;
+        }
+
+        StartCoroutine(
+            ShowBlackPanelRoutine()
+        );
+
+        Camera.main.transform.position =
+            transCameraCutSceneList[index].position;
+
+        Camera.main.transform.rotation =
+            transCameraCutSceneList[index].rotation;
     }
 
+    //==================================================
+    // CAMERA DI CHUYỂN MƯỢT
+    //==================================================
     private IEnumerator MoveCameraToPoint(int index)
     {
-        if (!IsValidCameraPoint(index)) yield break;
-
-        Transform cam = Camera.main.transform;
-        Transform target = transCameraCutSceneList[index];
-        Vector3 startPos = cam.position;
-        Quaternion startRot = cam.rotation;
-        float t = 0f;
-
-        while (t < cameraMoveTime)
+        if (!IsValidCameraPoint(index))
         {
-            t += Time.deltaTime;
-            float lerp = t / cameraMoveTime;
-            cam.position = Vector3.Lerp(startPos, target.position, lerp);
-            cam.rotation = Quaternion.Slerp(startRot, target.rotation, lerp);
+            yield break;
+        }
+
+        Transform cameraTransform =
+            Camera.main.transform;
+
+        Transform target =
+            transCameraCutSceneList[index];
+
+        Vector3 startPosition =
+            cameraTransform.position;
+
+        Quaternion startRotation =
+            cameraTransform.rotation;
+
+        if (cameraMoveTime <= 0f)
+        {
+            cameraTransform.position =
+                target.position;
+
+            cameraTransform.rotation =
+                target.rotation;
+
+            yield break;
+        }
+
+        float time = 0f;
+
+        while (time < cameraMoveTime)
+        {
+            time += Time.deltaTime;
+
+            float percent =
+                time / cameraMoveTime;
+
+            cameraTransform.position =
+                Vector3.Lerp(
+                    startPosition,
+                    target.position,
+                    percent
+                );
+
+            cameraTransform.rotation =
+                Quaternion.Slerp(
+                    startRotation,
+                    target.rotation,
+                    percent
+                );
+
             yield return null;
         }
 
-        cam.position = target.position;
-        cam.rotation = target.rotation;
+        cameraTransform.position =
+            target.position;
+
+        cameraTransform.rotation =
+            target.rotation;
     }
 
+    //==================================================
+    // KIỂM TRA CAMERA POINT
+    //==================================================
     private bool IsValidCameraPoint(int index)
     {
         return transCameraCutSceneList != null &&
@@ -361,12 +838,28 @@ public class CutSceneEndGame : MonoBehaviour
                Camera.main != null;
     }
 
-    // ====== BLACK PANEL ======
+    //==================================================
+    // BLACK PANEL CAMERA CUT
+    //==================================================
     private IEnumerator ShowBlackPanelRoutine()
     {
-        if (blackPanel == null) yield break;
+        if (blackPanel == null)
+        {
+            yield break;
+        }
+
         blackPanel.SetActive(true);
+
         yield return new WaitForSeconds(1.6f);
+
         blackPanel.SetActive(false);
+    }
+
+    //==================================================
+    // FIND PLAYER WINNER
+    //==================================================
+    public void FindPlayerWinner()
+    {
+        player = GameObject.FindGameObjectWithTag("Player");
     }
 }
