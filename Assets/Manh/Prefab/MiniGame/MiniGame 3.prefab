@@ -935,6 +935,7 @@ GameObject:
   - component: {fileID: 1844041280646986188}
   - component: {fileID: 7560068989794363734}
   - component: {fileID: 7163271382470066698}
+  - component: {fileID: 3924095441903326591}
   m_Layer: 0
   m_Name: Hitbox
   m_TagString: Untagged
@@ -976,8 +977,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 3, y: 2.5, z: 11}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 2, y: 2, z: 11.2}
+  m_Center: {x: 0, y: 0, z: 1.16}
 --- !u!114 &7163271382470066698
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -990,8 +991,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9f70ba09f7f59d49b8b6e4d7c38606c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AutoHitboxFitter
-  fireParticle: {fileID: 0}
+  fireParticle: {fileID: 1564429641282773541}
   thicknessMultiplier: 1.5
+--- !u!114 &3924095441903326591
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2563361249320887290}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 487b06e5d61ac2b4ea9e89ae4a436483, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnimalParty.Obstacles.LaserTrap
+  trapType: 1
+  targetLayer:
+    serializedVersion: 2
+    m_Bits: 8
+  wallLayer:
+    serializedVersion: 2
+    m_Bits: 512
+  laserLine: {fileID: 9188994369139042915, guid: a76355fb54d1f0b47a7f7acd322e876d, type: 3}
+  leftWallImpact: {fileID: 1564429641282773541}
+  rightWallImpact: {fileID: 3104303075598540642}
+  impactOffset: 0.05
+  hitCooldown: 0.5
+  coinPenalty: 5
+  stunTime: 0.2
+  playerShakeAmount: 0.08
+  flashDuration: 0.4
+  flashInterval: 0.05
+  fireEffectPrefab: {fileID: 1947871717301538, guid: a990e3ac1318b834488c784d851f42a9, type: 3}
+  burnDuration: 2
+  fireSpawnOffset: {x: 0, y: 2, z: 0}
+  showDebug: 1
 --- !u!1 &2873915807392457419
 GameObject:
   m_ObjectHideFlags: 0
@@ -3728,6 +3762,7 @@ GameObject:
   - component: {fileID: 9082536725541548380}
   - component: {fileID: 2340463022104181448}
   - component: {fileID: 6366231829119395995}
+  - component: {fileID: 1129350372315995593}
   m_Layer: 0
   m_Name: Hitbox
   m_TagString: Untagged
@@ -3769,8 +3804,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 2, y: 2, z: 11.2}
+  m_Center: {x: 0, y: 0, z: 1.16}
 --- !u!114 &6366231829119395995
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3783,8 +3818,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9f70ba09f7f59d49b8b6e4d7c38606c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AutoHitboxFitter
-  fireParticle: {fileID: 0}
+  fireParticle: {fileID: 1564429641282773541}
   thicknessMultiplier: 1.5
+--- !u!114 &1129350372315995593
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8147022206366202924}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 487b06e5d61ac2b4ea9e89ae4a436483, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnimalParty.Obstacles.LaserTrap
+  trapType: 1
+  targetLayer:
+    serializedVersion: 2
+    m_Bits: 8
+  wallLayer:
+    serializedVersion: 2
+    m_Bits: 512
+  laserLine: {fileID: 9188994369139042915, guid: a76355fb54d1f0b47a7f7acd322e876d, type: 3}
+  leftWallImpact: {fileID: 1564429641282773541}
+  rightWallImpact: {fileID: 3104303075598540642}
+  impactOffset: 0.05
+  hitCooldown: 0.5
+  coinPenalty: 5
+  stunTime: 0.2
+  playerShakeAmount: 0.08
+  flashDuration: 0.4
+  flashInterval: 0.05
+  fireEffectPrefab: {fileID: 1947871717301538, guid: a990e3ac1318b834488c784d851f42a9, type: 3}
+  burnDuration: 2
+  fireSpawnOffset: {x: 0, y: 2, z: 0}
+  showDebug: 1
 --- !u!1 &8519521697906567069
 GameObject:
   m_ObjectHideFlags: 0
@@ -3951,7 +4019,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LaserSpamManager
   manager: {fileID: 0}
-  totalGameTime: 70
+  totalGameTime: 160
   phase1_Hub:
     startTime: 0
   phase2_Fire:

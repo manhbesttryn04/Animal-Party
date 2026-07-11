@@ -203,6 +203,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 487b06e5d61ac2b4ea9e89ae4a436483, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnimalParty.Obstacles.LaserTrap
+  trapType: 0
   targetLayer:
     serializedVersion: 2
     m_Bits: 8
@@ -219,6 +220,8 @@ MonoBehaviour:
   playerShakeAmount: 0.08
   flashDuration: 0.4
   flashInterval: 0.05
+  fireEffectPrefab: {fileID: 1947871717301538, guid: a990e3ac1318b834488c784d851f42a9, type: 3}
+  burnDuration: 1
   showDebug: 1
 --- !u!65 &-1968484127701247495
 BoxCollider:
