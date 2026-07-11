@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-public class BombGameManager : MonoBehaviour
+public class MiniGame6 : MonoBehaviour
 {
-    public static BombGameManager Instance;
+    public static MiniGame6 Instance;
 
     [Header("--- MANAGER ---")]
     public MiniGameManager manager;
@@ -37,6 +37,7 @@ public class BombGameManager : MonoBehaviour
     public float bombFlyDuration = 0.25f;
 
     [Header("--- UI ---")]
+    public GameObject miniGameCanvas;
     public TMP_Text timerText;
     public TMP_Text messageText;
     public TMP_Text countdownText;
@@ -45,12 +46,6 @@ public class BombGameManager : MonoBehaviour
     public TMP_Text resultText;
     public GameObject resultPanel;
 
-    [Header("--- AUDIO ---")]
-    public AudioSource audioSource;   // SFX (tick, explode)
-    public AudioSource musicSource;   // Nhạc nền loop riêng
-    public AudioClip bgMusicClip;   // Nhạc nền
-    public AudioClip tickBombClip;
-    public AudioClip explodeBombClip;
 
     [Header("--- VFX ---")]
     public GameObject explosionVFX;
@@ -73,16 +68,14 @@ public class BombGameManager : MonoBehaviour
 
     private void Awake() { Instance = this; }
 
-    private void Start()
-    {
-        if (autoStartOnPlay && manager == null)
-            StartMiniGame();
-    }
-
     // ====== BẮT ĐẦU ======
     public void StartMiniGame()
     {
         if (isRunning) return;
+        if (miniGameCanvas != null)
+        {
+            miniGameCanvas.SetActive(true);
+        }
 
         // Lấy player
         GameObject p1obj = manager != null ? manager.currentPlayer1 : testPlayer1;
@@ -127,14 +120,6 @@ public class BombGameManager : MonoBehaviour
 
         isRunning = true;
 
-        // Phát nhạc nền
-        if (musicSource != null && bgMusicClip != null)
-        {
-            musicSource.clip = bgMusicClip;
-            musicSource.loop = true;
-            musicSource.Play();
-        }
-
         StartCoroutine(GameRoutine());
     }
 
@@ -145,11 +130,7 @@ public class BombGameManager : MonoBehaviour
         roundActive = false;
 
         StopAllCoroutines();
-
-        // Dừng nhạc nền
-        if (musicSource != null) musicSource.Stop();
-        if (audioSource != null) audioSource.Stop();
-
+   
         // Tắt BombCarrier
         carrier1?.SetGameActive(false);
         carrier2?.SetGameActive(false);
@@ -165,6 +146,20 @@ public class BombGameManager : MonoBehaviour
         }
 
         activePlayers.Clear();
+        if (timerText != null)
+            timerText.text = "";
+
+        if (messageText != null)
+            messageText.text = "";
+
+        if (countdownText != null)
+            countdownText.text = "";
+
+        // Tắt toàn bộ Canvas của minigame
+        if (miniGameCanvas != null)
+        {
+            miniGameCanvas.SetActive(false);
+        }
     }
 
     // ====== GAME ROUTINE ======
@@ -217,12 +212,10 @@ public class BombGameManager : MonoBehaviour
         UpdateBombBlink(timeLeft / roundDuration);
 
         // Tiếng tích tắc khi còn 5 giây
-        if (timeLeft <= 5f && !hasPlayedTick && tickBombClip != null && audioSource != null)
+        if (timeLeft <= 5f && !hasPlayedTick)
         {
             hasPlayedTick = true;
-            audioSource.clip = tickBombClip;
-            audioSource.loop = false;
-            audioSource.Play();
+            AudioManager.Instance.PlaySpecial(AudioManager.Instance.bombTickingClip);
         }
 
         if (timeLeft <= 0f)
@@ -312,7 +305,7 @@ public class BombGameManager : MonoBehaviour
         if (flyCoroutine != null) StopCoroutine(flyCoroutine);
 
         // Dừng nhạc nền
-        if (musicSource != null) musicSource.Stop();
+        AudioManager.Instance.StopMusic();
 
         // Reset tốc độ player
         SetPlayerSpeed(playerMoveSpeed);
@@ -321,8 +314,7 @@ public class BombGameManager : MonoBehaviour
         if (explosionVFX != null && currentBombHolder != null)
             Instantiate(explosionVFX, currentBombHolder.transform.position, Quaternion.identity);
 
-        if (explodeBombClip != null && audioSource != null)
-            audioSource.PlayOneShot(explodeBombClip);
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.explosionBombClip);
 
         if (bombInstance != null) bombInstance.SetActive(false);
 
@@ -372,7 +364,7 @@ public class BombGameManager : MonoBehaviour
         isRunning = false;
 
         // Dừng nhạc nền
-        if (musicSource != null) musicSource.Stop();
+        AudioManager.Instance.StopMusic();
 
         if (resultPanel) resultPanel.SetActive(true);
 
@@ -422,10 +414,16 @@ public class BombGameManager : MonoBehaviour
 
         // Tắt PlayerMove để không bị override
         PlayerMove move = playerObj.GetComponent<PlayerMove>();
-        if (move != null) move.isJumpAndMove = false;
+        PlayerAnimator pani = playerObj.GetComponent<PlayerAnimator>();
+        if (move != null && pani != null)
+        {
 
-        // Dùng Rigidbody nếu có
-        Rigidbody rb = playerObj.GetComponent<Rigidbody>();
+            move.isJumpAndMove = false;
+            pani.playerAnimator.SetFloat("Run", 0f);
+        }
+
+            // Dùng Rigidbody nếu có
+            Rigidbody rb = playerObj.GetComponent<Rigidbody>();
         CharacterController cc = playerObj.GetComponent<CharacterController>();
 
         // Hướng văng lên trời + xoay tròn nhẹ
@@ -524,10 +522,13 @@ public class BombGameManager : MonoBehaviour
         {
             move.speed = playerMoveSpeed;
             move.isJumpAndMove = true;
-            move.isWalk = true;
+            move.isMove = true;
+            //move.isWalk = true;
+            move.gravity = -18f;
         }
 
         if (anim != null && anim.playerAnimator != null)
             anim.playerAnimator.SetBool("Die", false);
     }
+ 
 }

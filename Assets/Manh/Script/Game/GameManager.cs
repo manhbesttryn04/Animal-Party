@@ -487,7 +487,7 @@ public class GameManager : MonoBehaviour
         {   
             UIManager.Instance.HideUIMain();
             AudioManager.Instance.StopMusic();
-            AudioManager.Instance.musicSource.volume = 0.6f;
+            AudioManager.Instance.musicSource.volume = 0.4f;
             if (stateGame.hasWinByCoin)
             {
                 AudioManager.Instance.PlayMusic(AudioManager.Instance.winnerMiniGameClip1);

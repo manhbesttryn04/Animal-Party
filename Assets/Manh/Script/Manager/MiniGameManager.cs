@@ -608,7 +608,7 @@ public class MiniGameManager : MonoBehaviour
         }
         else if (indexMiniGame == 6)
         {
-            // Chưa có minigame 6
+            miniGameList.miniGame6.StartMiniGame();
         }
         else if (indexMiniGame == 7)
         {
@@ -658,7 +658,8 @@ public class MiniGameManager : MonoBehaviour
         }
         else if (indexMiniGame == 6)
         {
-            // Chưa có minigame 6
+            
+        miniGameList.miniGame6.StopMiniGame();
         }
         else if (indexMiniGame == 7)
         {

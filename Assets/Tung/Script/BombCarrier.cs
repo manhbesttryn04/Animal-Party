@@ -51,7 +51,7 @@ public class BombCarrier : MonoBehaviour
         if (otherCarrier == null || otherCarrier == this) return;
         if (!otherCarrier.IsGameActive() || otherCarrier.IsEliminated()) return;
 
-        BombGameManager.Instance?.TransferBomb(this, otherCarrier);
+        MiniGame6.Instance?.TransferBomb(this, otherCarrier);
     }
 
     public void SetHoldingBomb(bool holding)

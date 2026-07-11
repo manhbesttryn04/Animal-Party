@@ -99,6 +99,10 @@ public class AudioManager : MonoBehaviour
     public AudioClip snowFallClip;
     public AudioClip buffBigClip;
     public AudioClip iceMagicClip;
+    [Header("Minigame 6")]
+    public AudioClip bombTickingClip;
+    public AudioClip explosionBombClip;
+
 
     private Coroutine fadeAllAudioCoroutine;
 
