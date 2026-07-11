@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Security.Cryptography.X509Certificates;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -47,6 +48,7 @@ public class ShopManager : MonoBehaviour
     public int timePerTurn = 20;
 
     private bool[] canErrorCoin = { true, true };
+    public bool open = true;
 
     #endregion
 
@@ -79,7 +81,11 @@ public class ShopManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
-  
+    private void Start()
+    {
+        if (open) { Open(); }
+        
+    }
     #endregion
 
     // =========================================================

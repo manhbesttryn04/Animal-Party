@@ -119,7 +119,7 @@ public class PlayerMoveAI : MonoBehaviour
         yield return new WaitForSeconds(1f);
 
         int finishIndex = pointCheck.Count - 1;
-        int bonusStep = Mathf.Min(31, finishIndex - currentIndex);
+        int bonusStep = Mathf.Min(2, finishIndex - currentIndex);
 
         for (int i = 0; i <= bonusStep; i++)
         {
