@@ -75,6 +75,8 @@ public class MiniGame3 : MonoBehaviour
 
     [Header("--- BẪY LỬA ---")]
     public GameObject[] flamethrowerTraps;
+    // Kéo Master_Flamethrower vào đây
+    public SyncedFlamethrowerBrain flamethrowerBrain;
 
     [Header("Team Integration")]
     public bool isRunning = false;
@@ -256,11 +258,35 @@ public class MiniGame3 : MonoBehaviour
 
     private void ToggleFlamethrowers(bool state)
     {
-        if (flamethrowerTraps == null || flamethrowerTraps.Length == 0) return;
+        /*
+         * Không SetActive(false) FireTrap_Left và FireTrap_Right.
+         * Nếu tắt GameObject, coroutine hiệu ứng thiêu đốt
+         * trên script của bẫy có thể bị dừng giữa chừng.
+         */
 
-        foreach (GameObject trap in flamethrowerTraps)
+        if (flamethrowerTraps != null)
         {
-            if (trap != null) trap.SetActive(state);
+            foreach (GameObject trap in flamethrowerTraps)
+            {
+                if (trap == null)
+                    continue;
+
+                // Hai bẫy phải luôn active
+                if (!trap.activeSelf)
+                    trap.SetActive(true);
+            }
+        }
+
+        // Chỉ bật/tắt bộ não điều khiển bẫy
+        if (flamethrowerBrain != null)
+        {
+            flamethrowerBrain.SetTrapRunning(state);
+        }
+        else
+        {
+            Debug.LogWarning(
+                "[MiniGame3] Chưa gán Master_Flamethrower vào flamethrowerBrain!"
+            );
         }
     }
 

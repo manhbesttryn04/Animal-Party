@@ -39,7 +39,7 @@ public class SyncedFlamethrowerBrain : MonoBehaviour
     private Quaternion leftInitialRot;
     private Quaternion rightInitialRot;
     private Coroutine brainCoroutine;
-
+    private bool trapRunning;
     private void Awake()
     {
         if (leftTrap != null) leftInitialRot = leftTrap.localRotation;
@@ -48,16 +48,44 @@ public class SyncedFlamethrowerBrain : MonoBehaviour
 
     private void OnEnable()
     {
-        SetFireState(false);
-        ResetRotations();
-        brainCoroutine = StartCoroutine(TrapRoutine());
+        SetTrapRunning(false);
     }
 
     private void OnDisable()
     {
-        if (brainCoroutine != null) StopCoroutine(brainCoroutine);
-        SetFireState(false);
-        ResetRotations();
+        SetTrapRunning(false);
+    }
+    public void SetTrapRunning(bool state)
+    {
+        if (state)
+        {
+            if (trapRunning)
+                return;
+
+            trapRunning = true;
+
+            SetFireState(false);
+            ResetRotations();
+
+            if (brainCoroutine != null)
+                StopCoroutine(brainCoroutine);
+
+            brainCoroutine = StartCoroutine(TrapRoutine());
+        }
+        else
+        {
+            trapRunning = false;
+
+            if (brainCoroutine != null)
+            {
+                StopCoroutine(brainCoroutine);
+                brainCoroutine = null;
+            }
+
+            // Chỉ tắt Particle và Collider lửa
+            SetFireState(false);
+            ResetRotations();
+        }
     }
 
     private void SetFireState(bool state)
