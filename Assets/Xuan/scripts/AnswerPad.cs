@@ -6,17 +6,17 @@ public class AnswerPad : MonoBehaviour
     public int padIndex; // 0=A, 1=B, 2=C, 3=D
 
     // Sử dụng OnTriggerStay để liên tục cập nhật ô lựa chọn khi player đang đứng trong ô
-    private void OnTriggerStay(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
-        if (mathManager == null) return;
-
-        // Kiểm tra xem đối tượng va chạm có gắn script PlayerType không
-        PlayerType playerType = other.GetComponent<PlayerType>();
-
-        if (playerType != null)
+        // Kiểm tra xem vật thể chạm vào ô có phải là người chơi hay không
+        if (other.gameObject.name.Contains("Player Play"))
         {
-            // Liên tục gửi tín hiệu cập nhật: Player nào đang đứng trên ô index nào
-            mathManager.OnPlayerStepOnPad(playerType.isPlayer2, padIndex);
+            MathManager mathManager = FindFirstObjectByType<MathManager>();
+            if (mathManager != null)
+            {
+                // Truyền trực tiếp GameObject (other.gameObject) và chỉ số ô (padIndex)
+                mathManager.OnPlayerStepOnPad(other.gameObject, this.padIndex);
+            }
         }
     }
 }

@@ -19,10 +19,9 @@ public class IslandGameManager : MonoBehaviour
     [Tooltip("Góc quay tối đa sang trái hoặc phải (Ví dụ: 25 độ)")]
     public float maxSpreadAngle = 25f;
 
-    // 🛠️ BỔ SUNG: Cấu hình âm thanh khi đại bác bắn
     [Header("Cấu hình Âm thanh Bắn Pháo")]
-    public AudioClip cannonShotSound;       // Kéo file âm thanh (.mp3, .wav) vào đây
-    [Range(0f, 1f)] public float shotVolume = 0.8f; // Điều chỉnh âm lượng (0 đến 1)
+    public AudioClip cannonShotSound;
+    [Range(0f, 1f)] public float shotVolume = 0.8f;
 
     [Header("UI Giao diện")]
     public TextMeshProUGUI timerText;
@@ -31,26 +30,22 @@ public class IslandGameManager : MonoBehaviour
     public TextMeshProUGUI p2PercentText;
 
     [Header("Cấu hình Lực Đẩy Vật Lý (Cho CharacterController)")]
-    public float baseKnockbackForce = 12f;     // Lực đẩy tối thiểu khi 0%
-    public float knockbackScaling = 0.45f;    // Tốc độ tăng lực đẩy theo %
-    public float superKnockbackForce = 65f;   // Siêu lực đẩy khi đạt 100%
-    public float knockbackDecay = 6f;         // Tốc độ dừng lại sau khi bị đẩy
+    public float baseKnockbackForce = 18f;     // Tăng nhẹ lực đẩy tối thiểu ban đầu lên để tạo độ văng rõ rệt
+    public float knockbackScaling = 0.65f;     // Tăng tỷ lệ nhân % để càng nhiều % càng văng xa khủng khiếp hơn
+    public float superKnockbackForce = 75f;    // Siêu lực đẩy khi đạt 100%
+    public float knockbackDecay = 4.5f;        // Giảm tốc độ dừng lại một chút để player trượt dài mượt mà hơn
 
-    // Biến lưu trữ đối tượng Player tự động tìm kiếm
     private GameObject player1Obj;
     private GameObject player2Obj;
     private PlayerMove p1MoveScript;
     private PlayerMove p2MoveScript;
 
-    // Biến lưu trữ % tích tụ nội bộ trong GameManager
     private int p1Percent = 0;
     private int p2Percent = 0;
 
-    // Lưu trữ vận tốc đẩy lùi của từng người chơi để xử lý CharacterController mượt mà
     private Vector3 p1KnockbackVelocity = Vector3.zero;
     private Vector3 p2KnockbackVelocity = Vector3.zero;
 
-    // Lưu vị trí và góc xoay gốc của các khẩu pháo
     private Dictionary<Transform, Vector3> cannonOriginalPositions = new Dictionary<Transform, Vector3>();
     private Dictionary<Transform, Quaternion> cannonOriginalRotations = new Dictionary<Transform, Quaternion>();
 
@@ -66,11 +61,8 @@ public class IslandGameManager : MonoBehaviour
         {
             if (cannon != null)
             {
-                // Lưu lại vị trí và góc xoay hướng chuẩn ban đầu của pháo
                 cannonOriginalPositions[cannon] = cannon.position;
                 cannonOriginalRotations[cannon] = cannon.rotation;
-
-                // Giấu pháo xuống dưới đất
                 cannon.position = cannon.position + new Vector3(0f, -1.5f, 0f);
             }
         }
@@ -111,9 +103,6 @@ public class IslandGameManager : MonoBehaviour
 
         if (player1Obj != null) p1MoveScript = player1Obj.GetComponent<PlayerMove>();
         if (player2Obj != null) p2MoveScript = player2Obj.GetComponent<PlayerMove>();
-
-        if (player1Obj == null) Debug.LogError("Không tìm thấy Player 1 trong Scene!");
-        if (player2Obj == null) Debug.LogError("Không tìm thấy Player 2 trong Scene!");
     }
 
     void Update()
@@ -150,6 +139,7 @@ public class IslandGameManager : MonoBehaviour
         }
     }
 
+    // Hàm xử lý khi đạn nổ trúng người chơi
     public void ProcessBulletHit(GameObject hitPlayer, Vector3 bulletPosition)
     {
         if (!isPlaying) return;
@@ -159,9 +149,10 @@ public class IslandGameManager : MonoBehaviour
 
         if (!isP1 && !isP2) return;
 
+        // Tính số % ngẫu nhiên cộng thêm dựa trên mốc thời gian
         int addedPercent = 2;
-        if (timeLeft > 60) addedPercent = Random.Range(2, 6);
-        else addedPercent = Random.Range(6, 11);
+        if (timeLeft > 60) addedPercent = Random.Range(4, 9); // Tăng % tích lũy ở giai đoạn đầu lên một chút
+        else addedPercent = Random.Range(9, 16); // Giai đoạn sau cộng nhiều hơn để tăng tính kịch tính
 
         int currentPercent = 0;
 
@@ -178,8 +169,9 @@ public class IslandGameManager : MonoBehaviour
 
         UpdatePercentUI();
 
+        // Tính hướng đẩy lùi (Đẩy ngang trên trục XZ)
         Vector3 pushDirection = (hitPlayer.transform.position - bulletPosition).normalized;
-        pushDirection.y = 0.1f;
+        pushDirection.y = 0.05f; // Tạo một chút góc hướng lên trên nhẹ để tránh ma sát sàn nhà làm đứng máy
 
         float finalForce = baseKnockbackForce;
 
@@ -191,6 +183,7 @@ public class IslandGameManager : MonoBehaviour
         }
         else
         {
+            // FIX LỰC VĂNG: Công thức nhân cộng dồn lũy tiến rõ rệt ngay từ phần trăm nhỏ
             finalForce = baseKnockbackForce + (currentPercent * knockbackScaling);
         }
 
@@ -255,7 +248,7 @@ public class IslandGameManager : MonoBehaviour
 
         Vector3 downPos = upPos + new Vector3(0f, -1.5f, 0f);
 
-        // 1. Pháo trồi lên mặt đất
+        // 1. Pháo trồi lên
         float elapsed = 0f;
         while (elapsed < 0.3f)
         {
@@ -265,7 +258,7 @@ public class IslandGameManager : MonoBehaviour
         }
         cannonTransform.position = upPos;
 
-        // 2. Tính toán góc lệch ngẫu nhiên trái/phải và xoay pháo
+        // 2. Xoay ngẫu nhiên
         float randomAngle = Random.Range(-maxSpreadAngle, maxSpreadAngle);
         Quaternion targetRotation = originalRot * Quaternion.Euler(0f, randomAngle, 0f);
 
@@ -280,7 +273,7 @@ public class IslandGameManager : MonoBehaviour
 
         yield return new WaitForSeconds(0.1f);
 
-        // 3. Tiến hành bắn đạn từ đầu nòng FirePoint
+        // 3. Khai hỏa
         Vector3 spawnPosition = cannonTransform.position;
         Quaternion spawnRotation = cannonTransform.rotation;
 
@@ -295,13 +288,14 @@ public class IslandGameManager : MonoBehaviour
             spawnPosition = cannonTransform.position + (cannonTransform.forward * 1.2f);
         }
 
-        // 🛠️ BỔ SUNG: Phát âm thanh bắn pháo 3D ngay tại điểm nòng súng vừa khai hỏa
         if (cannonShotSound != null)
         {
             AudioSource.PlayClipAtPoint(cannonShotSound, spawnPosition, shotVolume);
         }
 
         GameObject bullet = Instantiate(bulletPrefab, spawnPosition, spawnRotation);
+
+        // Cài đặt script va chạm trigger mới vào viên đạn
         IslandBulletCollision bulletScript = bullet.AddComponent<IslandBulletCollision>();
         bulletScript.Setup(this);
 
@@ -315,7 +309,7 @@ public class IslandGameManager : MonoBehaviour
 
         yield return new WaitForSeconds(0.3f);
 
-        // 4. Lặn xuống đồng thời trả góc xoay súng về vị trí ban đầu
+        // 4. Lặn xuống
         elapsed = 0f;
         while (elapsed < 0.4f)
         {
@@ -350,24 +344,31 @@ public class IslandGameManager : MonoBehaviour
     }
 }
 
+// FIX VA CHẠM: Chuyển hoàn toàn sang dạng Trigger để bắt dính CharacterController của Player
 public class IslandBulletCollision : MonoBehaviour
 {
     private IslandGameManager manager;
+    private bool hasCollided = false; // Biến cờ bảo vệ chống va chạm trùng lặp nhiều lần 1 frame
 
     public void Setup(IslandGameManager gameManager)
     {
         manager = gameManager;
     }
 
-    private void OnCollisionEnter(Collision collision)
+    private void OnTriggerEnter(Collider other)
     {
-        if (collision.gameObject.GetComponent<PlayerType>() != null)
+        if (hasCollided) return;
+
+        // Quét chuẩn xác component nhận diện Player
+        if (other.GetComponent<PlayerType>() != null)
         {
+            hasCollided = true; // Khóa va chạm ngay lập tức
+
             if (manager != null)
             {
-                manager.ProcessBulletHit(collision.gameObject, transform.position);
+                manager.ProcessBulletHit(other.gameObject, transform.position);
             }
-            Destroy(gameObject);
+            Destroy(gameObject); // Xóa viên đạn ngay khi chạm mục tiêu
         }
     }
 }
