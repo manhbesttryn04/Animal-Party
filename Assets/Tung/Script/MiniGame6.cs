@@ -138,12 +138,6 @@ public class MiniGame6 : MonoBehaviour
         if (flyCoroutine != null) StopCoroutine(flyCoroutine);
         if (bombInstance != null) Destroy(bombInstance);
 
-        // Trao thưởng
-        if (manager != null)
-        {
-            CheckFinishReward(manager.currentPlayer1);
-            CheckFinishReward(manager.currentPlayer2);
-        }
 
         activePlayers.Clear();
         if (timerText != null)
@@ -363,40 +357,57 @@ public class MiniGame6 : MonoBehaviour
         roundActive = false;
         isRunning = false;
 
-        // Dừng nhạc nền
         AudioManager.Instance.StopMusic();
 
-        if (resultPanel) resultPanel.SetActive(true);
+        if (resultPanel != null)
+            resultPanel.SetActive(true);
 
-        if (activePlayers.Count == 1)
+        // Game chỉ kết thúc khi còn đúng 1 người
+        if (activePlayers.Count != 1)
         {
-            string winnerName = activePlayers[0] == carrier1 ? "PLAYER 1" : "PLAYER 2";
-            string color = activePlayers[0] == carrier1 ? "red" : "green";
-            if (resultText) resultText.text = $"<color={color}>{winnerName} WINS!</color>";
-            if (messageText) messageText.text = $"{winnerName} WINS!";
-        }
-        else
-        {
-            if (resultText) resultText.text = "<color=yellow>IT'S A TIE!</color>";
-            if (messageText) messageText.text = "It's a tie!";
+            Debug.LogError("[MiniGame6] Không xác định được người thắng!");
+            return;
         }
 
+        bool isPlayer1Win = activePlayers[0] == carrier1;
+
+        string winnerName = isPlayer1Win ? "PLAYER 1" : "PLAYER 2";
+        string color = isPlayer1Win ? "red" : "green";
+
+        if (resultText != null)
+            resultText.text = $"<color={color}>{winnerName} WINS!</color>";
+
+        if (messageText != null)
+            messageText.text = $"{winnerName} WINS!";
+
+        // 1 = thắng, 0 = thua
         if (manager != null)
         {
-            CheckFinishReward(manager.currentPlayer1);
-            CheckFinishReward(manager.currentPlayer2);
+            CheckFinishReward(
+                manager.currentPlayer1,
+                isPlayer1Win ? 1 : 0
+            );
+
+            CheckFinishReward(
+                manager.currentPlayer2,
+                isPlayer1Win ? 0 : 1
+            );
         }
     }
 
-    void CheckFinishReward(GameObject playerObj)
+    void CheckFinishReward(GameObject playerObj, int checkWin)
     {
-        if (playerObj == null || manager == null) return;
+        if (playerObj == null)
+            return;
 
         PlayerMiniGame mini = playerObj.GetComponent<PlayerMiniGame>();
-        BombCarrier carrier = playerObj.GetComponent<BombCarrier>();
-        if (mini == null || carrier == null) return;
 
-        mini.UpCoin(carrier.IsEliminated() ? 0 : 1, 100);
+        if (mini == null)
+            return;
+
+        // checkWin = 1: người thắng
+        // checkWin = 0: người thua
+        mini.UpCoin(checkWin, 100);
     }
 
     [Header("--- LAUNCH ON EXPLODE ---")]
@@ -420,7 +431,7 @@ public class MiniGame6 : MonoBehaviour
 
             move.isJumpAndMove = false;
             pani.playerAnimator.SetFloat("Run", 0f);
-        }
+        } 
 
             // Dùng Rigidbody nếu có
             Rigidbody rb = playerObj.GetComponent<Rigidbody>();

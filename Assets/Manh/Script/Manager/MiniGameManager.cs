@@ -22,6 +22,7 @@ public class MiniGameManager : MonoBehaviour
     public IntrusTextList intrusTextList;
     public VideoInstructList videoInstructList;
     public MapMiniGameList mapMiniGameList;
+    public TimeMinigame timeMinigame;
 
     public GameObject mainMap;
 
@@ -700,29 +701,30 @@ public class MiniGameManager : MonoBehaviour
         switch (indexMiniGame)
         {
             case 1:
-                countDownTime = 0f;
+                countDownTime = timeMinigame.timeMinigame1;
                 break;
 
             case 2:
-                countDownTime = 60f;
+                countDownTime = timeMinigame.timeMinigame2;
+
                 VolumeManager.Instance.SetBloomIntensity(0.5f);
                 break;
 
             case 3:
-                countDownTime = 120;
+                countDownTime = timeMinigame.timeMinigame3;
                 break;
 
             case 4:
-                countDownTime = 70f;
+                countDownTime = timeMinigame.timeMinigame4;
                 break;
 
             case 5:
-                countDownTime = 90f;
+                countDownTime = timeMinigame.timeMinigame5;
                 VolumeManager.Instance.SetBloomIntensity(1f);
                 break;
 
             case 6:
-                // Chưa set thời gian
+                countDownTime = timeMinigame.timeMinigame6;
                 break;
 
             case 7:
