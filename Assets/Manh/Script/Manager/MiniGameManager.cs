@@ -23,6 +23,7 @@ public class MiniGameManager : MonoBehaviour
     public VideoInstructList videoInstructList;
     public MapMiniGameList mapMiniGameList;
     public TimeMinigame timeMinigame;
+    public InstructInputMinigame inputMinigame;
 
     public GameObject mainMap;
 
@@ -44,6 +45,7 @@ public class MiniGameManager : MonoBehaviour
     public TextMeshProUGUI textNameMiniGameMain;
 
     public GameObject canvasInstruct;
+    public GameObject canvasInstructInputMinigame;
     public GameObject blackPanel;
 
     // =========================================================
@@ -402,7 +404,18 @@ public class MiniGameManager : MonoBehaviour
         videoIntrucs.clip = null;
         // Tắt bảng hướng dẫn
         canvasInstruct.SetActive(false);
-
+        
+        if(canvasInstructInputMinigame != null)
+        {
+            canvasInstructInputMinigame.SetActive(true);
+        }
+        if(inputMinigame != null)
+        {
+            inputMinigame.ShowInputMinigame(indexMiniGame);
+        }
+        yield return new WaitForSeconds(5f);
+        inputMinigame.HideAllInput();
+      canvasInstructInputMinigame.SetActive(false );
         // Tắt màn đen sau khi chuẩn bị xong
         if (blackPanel != null)
             blackPanel.SetActive(false);

@@ -127,8 +127,8 @@ public class PlayerMove : MonoBehaviour
             return;
 
         bool liePressed = !manager.playerType.isPlayer2
-            ? Input.GetKeyDown(KeyCode.K)
-            : Input.GetKeyDown(KeyCode.Keypad3);
+            ? Input.GetKeyDown(KeyCode.L)
+            : Input.GetKeyDown(KeyCode.Keypad2);
 
         if (liePressed)
         {
