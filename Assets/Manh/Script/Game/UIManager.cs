@@ -82,6 +82,8 @@ public class UIManager : MonoBehaviour
     public GameObject bonusCoinTextP2;
    
     public GameObject blackPanel;
+    //Setting UI
+    public GameObject SettingPanel;
 
     #endregion
 
@@ -475,5 +477,13 @@ public class UIManager : MonoBehaviour
     public void HideUIMain()
     {
         uiMain.SetActive(false);
+    }
+
+    public void OpenSettingPanel()
+    {
+        SettingPanel.SetActive(true);
+    }
+    public void HideSettingPanel() {
+        SettingPanel.SetActive(false );
     }
 }

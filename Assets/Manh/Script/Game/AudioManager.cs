@@ -106,7 +106,8 @@ public class AudioManager : MonoBehaviour
 
 
     private Coroutine fadeAllAudioCoroutine;
-
+    private float baseMusicVolume = 1f;
+    private float baseSFXVolume = 1f;
 
 
     private void Awake()
@@ -255,14 +256,25 @@ public class AudioManager : MonoBehaviour
     {
         if (mainGameAudioSetup != null)
         {
-            musicSource.volume = mainGameAudioSetup.musicVolume;
-            sfxSource.volume = mainGameAudioSetup.sfxVolume;
-            environmentSource.volume = mainGameAudioSetup.environmentVolume;
-            specialSource.volume = mainGameAudioSetup.specialVolume;
+            // Lưu âm lượng gốc
+            baseMusicVolume = mainGameAudioSetup.musicVolume;
+            baseSFXVolume = mainGameAudioSetup.sfxVolume;
+
+            // Chỉ Music và SFX chịu ảnh hưởng của Setting
+            RefreshSettingVolume();
+
+            // Hai nguồn này giữ nguyên theo AudioSetup
+            environmentSource.volume =
+                mainGameAudioSetup.environmentVolume;
+
+            specialSource.volume =
+                mainGameAudioSetup.specialVolume;
         }
         else
         {
-            Debug.LogWarning("Main game audio setup is not assigned.");
+            Debug.LogWarning(
+                "Main game audio setup is not assigned."
+            );
         }
     }
 
@@ -272,18 +284,78 @@ public class AudioManager : MonoBehaviour
 
         if (index < 0 || index >= audioSetupList.Count)
         {
-            Debug.LogWarning("AudioSetup index out of range: " + indexMiniGame);
+            Debug.LogWarning(
+                "AudioSetup index out of range: " +
+                indexMiniGame
+            );
+
             return;
         }
 
         AudioSetup setup = audioSetupList[index];
 
-        musicSource.volume = setup.musicVolume;
-        sfxSource.volume = setup.sfxVolume;
+        // Lưu âm lượng gốc của Music và SFX
+        baseMusicVolume = setup.musicVolume;
+        baseSFXVolume = setup.sfxVolume;
+
+        // Áp dụng Slider
+        RefreshSettingVolume();
+
+        // Environment và Special không chịu ảnh hưởng Slider
         environmentSource.volume = setup.environmentVolume;
         specialSource.volume = setup.specialVolume;
     }
+    //==================================================
+    // MUSIC SETTING
+    //==================================================
 
+    public void ApplyMusicSetting(float sliderValue)
+    {
+        sliderValue = Mathf.Clamp01(sliderValue);
+
+        if (musicSource != null)
+        {
+            musicSource.volume =
+                baseMusicVolume * sliderValue;
+        }
+    }
+
+    //==================================================
+    // SFX SETTING
+    //==================================================
+
+    public void ApplySFXSetting(float sliderValue)
+    {
+        sliderValue = Mathf.Clamp01(sliderValue);
+
+        if (sfxSource != null)
+        {
+            sfxSource.volume =
+                baseSFXVolume * sliderValue;
+        }
+    }
+
+    //==================================================
+    // REFRESH SETTING VOLUME
+    //==================================================
+
+    public void RefreshSettingVolume()
+    {
+        float musicSliderValue = 1f;
+        float sfxSliderValue = 1f;
+
+        if (SettingManager.Instance != null)
+        {
+            musicSliderValue =
+                SettingManager.Instance.musicValue;
+
+            sfxSliderValue =
+                SettingManager.Instance.sfxValue;
+        }
+
+        ApplyMusicSetting(musicSliderValue);
+        ApplySFXSetting(sfxSliderValue);
+    }
 
     /// <summary>
     /// Giảm toàn bộ AudioSource về 0 theo thời gian.
