@@ -49,6 +49,7 @@ public class MathManager : MonoBehaviour
             return;
         }
 
+        // Tìm kiếm Player dựa trên tên chính xác trong hệ thống
         player1Obj = GameObject.Find("Player Play 1");
         player2Obj = GameObject.Find("Player Play 2");
 
@@ -69,8 +70,8 @@ public class MathManager : MonoBehaviour
             p1Choice = -1;
             p2Choice = -1;
 
-            p1StatusText.text = "";
-            p2StatusText.text = "";
+            p1StatusText.text = "Hãy chọn đáp án!";
+            p2StatusText.text = "Hãy chọn đáp án!";
 
             // ---- BƯỚC 2: ĐẾM NGƯỢC 6 GIÂY ----
             float timeLeft = selectionDuration;
@@ -78,11 +79,11 @@ public class MathManager : MonoBehaviour
             {
                 timerText.text = Mathf.CeilToInt(timeLeft).ToString();
 
-                // FIX LỖI 2 LẦN: Kiểm tra thêm điều kiện phụ để không gọi trùng lặp hàm khóa
+                // Kiểm tra điều kiện chạm mốc thời gian khóa (2 giây cuối)
                 if (timeLeft <= lockThreshold && !isLockedState)
                 {
-                    isLockedState = true; // Gán cờ ngay lập tức để chặn luồng chạy song song
-                    LockPlayersInsideBox();
+                    isLockedState = true; // Gán cờ khóa ngay lập tức
+                    LockExistingPlayers(); // Kích hoạt vách ngăn cho những người đã đứng sẵn trong ô
                 }
 
                 yield return new WaitForSeconds(0.1f);
@@ -91,7 +92,7 @@ public class MathManager : MonoBehaviour
 
             // ---- BƯỚC 3: HẾT GIỜ -> TÍNH TOÁN KẾT QUẢ & KÍCH NỔ ----
             isAnsweringState = false;
-            UnlockAllWalls();
+            UnlockAllWalls(); // Hạ các vách ngăn xuống để thực hiện hiệu ứng đẩy lùi (Knockback)
 
             // Chỉ chạy tính toán kết quả nếu chưa từng thực hiện kích nổ cho lượt này
             if (!hasPunished)
@@ -148,61 +149,82 @@ public class MathManager : MonoBehaviour
         }
     }
 
-    // Hàm nhận diện va chạm từ các ô đáp án dậm chân
-    public void OnPlayerStepOnPad(bool isPlayer2, int padIndex)
+    // NÂNG CẤP TOÀN DIỆN: Hàm nhận diện dựa trực tiếp vào thực thể GameObject dậm lên ô
+    public void OnPlayerStepOnPad(GameObject playerObj, int padIndex)
     {
-        // Vẫn nhận phản hồi trong suốt 6 giây chơi game (kể cả 2 giây cuối)
-        if (!isAnsweringState) return;
+        if (!isAnsweringState || playerObj == null) return;
 
-        if (!isPlayer2)
+        // Tự động phân tích danh tính Player dựa trên thực thể GameObject truyền vào
+        bool isP1 = (playerObj == player1Obj || playerObj.name == "Player Play 1");
+        bool isP2 = (playerObj == player2Obj || playerObj.name == "Player Play 2");
+
+        if (isP1)
         {
-            // Nếu đã bị khóa tường, không cho phép đổi sang ô khác khi đang đứng ở ô cũ
+            // Nếu đã bị khóa tường và đã có lựa chọn từ trước, không cho phép đổi sang ô khác
             if (isLockedState && p1Choice != -1 && p1Choice != padIndex) return;
 
             p1Choice = padIndex;
-            if (!isLockedState) p1StatusText.text = "P1 đang chọn ô: " + (padIndex + 1);
+
+            if (isLockedState)
+            {
+                p1StatusText.text = "P1: ĐÃ KHÓA TRONG Ô " + (padIndex + 1) + "!";
+                ActivateWall(padIndex); // Nếu chọn muộn ở 2s cuối, dựng tường bao quanh ngay lập tức
+            }
+            else
+            {
+                p1StatusText.text = "P1 đang chọn ô: " + (padIndex + 1);
+            }
         }
-        else
+        else if (isP2)
         {
             if (isLockedState && p2Choice != -1 && p2Choice != padIndex) return;
 
             p2Choice = padIndex;
-            if (!isLockedState) p2StatusText.text = "P2 đang chọn ô: " + (padIndex + 1);
+
+            if (isLockedState)
+            {
+                p2StatusText.text = "P2: ĐÃ KHÓA TRONG Ô " + (padIndex + 1) + "!";
+                ActivateWall(padIndex);
+            }
+            else
+            {
+                p2StatusText.text = "P2 đang chọn ô: " + (padIndex + 1);
+            }
         }
     }
 
-    // Cơ chế kích hoạt vách ngăn bao quanh ô chọn tại 2s cuối
-    void LockPlayersInsideBox()
+    // Cơ chế kích hoạt vách ngăn bao quanh ô chọn tại thời điểm chạm mốc khóa
+    void LockExistingPlayers()
     {
-        // Xử lý thông báo và kích hoạt tường P1
-        if (p1Choice == -1)
-        {
-            p1StatusText.text = "P1: Chưa chọn - TỰ DO!";
-        }
-        else
+        if (p1Choice != -1)
         {
             p1StatusText.text = "P1: ĐÃ KHÓA TRONG Ô " + (p1Choice + 1) + "!";
-            if (answerWalls != null && p1Choice < answerWalls.Length && answerWalls[p1Choice] != null)
-            {
-                answerWalls[p1Choice].SetActive(true);
-            }
-        }
-
-        // Xử lý thông báo và kích hoạt tường P2
-        if (p2Choice == -1)
-        {
-            p2StatusText.text = "P2: Chưa chọn - TỰ DO!";
+            ActivateWall(p1Choice);
         }
         else
         {
-            p2StatusText.text = "P2: ĐÃ KHÓA TRONG Ô " + (p2Choice + 1) + "!";
-            if (answerWalls != null && p2Choice < answerWalls.Length && answerWalls[p2Choice] != null)
-            {
-                answerWalls[p2Choice].SetActive(true);
-            }
+            p1StatusText.text = "P1: Chưa chọn - Hãy mau dậm ô!";
         }
 
-        Debug.Log("Hệ thống: Đã chốt vị trí và kích hoạt vách ngăn.");
+        if (p2Choice != -1)
+        {
+            p2StatusText.text = "P2: ĐÃ KHÓA TRONG Ô " + (p2Choice + 1) + "!";
+            ActivateWall(p2Choice);
+        }
+        else
+        {
+            p2StatusText.text = "P2: Chưa chọn - Hãy mau dậm ô!";
+        }
+
+        Debug.Log("Hệ thống: Đã chốt vị trí hiện tại và kích hoạt vách ngăn cố định.");
+    }
+
+    void ActivateWall(int index)
+    {
+        if (answerWalls != null && index >= 0 && index < answerWalls.Length && answerWalls[index] != null)
+        {
+            answerWalls[index].SetActive(true);
+        }
     }
 
     void UnlockAllWalls()
