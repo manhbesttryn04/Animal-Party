@@ -18,6 +18,7 @@ public class LoadingManager : MonoBehaviour
 
     public IEnumerator ShowLoading()
     {
+        
         loadingPanel.SetActive(true);
         slider.value = 0;
 

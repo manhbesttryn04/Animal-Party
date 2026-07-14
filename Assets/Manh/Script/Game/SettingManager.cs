@@ -1,6 +1,9 @@
-﻿using TMPro;
+﻿using System.Collections;
+using TMPro;
 using UnityEditor.UI;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class SettingManager : MonoBehaviour
@@ -21,6 +24,15 @@ public class SettingManager : MonoBehaviour
     [Range(0f, 1f)]
     public float sfxValue = 1f;
 
+    [Header("Main Menu")]
+    public Button backToMainMenuButton;
+    [Header("Buttons")]
+    public Button openSettingButton;
+    public int countClick = 0;
+    public int indexScene;
+    //public float backDelay = 2f;
+
+
     private void Awake()
     {
         if (Instance == null)
@@ -39,6 +51,10 @@ public class SettingManager : MonoBehaviour
         SetupDefaultValue();
         AddListeners();
         ApplySettings();
+        ResetSetting();
+
+        if (backToMainMenuButton != null)
+            backToMainMenuButton.onClick.AddListener(OnClickBackToMainMenu);
     }
 
     private void SetupDefaultValue()
@@ -79,6 +95,9 @@ public class SettingManager : MonoBehaviour
 
         if (qualityGraphicDropDown != null)
             qualityGraphicDropDown.onValueChanged.AddListener(SetGraphicQuality);
+
+        if (openSettingButton != null)
+            openSettingButton.onClick.AddListener(ToggleSetting);
     }
 
     private void RemoveListeners()
@@ -91,6 +110,9 @@ public class SettingManager : MonoBehaviour
 
         if (qualityGraphicDropDown != null)
             qualityGraphicDropDown.onValueChanged.RemoveListener(SetGraphicQuality);
+
+        if (openSettingButton != null)
+            openSettingButton.onClick.RemoveListener(ToggleSetting);
     }
 
     //==================================================
@@ -106,6 +128,32 @@ public class SettingManager : MonoBehaviour
             AudioManager.Instance.ApplyMusicSetting(musicValue);
         }
     }
+    public void ToggleSetting()
+    {
+        countClick++;
+
+        if (countClick == 1)
+        {
+            UIManager.Instance.ActiveSettingPanel(true);
+        }
+        else if (countClick == 2)
+        {
+            UIManager.Instance.ActiveSettingPanel(false);
+
+            // Bỏ trạng thái Selected của Button
+            EventSystem.current.SetSelectedGameObject(null);
+
+            countClick = 0;
+        }
+    }
+    public void ResetSetting()
+    {
+        countClick = 0;
+        EventSystem.current.SetSelectedGameObject(null);
+        UIManager.Instance.ActiveSettingPanel(false);
+    }
+ 
+
 
     //==================================================
     // SFX SLIDER
@@ -168,4 +216,29 @@ public class SettingManager : MonoBehaviour
         if (Instance == this)
             Instance = null;
     }
+    //==================================================
+    // BACK TO MAIN MENU
+    //==================================================
+
+    public void OnClickBackToMainMenu()
+    {
+        
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.clickButton);
+        StartCoroutine(BackToMainMenuRoutine());
+    }
+
+    private IEnumerator BackToMainMenuRoutine()
+    {
+       var audio = AudioManager.Instance;
+        if (audio != null)
+        {
+            audio.StopAllAudio();
+        }
+
+        yield return LoadingManager.Instance.ShowLoading();
+        VolumeManager.Instance.SetGraphicsQuality(2);
+      
+        SceneManager.LoadScene(indexScene);
+    }
+
 }

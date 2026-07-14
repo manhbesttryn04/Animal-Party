@@ -149,7 +149,7 @@ public class CutSceneShip : MonoBehaviour
         blackFlastPanel.SetActive(true);
         cam.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
         cam.transform.position = transVideoList[4].position;
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0);
 
         // Point 6 — câu cuối đỏ son
         StartCoroutine(MoveAndRotate(transVideoList[5]));

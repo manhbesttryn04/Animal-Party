@@ -36,6 +36,7 @@ public class ChooseMode : MonoBehaviour
     public AudioClip clickClip;
     public AudioClip doneChooseClip;
     public AudioClip startClickClip;
+    public AudioSource auidosource;
 
     private void Start()
     {
@@ -273,6 +274,7 @@ public class ChooseMode : MonoBehaviour
 
             timer += 2f;
         }
+       auidosource.Stop();
        yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
         SceneManager.LoadScene("CutScene 1");
     }

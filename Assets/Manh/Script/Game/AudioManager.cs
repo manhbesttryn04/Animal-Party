@@ -51,6 +51,7 @@ public class AudioManager : MonoBehaviour
     [Header("UI SFX")]
     public AudioClip openResultPanel;
     public AudioClip nextRound;
+    public AudioClip clickButton;
     [Header("Camera SFX")]
     public AudioClip moveCamera;
 
@@ -397,5 +398,15 @@ public class AudioManager : MonoBehaviour
         specialSource.volume = 0f;
 
         fadeAllAudioCoroutine = null;
+    }
+    public void StopAllAudio()
+    {
+        musicSource.volume = 0;
+        StopMusic();
+        environmentSource.volume= 0;
+        StopEnvironment();
+        specialSource.volume = 0f;
+        StopSpecial();
+        sfxSource.volume = 0;
     }
 }

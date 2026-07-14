@@ -217,6 +217,8 @@ public class MiniGameManager : MonoBehaviour
 
         // Ẩn bảng thông báo play
         UIManager.Instance.HideNotifiPlayPanel(false);
+        SettingManager.Instance.ResetSetting();
+        UIManager.Instance.ActiveOpenSettingButton(false);
 
         // =====================================================
         // LOADING
@@ -228,6 +230,7 @@ public class MiniGameManager : MonoBehaviour
         // Tắt loading
         LoadingManager.Instance.HideLoading();
 
+        UIManager.Instance.ActiveOpenSettingButton(true);
         // Bật màn đen nếu muốn che cảnh lúc đổi camera
         if (blackPanel != null)
             blackPanel.SetActive(true);
@@ -500,6 +503,9 @@ public class MiniGameManager : MonoBehaviour
         // SHOW RESULT
         // =====================================================
         AudioManager.Instance.SetupMainGameAudio();
+        SettingManager.Instance.ResetSetting();
+        UIManager.Instance.ActiveOpenSettingButton(false);
+
         // Hiện bảng kết quả coin của 2 player
         UIManager.Instance.UpdateResultPanel(
             coin1.coinMiniGame,
@@ -529,6 +535,9 @@ public class MiniGameManager : MonoBehaviour
 
         // Tắt loading
         LoadingManager.Instance.HideLoading();
+       
+        UIManager.Instance.ActiveOpenSettingButton(true);
+
 
         // =====================================================
         // DISABLE CAMERA

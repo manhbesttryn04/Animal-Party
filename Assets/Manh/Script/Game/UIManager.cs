@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
@@ -83,7 +84,8 @@ public class UIManager : MonoBehaviour
    
     public GameObject blackPanel;
     //Setting UI
-    public GameObject SettingPanel;
+    public GameObject settingPanel;
+    public GameObject openSettingPanelButton;
 
     #endregion
 
@@ -479,11 +481,13 @@ public class UIManager : MonoBehaviour
         uiMain.SetActive(false);
     }
 
-    public void OpenSettingPanel()
+    public void ActiveSettingPanel(bool i)
     {
-        SettingPanel.SetActive(true);
+        settingPanel.SetActive(i);
     }
-    public void HideSettingPanel() {
-        SettingPanel.SetActive(false );
+    public void ActiveOpenSettingButton(bool i)
+    {
+        openSettingPanelButton.SetActive(i);
     }
+   
 }
