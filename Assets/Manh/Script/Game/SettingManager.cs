@@ -47,6 +47,11 @@ public class SettingManager : MonoBehaviour
 
     private void Start()
     {
+        var cursor = CursorManager.Instance;
+        if (cursor != null)
+        {
+            cursor.ShowGameCursor();
+        }
         SetupDefaultValue();
         AddListeners();
         ApplySettings();
@@ -120,6 +125,7 @@ public class SettingManager : MonoBehaviour
 
     public void SetMusicVolume(float value)
     {
+       // AudioManager.Instance.PlayUI(AudioManager.Instance.audioReduction);
         musicValue = Mathf.Clamp01(value);
 
         if (AudioManager.Instance != null)
@@ -130,7 +136,7 @@ public class SettingManager : MonoBehaviour
     public void ToggleSetting()
     {
         countClick++;
-
+        AudioManager.Instance.PlayUI(AudioManager.Instance.clickButton);
         if (countClick == 1)
         {
             UIManager.Instance.ActiveSettingPanel(true);
@@ -160,6 +166,7 @@ public class SettingManager : MonoBehaviour
 
     public void SetSFXVolume(float value)
     {
+        //AudioManager.Instance.PlayUI(AudioManager.Instance.audioReduction);
         sfxValue = Mathf.Clamp01(value);
 
         if (AudioManager.Instance != null)
@@ -177,6 +184,8 @@ public class SettingManager : MonoBehaviour
 
     public void SetGraphicQuality(int value)
     {
+        AudioManager.Instance.PlayUI(AudioManager.Instance.clickButton);
+
         value = Mathf.Clamp(value, 0, 2);
 
         if (VolumeManager.Instance != null)
@@ -222,7 +231,7 @@ public class SettingManager : MonoBehaviour
     public void OnClickBackToMainMenu()
     {
         
-        AudioManager.Instance.PlaySFX(AudioManager.Instance.clickButton);
+        AudioManager.Instance.PlayUI(AudioManager.Instance.clickButton);
         StartCoroutine(BackToMainMenuRoutine());
     }
 

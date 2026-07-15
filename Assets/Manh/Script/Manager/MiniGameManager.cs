@@ -218,6 +218,11 @@ public class MiniGameManager : MonoBehaviour
         // Ẩn bảng thông báo play
         UIManager.Instance.HideNotifiPlayPanel(false);
         SettingManager.Instance.ResetSetting();
+        var cursor = CursorManager.Instance;
+        if (cursor != null)
+        {
+            cursor.HideGameCursor();
+        }
         UIManager.Instance.ActiveOpenSettingButton(false);
 
         // =====================================================
@@ -230,7 +235,6 @@ public class MiniGameManager : MonoBehaviour
         // Tắt loading
         LoadingManager.Instance.HideLoading();
 
-        UIManager.Instance.ActiveOpenSettingButton(true);
         // Bật màn đen nếu muốn che cảnh lúc đổi camera
         if (blackPanel != null)
             blackPanel.SetActive(true);
@@ -418,10 +422,15 @@ public class MiniGameManager : MonoBehaviour
         }
         yield return new WaitForSeconds(5f);
         inputMinigame.HideAllInput();
-      canvasInstructInputMinigame.SetActive(false );
+      canvasInstructInputMinigame.SetActive(false);
         // Tắt màn đen sau khi chuẩn bị xong
         if (blackPanel != null)
             blackPanel.SetActive(false);
+        UIManager.Instance.ActiveOpenSettingButton(true);
+        if (cursor != null)
+        {
+            cursor.ShowGameCursor();
+        }
 
         // =====================================================
         // UNLOCK PLAYER MOVE
@@ -505,6 +514,10 @@ public class MiniGameManager : MonoBehaviour
         AudioManager.Instance.SetupMainGameAudio();
         SettingManager.Instance.ResetSetting();
         UIManager.Instance.ActiveOpenSettingButton(false);
+        if (cursor != null)
+        {
+            cursor.HideGameCursor();
+        }
 
         // Hiện bảng kết quả coin của 2 player
         UIManager.Instance.UpdateResultPanel(
@@ -537,6 +550,10 @@ public class MiniGameManager : MonoBehaviour
         LoadingManager.Instance.HideLoading();
        
         UIManager.Instance.ActiveOpenSettingButton(true);
+        if (cursor != null)
+        {
+            cursor.ShowGameCursor();
+        }
 
 
         // =====================================================
@@ -779,7 +796,7 @@ public class MiniGameManager : MonoBehaviour
     public void SetIndex()
     {
         indexMiniGame++;
-            if (indexMiniGame >= 6) indexMiniGame = 1;
+            if (indexMiniGame > 6) indexMiniGame = 1;
     }
     
 }

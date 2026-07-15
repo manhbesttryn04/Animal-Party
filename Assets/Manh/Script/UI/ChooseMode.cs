@@ -43,6 +43,12 @@ public class ChooseMode : MonoBehaviour
         UpdatePlayer1();
         UpdatePlayer2();
 
+        var cursor = CursorManager.Instance;
+        if (cursor != null)
+        {
+            cursor.ShowGameCursor();
+        }
+
     }
 
     private void Update()
@@ -275,7 +281,12 @@ public class ChooseMode : MonoBehaviour
             timer += 2f;
         }
        auidosource.Stop();
-       yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
+        var cursor = CursorManager.Instance;
+        if (cursor != null)
+        {
+            cursor.HideGameCursor();
+        }
+        yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
         SceneManager.LoadScene("CutScene 1");
     }
 

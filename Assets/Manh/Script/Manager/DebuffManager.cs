@@ -393,7 +393,7 @@ public class DebuffManager : MonoBehaviour
             yield return new  WaitUntil(()=> !trapState.isTrapActive);
             VolumeManager.Instance.ResetMotionBlur();
 
-
+            yield return new WaitForSeconds(2f);
             // Camera nhìn player bị trúng đạn
             yield return StartCoroutine(
                 CameraManager.Instance.MoveToTarget(

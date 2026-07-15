@@ -13,6 +13,14 @@ public class MainMenuController : MonoBehaviour
     public GameObject settingsPanel;
 
     // ====== NÚT START ======
+    private void Start()
+    {
+        var cursor = CursorManager.Instance;
+        if(cursor != null)
+        {
+            cursor.ShowGameCursor();
+        }
+    }
     public void OnStartClicked()
     {
         SafePlayClick();
@@ -22,6 +30,11 @@ public class MainMenuController : MonoBehaviour
     }
     IEnumerator StartLoadScene()
     {
+        var cursor = CursorManager.Instance;
+        if (cursor != null)
+        {
+            cursor.HideGameCursor();
+        }
         yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
         SceneManager.LoadScene(gameSceneName);
     }

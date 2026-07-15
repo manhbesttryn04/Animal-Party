@@ -112,8 +112,8 @@ public class CutScene2 : MonoBehaviour
     IEnumerator SkipToEnd()
     {
         blackClosePanel.gameObject.SetActive(true);
-        StartCoroutine(FadeOutAudio(1f));
-        yield return new WaitForSeconds(1f);
+        StartCoroutine(FadeOutAudio(0f));
+        yield return new WaitForSeconds(0f);
         yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
         SceneManager.LoadScene("MainScene");
     }

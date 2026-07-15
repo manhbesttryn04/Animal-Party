@@ -96,6 +96,11 @@ public class ShopManager : MonoBehaviour
 
     public void Open()
     {
+        var cursor = CursorManager.Instance;
+        if (cursor != null)
+        {
+            cursor.HideGameCursor();
+        }
         AudioManager.Instance.PlaySFX(AudioManager.Instance.openShopClip);
 
         SetupPlayers();

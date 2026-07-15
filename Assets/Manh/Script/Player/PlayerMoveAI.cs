@@ -79,6 +79,7 @@ public class PlayerMoveAI : MonoBehaviour
 
             if (CheckFinishIndex())
             {
+                StopAllCameraFollow();
                 isMoving = false;
                 yield break;
             }

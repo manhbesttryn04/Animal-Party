@@ -16,6 +16,8 @@ public class AudioManager : MonoBehaviour
     public AudioSource sfxSource;     // Hiệu ứng
     public AudioSource environmentSource; // Môi trường
     public AudioSource specialSource; // Âm thanh đặc biệt
+    public AudioSource UISource;
+    public AudioSource[] audioSources;
 
 
     [Header("SFX")]
@@ -52,6 +54,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip openResultPanel;
     public AudioClip nextRound;
     public AudioClip clickButton;
+    public AudioClip audioReduction;
     [Header("Camera SFX")]
     public AudioClip moveCamera;
 
@@ -205,6 +208,12 @@ public class AudioManager : MonoBehaviour
         if (clip == null) return;
 
         specialSource.PlayOneShot(clip);
+    }
+    public void PlayUI(AudioClip clip)
+    {
+        if (clip == null) return;
+
+        UISource.PlayOneShot(clip);
     }
 
     public void SetupMusicMiniGame(int indexMiniGame)
@@ -401,6 +410,10 @@ public class AudioManager : MonoBehaviour
     }
     public void StopAllAudio()
     {
+        for(int i = 0; i < audioSources.Length; i++)
+        {
+            audioSources[i].volume = 0;
+        }
         musicSource.volume = 0;
         StopMusic();
         environmentSource.volume= 0;

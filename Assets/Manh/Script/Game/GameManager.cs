@@ -486,21 +486,23 @@ public class GameManager : MonoBehaviour
         if(stateGame.hasPlayer1Win || stateGame.hasPlayer2Win)
         {   
             UIManager.Instance.HideUIMain();
+            VolumeManager.Instance.SetGraphicsQuality(2);
             AudioManager.Instance.StopMusic();
             AudioManager.Instance.musicSource.volume = 0.3f;
-            if (stateGame.hasWinByCoin)
-            {
-                AudioManager.Instance.PlayMusic(AudioManager.Instance.winnerMiniGameClip1);
-            }else if (stateGame.hasWinByIndex)
-            {
-                AudioManager.Instance.PlayMusic(AudioManager.Instance.winnerMiniGameClip2);
-            }
+            AudioManager.Instance.sfxSource.volume = 1f;
+            AudioManager.Instance.PlayMusic(AudioManager.Instance.winnerMiniGameClip1);
 
-                PointCheck.Instance.HideAllTraps();
+         
+            PointCheck.Instance.HideAllTraps();
             StartCutSceneWinner();
         }
         else
         {
+            var cursor = CursorManager.Instance;
+            if (cursor != null)
+            {
+                cursor.ShowGameCursor();
+            }
            ExitNextRound();
         }
     }

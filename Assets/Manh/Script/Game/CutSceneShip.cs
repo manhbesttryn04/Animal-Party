@@ -260,7 +260,7 @@ public class CutSceneShip : MonoBehaviour
 
     IEnumerator LoadScene(string name)
     {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0f);
         SceneManager.LoadScene(name);
     }
 
