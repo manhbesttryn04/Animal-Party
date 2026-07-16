@@ -30,6 +30,11 @@ public class MainMenuController : MonoBehaviour
     }
     IEnumerator StartLoadScene()
     {
+        var audio = AudioManager1.Instance;
+        if(audio != null)
+        {
+            audio.ambientSource.volume = 0;
+        }
         var cursor = CursorManager.Instance;
         if (cursor != null)
         {

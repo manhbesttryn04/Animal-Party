@@ -16,13 +16,10 @@ public class UIManager : MonoBehaviour
     // Singleton để các script khác có thể gọi UIManager.Instance
     public static UIManager Instance { get; private set; }
 
-    // =========================================================
-    // RESULT PANEL
-    // =========================================================
+    [Header("UI Main")]
     public GameObject uiMain;
 
-    #region Result Panel
-
+    [Header("Resutl Panel UI")]
     // Panel hiện kết quả cuối game
     public GameObject resultPanel;
 
@@ -34,13 +31,8 @@ public class UIManager : MonoBehaviour
     public GameObject player1ResultUI;
     public GameObject player2ResultUI;
 
-    #endregion
 
-    // =========================================================
-    // NOTIFICATION
-    // =========================================================
-
-    #region Notification
+    [Header("Notifi Panel UI")]
 
     // Panel thông báo
     public GameObject notifiPanel;
@@ -48,13 +40,7 @@ public class UIManager : MonoBehaviour
     // Nội dung thông báo
     public TextMeshProUGUI textNotifi;
 
-    #endregion
-
-    // =========================================================
-    // PLAYER STATUS PANEL
-    // =========================================================
-
-    #region Player Status Panel
+    [Header("Notifi Player Play UI")]
 
     // Panel hiển thị thông tin trong lúc chơi
     public GameObject notifiPlay;
@@ -81,18 +67,15 @@ public class UIManager : MonoBehaviour
     // Bonus Coin UI
     public GameObject bonusCoinTextP1;
     public GameObject bonusCoinTextP2;
+
+    [Header("Black Panel")]
    
     public GameObject blackPanel;
-    //Setting UI
+
+    [Header("Setting UI")]
     public GameObject settingPanel;
     public GameObject openSettingPanelButton;
-
-    #endregion
-
-    // =========================================================
-    // BONUS PANEL
-    // =========================================================
-
+    [Header("Bonus Panel")]
     // Panel thưởng
     public GameObject bonusPanel;
 

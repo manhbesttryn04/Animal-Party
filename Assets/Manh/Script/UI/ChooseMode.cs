@@ -36,7 +36,7 @@ public class ChooseMode : MonoBehaviour
     public AudioClip clickClip;
     public AudioClip doneChooseClip;
     public AudioClip startClickClip;
-    public AudioSource auidosource;
+    public AudioSource[] auidosource;
 
     private void Start()
     {
@@ -280,7 +280,10 @@ public class ChooseMode : MonoBehaviour
 
             timer += 2f;
         }
-       auidosource.Stop();
+
+        for (int i = 0; i < auidosource.Length; i++) {
+            auidosource[i].volume = 0;
+        }
         var cursor = CursorManager.Instance;
         if (cursor != null)
         {

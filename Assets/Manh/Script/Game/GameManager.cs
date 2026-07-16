@@ -199,7 +199,7 @@ public class GameManager : MonoBehaviour
             stateGame.isFistRound = true;
         }
 
-        /*
+        /*     
         var randomIndex = Random.Range(0, 2);
 
         if(randomIndex == 0)

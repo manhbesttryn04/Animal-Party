@@ -42,7 +42,6 @@ public class MiniGameManager : MonoBehaviour
 
     [Header("Main UI")]
     public GameObject UIMiniGame;
-    public TextMeshProUGUI textNameMiniGameMain;
 
     public GameObject canvasInstruct;
     public GameObject canvasInstructInputMinigame;

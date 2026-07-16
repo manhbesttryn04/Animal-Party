@@ -17,7 +17,7 @@ public class AudioManager1 : MonoBehaviour
     [Range(0f, 1f)] public float clickVolume = 0.7f;
 
     private AudioSource musicSource;
-    private AudioSource ambientSource;
+    public AudioSource ambientSource;
     private AudioSource sfxSource;
 
     void Awake()
