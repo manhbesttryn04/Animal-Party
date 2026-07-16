@@ -33,7 +33,7 @@ public class BulletCanon : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.GetComponent<PlayerType>() != null || other.CompareTag("Player"))
+        if (other.GetComponent<PlayerType>() != null || other.CompareTag("Player 1")|| other.CompareTag("Player 2"))
         {
             TriggerExplosion();
         }
@@ -41,7 +41,7 @@ public class BulletCanon : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.GetComponent<PlayerType>() != null || collision.gameObject.CompareTag("Player"))
+        if (collision.gameObject.GetComponent<PlayerType>() != null || collision.gameObject.CompareTag("Player 1") || collision.gameObject.CompareTag("Player 2"))
         {
             TriggerExplosion();
         }
@@ -52,8 +52,7 @@ public class BulletCanon : MonoBehaviour
         // 1. Kích hoạt âm thanh nổ 3D tại vị trí va chạm
         if (explosionSound != null)
         {
-            // Hàm này tự sinh ra một AudioSource tạm thời tại vị trí nổ, phát xong tự xóa
-            AudioSource.PlayClipAtPoint(explosionSound, transform.position, volume);
+          AudioManager.Instance.PlaySFX(explosionSound);
         }
 
         // 2. Kích hoạt hiệu ứng hình ảnh

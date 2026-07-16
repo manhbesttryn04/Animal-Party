@@ -651,7 +651,7 @@ public class MiniGameManager : MonoBehaviour
         }
         else if (indexMiniGame == 7)
         {
-            // Chưa có minigame 7
+           miniGameList.miniGame7.StartMiniGame();
         }
         else if (indexMiniGame == 8)
         {
@@ -702,7 +702,7 @@ public class MiniGameManager : MonoBehaviour
         }
         else if (indexMiniGame == 7)
         {
-            // Chưa có minigame 7
+            miniGameList.miniGame7.StopMiniGame();
         }
         else if (indexMiniGame == 8)
         {
@@ -766,7 +766,7 @@ public class MiniGameManager : MonoBehaviour
                 break;
 
             case 7:
-                // Chưa set thời gian
+                countDownTime = timeMinigame.timeMinigame7;
                 break;
 
             case 8:

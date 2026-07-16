@@ -8,4 +8,5 @@ public class MiniGameList : MonoBehaviour
     public MiniGame4 miniGame4;
     public MiniGame5 miniGame5;
     public MiniGame6 miniGame6;
+    public MiniGame7 miniGame7;
 }
