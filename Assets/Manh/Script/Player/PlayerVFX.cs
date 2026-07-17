@@ -49,6 +49,25 @@ public class PlayerVFX : MonoBehaviour
 
         normalRenderer.gameObject.SetActive(false);
     }
+    public IEnumerator DissolveOutRoutine1()
+    {
+       // AudioManager.Instance.PlaySFX(AudioManager.Instance.startLeteClip);
+        respawnRenderer.enabled = true;
+        normalRenderer.gameObject.SetActive(false);
+
+        respawnMat.SetFloat("_Progress", 1f);
+
+        if (circleEffect != null)
+        {
+            circleEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            circleEffect.Play();
+        }
+
+        yield return StartCoroutine(SetProgress(1f, -1f, dissolveOutTime));
+
+        normalRenderer.gameObject.SetActive(false);
+    }
+
 
     // Ẩn -> Hiện
     public IEnumerator DissolveInRoutine()
@@ -71,6 +90,30 @@ public class PlayerVFX : MonoBehaviour
             circleEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
      
        ;
+
+        respawnRenderer.enabled = false;
+        normalRenderer.gameObject.SetActive(true);
+    }
+    public IEnumerator DissolveInRoutine1()
+    {
+       // AudioManager.Instance.PlaySFX(AudioManager.Instance.endLeteClip);
+        respawnRenderer.enabled = true;
+        normalRenderer.gameObject.SetActive(false);
+
+        respawnMat.SetFloat("_Progress", -1f);
+
+        if (circleEffect != null)
+        {
+            circleEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            circleEffect.Play();
+        }
+
+        yield return StartCoroutine(SetProgress(-1f, 1f, dissolveInTime));
+
+        if (circleEffect != null)
+            circleEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+        ;
 
         respawnRenderer.enabled = false;
         normalRenderer.gameObject.SetActive(true);

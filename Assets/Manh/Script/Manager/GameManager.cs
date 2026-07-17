@@ -212,6 +212,7 @@ public class GameManager : MonoBehaviour
         }
         */
 
+       
         // Chạy minigame
         miniGameManager.StartMiniGame();
     }
@@ -264,6 +265,28 @@ public class GameManager : MonoBehaviour
         if (p2 != null && p2.playerBuff != null)
         {
             p2.playerBuff.ResetBuff();
+        }
+    }
+    public void PlayerTeleportToMain()
+    {
+        PlayerVFX v1 = player1Main.GetComponent<PlayerVFX>();
+        PlayerVFX v2 = player2Main.GetComponent<PlayerVFX>();
+        if(v1 && v2  != null)
+        {
+          StartCoroutine(v1.DissolveInRoutine1());
+            StartCoroutine(v2.DissolveInRoutine1());
+
+        }
+    }
+    public void PlayerTeleportToMiniGame()
+    {
+        PlayerVFX v1 = player1Main.GetComponent<PlayerVFX>();
+        PlayerVFX v2 = player2Main.GetComponent<PlayerVFX>();
+        if (v1 && v2 != null)
+        {
+            StartCoroutine(v1.DissolveOutRoutine1());
+            StartCoroutine(v2.DissolveOutRoutine1());
+
         }
     }
 
@@ -444,6 +467,8 @@ public class GameManager : MonoBehaviour
         )
         {
             canCheckMiniGame = false;
+            PlayerTeleportToMiniGame();
+            
             JoinRandomMiniGame();
 
             // Khóa để tránh gọi minigame nhiều lần trong Update

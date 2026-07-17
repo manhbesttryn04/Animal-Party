@@ -206,7 +206,7 @@ public class MiniGameManager : MonoBehaviour
 
         // Tắt map chính
         mainMap.SetActive(false);
-        playersMain.SetActive(false);
+       
 
         // Bật map minigame theo index
         mapMiniGameList.mapMiniGameList[miniGameIndex].SetActive(true);
@@ -297,11 +297,17 @@ public class MiniGameManager : MonoBehaviour
         // Lấy script di chuyển
         PlayerMove move1 = currentPlayer1.GetComponent<PlayerMove>();
         PlayerMove move2 = currentPlayer2.GetComponent<PlayerMove>();
+        PlayerVFX  vfx1 = currentPlayer1.GetComponent<PlayerVFX>();
+        PlayerVFX vfx2 = currentPlayer2.GetComponent<PlayerVFX>();
 
         // =====================================================
         // CHECK COMPONENT
         // =====================================================
 
+        if( vfx1 == null|| vfx2 == null)
+        {
+            yield break;
+        }
         if (avatar1 == null || avatar2 == null)
         {
             Debug.LogError("PlayerInfo missing!");
@@ -339,7 +345,15 @@ public class MiniGameManager : MonoBehaviour
 
         if (move2 != null)
             move2.isJumpAndMove = false;
-
+        
+        if(vfx2 != null)
+        {
+            StartCoroutine(vfx2.DissolveInRoutine1());
+        }
+        if(vfx1 != null)
+        {
+            StartCoroutine (vfx1.DissolveInRoutine1());
+        }
         // =====================================================
         // SETUP PLAYER
         // =====================================================
@@ -376,6 +390,7 @@ public class MiniGameManager : MonoBehaviour
                 miniGameCamera.MiniGameCameraList[miniGameIndex].PlayCutscene()
             );
         }
+        playersMain.SetActive(false);
 
         // =====================================================
         // SHOW INSTRUCTION
@@ -581,6 +596,7 @@ public class MiniGameManager : MonoBehaviour
 
         // Reset debuff phép
         GameManager.Instance.ResetMagicDebuffAllPlayer();
+        GameManager.Instance.PlayerTeleportToMain();
 
         // Convert buff xúc xắc nếu có
         GameManager.Instance.ConvertBuffDiceAllPlayer();

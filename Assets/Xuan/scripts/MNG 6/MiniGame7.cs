@@ -96,6 +96,7 @@ public class MiniGame7 : MonoBehaviour
         StopMiniGame();
         canvasMain.SetActive(true);
         FindAndAssignPlayers();
+        SetUpAllPlayer();
         ResetGameData();
         ResetPlayers();
         ResetCannons();
@@ -963,6 +964,17 @@ public class MiniGame7 : MonoBehaviour
     {
         StopMiniGame();
     }
+    public void SetUpAllPlayer()
+    {
+        PlayerDefense p1 = player1Obj.GetComponent<PlayerDefense>();
+        PlayerDefense p2 = player2Obj.GetComponent<PlayerDefense>();
+
+        if(p1 != null && p2 != null)
+        {
+            p1.hasDefense = true;
+            p2.hasDefense = true;
+        }
+    }
 }
 
 // =============================================================
@@ -984,6 +996,15 @@ public class IslandBulletCollision : MonoBehaviour
     {
         if (hasCollided)
             return;
+
+        // Đụng khiên thì chặn đạn
+        if (other.CompareTag("Defense"))
+        {
+            hasCollided = true;
+
+            Destroy(gameObject, 4f);
+            return;
+        }
 
         PlayerType playerType =
             other.GetComponentInParent<PlayerType>();

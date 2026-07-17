@@ -1,39 +1,81 @@
 ﻿using UnityEngine;
 
+using UnityEngine;
+using System.Collections;
+
 public class BulletCanon : MonoBehaviour
 {
     [Header("Cấu hình Đạn")]
     public float speed = 15f;
-    public float lifeTime = 4f; // Tự hủy sau 4 giây nếu không trúng gì
+    public float lifeTime = 4f;
+
+    [Header("Phản Đạn")]
+    [Range(0f, 90f)]
+    public float reflectAngle = 45f;
+
+    public float reflectCooldown = 0.15f;
+    public float pushOutDistance = 0.3f;
 
     [Header("Hiệu ứng Nổ")]
-    public GameObject explosionPrefab; // Kéo Prefab hiệu ứng nổ vào đây
-    public float explosionDestroyTime = 2f; // Thời gian hiệu ứng nổ tồn tại trước khi tự xóa
+    public GameObject explosionPrefab;
+    public float explosionDestroyTime = 2f;
 
     [Header("Âm thanh Nổ")]
-    public AudioClip explosionSound; // Kéo file âm thanh (.mp3, .wav) vào đây
-    [Range(0f, 1f)] public float volume = 1f; // Âm lượng tiếng nổ (từ 0 đến 1)
+    public AudioClip explosionSound;
 
-    private Vector3 moveDirection;
+    [Range(0f, 1f)]
+    public float volume = 1f;
 
-    public void SetupDirection(Vector3 direction)
+    private Rigidbody rb;
+
+    private bool canReflect = true;
+    private bool hasExploded;
+
+    private void Awake()
     {
-        moveDirection = direction.normalized;
+        rb = GetComponent<Rigidbody>();
     }
 
-    void Start()
+    private void Start()
     {
         Destroy(gameObject, lifeTime);
     }
 
-    void Update()
+    /*
+     * Hàm này chỉ dùng nếu script khác muốn truyền hướng bay.
+     * Trong MiniGame7, đạn đã được gán linearVelocity khi Instantiate,
+     * nên không bắt buộc phải gọi hàm này.
+     */
+    public void SetupDirection(Vector3 direction)
     {
-        transform.Translate(moveDirection * speed * Time.deltaTime, Space.World);
+        if (rb == null)
+            return;
+
+        Vector3 normalizedDirection = direction.normalized;
+
+        rb.linearVelocity =
+            normalizedDirection * speed;
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.GetComponent<PlayerType>() != null || other.CompareTag("Player 1")|| other.CompareTag("Player 2"))
+        if (hasExploded)
+            return;
+
+        // Kiểm tra khiên trước PlayerType,
+        // vì collider khiên có thể nằm bên trong Player.
+        if (other.CompareTag("Defense"))
+        {
+            TryReflect(other.transform);
+            return;
+        }
+
+        PlayerType playerType =
+            other.GetComponentInParent<PlayerType>();
+
+        if (playerType != null ||
+            other.CompareTag("Player 1") ||
+            other.CompareTag("Player 2"))
         {
             TriggerExplosion();
         }
@@ -41,28 +83,127 @@ public class BulletCanon : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.GetComponent<PlayerType>() != null || collision.gameObject.CompareTag("Player 1") || collision.gameObject.CompareTag("Player 2"))
+        if (hasExploded)
+            return;
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.buffDeffClip);    
+        GameObject hitObject =
+            collision.gameObject;
+
+        if (hitObject.CompareTag("Defense"))
+        {
+            TryReflect(hitObject.transform);
+            return;
+        }
+
+        PlayerType playerType =
+            hitObject.GetComponentInParent<PlayerType>();
+
+        if (playerType != null ||
+            hitObject.CompareTag("Player 1") ||
+            hitObject.CompareTag("Player 2"))
         {
             TriggerExplosion();
         }
     }
 
-    void TriggerExplosion()
+    private void TryReflect(Transform shield)
     {
-        // 1. Kích hoạt âm thanh nổ 3D tại vị trí va chạm
-        if (explosionSound != null)
+        if (!canReflect || rb == null)
+            return;
+
+        canReflect = false;
+
+        ReflectBullet(shield);
+
+        StartCoroutine(ReflectCooldownRoutine());
+    }
+
+    private void ReflectBullet(Transform shield)
+    {
+        /*
+         * Chọn góc ngẫu nhiên trong vùng hình tam giác:
+         *
+         *               0°
+         *              ↑
+         *         ↖         ↗
+         *      -45°         +45°
+         */
+
+        float randomAngle =
+            Random.Range(
+                -reflectAngle,
+                reflectAngle
+            );
+
+        Vector3 direction =
+            Quaternion.AngleAxis(
+                randomAngle,
+                Vector3.up
+            ) * shield.forward;
+
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude < 0.001f)
+            direction = -rb.linearVelocity.normalized;
+
+        direction.Normalize();
+
+        float currentSpeed =
+            rb.linearVelocity.magnitude;
+
+        // Phòng trường hợp Rigidbody đang đứng yên
+        if (currentSpeed < 0.1f)
+            currentSpeed = speed;
+
+        rb.linearVelocity =
+            direction * currentSpeed;
+
+        // Xoay đầu viên đạn theo hướng mới
+        transform.forward = direction;
+
+        // Đẩy ra khỏi collider khiên để tránh va chạm lại ngay
+        rb.position +=
+            direction * pushOutDistance;
+    }
+
+    private IEnumerator ReflectCooldownRoutine()
+    {
+        yield return new WaitForSeconds(
+            reflectCooldown
+        );
+
+        canReflect = true;
+    }
+
+    private void TriggerExplosion()
+    {
+        if (hasExploded)
+            return;
+
+        hasExploded = true;
+
+        if (AudioManager.Instance != null)
         {
-          AudioManager.Instance.PlaySFX(explosionSound);
+            AudioManager.Instance.PlaySFX(
+                AudioManager.Instance.boomClip
+            );
         }
 
-        // 2. Kích hoạt hiệu ứng hình ảnh
         if (explosionPrefab != null)
         {
-            GameObject explosion = Instantiate(explosionPrefab, transform.position, Quaternion.identity);
-            Destroy(explosion, explosionDestroyTime);
+            GameObject explosion =
+                Instantiate(
+                    explosionPrefab,
+                    transform.position,
+                    Quaternion.identity
+                );
+
+            Destroy(
+                explosion,
+                explosionDestroyTime
+            );
         }
 
-        // 3. Hủy viên đạn
         Destroy(gameObject);
     }
 }

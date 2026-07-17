@@ -143,7 +143,7 @@ public class TrapRow : MonoBehaviour
             AudioManager.Instance.PlaySFX(AudioManager.Instance.loadBrickClip);
  
             // Delay giữa từng cục
-             yield return new WaitForSeconds(0.2f);
+             yield return new WaitForSeconds(0.18f);
         }
     }
     IEnumerator RestoreSingleBrick(GameObject brick)
@@ -238,6 +238,47 @@ public class TrapRow : MonoBehaviour
         foreach (GameObject skull in skulls)
         {
             skull.SetActive(false);
+        }
+    }
+    public void ResetRow()
+    {
+        // Dừng toàn bộ coroutine đang chạy trên TrapRow
+        StopAllCoroutines();
+
+        isRunning = false;
+
+        // Ẩn warning
+        HideWarning();
+
+        // Reset cá mập
+        for (int i = 0; i < sharks.Length; i++)
+        {
+            if (sharks[i] == null)
+                continue;
+
+            sharks[i].position = sharkStartPos[i];
+            sharks[i].gameObject.SetActive(false);
+        }
+
+        // Phục hồi toàn bộ gạch
+        foreach (GameObject brick in bricks)
+        {
+            if (brick == null)
+                continue;
+
+            brick.transform.localScale = Vector3.one;
+
+            MeshRenderer mesh =
+                brick.GetComponent<MeshRenderer>();
+
+            if (mesh != null)
+                mesh.enabled = true;
+
+            Collider col =
+                brick.GetComponent<Collider>();
+
+            if (col != null)
+                col.enabled = true;
         }
     }
 }
