@@ -24,31 +24,23 @@ public class ShopManager : MonoBehaviour
 
     #region Inspector
 
+    [Header("Manager References")]
+    public UIManager ui;
+    public InputChooseItem inputChooseItem;
+
     [Header("Item Data")]
     public Sprite[] itemSprites;
 
     [Header("Players")]
     public PlayerManager[] players;
 
-    [Header("UI")]
-    public GameObject canvasShop;
-    public TextMeshProUGUI[] playerCoinTexts;
-    public Image[] playerItemImages;
-    public InputChooseItem inputChooseItem;
-    public TextMeshProUGUI timerText;
-
-    [Header("Random Card")]
-    public GameObject canvasRandomCard;
-
-    [Header("Turn Panels")]
-    public GameObject panelPlayer1Turn;
-    public GameObject panelPlayer2Turn;
-
     [Header("Turn Timer")]
     public int timePerTurn = 20;
 
-    private bool[] canErrorCoin = { true, true };
+    [Header("Shop Settings")]
     public bool open = true;
+
+    private bool[] canErrorCoin = { true, true };
 
     #endregion
 
@@ -83,8 +75,9 @@ public class ShopManager : MonoBehaviour
     }
     private void Start()
     {
+        ui = UIManager.Instance;
         if (open) { Open(); }
-        
+
     }
     #endregion
 
@@ -144,19 +137,19 @@ public class ShopManager : MonoBehaviour
     {
         UpdateCoin();
 
-        foreach (Image img in playerItemImages)
+        foreach (Image img in ui.playerItemImagesList)
         {
             if (img != null)
                 img.gameObject.SetActive(false);
         }
 
-        canvasShop?.SetActive(false);
+        ui.shopPanel?.SetActive(false);
 
-        if (canvasRandomCard != null)
-            canvasRandomCard.SetActive(false);
+        if (ui.canvasRandomCard != null)
+            ui.canvasRandomCard.SetActive(false);
 
-        if (timerText != null)
-            timerText.text = timePerTurn.ToString();
+        if (ui.timerShopText != null)
+            ui.timerShopText.text = timePerTurn.ToString();
     }
 
     #endregion
@@ -171,20 +164,20 @@ public class ShopManager : MonoBehaviour
     {
         for (int i = 0; i < players.Length; i++)
         {
-            if (players[i] == null || playerCoinTexts[i] == null)
+            if (players[i] == null || ui.playerCoinTextList[i] == null)
                 continue;
 
-            playerCoinTexts[i].text =
+            ui.playerCoinTextList[i].text =
                 players[i].playerCoin.coinEndMiniGame.ToString();
         }
     }
 
     private IEnumerator FlashCoinText(int playerIndex)
     {
-        if (playerIndex < 0 || playerIndex >= playerCoinTexts.Length)
+        if (playerIndex < 0 || playerIndex >= ui.playerCoinTextList.Length)
             yield break;
 
-        TextMeshProUGUI text = playerCoinTexts[playerIndex];
+        TextMeshProUGUI text = ui.playerCoinTextList[playerIndex];
 
         if (text == null)
             yield break;
@@ -257,22 +250,22 @@ public class ShopManager : MonoBehaviour
 
     public void ShowPlayerItem(int playerIndex, int itemIndex)
     {
-        if (playerIndex < 0 || playerIndex >= playerItemImages.Length)
+        if (playerIndex < 0 || playerIndex >= ui.playerItemImagesList.Length)
             return;
 
         if (itemIndex < 0 || itemIndex >= itemSprites.Length)
             return;
 
-        playerItemImages[playerIndex].sprite = itemSprites[itemIndex];
+        ui.playerItemImagesList[playerIndex].sprite = itemSprites[itemIndex];
 
-        playerItemImages[playerIndex].gameObject.SetActive(true);
+        ui.playerItemImagesList[playerIndex].gameObject.SetActive(true);
 
         SendBuffToPlayer(playerIndex, itemIndex);
     }
 
     public void ResetShop()
     {
-        foreach (Image img in playerItemImages)
+        foreach (Image img in ui.playerItemImagesList)
         {
             img.sprite = null;
             img.gameObject.SetActive(false);
@@ -291,7 +284,7 @@ public class ShopManager : MonoBehaviour
     {
         StopTurnTimer();
 
-        canvasShop.SetActive(true);
+        ui.shopPanel.SetActive(true);
 
         ResetShop();
         UpdateCoin();
@@ -299,19 +292,19 @@ public class ShopManager : MonoBehaviour
         inputChooseItem.isPlayer1Choose = false;
         inputChooseItem.isPlayer2Choose = false;
 
-        for (int i = 0; i < inputChooseItem.items.Length; i++)
+        for (int i = 0; i < ui.itemsList.Length; i++)
         {
-            inputChooseItem.items[i].transform.GetChild(1).gameObject.SetActive(false);
-            inputChooseItem.items[i].transform.GetChild(2).gameObject.SetActive(false);
+            ui.itemsList[i].transform.GetChild(1).gameObject.SetActive(false);
+            ui.itemsList[i].transform.GetChild(2).gameObject.SetActive(false);
         }
 
-        if (canvasRandomCard != null)
-            canvasRandomCard.SetActive(false);
+        if (ui.canvasRandomCard != null)
+            ui.canvasRandomCard.SetActive(false);
 
-        if (timerText != null)
+        if (ui.timerShopText != null)
         {
-            timerText.text = "";
-            timerText.gameObject.SetActive(false);
+            ui.timerShopText.text = "";
+            ui.timerShopText.gameObject.SetActive(false);
         }
 
         CancelInvoke(nameof(StartPlayer1Turn));
@@ -332,7 +325,7 @@ public class ShopManager : MonoBehaviour
         inputChooseItem.isPlayer1Choose = true;
         inputChooseItem.isPlayer2Choose = false;
 
-        inputChooseItem.items[inputChooseItem.player1Index]
+        ui.itemsList[inputChooseItem.player1Index]
             .transform.GetChild(1)
             .gameObject.SetActive(true);
 
@@ -344,9 +337,9 @@ public class ShopManager : MonoBehaviour
         StopTurnTimer();
         CancelInvoke(nameof(StartPlayer1Turn));
 
-        canvasShop.SetActive(false);
+        ui.shopPanel.SetActive(false);
 
-     GameManager.Instance.CheckWinnerOrNextRound();
+        GameManager.Instance.CheckWinnerOrNextRound();
     }
 
     #endregion
@@ -363,10 +356,10 @@ public class ShopManager : MonoBehaviour
 
         currentTime = timePerTurn;
 
-        if (timerText != null)
+        if (ui.timerShopText != null)
         {
-            timerText.gameObject.SetActive(true);
-            timerText.text = currentTime.ToString();
+            ui.timerShopText.gameObject.SetActive(true);
+            ui.timerShopText.text = currentTime.ToString();
         }
 
         turnTimerCoroutine = StartCoroutine(TurnTimerRoutine(onTimeOut));
@@ -380,10 +373,10 @@ public class ShopManager : MonoBehaviour
             turnTimerCoroutine = null;
         }
 
-        if (timerText != null)
+        if (ui.timerShopText != null)
         {
-            timerText.text = "";
-            timerText.gameObject.SetActive(false);
+            ui.timerShopText.text = "";
+            ui.timerShopText.gameObject.SetActive(false);
         }
     }
 
@@ -391,18 +384,18 @@ public class ShopManager : MonoBehaviour
     {
         while (currentTime > 0)
         {
-            if (timerText != null)
-                timerText.text = currentTime.ToString();
+            if (ui.timerShopText != null)
+                ui.timerShopText.text = currentTime.ToString();
 
             yield return new WaitForSeconds(1f);
 
             currentTime--;
         }
 
-        if (timerText != null)
+        if (ui.timerShopText != null)
         {
-            timerText.text = "";
-            timerText.gameObject.SetActive(false);
+            ui.timerShopText.text = "";
+            ui.timerShopText.gameObject.SetActive(false);
         }
 
         turnTimerCoroutine = null;
@@ -420,18 +413,18 @@ public class ShopManager : MonoBehaviour
 
     public void ShowPlayer1Turn()
     {
-        StartCoroutine(ShowPlayerTurn(panelPlayer1Turn));
+        StartCoroutine(ShowPlayerTurn(ui.panelPlayer1Turn));
     }
 
     public void ShowPlayer2Turn()
     {
-        StartCoroutine(ShowPlayerTurn(panelPlayer2Turn));
+        StartCoroutine(ShowPlayerTurn(ui.panelPlayer2Turn));
     }
 
     private IEnumerator ShowPlayerTurn(GameObject panel)
     {
-        panelPlayer1Turn.SetActive(false);
-        panelPlayer2Turn.SetActive(false);
+        ui.panelPlayer1Turn.SetActive(false);
+        ui.panelPlayer2Turn.SetActive(false);
 
         panel.SetActive(true);
 

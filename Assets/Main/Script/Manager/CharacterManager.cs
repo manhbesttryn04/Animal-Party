@@ -4,13 +4,21 @@ using UnityEngine;
 
 public class CharacterManager : MonoBehaviour
 {
+    [Header("Singleton")]
     public static CharacterManager Instance;
+
+    [Header("Selected Character Index")]
     public int indexPlayer1;
     public int indexPlayer2;
+
+    [Header("Player Character Lists")]
     public List<GameObject> player1List;
     public List<GameObject> player2List;
     public List<GameObject> playerPlaylist;
+
+    [Header("Manager Settings")]
     public bool isExitManager;
+
     private void Awake()
     {
         if (Instance == null)
@@ -22,13 +30,14 @@ public class CharacterManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
         if (isExitManager)
         {
             indexPlayer1 = SendIndexCharacter.Instance.player1Index;
             indexPlayer2 = SendIndexCharacter.Instance.player2Index;
         }
-   
-       SetUpPlayer(); 
+
+        SetUpPlayer();
     }
 
     public void SetUpPlayer()

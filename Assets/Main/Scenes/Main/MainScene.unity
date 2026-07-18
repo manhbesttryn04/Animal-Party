@@ -5794,19 +5794,7 @@ MonoBehaviour:
   mainMap: {fileID: 2004911891}
   playersMain: {fileID: 754339472}
   miniGameCamera: {fileID: 288627988}
-  UIMiniGame: {fileID: 1528946550}
-  canvasInstruct: {fileID: 334150857}
-  canvasInstructInputMinigame: {fileID: 422256658}
-  blackPanel: {fileID: 246288333}
   videoIntrucs: {fileID: 834109747}
-  textNameMiniGame: {fileID: 567376826}
-  textInstrucs: {fileID: 501609122}
-  textError: {fileID: 629135665}
-  timerText: {fileID: 709970621}
-  cointextPlayer1: {fileID: 1892316994}
-  cointextPlayer2: {fileID: 1564359957}
-  characterImagePlayer1: {fileID: 1680585085}
-  characterImagePlayer2: {fileID: 447437318}
   spawnPoint: {fileID: 288627992}
   currentPlayer1: {fileID: 0}
   currentPlayer2: {fileID: 0}
@@ -6027,7 +6015,7 @@ MonoBehaviour:
   instructInputMinigame4: 01000000
   instructInputMinigame5: 01000000
   instructInputMinigame6: 01010000
-  instructInputMinigame7: 01010000
+  instructInputMinigame7: 01010001
   instructInputMinigame8: 
 --- !u!1001 &290517520
 PrefabInstance:
@@ -10497,7 +10485,7 @@ GameObject:
   - component: {fileID: 465501847}
   - component: {fileID: 465501846}
   m_Layer: 5
-  m_Name: Not Buy Player 2
+  m_Name: Notifi Buy Player 2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -17685,8 +17673,8 @@ Transform:
   - {fileID: 1529704401}
   - {fileID: 21708515}
   - {fileID: 1065188562}
-  - {fileID: 1937041804}
   - {fileID: 371351952}
+  - {fileID: 1937041804}
   - {fileID: 1393103763}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -32109,7 +32097,7 @@ MonoBehaviour:
   - {fileID: 238291501}
   transPlayerToWalk: {fileID: 991644952}
   cameraMoveTime: 1
-  waitTime: 0.5
+  waitTime: 0
   scaleTime: 1
   playerMoveSpeed: 0.8
   cameraBackDistance: 3
@@ -32525,19 +32513,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d56d7f5a618a74042afa08a5056d923d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  leftCanvas: {fileID: 100450351}
-  rightCanvas: {fileID: 1198052629}
+  ui: {fileID: 1937041803}
   debuffSprite:
   - {fileID: -9160987577138628238, guid: 215687feeab0b7445b4a1cd86c82c2e1, type: 3}
   - {fileID: -1999946806344817058, guid: 215687feeab0b7445b4a1cd86c82c2e1, type: 3}
-  leftCards:
-  - {fileID: 1894174904}
-  - {fileID: 584547520}
-  rightCards:
-  - {fileID: 490140662}
-  - {fileID: 22019719}
   cannonPrefab: {fileID: 3025485861563049401, guid: 545d4b28a12fa654e99574cc0bf88887, type: 3}
-  panelNotiifiChooseDebuff: {fileID: 610134593}
 --- !u!4 &1427530311
 Transform:
   m_ObjectHideFlags: 0
@@ -35419,19 +35399,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d8f3229c019ccc4cb3b93d7c214a83b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  items:
-  - {fileID: 492401206}
-  - {fileID: 1342823084}
-  - {fileID: 309582407}
-  - {fileID: 519006950}
-  - {fileID: 1129281461}
-  - {fileID: 929444426}
-  itemCardRandom:
-  - {fileID: 1183789924}
-  - {fileID: 1498584864}
-  - {fileID: 2125876336}
-  - {fileID: 323464988}
   shopManager: {fileID: 1529704400}
+  ui: {fileID: 1937041803}
   player1Index: 1
   player2Index: 1
   isPlayer1Choose: 0
@@ -35448,6 +35417,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81a41c6680b609a4697acd1ed3716e50, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  ui: {fileID: 1937041803}
+  inputChooseItem: {fileID: 1529704399}
   itemSprites:
   - {fileID: -7343220986905845580, guid: 215687feeab0b7445b4a1cd86c82c2e1, type: 3}
   - {fileID: -3662145209645026858, guid: 215687feeab0b7445b4a1cd86c82c2e1, type: 3}
@@ -35458,20 +35429,8 @@ MonoBehaviour:
   players:
   - {fileID: 0}
   - {fileID: 0}
-  canvasShop: {fileID: 891100178}
-  playerCoinTexts:
-  - {fileID: 1230717153}
-  - {fileID: 656507711}
-  playerItemImages:
-  - {fileID: 643987959}
-  - {fileID: 1291024650}
-  inputChooseItem: {fileID: 1529704399}
-  timerText: {fileID: 1997106050}
-  canvasRandomCard: {fileID: 190533177}
-  panelPlayer1Turn: {fileID: 1680867934}
-  panelPlayer2Turn: {fileID: 465501844}
   timePerTurn: 20
-  open: 0
+  open: 1
 --- !u!4 &1529704401
 Transform:
   m_ObjectHideFlags: 0
@@ -38831,7 +38790,7 @@ GameObject:
   - component: {fileID: 1680867937}
   - component: {fileID: 1680867936}
   m_Layer: 5
-  m_Name: Not Buy Player 1
+  m_Name: Notifi Buy Player 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -42975,6 +42934,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b7a4ea69cd968ab4a8c8cff1b72b93fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  playerManager1: {fileID: 0}
+  playerManager2: {fileID: 0}
   uiMain: {fileID: 939190074}
   resultPanel: {fileID: 1973356927}
   coinTextP1: {fileID: 34187286}
@@ -42983,6 +42944,10 @@ MonoBehaviour:
   player2ResultUI: {fileID: 65221901}
   notifiPanel: {fileID: 1435245380}
   textNotifi: {fileID: 929250097}
+  diceRollP1: {fileID: 1478230515}
+  diceRollP2: {fileID: 39984624}
+  notifiP1: {fileID: 1626610150}
+  notifiP2: {fileID: 1198688706}
   notifiPlay: {fileID: 430287322}
   notifiplayer1: {fileID: 1449897450}
   notifiplayer2: {fileID: 1259093293}
@@ -43000,12 +42965,54 @@ MonoBehaviour:
   - {fileID: -1705673662, guid: 3ae3ac8b34767f54996feb4ddfd48891, type: 3}
   bonusCoinTextP1: {fileID: 992945204}
   bonusCoinTextP2: {fileID: 1921786118}
+  canvasMiniGame: {fileID: 1528946550}
+  timeMiniGameText: {fileID: 709970621}
+  coinMiniGameTextP1: {fileID: 1892316994}
+  coinMiniGameTextP2: {fileID: 1564359957}
+  avatarP1: {fileID: 1680585085}
+  avatarP2: {fileID: 447437318}
+  canvasIntructGamePlay: {fileID: 334150857}
+  nameMiniGameText: {fileID: 567376826}
+  instructGamePlayText: {fileID: 501609122}
+  errorGamePlayText: {fileID: 629135665}
+  canvasInstructInput: {fileID: 422256658}
+  leftCardCanvas: {fileID: 100450351}
+  rightCardCanvas: {fileID: 1198052629}
+  leftCardsList:
+  - {fileID: 1894174904}
+  - {fileID: 584547520}
+  rightCardsList:
+  - {fileID: 490140662}
+  - {fileID: 22019719}
+  panelNotiifiChooseDebuff: {fileID: 610134593}
+  shopPanel: {fileID: 891100178}
+  playerCoinTextList:
+  - {fileID: 1230717153}
+  - {fileID: 656507711}
+  playerItemImagesList:
+  - {fileID: 643987959}
+  - {fileID: 1291024650}
+  timerShopText: {fileID: 1997106050}
+  canvasRandomCard: {fileID: 190533177}
+  panelPlayer1Turn: {fileID: 1680867934}
+  panelPlayer2Turn: {fileID: 465501844}
+  itemsList:
+  - {fileID: 492401206}
+  - {fileID: 1342823084}
+  - {fileID: 309582407}
+  - {fileID: 519006950}
+  - {fileID: 1129281461}
+  - {fileID: 929444426}
+  itemCardRandomList:
+  - {fileID: 1183789924}
+  - {fileID: 1498584864}
+  - {fileID: 2125876336}
+  - {fileID: 323464988}
   blackPanel: {fileID: 1436521135}
+  flastBlackPanel: {fileID: 246288333}
   settingPanel: {fileID: 1831985795}
   openSettingPanelButton: {fileID: 1045522656}
   bonusPanel: {fileID: 1264563681}
-  playerManager1: {fileID: 0}
-  playerManager2: {fileID: 0}
   updateUITime: 2
 --- !u!4 &1937041804
 Transform:
@@ -117114,7 +117121,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8149235726067356008, guid: 8c1a2e4f67c39234b8ca76303e14e560, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -36,50 +36,8 @@ public class MiniGameManager : MonoBehaviour
     [Header("Camera")]
     public CameraCutList miniGameCamera;
 
-    // =========================================================
-    // UI
-    // =========================================================
-
-    [Header("Main UI")]
-    public GameObject UIMiniGame;
-
-    public GameObject canvasInstruct;
-    public GameObject canvasInstructInputMinigame;
-    public GameObject blackPanel;
-
-    // =========================================================
-    // INSTRUCTION UI
-    // =========================================================
-
-    [Header("Instruction UI")]
+    [Header("Video MiniGame")]
     public VideoPlayer videoIntrucs;
-
-    public TextMeshProUGUI textNameMiniGame;
-    public TextMeshProUGUI textInstrucs;
-    public TextMeshProUGUI textError;
-
-    // =========================================================
-    // TIMER UI
-    // =========================================================
-
-    [Header("Timer UI")]
-    public TextMeshProUGUI timerText;
-
-    // =========================================================
-    // COIN UI
-    // =========================================================
-
-    [Header("Coin UI")]
-    public TextMeshProUGUI cointextPlayer1;
-    public TextMeshProUGUI cointextPlayer2;
-
-    // =========================================================
-    // AVATAR UI
-    // =========================================================
-
-    [Header("Avatar UI")]
-    public Image characterImagePlayer1;
-    public Image characterImagePlayer2;
 
     // =========================================================
     // SPAWN
@@ -235,8 +193,9 @@ public class MiniGameManager : MonoBehaviour
         LoadingManager.Instance.HideLoading();
 
         // Bật màn đen nếu muốn che cảnh lúc đổi camera
-        if (blackPanel != null)
-            blackPanel.SetActive(true);
+      var ui = UIManager.Instance;
+        ui.flastBlackPanel.SetActive(false);
+        ui.flastBlackPanel.SetActive(true);
 
         // Mở nhạc minigame
         SetupMusicMiniGame();
@@ -253,8 +212,8 @@ public class MiniGameManager : MonoBehaviour
         // =====================================================
 
         // Hiện text timer
-        timerText.gameObject.SetActive(true);
-
+       // timerText.gameObject.SetActive(true);
+        ui.timeMiniGameText.gameObject.SetActive(true);
         // =====================================================
         // SPAWN PLAYER
         // =====================================================
@@ -370,14 +329,21 @@ public class MiniGameManager : MonoBehaviour
         // =====================================================
 
         // Set avatar player 1
-        characterImagePlayer1.sprite = avatar1.avatarCharacter;
+      //  characterImagePlayer1.sprite = avatar1.avatarCharacter;
+        ui.avatarP1.sprite = avatar1.avatarCharacter;
 
         // Set avatar player 2
-        characterImagePlayer2.sprite = avatar2.avatarCharacter;
+        //characterImagePlayer2.sprite = avatar2.avatarCharacter;
+        ui.avatarP2.sprite = avatar2.avatarCharacter;
 
         // Set coin ban đầu
-        cointextPlayer1.text = coin1.coinMiniGame.ToString();
-        cointextPlayer2.text = coin2.coinMiniGame.ToString();
+       // cointextPlayer1.text = coin1.coinMiniGame.ToString();
+        ui.coinMiniGameTextP1.text = coin1.coinMiniGame.ToString();
+
+      //  cointextPlayer2.text = coin2.coinMiniGame.ToString();
+        ui.coinMiniGameTextP2.text = coin2.coinMiniGame.ToString();
+
+
 
         // =====================================================
         // PLAY CUTSCENE
@@ -397,16 +363,19 @@ public class MiniGameManager : MonoBehaviour
         // =====================================================
 
         // Hiện bảng hướng dẫn
-        canvasInstruct.SetActive(true);
+        //canvasInstruct.SetActive(true);
+        ui.canvasIntructGamePlay.SetActive(true);
 
         // Set text hướng dẫn
-        textInstrucs.text = intrusTextList.instructTextList[miniGameIndex];
+        //textInstrucs.text = intrusTextList.instructTextList[miniGameIndex];
+        ui.instructGamePlayText.text = intrusTextList.instructTextList[miniGameIndex];
 
         // Set tên minigame
-        textNameMiniGame.text = intrusTextList.nameMiniGameList[miniGameIndex];
+        //textNameMiniGame.text = intrusTextList.nameMiniGameList[miniGameIndex];
+        ui.nameMiniGameText.text = intrusTextList.nameMiniGameList[miniGameIndex];
 
         // Set text lỗi / cảnh báo
-        textError.text = intrusTextList.errorTextList[miniGameIndex];
+       ui.errorGamePlayText.text = intrusTextList.errorTextList[miniGameIndex];
 
         // Set video hướng dẫn
         videoIntrucs.clip = videoInstructList.videoInstructList[miniGameIndex];
@@ -424,22 +393,20 @@ public class MiniGameManager : MonoBehaviour
         }
         videoIntrucs.clip = null;
         // Tắt bảng hướng dẫn
-        canvasInstruct.SetActive(false);
+       ui.canvasIntructGamePlay.SetActive(false);
         
-        if(canvasInstructInputMinigame != null)
-        {
-            canvasInstructInputMinigame.SetActive(true);
-        }
+       
+            ui.canvasInstructInput.SetActive(true);
+        
         if(inputMinigame != null)
         {
             inputMinigame.ShowInputMinigame(indexMiniGame);
         }
         yield return new WaitForSeconds(5f);
         inputMinigame.HideAllInput();
-      canvasInstructInputMinigame.SetActive(false);
+        ui.canvasInstructInput.SetActive(false);
         // Tắt màn đen sau khi chuẩn bị xong
-        if (blackPanel != null)
-            blackPanel.SetActive(false);
+       ui.flastBlackPanel.SetActive(false);
         UIManager.Instance.ActiveOpenSettingButton(true);
         if (cursor != null)
         {
@@ -462,7 +429,7 @@ public class MiniGameManager : MonoBehaviour
         // =====================================================
 
         // Hiện UI chính của minigame
-        UIMiniGame.SetActive(true);
+       ui.canvasMiniGame.SetActive(true);
 
         // =====================================================
         // START MINIGAME LOGIC
@@ -492,12 +459,12 @@ public class MiniGameManager : MonoBehaviour
             int remainSeconds = seconds % 60;
 
             // Update timer UI dạng 00:00
-            timerText.text =
+           ui.timeMiniGameText.text =
                 minutes.ToString("00") + ":" + remainSeconds.ToString("00");
 
             // Update coin realtime
-            cointextPlayer1.text = coin1.coinMiniGame.ToString();
-            cointextPlayer2.text = coin2.coinMiniGame.ToString();
+            ui.coinMiniGameTextP1.text = coin1.coinMiniGame.ToString();
+            ui.coinMiniGameTextP2.text = coin2.coinMiniGame.ToString();
 
             yield return null;
         }
@@ -507,7 +474,7 @@ public class MiniGameManager : MonoBehaviour
         // =====================================================
 
         // Khi hết giờ, ép timer về 00:00
-        timerText.text = "00:00";
+        ui.timeMiniGameText.text = "00:00";
 
         // =====================================================
         // STOP MINIGAME
@@ -520,7 +487,7 @@ public class MiniGameManager : MonoBehaviour
         ExitStopMiniGame();
 
         // Ẩn UI minigame
-        UIMiniGame.SetActive(false);
+        ui.canvasMiniGame.SetActive(false);
 
         // =====================================================
         // SHOW RESULT
@@ -582,7 +549,7 @@ public class MiniGameManager : MonoBehaviour
         // =====================================================
 
         // Ẩn timer
-        timerText.gameObject.SetActive(false);
+        ui.timeMiniGameText.gameObject.SetActive(false);
 
         // =====================================================
         // CHECK WINNER

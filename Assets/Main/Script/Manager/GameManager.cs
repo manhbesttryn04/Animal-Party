@@ -13,34 +13,34 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance => instance;
 
     // =========================================================
-    // WINNER DATA
+    // INSPECTOR
     // =========================================================
+    #region Inspector
 
     [Header("Winner")]
-
-    // Lưu tên người thắng vòng hiện tại
     public string playerWinRound;
 
-    // Object chính của Player 1 và Player 2
-    public GameObject player1Main, player2Main;
+    [Header("Main Players")]
+    public GameObject player1Main;
+    public GameObject player2Main;
 
-    // =========================================================
-    // MANAGER REFERENCES
-    // =========================================================
-
-    // Quản lý mini game
-    MiniGameManager miniGameManager;
-
-    // Quản lý trạng thái vòng chơi / story game
-    StateStoryGame stateGame;
-
-    // Cho phép bắt đầu vòng tiếp theo hay chưa
+    [Header("Game Loop")]
     public bool canStartNextRound = false;
-
     public bool canCheckPlayer2 = true;
     public bool canCheckMiniGame = true;
 
+    #endregion
+
+    // =========================================================
+    // PRIVATE VARIABLES
+    // =========================================================
+    #region Private Variables
+
+    private MiniGameManager miniGameManager;
+    private StateStoryGame stateGame;
     private float timer;
+
+    #endregion
 
     // =========================================================
     // UNITY FUNCTIONS

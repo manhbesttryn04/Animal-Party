@@ -15,81 +15,87 @@ public class UIManager : MonoBehaviour
 
     // Singleton để các script khác có thể gọi UIManager.Instance
     public static UIManager Instance { get; private set; }
-
-    [Header("UI Main")]
-    public GameObject uiMain;
-
-    [Header("Resutl Panel UI")]
-    // Panel hiện kết quả cuối game
-    public GameObject resultPanel;
-
-    // Text hiển thị số coin của Player 1 và Player 2
-    public TextMeshProUGUI coinTextP1;
-    public TextMeshProUGUI coinTextP2;
-
-    // UI kết quả của từng người chơi
-    public GameObject player1ResultUI;
-    public GameObject player2ResultUI;
-
-
-    [Header("Notifi Panel UI")]
-
-    // Panel thông báo
-    public GameObject notifiPanel;
-
-    // Nội dung thông báo
-    public TextMeshProUGUI textNotifi;
-
-    [Header("Notifi Player Play UI")]
-
-    // Panel hiển thị thông tin trong lúc chơi
-    public GameObject notifiPlay;
-
-    // Khung thông tin của từng người chơi
-    public GameObject notifiplayer1;
-    public GameObject notifiplayer2;
-
-    // Coin hiện tại của từng người
-    public TextMeshProUGUI coinTextNotP1;
-    public TextMeshProUGUI coinTextNotP2;
-
-    // Vị trí hiện tại trên bàn cờ
-    public TextMeshProUGUI indexTextP1;
-    public TextMeshProUGUI indexTextP2;
-
-    // Ảnh buff hiện tại của Player 1 và Player 2
-    public Image imageCurrentBuffP1;
-    public Image imageCurrentBuffP2;
-
-    // Danh sách sprite buff
-    public List<Sprite> buffImageList;
-
-    // Bonus Coin UI
-    public GameObject bonusCoinTextP1;
-    public GameObject bonusCoinTextP2;
-
-    [Header("Black Panel")]
-   
-    public GameObject blackPanel;
-
-    [Header("Setting UI")]
-    public GameObject settingPanel;
-    public GameObject openSettingPanelButton;
-    [Header("Bonus Panel")]
-    // Panel thưởng
-    public GameObject bonusPanel;
-
-    // =========================================================
-    // PLAYER REFERENCES
-    // =========================================================
-
-    // Tham chiếu tới PlayerManager
+    [Header("Player References")]
     public PlayerManager playerManager1;
     public PlayerManager playerManager2;
 
-    // =========================================================
-    // UNITY FUNCTIONS
-    // =========================================================
+    [Header("Main UI")]
+    public GameObject uiMain;
+
+    [Header("Result UI")]
+    public GameObject resultPanel;
+    public TextMeshProUGUI coinTextP1;
+    public TextMeshProUGUI coinTextP2;
+    public GameObject player1ResultUI;
+    public GameObject player2ResultUI;
+
+    [Header("Notification UI")]
+    public GameObject notifiPanel;
+    public TextMeshProUGUI textNotifi;
+    public GameObject diceRollP1;
+    public GameObject diceRollP2;
+    public GameObject notifiP1;
+    public GameObject notifiP2;
+
+    [Header("Player Info UI")]
+    public GameObject notifiPlay;
+    public GameObject notifiplayer1;
+    public GameObject notifiplayer2;
+    public TextMeshProUGUI coinTextNotP1;
+    public TextMeshProUGUI coinTextNotP2;
+    public TextMeshProUGUI indexTextP1;
+    public TextMeshProUGUI indexTextP2;
+    public Image imageCurrentBuffP1;
+    public Image imageCurrentBuffP2;
+    public List<Sprite> buffImageList;
+    public GameObject bonusCoinTextP1;
+    public GameObject bonusCoinTextP2;
+
+    [Header("Mini Game UI")]
+    public GameObject canvasMiniGame;
+    public TextMeshProUGUI timeMiniGameText;
+    public TextMeshProUGUI coinMiniGameTextP1;
+    public TextMeshProUGUI coinMiniGameTextP2;
+    public Image avatarP1;
+    public Image avatarP2;
+
+    [Header("Instruction UI")]
+    public GameObject canvasIntructGamePlay;
+    public TextMeshProUGUI nameMiniGameText;
+    public TextMeshProUGUI instructGamePlayText;
+    public TextMeshProUGUI errorGamePlayText;
+    public GameObject canvasInstructInput;
+
+    [Header("Debuff UI")]
+    public GameObject leftCardCanvas;
+    public GameObject rightCardCanvas;
+    public GameObject[] leftCardsList;
+    public GameObject[] rightCardsList;
+    public GameObject panelNotiifiChooseDebuff;
+
+    [Header("Shop UI")]
+    public GameObject shopPanel;
+    public TextMeshProUGUI[] playerCoinTextList;
+    public Image[] playerItemImagesList;
+    public TextMeshProUGUI timerShopText;
+    public GameObject canvasRandomCard;
+    public GameObject panelPlayer1Turn;
+    public GameObject panelPlayer2Turn;
+    public GameObject[] itemsList;
+    public GameObject[] itemCardRandomList;
+
+    [Header("Screen Transition")]
+    public GameObject blackPanel;
+    public GameObject flastBlackPanel;
+
+    [Header("Settings UI")]
+    public GameObject settingPanel;
+    public GameObject openSettingPanelButton;
+
+    [Header("Bonus UI")]
+    public GameObject bonusPanel;
+
+    [Header("Update Settings")]
     public float updateUITime = 0.25f;
     private float updateTimer;
 

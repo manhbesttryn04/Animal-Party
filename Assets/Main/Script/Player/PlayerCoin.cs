@@ -15,11 +15,11 @@ public class PlayerCoin : MonoBehaviour
 
         if (!manager.playerType.isPlayer2)
         {
-            gameManager.cointextPlayer1.text = coinMiniGame.ToString();
+            UIManager.Instance.coinMiniGameTextP1.text = coinMiniGame.ToString();
         }
         else
         {
-            gameManager.cointextPlayer2.text = coinMiniGame.ToString();
+            UIManager.Instance.coinMiniGameTextP2.text = coinMiniGame.ToString();
         }
     }
     public void AddCoin(int i)

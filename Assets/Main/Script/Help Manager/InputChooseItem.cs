@@ -4,10 +4,8 @@ using UnityEngine;
 public class InputChooseItem : MonoBehaviour
 {
     #region References
-
-    public GameObject[] items;
-    public GameObject[] itemCardRandom;
     public ShopManager shopManager;
+    public UIManager ui;
 
     #endregion
 
@@ -34,6 +32,7 @@ public class InputChooseItem : MonoBehaviour
 
     private void Start()
     {
+        ui = UIManager.Instance;
         InitHighlight();
     }
 
@@ -50,10 +49,10 @@ public class InputChooseItem : MonoBehaviour
 
     private void InitHighlight()
     {
-        for (int i = 0; i < items.Length; i++)
+        for (int i = 0; i < ui.itemsList.Length; i++)
         {
-            items[i].transform.GetChild(1).gameObject.SetActive(false);
-            items[i].transform.GetChild(2).gameObject.SetActive(false);
+            ui.itemsList[i].transform.GetChild(1).gameObject.SetActive(false);
+            ui.itemsList[i].transform.GetChild(2).gameObject.SetActive(false);
         }
 
         ClearRandomCardHighlight();
@@ -66,9 +65,9 @@ public class InputChooseItem : MonoBehaviour
 
     private void ClearRandomCardHighlight()
     {
-        for (int i = 0; i < itemCardRandom.Length; i++)
+        for (int i = 0; i < ui.itemCardRandomList.Length; i++)
         {
-            itemCardRandom[i].transform.GetChild(1).gameObject.SetActive(false);
+            ui.itemCardRandomList[i].transform.GetChild(1).gameObject.SetActive(false);
         }
     }
 
@@ -126,7 +125,7 @@ public class InputChooseItem : MonoBehaviour
 
     private void HandlePlayer1Input()
     {
-        IndexItem current = items[player1Index].GetComponent<IndexItem>();
+        IndexItem current = ui.itemsList[player1Index].GetComponent<IndexItem>();
 
         if (Input.GetKeyDown(KeyCode.W)) ChangePlayer1(current.top);
         if (Input.GetKeyDown(KeyCode.S)) ChangePlayer1(current.bottom);
@@ -136,20 +135,20 @@ public class InputChooseItem : MonoBehaviour
 
     private void ChangePlayer1(int newIndex)
     {
-        if (newIndex < 0 || newIndex >= items.Length) return;
+        if (newIndex < 0 || newIndex >= ui.itemsList.Length) return;
 
         AudioManager.Instance.PlaySFX(AudioManager.Instance.movechooseItemClip);
 
-        items[player1Index].transform.GetChild(1).gameObject.SetActive(false);
+        ui.itemsList[player1Index].transform.GetChild(1).gameObject.SetActive(false);
 
         player1Index = newIndex;
 
-        items[player1Index].transform.GetChild(1).gameObject.SetActive(true);
+        ui.itemsList[player1Index].transform.GetChild(1).gameObject.SetActive(true);
     }
 
     private void BuyPlayer1Item()
     {
-        PriceItem item = items[player1Index].GetComponent<PriceItem>();
+        PriceItem item = ui.itemsList[player1Index].GetComponent<PriceItem>();
         if (item == null) return;
 
         if (player1Index == 1)
@@ -160,7 +159,7 @@ public class InputChooseItem : MonoBehaviour
             shopManager.StopTurnTimer();
 
             isPlayer1Choose = false;
-            items[player1Index].transform.GetChild(1).gameObject.SetActive(false);
+            ui.itemsList[player1Index].transform.GetChild(1).gameObject.SetActive(false);
 
             OpenRandomCard(0);
             return;
@@ -171,7 +170,7 @@ public class InputChooseItem : MonoBehaviour
             shopManager.StopTurnTimer();
 
             isPlayer1Choose = false;
-            items[player1Index].transform.GetChild(1).gameObject.SetActive(false);
+            ui.itemsList[player1Index].transform.GetChild(1).gameObject.SetActive(false);
 
             bool win1 = GameManager.Instance.CheckWinnerByPowerCoinP1();
             if(win1)
@@ -188,7 +187,7 @@ public class InputChooseItem : MonoBehaviour
         shopManager.StopTurnTimer();
 
         isPlayer1Choose = false;
-        items[player1Index].transform.GetChild(1).gameObject.SetActive(false);
+        ui.itemsList[player1Index].transform.GetChild(1).gameObject.SetActive(false);
 
         StartCoroutine(ShowPlayer2TurnDelay());
     }
@@ -199,7 +198,7 @@ public class InputChooseItem : MonoBehaviour
 
     private void HandlePlayer2Input()
     {
-        IndexItem current = items[player2Index].GetComponent<IndexItem>();
+        IndexItem current = ui.itemsList[player2Index].GetComponent<IndexItem>();
 
         if (Input.GetKeyDown(KeyCode.UpArrow)) ChangePlayer2(current.top);
         if (Input.GetKeyDown(KeyCode.DownArrow)) ChangePlayer2(current.bottom);
@@ -209,20 +208,20 @@ public class InputChooseItem : MonoBehaviour
 
     private void ChangePlayer2(int newIndex)
     {
-        if (newIndex < 0 || newIndex >= items.Length) return;
+        if (newIndex < 0 || newIndex >= ui.itemsList.Length) return;
 
         AudioManager.Instance.PlaySFX(AudioManager.Instance.movechooseItemClip);
 
-        items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
+        ui.itemsList[player2Index].transform.GetChild(2).gameObject.SetActive(false);
 
         player2Index = newIndex;
 
-        items[player2Index].transform.GetChild(2).gameObject.SetActive(true);
+        ui.itemsList[player2Index].transform.GetChild(2).gameObject.SetActive(true);
     }
 
     private void BuyPlayer2Item()
     {
-        PriceItem item = items[player2Index].GetComponent<PriceItem>();
+        PriceItem item = ui.itemsList[player2Index].GetComponent<PriceItem>();
         if (item == null) return;
 
         if (player2Index == 1)
@@ -233,7 +232,7 @@ public class InputChooseItem : MonoBehaviour
             shopManager.StopTurnTimer();
 
             isPlayer2Choose = false;
-            items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
+            ui.itemsList[player2Index].transform.GetChild(2).gameObject.SetActive(false);
 
             OpenRandomCard(1);
             return;
@@ -244,7 +243,7 @@ public class InputChooseItem : MonoBehaviour
             shopManager.StopTurnTimer();
 
             isPlayer2Choose = false;
-            items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
+            ui.itemsList[player2Index].transform.GetChild(2).gameObject.SetActive(false);
 
             bool win2 = GameManager.Instance.CheckWinnerByPowerCoinP2();
             StartCoroutine(CloseShop());
@@ -257,7 +256,7 @@ public class InputChooseItem : MonoBehaviour
         shopManager.StopTurnTimer();
 
         isPlayer2Choose = false;
-        items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
+        ui.itemsList[player2Index].transform.GetChild(2).gameObject.SetActive(false);
 
         CheckAllPlayersFinished();
     }
@@ -272,8 +271,8 @@ public class InputChooseItem : MonoBehaviour
         isPlayer2Choose = false;
         isChoosingRandomCard = false;
 
-        items[player1Index].transform.GetChild(1).gameObject.SetActive(false);
-        items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
+        ui.itemsList[player1Index].transform.GetChild(1).gameObject.SetActive(false);
+        ui.itemsList[player2Index].transform.GetChild(2).gameObject.SetActive(false);
 
         shopManager.ShowPlayer2Turn();
 
@@ -281,7 +280,7 @@ public class InputChooseItem : MonoBehaviour
 
         isPlayer2Choose = true;
 
-        items[player2Index].transform.GetChild(2).gameObject.SetActive(true);
+        ui.itemsList[player2Index].transform.GetChild(2).gameObject.SetActive(true);
 
         shopManager.StartTurnTimer(TimeOutPlayer2);
     }
@@ -292,7 +291,7 @@ public class InputChooseItem : MonoBehaviour
 
     private void OpenRandomCard(int playerIndex)
     {
-        shopManager.canvasRandomCard.SetActive(true);
+        ui.canvasRandomCard.SetActive(true);
 
         randomCardPlayer = playerIndex;
         randomCardIndex = 0;
@@ -313,7 +312,7 @@ public class InputChooseItem : MonoBehaviour
 
     private IEnumerator WaitOpenAnimation()
     {
-        Animator animator = shopManager.canvasRandomCard.GetComponent<Animator>();
+        Animator animator = ui.canvasRandomCard.GetComponent<Animator>();
 
         yield return null;
 
@@ -330,7 +329,7 @@ public class InputChooseItem : MonoBehaviour
 
         isChoosingRandomCard = true;
 
-        itemCardRandom[randomCardIndex]
+        ui.itemCardRandomList[randomCardIndex]
             .transform.GetChild(1)
             .gameObject.SetActive(true);
 
@@ -349,9 +348,9 @@ public class InputChooseItem : MonoBehaviour
             (randomItems[rand], randomItems[i]);
         }
 
-        for (int i = 0; i < itemCardRandom.Length; i++)
+        for (int i = 0; i < ui.itemCardRandomList.Length; i++)
         {
-            RandomCard card = itemCardRandom[i].GetComponent<RandomCard>();
+            RandomCard card =   ui.itemCardRandomList[i].GetComponent<RandomCard>();
 
             card.itemIndex = randomItems[i];
             card.image.sprite = card.spriteStar;
@@ -360,7 +359,7 @@ public class InputChooseItem : MonoBehaviour
 
     private void HandleRandomCardInput()
     {
-        IndexItem current = itemCardRandom[randomCardIndex].GetComponent<IndexItem>();
+        IndexItem current = ui.itemCardRandomList[randomCardIndex].GetComponent<IndexItem>();
 
         if (randomCardPlayer == 0)
         {
@@ -382,17 +381,17 @@ public class InputChooseItem : MonoBehaviour
 
     private void ChangeRandomCard(int newIndex)
     {
-        if (newIndex < 0 || newIndex >= itemCardRandom.Length) return;
+        if (newIndex < 0 || newIndex >= ui.itemCardRandomList.Length) return;
 
         AudioManager.Instance.PlaySFX(AudioManager.Instance.movechooseItemClip);
 
-        itemCardRandom[randomCardIndex]
+        ui.itemCardRandomList[randomCardIndex]
             .transform.GetChild(1)
             .gameObject.SetActive(false);
 
         randomCardIndex = newIndex;
 
-        itemCardRandom[randomCardIndex]
+        ui.itemCardRandomList[randomCardIndex]
             .transform.GetChild(1)
             .gameObject.SetActive(true);
     }
@@ -412,9 +411,9 @@ public class InputChooseItem : MonoBehaviour
 
         isChoosingRandomCard = false;
 
-        RandomCard card = itemCardRandom[randomCardIndex].GetComponent<RandomCard>();
+        RandomCard card = ui.itemCardRandomList[randomCardIndex].GetComponent<RandomCard>();
 
-        itemCardRandom[randomCardIndex]
+        ui.itemCardRandomList[randomCardIndex]
             .transform.GetChild(1)
             .gameObject.SetActive(true);
 
@@ -428,7 +427,7 @@ public class InputChooseItem : MonoBehaviour
 
         ClearRandomCardHighlight();
 
-        shopManager.canvasRandomCard.SetActive(false);
+        ui.canvasRandomCard.SetActive(false);
 
         isChoosingCardRoutine = false;
 
@@ -439,7 +438,7 @@ public class InputChooseItem : MonoBehaviour
         else
         {
             isPlayer2Choose = false;
-            items[player2Index].transform.GetChild(2).gameObject.SetActive(false);
+            ui.itemsList[player2Index].transform.GetChild(2).gameObject.SetActive(false);
 
             CheckAllPlayersFinished();
         }

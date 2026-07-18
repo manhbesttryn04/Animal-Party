@@ -10,14 +10,15 @@ public class PlayerNotifi : MonoBehaviour
     public void Start()
     {
         manager = GetComponent<PlayerManager>();
+        var ui = UIManager.Instance;
         if (!manager.playerType.isPlayer2)
         {
-            NotifiPlayer = GameObject.Find("Not Player 1");
-            DicePlayer = GameObject.Find("Dice Player 1");
+            NotifiPlayer = ui.notifiP1;
+            DicePlayer = ui.diceRollP1;
         }else
         {
-            NotifiPlayer = GameObject.Find("Not Player 2");
-            DicePlayer = GameObject.Find("Dice Player 2");
+            NotifiPlayer = ui.notifiP2;
+            DicePlayer = ui.diceRollP2;
         }
         NotifiPlayer.SetActive(false);
         DicePlayer.SetActive(false);

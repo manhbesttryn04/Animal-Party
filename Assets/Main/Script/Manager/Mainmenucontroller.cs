@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;using UnityEngine.SceneManagement;
 
 public class MainMenuController : MonoBehaviour
 {
@@ -11,6 +12,9 @@ public class MainMenuController : MonoBehaviour
     [Header("--- SETTINGS PANEL ---")]
     [Tooltip("Panel cài đặt âm thanh, kéo vào đây, để Inactive trong Hierarchy")]
     public GameObject settingsPanel;
+    public Volume volume;
+    private Vignette vignette;
+
 
     // ====== NÚT START ======
     private void Start()
@@ -19,6 +23,12 @@ public class MainMenuController : MonoBehaviour
         if(cursor != null)
         {
             cursor.ShowGameCursor();
+        }
+        if (volume.profile.TryGet(out vignette))
+        {
+        
+            vignette.intensity.value = 0f;
+       
         }
     }
     public void OnStartClicked()

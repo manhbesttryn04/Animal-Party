@@ -96,7 +96,7 @@ public class CutScenePowerCoin : MonoBehaviour
         teleport.transform.rotation =
             Quaternion.LookRotation(player.transform.forward);
 
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(0.2f);
 
         // 4. Camera di chuyển ra sau player
         // XZ theo sau lưng player, Y lấy theo teleport
@@ -150,14 +150,8 @@ public class CutScenePowerCoin : MonoBehaviour
         AudioManager.Instance.PlaySFX(AudioManager.Instance.closeTeleportClip);
         yield return StartCoroutine(
             ScaleTeleport(Vector3.zero, scaleTime)
-        );
-       
-
-        yield return new WaitForSeconds(waitTime);
-        VolumeManager.Instance.ResetVignette();
-        yield return StartCoroutine(UIManager.Instance.BlackPanelRoutine());
+        );    
         SceneManager.LoadScene(5);
-
     }
 
     private IEnumerator ScaleTeleport(Vector3 targetScale, float duration)

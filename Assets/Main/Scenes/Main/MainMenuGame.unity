@@ -3516,8 +3516,14 @@ Transform:
   m_Children:
   - {fileID: 1223766926}
   - {fileID: 1901891643}
+  - {fileID: 661324295}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &661324295 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6495310850400595366, guid: b3d85d9e05345b148afecd0d10faf4be, type: 3}
+  m_PrefabInstance: {fileID: 2040301241}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &664239407
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6039,6 +6045,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 116a4736ebe301c40b5f911851748701, type: 3}
+--- !u!114 &1132825314 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2348478708877546823, guid: dce8ffe02463019438e9a3515d40ad84, type: 3}
+  m_PrefabInstance: {fileID: 1133190964}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
 --- !u!1001 &1133190964
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7088,6 +7105,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MainMenuController
   gameSceneName: ChooseCharacterScene
   settingsPanel: {fileID: 0}
+  volume: {fileID: 0}
 --- !u!4 &1223766926
 Transform:
   m_ObjectHideFlags: 0
@@ -13434,6 +13452,69 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c607c6adafdc5854d8f75f91c0b35dcc, type: 3}
+--- !u!1001 &2040301241
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 650177491}
+    m_Modifications:
+    - target: {fileID: 6495310850400595366, guid: b3d85d9e05345b148afecd0d10faf4be, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -1589.6268
+      objectReference: {fileID: 0}
+    - target: {fileID: 6495310850400595366, guid: b3d85d9e05345b148afecd0d10faf4be, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 800
+      objectReference: {fileID: 0}
+    - target: {fileID: 6495310850400595366, guid: b3d85d9e05345b148afecd0d10faf4be, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -1212.4475
+      objectReference: {fileID: 0}
+    - target: {fileID: 6495310850400595366, guid: b3d85d9e05345b148afecd0d10faf4be, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6495310850400595366, guid: b3d85d9e05345b148afecd0d10faf4be, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6495310850400595366, guid: b3d85d9e05345b148afecd0d10faf4be, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6495310850400595366, guid: b3d85d9e05345b148afecd0d10faf4be, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6495310850400595366, guid: b3d85d9e05345b148afecd0d10faf4be, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6495310850400595366, guid: b3d85d9e05345b148afecd0d10faf4be, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6495310850400595366, guid: b3d85d9e05345b148afecd0d10faf4be, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8498794408850761772, guid: b3d85d9e05345b148afecd0d10faf4be, type: 3}
+      propertyPath: m_Name
+      value: Volume Manager
+      objectReference: {fileID: 0}
+    - target: {fileID: 8977845633667367423, guid: b3d85d9e05345b148afecd0d10faf4be, type: 3}
+      propertyPath: volume
+      value: 
+      objectReference: {fileID: 1132825314}
+    m_RemovedComponents: []
+    m_RemovedGameObjects:
+    - {fileID: 7434985565955729016, guid: b3d85d9e05345b148afecd0d10faf4be, type: 3}
+    - {fileID: 254242109385462341, guid: b3d85d9e05345b148afecd0d10faf4be, type: 3}
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: b3d85d9e05345b148afecd0d10faf4be, type: 3}
 --- !u!4 &2041274489 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 116a4736ebe301c40b5f911851748701, type: 3}

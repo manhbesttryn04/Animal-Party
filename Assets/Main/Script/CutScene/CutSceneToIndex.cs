@@ -129,12 +129,6 @@ public class CutSceneToIndex : MonoBehaviour
         yield return StartCoroutine(
             ScaleTeleport(Vector3.zero, scaleTime)
         );
-
-        // 8. Reset vignette
-        VolumeManager.Instance.ResetVignette();
-
-        // 9. Hiện black panel
-         StartCoroutine(UIManager.Instance.BlackPanelRoutine());
         SceneManager.LoadScene(5);
     }
 

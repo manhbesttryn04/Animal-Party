@@ -8,43 +8,25 @@ public class DebuffManager : MonoBehaviour
     // SINGLETON
     // =========================================================
 
+    [Header("Singleton")]
     public static DebuffManager _instance;
     public static DebuffManager Instance => _instance;
 
-    // =========================================================
-    // UI CANVAS
-    // =========================================================
-
-    [Header("Canvas")]
-    public GameObject leftCanvas;
-    public GameObject rightCanvas;
+    [Header("Manager References")]
+    public UIManager ui;
 
     [Header("Debuff Sprites")]
     public Sprite[] debuffSprite;
 
-    [Header("Cards")]
-    public GameObject[] leftCards;
-    public GameObject[] rightCards;
-
-    // =========================================================
-    // CARD INDEX / ACTIVE STATE
-    // =========================================================
-
-    [Header("Index")]
+    [Header("Card Selection")]
     private int leftIndex;
     private int rightIndex;
 
     private bool leftActive;
     private bool rightActive;
 
-    // =========================================================
-    // PREFAB / NOTIFY
-    // =========================================================
-
-    [Header("Prefab")]
+    [Header("Prefabs")]
     public GameObject cannonPrefab;
-    public GameObject panelNotiifiChooseDebuff;
-
     // =========================================================
     // UNITY FUNCTIONS
     // =========================================================
@@ -64,7 +46,12 @@ public class DebuffManager : MonoBehaviour
             // Nếu đã có DebuffManager thì xóa bản mới
             Destroy(gameObject);
         }
-    }      
+       
+    }
+    private void Start()
+    {
+        ui = UIManager.Instance;
+    }
 
     private void Update()
     {
@@ -85,8 +72,8 @@ public class DebuffManager : MonoBehaviour
 
     public void OpenDebuffInternal(int playerIndex)
     {
-        leftCanvas.SetActive(false);
-        rightCanvas.SetActive(false);
+        ui.leftCardCanvas.SetActive(false);
+        ui.rightCardCanvas.SetActive(false);
 
         HideAllCards();
 
@@ -98,17 +85,17 @@ public class DebuffManager : MonoBehaviour
 
         if (playerIndex == 0)
         {
-            leftCanvas.SetActive(true);
+            ui.leftCardCanvas.SetActive(true);
 
-            Reset(leftCards, ref leftIndex);
+            Reset(ui.leftCardsList, ref leftIndex);
 
             StartCoroutine(WaitOpenDebuffAnimation(0));
         }
         else
         {
-            rightCanvas.SetActive(true);
+            ui.rightCardCanvas.SetActive(true);
 
-            Reset(rightCards, ref rightIndex);
+            Reset(ui.rightCardsList, ref rightIndex);
 
             StartCoroutine(WaitOpenDebuffAnimation(1));
         }
@@ -116,8 +103,8 @@ public class DebuffManager : MonoBehaviour
     private IEnumerator WaitOpenDebuffAnimation(int playerIndex)
     {
         Animator animator = playerIndex == 0
-            ? leftCanvas.GetComponent<Animator>()
-            : rightCanvas.GetComponent<Animator>();
+            ? ui.leftCardCanvas.GetComponent<Animator>()
+            : ui.rightCardCanvas.GetComponent<Animator>();
 
         // Đợi Animator cập nhật state
         yield return null;
@@ -130,22 +117,22 @@ public class DebuffManager : MonoBehaviour
         if (playerIndex == 0)
         {
             leftActive = true;
-            SetHighlight(leftCards, leftIndex, true);
+            SetHighlight(ui.leftCardsList, leftIndex, true);
         }
         else
         {
             rightActive = true;
-            SetHighlight(rightCards, rightIndex, true);
+            SetHighlight(ui.rightCardsList, rightIndex, true);
         }
     }
 
     IEnumerator ShowPanelChoose()
     {
-        panelNotiifiChooseDebuff.SetActive(true);
+        ui.panelNotiifiChooseDebuff.SetActive(true);
 
         yield return new WaitForSeconds(2f);
 
-        panelNotiifiChooseDebuff.SetActive(false);
+        ui.panelNotiifiChooseDebuff.SetActive(false);
     }
 
     // =========================================================
@@ -154,7 +141,7 @@ public class DebuffManager : MonoBehaviour
 
     private void HandleLeft()
     {
-        IndexItem current = leftCards[leftIndex].GetComponent<IndexItem>();
+        IndexItem current = ui.leftCardsList[leftIndex].GetComponent<IndexItem>();
 
         // Di chuyển chọn sang trái
         if (Input.GetKeyDown(KeyCode.A))
@@ -166,25 +153,25 @@ public class DebuffManager : MonoBehaviour
 
         // Chọn card
         if (Input.GetKeyDown(KeyCode.J))
-            Select(leftCards[leftIndex], 0);
+            Select(ui.leftCardsList[leftIndex], 0);
     }
 
     private void MoveLeft(int newIndex)
     {
         // Nếu index không hợp lệ thì bỏ qua
-        if (newIndex < 0 || newIndex >= leftCards.Length) return;
+        if (newIndex < 0 || newIndex >= ui.leftCardsList.Length) return;
 
         // Phát âm thanh di chuyển chọn item
         AudioManager.Instance.PlaySFX(AudioManager.Instance.movechooseItemClip);
 
         // Tắt highlight card cũ
-        SetHighlight(leftCards, leftIndex, false);
+        SetHighlight(ui.leftCardsList, leftIndex, false);
 
         // Cập nhật index mới
         leftIndex = newIndex;
 
         // Bật highlight card mới
-        SetHighlight(leftCards, leftIndex, true);
+        SetHighlight(ui.leftCardsList, leftIndex, true);
     }
 
     // =========================================================
@@ -193,7 +180,7 @@ public class DebuffManager : MonoBehaviour
 
     private void HandleRight()
     {
-        IndexItem current = rightCards[rightIndex].GetComponent<IndexItem>();
+        IndexItem current = ui.leftCardsList[rightIndex].GetComponent<IndexItem>();
 
         // Di chuyển chọn sang trái
         if (Input.GetKeyDown(KeyCode.LeftArrow))
@@ -205,25 +192,25 @@ public class DebuffManager : MonoBehaviour
 
         // Chọn card
         if (Input.GetKeyDown(KeyCode.Keypad1))
-            Select(rightCards[rightIndex], 1);
+            Select(ui.rightCardsList[rightIndex], 1);
     }
 
     private void MoveRight(int newIndex)
     {
         // Nếu index không hợp lệ thì bỏ qua
-        if (newIndex < 0 || newIndex >= rightCards.Length) return;
+        if (newIndex < 0 || newIndex >= ui.rightCardsList.Length) return;
 
         // Phát âm thanh di chuyển chọn item
         AudioManager.Instance.PlaySFX(AudioManager.Instance.movechooseItemClip);
 
         // Tắt highlight card cũ
-        SetHighlight(rightCards, rightIndex, false);
+        SetHighlight(ui.rightCardsList, rightIndex, false);
 
         // Cập nhật index mới
         rightIndex = newIndex;
 
         // Bật highlight card mới
-        SetHighlight(rightCards, rightIndex, true);
+        SetHighlight(ui.rightCardsList, rightIndex, true);
     }
 
     // =========================================================
@@ -484,14 +471,14 @@ public class DebuffManager : MonoBehaviour
 
     private void HideAllCards()
     {
-        for (int i = 0; i < leftCards.Length; i++)
+        for (int i = 0; i < ui.leftCardsList.Length; i++)
         {
-            leftCards[i].transform.GetChild(1).gameObject.SetActive(false);
+            ui.leftCardsList[i].transform.GetChild(1).gameObject.SetActive(false);
         }
 
-        for (int i = 0; i < rightCards.Length; i++)
+        for (int i = 0; i < ui.rightCardsList.Length; i++)
         {
-            rightCards[i].transform.GetChild(1).gameObject.SetActive(false);
+            ui.rightCardsList[i].transform.GetChild(1).gameObject.SetActive(false);
         }
     }
 
@@ -502,7 +489,7 @@ public class DebuffManager : MonoBehaviour
         rightActive = false;
 
         // Tắt canvas chọn debuff
-        leftCanvas.SetActive(false);
-        rightCanvas.SetActive(false);
+        ui.leftCardCanvas.SetActive(false);
+        ui.rightCardCanvas.SetActive(false);
     }
 }
