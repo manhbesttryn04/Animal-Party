@@ -1,8 +1,9 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class MiniGame2 : MonoBehaviour
 {
@@ -281,9 +282,13 @@ public class MiniGame2 : MonoBehaviour
                 manager.currentPlayer1.transform.position.y <= -10f
             )
             {
+                PlayerVFX vfx = manager.currentPlayer1.GetComponent<PlayerVFX>();
                 PlayerMiniGame player1 =
                     manager.currentPlayer1.GetComponent<PlayerMiniGame>();
-
+                if (vfx != null)
+                {
+                    StartCoroutine(vfx.DissolveInNoParticleRoutine(0.5f));
+                }
                 if (player1 != null)
                 {
                     player1.Respawn();
@@ -298,7 +303,10 @@ public class MiniGame2 : MonoBehaviour
             {
                 PlayerMiniGame player2 =
                     manager.currentPlayer2.GetComponent<PlayerMiniGame>();
-
+                PlayerVFX vfx = manager.currentPlayer2.GetComponent<PlayerVFX>();
+                if (vfx != null) {
+                    StartCoroutine(vfx.DissolveInNoParticleRoutine(0.5f));
+                }
                 if (player2 != null)
                 {
                     player2.Respawn();

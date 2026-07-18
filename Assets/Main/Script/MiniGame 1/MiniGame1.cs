@@ -500,9 +500,13 @@ public class MiniGame1 : MonoBehaviour
         if (player.transform.position.y >= 0.5f)
             return;
 
+        PlayerVFX vfx = player.GetComponent<PlayerVFX>();
         PlayerMiniGame playerMiniGame =
             player.GetComponent<PlayerMiniGame>();
-
+        if(vfx != null)
+        {
+           StartCoroutine( vfx.DissolveInNoParticleRoutine(0.5f));
+        }
         if (playerMiniGame != null)
         {
             playerMiniGame.Respawn();

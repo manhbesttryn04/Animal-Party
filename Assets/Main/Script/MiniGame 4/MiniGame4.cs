@@ -385,6 +385,10 @@ public class MiniGame4 : MonoBehaviour
         if (move != null)
             move.isJumpAndMove = false;
 
+        PlayerVFX vfx = target.GetComponent<PlayerVFX>();
+        if (vfx != null)
+            StartCoroutine(vfx.DissolveOutNoParticleRoutine(0.5f));
+
         PlayerAnimator playerAnimator = target.GetComponent<PlayerAnimator>();
         if (playerAnimator != null && playerAnimator.playerAnimator != null)
         {
@@ -402,6 +406,7 @@ public class MiniGame4 : MonoBehaviour
             PlayerMiniGame mini = player.GetComponent<PlayerMiniGame>();
             PlayerMove move = player.GetComponent<PlayerMove>();
             PlayerAnimator playerAnimator = player.GetComponent<PlayerAnimator>();
+            PlayerVFX vfx = player.GetComponent<PlayerVFX>();
 
             if (mini != null)
                 mini.Respawn();
@@ -409,7 +414,10 @@ public class MiniGame4 : MonoBehaviour
             if (playerAnimator != null && playerAnimator.playerAnimator != null)
                 playerAnimator.playerAnimator.SetBool("Die", false);
 
-            StartCoroutine(BlinkPlayer(player));
+           
+
+            if (vfx != null)
+                StartCoroutine(vfx.DissolveInNoParticleRoutine(0.5f)); // hoặc vfx.PlayBlink();
 
             if (move != null)
             {
@@ -430,33 +438,7 @@ public class MiniGame4 : MonoBehaviour
         deadPlayers.Clear();
     }
 
-    IEnumerator BlinkPlayer(GameObject player)
-    {
-        Renderer[] renderers = player.GetComponentsInChildren<Renderer>();
-
-        float timer = 0f;
-        bool visible = true;
-
-        while (timer < blinkTime)
-        {
-            visible = !visible;
-
-            foreach (Renderer r in renderers)
-            {
-                if (r != null)
-                    r.enabled = visible;
-            }
-
-            timer += blinkSpeed;
-            yield return new WaitForSeconds(blinkSpeed);
-        }
-
-        foreach (Renderer r in renderers)
-        {
-            if (r != null)
-                r.enabled = true;
-        }
-    }
+    
 
     void SaveRedStartPosition(GameObject playerObj)
     {
@@ -575,7 +557,7 @@ public class MiniGame4 : MonoBehaviour
             return;
 
         AudioManager.Instance.PlaySpecialOneShot(clipList[clipIndex]);
-        Debug.Log(clipIndex);
+       // Debug.Log(clipIndex);
 
     }
 

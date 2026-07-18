@@ -171,4 +171,39 @@ public class PlayerVFX : MonoBehaviour
         respawnRenderer.enabled = false;
         normalRenderer.gameObject.SetActive(true);
     }
+  //==================================================
+// Hiện -> Ẩn (Không Particle - Có tham số thời gian)
+//==================================================
+public IEnumerator DissolveOutNoParticleRoutine(float duration)
+    {
+        //AudioManager.Instance.PlaySFX(AudioManager.Instance.startLeteClip);
+
+        respawnRenderer.enabled = true;
+        normalRenderer.gameObject.SetActive(false);
+
+        respawnMat.SetFloat("_Progress", 1f);
+
+        yield return StartCoroutine(SetProgress(1f, -1f, duration));
+
+        respawnRenderer.enabled = false;
+        normalRenderer.gameObject.SetActive(false);
+    }
+
+    //==================================================
+    // Ẩn -> Hiện (Không Particle - Có tham số thời gian)
+    //==================================================
+    public IEnumerator DissolveInNoParticleRoutine(float duration)
+    {
+        //AudioManager.Instance.PlaySFX(AudioManager.Instance.endLeteClip);
+
+        respawnRenderer.enabled = true;
+        normalRenderer.gameObject.SetActive(false);
+
+        respawnMat.SetFloat("_Progress", -1f);
+
+        yield return StartCoroutine(SetProgress(-1f, 1f, duration));
+
+        respawnRenderer.enabled = false;
+        normalRenderer.gameObject.SetActive(true);
+    }
 }
