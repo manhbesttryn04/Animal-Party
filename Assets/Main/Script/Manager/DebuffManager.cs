@@ -22,8 +22,8 @@ public class DebuffManager : MonoBehaviour
     private int leftIndex;
     private int rightIndex;
 
-    private bool leftActive;
-    private bool rightActive;
+    public bool leftActive;
+    public bool rightActive;
 
     [Header("Prefabs")]
     public GameObject cannonPrefab;
@@ -51,6 +51,7 @@ public class DebuffManager : MonoBehaviour
     private void Start()
     {
         ui = UIManager.Instance;
+        OpenDebuffInternal(1);
     }
 
     private void Update()
@@ -219,6 +220,8 @@ public class DebuffManager : MonoBehaviour
 
     private void Select(GameObject cardObj, int playerIndex)
     {
+        // Kết thúc giao diện chọn
+        StartCoroutine(End());
         // Lấy RandomCard từ card đang chọn
         RandomCard card = cardObj.GetComponent<RandomCard>();
         if (card == null) return;
@@ -232,14 +235,22 @@ public class DebuffManager : MonoBehaviour
 
         // itemIndex 0 = Magic Debuff
         if (card.itemIndex == 0)
+        {
+            leftActive = false;
             StartCoroutine(ApplyMagicDebuff(playerIndex));
+           
+        }
+          
 
         // itemIndex 1 = Cannon Debuff
         if (card.itemIndex == 1)
+        {
+            rightActive = false;
             StartCoroutine(ApplyCannonDebuff(playerIndex));
+        }
+            
 
-        // Kết thúc giao diện chọn
-        StartCoroutine(End());
+      
     }
 
     // =========================================================
@@ -433,7 +444,7 @@ public class DebuffManager : MonoBehaviour
 
     private IEnumerator End()
     {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0f);
 
         HideAll();
     }
