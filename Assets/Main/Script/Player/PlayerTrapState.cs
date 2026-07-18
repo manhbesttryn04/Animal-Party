@@ -44,6 +44,7 @@ public class PlayerTrapState : MonoBehaviour
             if (trap.hasTelep)
             {
                 trap.TelepActivated();
+                yield return new WaitForSeconds (0.5f);
 
                 yield return StartCoroutine(trap.TeleportRoutine(manager.playerType.isPlayer2));
 
