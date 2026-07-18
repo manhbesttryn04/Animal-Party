@@ -13,38 +13,23 @@ public class TrapAndCoin : MonoBehaviour
 
     private void Start()
     {
-        SetUpItems();
+       SetUpItems();
     }
 
     public void SetUpItems()
     {
-        if (hasBom)
-            bom.SetActive(true);
-        else
+        
             bom.SetActive(false);
-
-        if (hasCoin)
-            coin.SetActive(true);
-        else
+        
             coin.SetActive(false);
-
-        if (hasTelep)
-        {
-            if (teleport == null) return;
-
-            teleport.gameObject.SetActive(true);
-            teleport.loop = true;
-            teleport.Play();
-        }
-        else
-        {
-            if (teleport != null)
-                teleport.gameObject.SetActive(false);
-        }
+      
+            teleport.gameObject.SetActive(false);
+        
     }
 
     public void BomActivated()
     {
+        bom.SetActive(true);
         Bomb b = bom.GetComponent<Bomb>();
 
         if (b != null)
@@ -56,6 +41,7 @@ public class TrapAndCoin : MonoBehaviour
 
     public void CoinActivated(int i)
     {
+        coin.SetActive(true);
         Coin c = coin.GetComponent<Coin>();
 
         if (c != null)
@@ -69,6 +55,11 @@ public class TrapAndCoin : MonoBehaviour
     {
         if (!hasTelep || teleport == null)
             return;
+         if (teleport == null) return;
+
+            teleport.gameObject.SetActive(true);
+            teleport.loop = true;
+            teleport.Play();
 
         hasTelep = false;
 

@@ -14,6 +14,8 @@ public class Coin : MonoBehaviour
     }
     IEnumerator CollectRoutine(int p)
     {
+        //gameObject.SetActive(true);
+        yield return new WaitForSeconds(1f);
         AudioManager.Instance.PlaySFX(AudioManager.Instance.coinClip);
         UIManager.Instance.ShowBonusCoin(p);
 

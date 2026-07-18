@@ -34,6 +34,7 @@ public class Bomb : MonoBehaviour
 
     IEnumerator ExplosionRoutine()
     {
+        gameObject.SetActive(true);
         // CHỜ TRƯỚC KHI NỔ
         yield return new WaitForSeconds(
             explodeDelay

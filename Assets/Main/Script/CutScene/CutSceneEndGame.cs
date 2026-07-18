@@ -347,7 +347,7 @@ public class CutSceneEndGame : MonoBehaviour
                 audio.FadeOutAllAudio(4.18f);
             }
 
-            yield return new WaitForSeconds(7f);
+            yield return new WaitForSeconds(5f);
 
             // Chuyển scene
             SceneManager.LoadScene(6);
