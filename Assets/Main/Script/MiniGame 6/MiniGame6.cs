@@ -379,6 +379,18 @@ public class MiniGame6 : MonoBehaviour
 
         if (messageText != null)
             messageText.text = $"{winnerName} WINS!";
+        // Phát giọng thông báo người thắng
+        if (AudioManager.Instance != null)
+        {
+            if (isPlayer1Win)
+            {
+                AudioManager.Instance.PlayUI(AudioManager.Instance.playerOneWinClip);
+            }
+            else
+            {
+                AudioManager.Instance.PlayUI(AudioManager.Instance.playerTwoWinClip);
+            }
+        }
 
         // 1 = thắng, 0 = thua
         if (manager != null)

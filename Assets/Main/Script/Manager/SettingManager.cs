@@ -28,6 +28,9 @@ public class SettingManager : MonoBehaviour
     [Header("Buttons")]
     public Button openSettingButton;
     public int countClick = 0;
+    [Header("Guide")]
+    public Button openGuideButton;
+    public int guideClick = 0;
     public int indexScene;
     //public float backDelay = 2f;
 
@@ -102,6 +105,8 @@ public class SettingManager : MonoBehaviour
 
         if (openSettingButton != null)
             openSettingButton.onClick.AddListener(ToggleSetting);
+        if (openGuideButton != null)
+            openGuideButton.onClick.AddListener(ToggleGuide);
     }
 
     private void RemoveListeners()
@@ -117,6 +122,8 @@ public class SettingManager : MonoBehaviour
 
         if (openSettingButton != null)
             openSettingButton.onClick.RemoveListener(ToggleSetting);
+        if (openGuideButton != null)
+            openGuideButton.onClick.RemoveListener(ToggleGuide);
     }
 
     //==================================================
@@ -247,6 +254,33 @@ public class SettingManager : MonoBehaviour
         VolumeManager.Instance.SetGraphicsQuality(2);
       
         SceneManager.LoadScene(indexScene);
+    }
+    public void ToggleGuide()
+    {
+        guideClick++;
+
+        AudioManager.Instance.PlayUI(AudioManager.Instance.clickButton);
+
+        if (guideClick == 1)
+        {
+            UIManager.Instance.intructInputBuyPanel.SetActive(true);
+        }
+        else if (guideClick == 2)
+        {
+            UIManager.Instance.intructInputBuyPanel.SetActive(false);
+
+            EventSystem.current.SetSelectedGameObject(null);
+
+            guideClick = 0;
+        }
+    }
+    public void ResetGuide()
+    {
+        guideClick = 0;
+
+        EventSystem.current.SetSelectedGameObject(null);
+
+        UIManager.Instance.intructInputBuyPanel.SetActive(false);
     }
 
 }

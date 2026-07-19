@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using UnityEditor;
 using UnityEngine;
 
 public class StartGame : MonoBehaviour
@@ -54,6 +55,7 @@ public class StartGame : MonoBehaviour
 
     public IEnumerator FistRoundPlayer1()
     {
+       
         PlayerManager p1 = player1.GetComponent<PlayerManager>();
 
         p1.playerCamera.isFllow2 = true;
@@ -63,7 +65,7 @@ public class StartGame : MonoBehaviour
         p1.playerCamera.isFllow2 = false;
 
         yield return new WaitForSeconds(0.5f);
-
+        AudioManager.Instance.PlayUI(AudioManager.Instance.playerOneClip);
         yield return StartCoroutine(p1.playerNotifi.SetNotifi());
 
         p1.playerInputDice.isClick = false;
@@ -80,7 +82,7 @@ public class StartGame : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
 
         p2.playerCamera.isFllow2 = false;
-
+        AudioManager.Instance.PlayUI (AudioManager.Instance.playerTwoClip);
         yield return StartCoroutine(p2.playerNotifi.SetNotifi());
 
         p2.playerInputDice.isClick = false;

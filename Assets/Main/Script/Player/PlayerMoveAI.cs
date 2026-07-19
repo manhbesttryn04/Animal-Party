@@ -122,7 +122,7 @@ public class PlayerMoveAI : MonoBehaviour
         int finishIndex = pointCheck.Count - 1;
         int bonusStep = Mathf.Min(2, finishIndex - currentIndex);
 
-        for (int i = 0; i <= bonusStep; i++)
+        for (int i = 0; i < bonusStep; i++)
         {
             AudioManager.Instance.PlaySFX(AudioManager.Instance.walkPlayerClip);
 
@@ -233,7 +233,7 @@ public class PlayerMoveAI : MonoBehaviour
     {
         isMoving = true;
 
-        manager.playerAnimator.playerAnimator.SetTrigger("Jump");
+        manager.playerAnimator.playerAnimator.SetTrigger("HitBomb");
 
         currentIndex = Mathf.Max(0, currentIndex - power);
 

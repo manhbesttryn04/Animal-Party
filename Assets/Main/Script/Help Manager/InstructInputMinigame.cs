@@ -33,7 +33,7 @@ public class InstructInputMinigame : MonoBehaviour
     [Header("Input Minigame 8")]
     public List<bool> instructInputMinigame8 = new List<bool>();
 
-    private const int INPUT_COUNT = 4;
+    private const int INPUT_COUNT = 5;
 
     private void Start()
     {

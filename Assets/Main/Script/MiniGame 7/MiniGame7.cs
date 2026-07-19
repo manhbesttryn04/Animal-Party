@@ -69,7 +69,10 @@ public class MiniGame7 : MonoBehaviour
     // Các Coroutine đại bác đang chạy
     private readonly List<Coroutine> activeCannonRoutines =
         new List<Coroutine>();
+    [Header("Shark")]
+    public SharkAttack shark;
 
+    private bool isWaitingForShark;
     private void Awake()
     {
         SaveCannonOriginalTransform();
@@ -139,6 +142,12 @@ public class MiniGame7 : MonoBehaviour
             StopCoroutine(cannonRoutine);
             cannonRoutine = null;
         }
+        isWaitingForShark = false;
+
+        if (shark != null)
+        {
+            shark.ResetShark();
+        }
 
         StopActiveCannonRoutines();
         DestroyAllBullets();
@@ -162,6 +171,11 @@ public class MiniGame7 : MonoBehaviour
 
         p1KnockbackVelocity = Vector3.zero;
         p2KnockbackVelocity = Vector3.zero;
+
+        isWaitingForShark = false;
+
+        if (shark != null)
+            shark.ResetShark();
     }
 
     private void ResetPlayers()
@@ -238,6 +252,10 @@ public class MiniGame7 : MonoBehaviour
 
     private void CheckPlayersFalling()
     {
+        // Đang chờ cá mập cắn thì không kiểm tra lại
+        if (isWaitingForShark)
+            return;
+
         bool p1Fell =
             player1Obj != null &&
             player1Obj.transform.position.y < fallHeight;
@@ -247,21 +265,34 @@ public class MiniGame7 : MonoBehaviour
             player2Obj.transform.position.y < fallHeight;
 
         if (p1Fell && p2Fell)
-        {          
-            EndGame(-1, "DRAW");
-            manager.timer = 2f;
+        {
+            // Cả hai cùng rơi: cắn xong mới xử hòa
+            BeginSharkFinish(
+                player1Obj.transform,
+                -1,
+                "DRAW"
+            );
         }
         else if (p1Fell)
         {
-            EndGame(1, "PLAYER 2 WIN");
-            manager.timer = 2f;
+            // Player 1 rơi
+            // Cá mập cắn xong Player 2 mới thắng
+            BeginSharkFinish(
+                player1Obj.transform,
+                1,
+                "PLAYER 2 WIN"
+            );
         }
         else if (p2Fell)
         {
-            EndGame(0, "PLAYER 1 WIN");
-            manager.timer = 2f;
+            // Player 2 rơi
+            // Cá mập cắn xong Player 1 mới thắng
+            BeginSharkFinish(
+                player2Obj.transform,
+                0,
+                "PLAYER 1 WIN"
+            );
         }
-        
     }
 
     // =========================================================
@@ -428,7 +459,11 @@ public class MiniGame7 : MonoBehaviour
         UpdateTimerUI();
 
         if (isPlaying)
+        {
             EndGame(-1, "DRAW");
+            PlayerCheckReward(4);
+        }
+           
 
         timerRoutine = null;
     }
@@ -631,7 +666,75 @@ public class MiniGame7 : MonoBehaviour
 
         cannon.rotation = endRotation;
     }
+    private void BeginSharkFinish(
+    Transform fallenPlayer,
+    int winnerIndex,
+    string resultMessage
+)
+    {
+        if (isWaitingForShark)
+            return;
 
+        isWaitingForShark = true;
+
+        // Dừng lực đẩy
+        p1KnockbackVelocity = Vector3.zero;
+        p2KnockbackVelocity = Vector3.zero;
+
+        // Dừng đại bác trong lúc cá mập bơi tới
+        if (cannonRoutine != null)
+        {
+            StopCoroutine(cannonRoutine);
+            cannonRoutine = null;
+        }
+
+        StopActiveCannonRoutines();
+        DestroyAllBullets();
+        ResetCannons();
+
+        // Nếu không có cá mập thì kết thúc ngay để tránh kẹt game
+        if (shark == null)
+        {
+            FinishAfterSharkBite(
+                winnerIndex,
+                resultMessage
+            );
+
+            return;
+        }
+
+        shark.AttackPlayer(
+            fallenPlayer,
+            () =>
+            {
+                // Hàm này chỉ chạy đúng lúc Animation Event cắn
+                FinishAfterSharkBite(
+                    winnerIndex,
+                    resultMessage
+                );
+            }
+        );
+    }
+    private void FinishAfterSharkBite(
+    int winnerIndex,
+    string resultMessage
+)
+    {
+        if (!isPlaying)
+            return;
+
+        isWaitingForShark = false;
+
+        EndGame(
+            winnerIndex,
+            resultMessage
+        );
+
+        if (manager != null)
+        {
+            manager.timer = 2f;
+        }
+    }
     private void ShootBullet(Transform cannonTransform)
     {
         if (bulletPrefab == null || cannonTransform == null)
@@ -898,7 +1001,7 @@ public class MiniGame7 : MonoBehaviour
     {
         // Khóa gameplay ngay lập tức
         isPlaying = false;
-
+      //  AudioManager.Instance.ZeroAllAudio();
         // Dừng timer
         if (timerRoutine != null)
         {
@@ -932,14 +1035,19 @@ public class MiniGame7 : MonoBehaviour
         if (winnerIndex == 0)
         {
             Debug.Log("Player 1 thắng");
+            PlayerCheckReward(0);
+            AudioManager.Instance.PlayUI(AudioManager.Instance.playerOneWinClip);
         }
         else if (winnerIndex == 1)
         {
             Debug.Log("Player 2 thắng");
+            PlayerCheckReward(1);
+            AudioManager.Instance.PlayUI(AudioManager.Instance.playerTwoWinClip);
         }
         else
         {
             Debug.Log("Minigame hòa");
+            PlayerCheckReward(3);
         }
 
         // Hiện message trong 1.5 giây
@@ -975,6 +1083,30 @@ public class MiniGame7 : MonoBehaviour
             p2.hasDefense = true;
         }
     }
+    public void PlayerCheckReward(int i)
+    {
+        PlayerMiniGame p1 = manager.currentPlayer1.GetComponent<PlayerMiniGame>();
+        PlayerMiniGame p2 = manager.currentPlayer2.GetComponent<PlayerMiniGame>();
+        if (i == 0)
+        {
+            p1.UpCoin(1, 100);
+            p2.UpCoin(0,100);
+        }
+        else if(i == 1)
+        {
+            p1.UpCoin(0, 100);
+            p2.UpCoin(1, 100);
+        }else if(i == 2)
+        {
+            p1.UpCoin(0, 100);
+            p2.UpCoin(0, 100);
+        }else if(i == 3)
+        {
+            p1.UpCoin(0, 0);
+            p2.UpCoin(0, 0);
+        }
+    }
+
 }
 
 // =============================================================
@@ -1024,4 +1156,5 @@ public class IslandBulletCollision : MonoBehaviour
 
         Destroy(gameObject);
     }
+    
 }

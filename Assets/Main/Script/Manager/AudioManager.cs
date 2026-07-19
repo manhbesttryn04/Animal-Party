@@ -25,6 +25,10 @@ public class AudioManager : MonoBehaviour
     public AudioClip walkPlayerClip;
     public AudioClip diceRollClip;
     public AudioClip playerTeleport;
+    public AudioClip playerOneClip;
+    public AudioClip playerTwoClip;
+    public AudioClip playerOneWinClip;
+    public AudioClip playerTwoWinClip;
 
     [Header("Debuff SFX")]
     public AudioClip cannonClip;
@@ -94,6 +98,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip laserHitClip;
     public AudioClip fireHitClip;
     public AudioClip laserMoveClip;
+    public AudioClip openFireClip;
     [Header("Minigame 4")]
     public AudioClip scanPiratesClip;
     public AudioClip laughPiratesClip;
@@ -421,5 +426,12 @@ public class AudioManager : MonoBehaviour
         specialSource.volume = 0f;
         StopSpecial();
         sfxSource.volume = 0;
+    }
+    public void ZeroAllAudio()
+    {
+        musicSource.volume = 0;
+        sfxSource.volume= 0;
+        environmentSource.volume= 0;
+        specialSource.volume = 0;
     }
 }

@@ -43,7 +43,7 @@ public class WallFlamethrowerCore : MonoBehaviour
     {
         isFiring = state;
         _lastState = state;
-
+        var audio = AudioManager.Instance;
         if (fireCollider != null) 
         {
             fireCollider.enabled = state;
@@ -51,8 +51,20 @@ public class WallFlamethrowerCore : MonoBehaviour
 
         if (fireParticles != null)
         {
-            if (state) fireParticles.Play();
-            else fireParticles.Stop();
+            if (state)
+            {
+                fireParticles.Play();
+                if (audio)
+                {
+                    audio.PlaySpecial(audio.openFireClip);
+                }
+
+            }
+            else
+            {
+                fireParticles.Stop();
+                if (audio) { audio.StopSpecial(); }
+            }
         }
 
         // Nếu tắt lửa thì dọn dẹp bộ nhớ đệm để sẵn sàng cho lần xịt kế tiếp

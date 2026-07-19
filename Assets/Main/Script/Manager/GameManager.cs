@@ -356,7 +356,7 @@ public class GameManager : MonoBehaviour
 
             // Tắt follow sau khi camera đã tới
             p1.playerCamera.isFllow2 = false;
-
+            AudioManager.Instance.PlayUI(AudioManager.Instance.playerOneClip);
             // Hiện thông báo roll dice
             yield return StartCoroutine(
                 player1Main.GetComponent<PlayerManager>().playerNotifi.SetNotifi()
@@ -403,7 +403,7 @@ public class GameManager : MonoBehaviour
 
             // Tắt follow sau khi camera đã tới
             p2.playerCamera.isFllow2 = false;
-
+            AudioManager.Instance.PlayUI(AudioManager.Instance.playerTwoClip);
             // Hiện thông báo roll dice
             yield return StartCoroutine(
                 player2Main.GetComponent<PlayerManager>().playerNotifi.SetNotifi()

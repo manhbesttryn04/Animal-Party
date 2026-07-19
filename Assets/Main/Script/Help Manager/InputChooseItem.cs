@@ -460,7 +460,7 @@ public class InputChooseItem : MonoBehaviour
     {
         shopManager.StopTurnTimer();
 
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(1f);
 
         ShopManager.Instance.CloseShop();
     }

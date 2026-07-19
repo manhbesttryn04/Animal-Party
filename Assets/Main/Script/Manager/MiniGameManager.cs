@@ -482,6 +482,7 @@ public class MiniGameManager : MonoBehaviour
 
         // Tắt nhạc minigame
         AudioManager.Instance.StopMusic();
+        AudioManager.Instance.ZeroAllAudio();
 
         // Gọi StopMiniGame của minigame hiện tại
         ExitStopMiniGame();
@@ -492,7 +493,7 @@ public class MiniGameManager : MonoBehaviour
         // =====================================================
         // SHOW RESULT
         // =====================================================
-        AudioManager.Instance.SetupMainGameAudio();
+        AudioManager.Instance.ZeroAllAudio();
         SettingManager.Instance.ResetSetting();
         UIManager.Instance.ActiveOpenSettingButton(false);
         if (cursor != null)
@@ -518,7 +519,7 @@ public class MiniGameManager : MonoBehaviour
 
         // Hiện loading khi quay về map chính
         yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
-
+        AudioManager.Instance.SetupMainGameAudio();
         playersMain.SetActive(true);
         // Bật lại map chính
         mainMap.SetActive(true);

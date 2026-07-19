@@ -2,10 +2,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem.HID;
-using UnityEngine.Rendering.RenderGraphModule;
 using UnityEngine.UI;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class MiniGame2 : MonoBehaviour
 {

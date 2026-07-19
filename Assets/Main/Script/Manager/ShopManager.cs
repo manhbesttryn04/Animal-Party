@@ -337,6 +337,8 @@ public class ShopManager : MonoBehaviour
         StopTurnTimer();
         CancelInvoke(nameof(StartPlayer1Turn));
 
+        if(ui.intructInputBuyPanel.activeSelf == true) SettingManager.Instance.ResetGuide();
+
         ui.shopPanel.SetActive(false);
 
         GameManager.Instance.CheckWinnerOrNextRound();
@@ -413,11 +415,13 @@ public class ShopManager : MonoBehaviour
 
     public void ShowPlayer1Turn()
     {
+        AudioManager.Instance.PlayUI(AudioManager.Instance.playerOneClip);
         StartCoroutine(ShowPlayerTurn(ui.panelPlayer1Turn));
     }
 
     public void ShowPlayer2Turn()
     {
+        AudioManager.Instance.PlayUI(AudioManager.Instance.playerTwoClip);
         StartCoroutine(ShowPlayerTurn(ui.panelPlayer2Turn));
     }
 
