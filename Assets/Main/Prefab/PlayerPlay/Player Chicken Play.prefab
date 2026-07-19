@@ -2109,6 +2109,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 680b36b9f8c4f824692a8472049936d9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3323761088058232431}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 680b36b9f8c4f824692a8472049936d9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -2983199995909828524}
   m_SourcePrefab: {fileID: 100100000, guid: 680b36b9f8c4f824692a8472049936d9, type: 3}
 --- !u!4 &12427904875632972 stripped
 Transform:
@@ -2473,7 +2476,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerVFX
   normalRenderer: {fileID: 8277521843872039284}
   respawnRenderer: {fileID: 8484074535934393624}
-  blinkRenderer: {fileID: 8277521843872039284}
   circleEffect: {fileID: 6957799275838409764}
   dissolveOutTime: 1
   dissolveInTime: 2
@@ -2497,6 +2499,27 @@ MonoBehaviour:
   defenseCooldown: 0.5
   isDefending: 0
   canDefense: 1
+--- !u!114 &-2983199995909828524
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4941376278353752160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7320597cb21ac7d459d455a464cb2b9c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  blockLayer:
+    serializedVersion: 2
+    m_Bits: 256
+  blockTag: Block
+  checkRadius: 1
+  startPushDistance: 1
+  pushForce: 4
+  maxPushSpeed: 6
+  controller: {fileID: 1281581493492613982}
 --- !u!4 &5211265491059608882 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4823275242529390977, guid: 680b36b9f8c4f824692a8472049936d9, type: 3}

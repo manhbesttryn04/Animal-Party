@@ -51,7 +51,7 @@ public class DebuffManager : MonoBehaviour
     private void Start()
     {
         ui = UIManager.Instance;
-        OpenDebuffInternal(1);
+       // OpenDebuffInternal(1);
     }
 
     private void Update()

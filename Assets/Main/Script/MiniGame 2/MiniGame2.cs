@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem.HID;
+using UnityEngine.Rendering.RenderGraphModule;
 using UnityEngine.UI;
 using static UnityEditor.Experimental.GraphView.GraphView;
 
@@ -21,6 +23,8 @@ public class MiniGame2 : MonoBehaviour
     public Image targetColorImage;
     public TextMeshProUGUI timerText;
     public TextMeshProUGUI roundText;
+    public int[] hhh;
+   
 
     [Header("Start Delay")]
     public float startDelay = 3f;
@@ -35,7 +39,7 @@ public class MiniGame2 : MonoBehaviour
 
     private Color targetColor;
     private int currentRound = 1;
-
+  
     private void Awake()
     {
         InitializeColorPools();
@@ -325,33 +329,38 @@ public class MiniGame2 : MonoBehaviour
     // ---- ĐÃ CẬP NHẬT: HÀM QUÉT ĐẾM KHÔNG BỊ SÓT VÀ KHÔNG KÉN TAG ----
     private int CountPlayersOnPad(GameObject padObj)
     {
-        int count = 0;
+        Vector3 center =
+            padObj.transform.position + Vector3.up * 1f;
 
-        // Tăng chiều cao hộp quét lên (1.5f) và nới rộng ra sát viền ô (0.49f) để không sót Player đứng rìa
-        Vector3 center = padObj.transform.position + new Vector3(0f, 1.0f, 0f);
-        Vector3 halfExtents = new Vector3(0.49f, 1.0f, 0.49f);
+        Vector3 halfExtents =
+            new Vector3(0.49f, 1f, 0.49f);
 
-        // Quét tất cả vật thể nằm trong phạm vi trên không của ô
-        Collider[] hitColliders = Physics.OverlapBox(center, halfExtents, padObj.transform.rotation);
+        Collider[] hitColliders = Physics.OverlapBox(
+            center,
+            halfExtents,
+            padObj.transform.rotation,
+            ~0,
+            QueryTriggerInteraction.Collide
+        );
+
+        HashSet<PlayerManager> players =
+            new HashSet<PlayerManager>();
 
         foreach (Collider col in hitColliders)
         {
-            // Bỏ qua nếu quét trúng chính cái ô sàn hoặc các ô sàn lân cận
-            if (col.gameObject == padObj || col.gameObject.GetComponent<ColorPad>() != null)
+            if (col == null)
                 continue;
 
-            // Nhận diện Player dựa trên bất kỳ script cốt lõi nào của nhân vật (PlayerMove, PlayerMiniGame, v.v.)
-            bool isPlayer = col.CompareTag("Player") ||
-                            col.GetComponent<PlayerMove>() != null ||
-                            col.GetComponentInParent<PlayerMove>() != null ||
-                            col.GetComponent<PlayerMiniGame>() != null;
+            PlayerManager player =
+                col.GetComponentInParent<PlayerManager>();
 
-            if (isPlayer)
+            if (player != null)
             {
-                count++;
+                players.Add(player);
             }
         }
-        return count;
+
+        return players.Count;
     }
     public void SetUpAllPlayer()
     {
