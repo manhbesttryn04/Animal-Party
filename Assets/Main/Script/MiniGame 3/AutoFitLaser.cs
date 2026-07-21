@@ -156,6 +156,10 @@ public class AutoFitLaser : MonoBehaviour
 
         if (mini != null)
             mini.UpCoin(0, coinPenalty);
+        if (FixBugMiniGame3.Instance != null)
+        {
+            FixBugMiniGame3.Instance.SetNeedRecover(move);
+        }
 
         StartCoroutine(ElectricStun(move));
         if (!electricPlayers.Contains(move))
@@ -166,6 +170,7 @@ public class AutoFitLaser : MonoBehaviour
 
     private IEnumerator ElectricStun(PlayerMove move)
     {
+     
         move.isMove = false;
         move.isJump = false;
 
@@ -179,6 +184,7 @@ public class AutoFitLaser : MonoBehaviour
 
         move.isMove = true;
         move.isJump = true;
+       
     }
 
     private IEnumerator PlayerElectricEffect(PlayerMove move)
@@ -247,7 +253,9 @@ public class AutoFitLaser : MonoBehaviour
             else if (materials[i].HasProperty("_Color"))
                 materials[i].SetColor("_Color", originalColors[i]);
         }
-        electricPlayers.Remove(move); 
+        electricPlayers.Remove(move);
+
+       
     }
 
     public void SetLaserActive(bool isActive)

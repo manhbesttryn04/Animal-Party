@@ -139,6 +139,10 @@ namespace AnimalParty.Obstacles
             PlayerMove move = targetCollider.GetComponentInParent<PlayerMove>();
             if (move != null)
             {
+                if (FixBugMiniGame3.Instance != null)
+                {
+                    FixBugMiniGame3.Instance.SetNeedRecover(move);
+                }
                 // Phát âm thanh theo loại bẫy
                 PlayTrapHitSound();
 
@@ -225,27 +229,61 @@ namespace AnimalParty.Obstacles
                 else if (materials[i].HasProperty("_Color")) materials[i].SetColor("_Color", originalColors[i]);
             }
             effectPlayers.Remove(move);
+         
         }
 
         private IEnumerator SpawnAndShrinkFire(Transform playerTransform)
         {
-            GameObject fireVFX = Instantiate(fireEffectPrefab, playerTransform.position, Quaternion.identity, playerTransform);
-            
-            // CỘNG THÊM OFFSET VÀO VỊ TRÍ LOCAL (giúp lửa bám vào người nhưng cao lên)
-            fireVFX.transform.localPosition = fireSpawnOffset;
-            
-            Vector3 originalScale = fireVFX.transform.localScale;
+            if (fireEffectPrefab == null || playerTransform == null)
+                yield break;
+
+            GameObject fireVFX = Instantiate(
+                fireEffectPrefab,
+                playerTransform.position,
+                Quaternion.identity,
+                playerTransform
+            );
+
+            // Có thể object đã bị script khác Destroy ngay sau khi tạo
+            if (fireVFX == null)
+                yield break;
+
+            Transform fireTransform = fireVFX.transform;
+
+            if (fireTransform == null)
+                yield break;
+
+            fireTransform.localPosition = fireSpawnOffset;
+
+            Vector3 originalScale = fireTransform.localScale;
             float timer = 0f;
-            
+
             while (timer < burnDuration)
             {
+                // FixBugMiniGame3 có thể đã xóa hiệu ứng lửa
+                if (fireVFX == null || fireTransform == null)
+                    yield break;
+
                 timer += Time.deltaTime;
-                float progress = timer / burnDuration; 
-                fireVFX.transform.localScale = Vector3.Lerp(originalScale, Vector3.zero, progress);
+
+                float progress = Mathf.Clamp01(
+                    timer / burnDuration
+                );
+
+                fireTransform.localScale = Vector3.Lerp(
+                    originalScale,
+                    Vector3.zero,
+                    progress
+                );
+
                 yield return null;
             }
 
-            Destroy(fireVFX);
+            // Chỉ Destroy nếu object vẫn còn tồn tại
+            if (fireVFX != null)
+            {
+                Destroy(fireVFX);
+            }
         }
         private void PlayTrapHitSound()
         {

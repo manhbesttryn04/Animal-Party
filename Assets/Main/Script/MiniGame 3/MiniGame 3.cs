@@ -57,6 +57,8 @@ public class MiniGame3 : MonoBehaviour
     // ==========================================
     [Header("MiniGame Manager")]
     public MiniGameManager manager;
+    [Header("Fix Bug")]
+    [SerializeField] private FixBugMiniGame3 fixBugMiniGame3;
 
     [Header("--- TỔNG THỜI GIAN GAME ---")]
     [Tooltip("Tổng thời gian sinh tồn (Giây)")]
@@ -108,6 +110,8 @@ public class MiniGame3 : MonoBehaviour
 
     public void StartMiniGame()
     {
+        if (fixBugMiniGame3 != null)
+            fixBugMiniGame3.SetupPlayers();
         SetUpAllPlayer();
         StopAllCoroutines();
         ClearAllLasers();
@@ -132,6 +136,8 @@ public class MiniGame3 : MonoBehaviour
         isRunning = false;
         isGameOver = true;
 
+        if (fixBugMiniGame3 != null)
+            fixBugMiniGame3.StopAndClearPlayers();
         StopAllCoroutines();
         ClearAllLasers();
         ToggleFlamethrowers(false);
@@ -192,6 +198,9 @@ public class MiniGame3 : MonoBehaviour
     {
         isRunning = false;
         isGameOver = true;
+
+        if (fixBugMiniGame3 != null)
+            fixBugMiniGame3.StopAndClearPlayers();
 
         StopAllCoroutines();
         ClearAllLasers();
