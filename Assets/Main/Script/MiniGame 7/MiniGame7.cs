@@ -71,8 +71,25 @@ public class MiniGame7 : MonoBehaviour
         new List<Coroutine>();
     [Header("Shark")]
     public SharkAttack shark;
+    [Header("Khóa điều khiển khi rơi khỏi đảo")]
+    public float disableControlHeight = -2.6f;
+
+    private bool p1ControlLocked;
+    private bool p2ControlLocked;
 
     private bool isWaitingForShark;
+
+    public bool IsWaitingForShark
+    {
+        get { return isWaitingForShark; }
+    }
+    private bool isFinishingSequence = false;
+
+    public bool IsFinishingSequence
+    {
+        get { return isFinishingSequence; }
+    }
+
     private void Awake()
     {
         SaveCannonOriginalTransform();
@@ -85,6 +102,8 @@ public class MiniGame7 : MonoBehaviour
             return;
 
         ApplyCharacterControllerKnockback();
+
+        CheckPlayersBelowIsland();
         CheckPlayersFalling();
     }
 
@@ -143,6 +162,7 @@ public class MiniGame7 : MonoBehaviour
             cannonRoutine = null;
         }
         isWaitingForShark = false;
+        isFinishingSequence = false;
 
         if (shark != null)
         {
@@ -172,6 +192,9 @@ public class MiniGame7 : MonoBehaviour
         p1KnockbackVelocity = Vector3.zero;
         p2KnockbackVelocity = Vector3.zero;
 
+        p1ControlLocked = false;
+        p2ControlLocked = false;
+
         isWaitingForShark = false;
 
         if (shark != null)
@@ -198,7 +221,56 @@ public class MiniGame7 : MonoBehaviour
     // =========================================================
     // TÌM PLAYER
     // =========================================================
+    private void CheckPlayersBelowIsland()
+    {
+        if (!p1ControlLocked &&
+            player1Obj != null &&
+            player1Obj.transform.position.y < disableControlHeight)
+        {
+            p1ControlLocked = true;
 
+            PlayerMove move = player1Obj.GetComponent<PlayerMove>();
+
+            if (move != null)
+            {
+                move.isJumpAndMove = false;
+                move.isWalk = false;
+            }
+
+            PlayerAnimator playerAnimator =
+                player1Obj.GetComponent<PlayerAnimator>();
+
+            if (playerAnimator != null &&
+                playerAnimator.playerAnimator != null)
+            {
+                playerAnimator.playerAnimator.SetFloat("Walk", 0f);
+            }
+        }
+
+        if (!p2ControlLocked &&
+            player2Obj != null &&
+            player2Obj.transform.position.y < disableControlHeight)
+        {
+            p2ControlLocked = true;
+
+            PlayerMove move = player2Obj.GetComponent<PlayerMove>();
+
+            if (move != null)
+            {
+                move.isJumpAndMove = false;
+                move.isWalk = false;
+            }
+
+            PlayerAnimator playerAnimator =
+                player2Obj.GetComponent<PlayerAnimator>();
+
+            if (playerAnimator != null &&
+                playerAnimator.playerAnimator != null)
+            {
+                playerAnimator.playerAnimator.SetFloat("Walk", 0f);
+            }
+        }
+    }
     private void FindAndAssignPlayers()
     {
         player1Obj = null;
@@ -458,12 +530,11 @@ public class MiniGame7 : MonoBehaviour
         timeLeft = 0f;
         UpdateTimerUI();
 
-        if (isPlaying)
+        if (isPlaying && !isFinishingSequence)
         {
             EndGame(-1, "DRAW");
-            PlayerCheckReward(4);
         }
-           
+
 
         timerRoutine = null;
     }
@@ -672,9 +743,10 @@ public class MiniGame7 : MonoBehaviour
     string resultMessage
 )
     {
-        if (isWaitingForShark)
+        if (isFinishingSequence)
             return;
 
+        isFinishingSequence = true;
         isWaitingForShark = true;
 
         // Dừng lực đẩy
@@ -716,24 +788,23 @@ public class MiniGame7 : MonoBehaviour
         );
     }
     private void FinishAfterSharkBite(
-    int winnerIndex,
-    string resultMessage
-)
+      int winnerIndex,
+      string resultMessage
+  )
     {
         if (!isPlaying)
             return;
 
         isWaitingForShark = false;
 
+        // Đưa timer của MiniGameManager về 2 giây
+        if (manager != null)
+            manager.timer = 3f;
+
         EndGame(
             winnerIndex,
             resultMessage
         );
-
-        if (manager != null)
-        {
-            manager.timer = 2f;
-        }
     }
     private void ShootBullet(Transform cannonTransform)
     {
@@ -1053,13 +1124,12 @@ public class MiniGame7 : MonoBehaviour
         // Hiện message trong 1.5 giây
         yield return new WaitForSeconds(1.5f);
 
-        // Xóa message
-        if (gameStatusText != null)
-            gameStatusText.text = "";
-
-        // Tắt UI minigame
         if (canvasMain != null)
             canvasMain.SetActive(false);
+
+        // Cá mập, chữ thắng và giọng nói đã chạy xong
+        isFinishingSequence = false;
+        isWaitingForShark = false;
     }
 
     // Giữ lại hàm cũ nếu script khác đang gọi

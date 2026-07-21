@@ -56,14 +56,14 @@ public class WallFlamethrowerCore : MonoBehaviour
                 fireParticles.Play();
                 if (audio)
                 {
-                    audio.PlaySpecial(audio.openFireClip);
+                    audio.PlaySFXNoOneShot(audio.openFireClip);
                 }
 
             }
             else
             {
                 fireParticles.Stop();
-                if (audio) { audio.StopSpecial(); }
+                if (audio) { audio.StopSFXNoOneShot(); }
             }
         }
 

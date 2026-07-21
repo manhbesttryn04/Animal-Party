@@ -446,27 +446,41 @@ public class MiniGameManager : MonoBehaviour
 
         while (timer > 0)
         {
-            // Giảm thời gian theo frame
             timer -= Time.deltaTime;
 
-            // Làm tròn lên để timer không hiện 00:00 quá sớm
             int seconds = Mathf.CeilToInt(timer);
-
-            // Tính phút
             int minutes = seconds / 60;
-
-            // Tính giây còn lại
             int remainSeconds = seconds % 60;
 
-            // Update timer UI dạng 00:00
-           ui.timeMiniGameText.text =
-                minutes.ToString("00") + ":" + remainSeconds.ToString("00");
+            ui.timeMiniGameText.text =
+                minutes.ToString("00") + ":" +
+                remainSeconds.ToString("00");
 
-            // Update coin realtime
-            ui.coinMiniGameTextP1.text = coin1.coinMiniGame.ToString();
-            ui.coinMiniGameTextP2.text = coin2.coinMiniGame.ToString();
+            ui.coinMiniGameTextP1.text =
+                coin1.coinMiniGame.ToString();
+
+            ui.coinMiniGameTextP2.text =
+                coin2.coinMiniGame.ToString();
 
             yield return null;
+        }
+
+        // Chờ MiniGame7 xử lý xong cá mập,
+        // thông báo thắng và giọng nói.
+        if (indexMiniGame == 7 &&
+            miniGameList != null &&
+            miniGameList.miniGame7 != null)
+        {
+            float maxWaitTime = 10f;
+
+            while (miniGameList.miniGame7.IsFinishingSequence &&
+                   maxWaitTime > 0f)
+            {
+                ui.timeMiniGameText.text = "00:00";
+
+                maxWaitTime -= Time.deltaTime;
+                yield return null;
+            }
         }
 
         // =====================================================
@@ -778,8 +792,8 @@ public class MiniGameManager : MonoBehaviour
 
     public void SetIndex()
     {
-        indexMiniGame++;
-            if (indexMiniGame > 7) indexMiniGame = 1;
+      //  indexMiniGame++;
+           // if (indexMiniGame > 7) indexMiniGame = 1;
     }
     
 }

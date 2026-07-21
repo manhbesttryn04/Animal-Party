@@ -289,8 +289,8 @@ RectTransform:
   - {fileID: 847991482}
   m_Father: {fileID: 1917321037}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -6442,6 +6442,7 @@ MonoBehaviour:
   canStartNextRound: 0
   canCheckPlayer2: 1
   canCheckMiniGame: 1
+  canRandomIndexMiniGame: 0
 --- !u!4 &265678874
 Transform:
   m_ObjectHideFlags: 0
@@ -6641,6 +6642,119 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 269940506}
   m_CullTransparentMesh: 1
+--- !u!1 &281956583
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 281956584}
+  - component: {fileID: 281956587}
+  - component: {fileID: 281956586}
+  - component: {fileID: 281956585}
+  m_Layer: 0
+  m_Name: Island (1)
+  m_TagString: Ground
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &281956584
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 281956583}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 17.546, y: 1.9185, z: -3.2629}
+  m_LocalScale: {x: 16.98358, y: 0.03861215, z: 16.98358}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 6286610420602584033}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!64 &281956585
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 281956583}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &281956586
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 281956583}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: ef3749ba96c474846a2bcf0432228f45, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &281956587
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 281956583}
+  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &282796958
 GameObject:
   m_ObjectHideFlags: 0
@@ -6830,7 +6944,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f5c43531b7774c45ba1db7013ef8a54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  indexMiniGame: 7
+  indexMiniGame: 3
   miniGameList: {fileID: 288627989}
   intrusTextList: {fileID: 288627990}
   videoInstructList: {fileID: 288627991}
@@ -6933,26 +7047,23 @@ MonoBehaviour:
   - Use movement keys and quick reflexes to dodge shark attacks.
   - Stand on the platform that matches the target color before time runs out, or
     you will fall when the wrong platforms collapse.
-  - Stand on the platform that matches the target color before time runs out, or
-    you will fall when the wrong platforms collapse.
+  - Dodge laser beams and fire as much as possible.
   - Move while the Pirate King is looking away. Stop immediately when he turns around.
     If he catches you moving, you lose!
   - 'Move across tiles to claim them for your color. Collect Shadows to grow larger
     and gain an advantage. Own the most tiles before time runs out to win! '
-  - "A bomb will be randomly given to one player\u2014move close to your opponent
-    to pass it, but after each pass there is a short cooldown."
-  - "A bomb will be randomly given to one player\u2014move close to your opponent
-    to pass it, but after each pass there is a short cooldown."
+  - A bomb will be randomly assigned to a player; move close to an opponent to pass
+    the bomb, but keep in mind that there is a short cooldown period after each pass.
+  - Dodge the cannon fire and survive on the island.
   errorTextList:
   - "The shark\u2019s hunting speed will gradually increase with each wave!"
   - Wrong platforms will collapse!
-  - Wrong platforms will collapse!
-  - Be careful! He can turn around at any time
+  - ' The difficulty of the lasers will gradually increase over time!'
+  - Be careful! He can turn around at any time!
   - Color Wipe removes colors from nearby tiles. Freeze temporarily stops your movement!
   - The bomb explodes when the countdown reaches 4 seconds, and whoever is holding
-    it will be eliminated.
-  - The bomb explodes when the countdown reaches 4 seconds, and whoever is holding
-    it will be eliminated.
+    it will be eliminated!
+  - The number and firing rate of the cannons will increase over time!
 --- !u!114 &288627991
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8434,7 +8545,7 @@ AudioSource:
   m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
-  Loop: 0
+  Loop: 1
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
@@ -9928,7 +10039,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &376663305
 RectTransform:
   m_ObjectHideFlags: 0
@@ -10119,7 +10230,7 @@ RectTransform:
   m_Father: {fileID: 910926150}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 10, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -11403,7 +11514,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Slider
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 0
     m_WrapAround: 0
     m_SelectOnUp: {fileID: 0}
     m_SelectOnDown: {fileID: 0}
@@ -14398,8 +14509,8 @@ RectTransform:
   - {fileID: 959044564}
   m_Father: {fileID: 438212413}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -15321,7 +15432,7 @@ RectTransform:
   m_Father: {fileID: 1453245267}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 10, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -17569,7 +17680,7 @@ RectTransform:
   m_Father: {fileID: 1551338015}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -20155,7 +20266,7 @@ MonoBehaviour:
   musicSlider: {fileID: 438192296}
   sfxSlider: {fileID: 1592214367}
   qualityGraphicDropDown: {fileID: 1167074680}
-  musicValue: 1
+  musicValue: 0
   sfxValue: 1
   backToMainMenuButton: {fileID: 2076523038}
   openSettingButton: {fileID: 1045522658}
@@ -21786,7 +21897,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 636144486}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.8133338
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -36807,7 +36918,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3548275952067095837, guid: 3a35bb4fdc8f3e64c8e902780ea050e1, type: 3}
       propertyPath: countCoinPower
-      value: 3
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5359118050741442794, guid: 3a35bb4fdc8f3e64c8e902780ea050e1, type: 3}
       propertyPath: m_Enabled
@@ -42751,7 +42862,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Slider
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 0
     m_WrapAround: 0
     m_SelectOnUp: {fileID: 0}
     m_SelectOnDown: {fileID: 0}
@@ -46001,9 +46112,9 @@ RectTransform:
   m_Father: {fileID: 1899861557}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -17, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1703076559
 MonoBehaviour:
@@ -52745,6 +52856,7 @@ GameObject:
   - component: {fileID: 2004911892}
   - component: {fileID: 2004911895}
   - component: {fileID: 2004911894}
+  - component: {fileID: 2004911896}
   m_Layer: 0
   m_Name: MAP
   m_TagString: Untagged
@@ -52888,6 +53000,103 @@ MonoBehaviour:
   minVolume: 0.1
   maxVolume: 0.3
   audioSource: {fileID: 2004911894}
+--- !u!82 &2004911896
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2004911891}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 8300000, guid: cedfc9d3d8fa9ff4ea5ae43cba57cc1f, type: 3}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &2005993409
 GameObject:
   m_ObjectHideFlags: 0
@@ -53887,7 +54096,7 @@ RectTransform:
   m_GameObject: {fileID: 2061823811}
   m_LocalRotation: {x: -0, y: 0.01927852, z: -0, w: 0.9998142}
   m_LocalPosition: {x: 0, y: 0, z: -24}
-  m_LocalScale: {x: 1.2853333, y: 1.2853333, z: 1.2853333}
+  m_LocalScale: {x: 1.0807983, y: 1.0807983, z: 1.0807983}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 891100179}
@@ -124070,7 +124279,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &5522726039850453927
 Transform:
   m_ObjectHideFlags: 0
@@ -124365,6 +124574,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 751866987}
     m_Modifications:
+    - target: {fileID: 854896827708248065, guid: 86ae381b36b3d2649ad03c3616c18ac2, type: 3}
+      propertyPath: m_SortingOrder
+      value: 999
+      objectReference: {fileID: 0}
     - target: {fileID: 1211201227758556062, guid: 86ae381b36b3d2649ad03c3616c18ac2, type: 3}
       propertyPath: m_Name
       value: LoadingManager
@@ -125249,6 +125462,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8450527186794755825}
+  - {fileID: 281956584}
   - {fileID: 174570567679744658}
   - {fileID: 8790381039988133073}
   - {fileID: 791693301237974497}
@@ -141894,7 +142108,7 @@ GameObject:
   - component: {fileID: 8554809165675510040}
   m_Layer: 0
   m_Name: Island
-  m_TagString: Ground
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -187476,6 +187690,7 @@ MonoBehaviour:
   knockbackDecay: 6
   fallHeight: -6
   shark: {fileID: 2112534114}
+  disableControlHeight: -2.6
 --- !u!1 &8580569972710212358
 GameObject:
   m_ObjectHideFlags: 0

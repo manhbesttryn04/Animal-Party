@@ -28,6 +28,7 @@ public class GameManager : MonoBehaviour
     public bool canStartNextRound = false;
     public bool canCheckPlayer2 = true;
     public bool canCheckMiniGame = true;
+    public bool canRandomIndexMiniGame = true;
 
     #endregion
 
@@ -199,20 +200,13 @@ public class GameManager : MonoBehaviour
             stateGame.isFistRound = true;
         }
 
-        /*     
-        var randomIndex = Random.Range(0, 2);
-
-        if(randomIndex == 0)
+        if (canRandomIndexMiniGame)
         {
-            miniGameManager.indexMiniGame = 0 + 4;
+            // Random từ 1 đến 7
+            miniGameManager.indexMiniGame = Random.Range(1, 8);
         }
-        else if(randomIndex == 1)
-        {
-            miniGameManager.indexMiniGame = 0 + 4;
-        }
-        */
+      
 
-       
         // Chạy minigame
         miniGameManager.StartMiniGame();
     }
@@ -220,14 +214,14 @@ public class GameManager : MonoBehaviour
     // Kiểm tra cả 2 người chơi đã tới vòng 1 chưa
     public void FistRoundMiniGame()
     {
-        PlayerRound r1 = player1Main.GetComponent<PlayerRound>();
-        PlayerRound r2 = player2Main.GetComponent<PlayerRound>();
+       // PlayerRound r1 = player1Main.GetComponent<PlayerRound>();
+        //PlayerRound r2 = player2Main.GetComponent<PlayerRound>();
 
         // Nếu cả 2 đều ở vòng 1 thì bắt đầu minigame đầu tiên
-        if (r1.isRound1 && r2.isRound1)
-        {
-            JoinRandomMiniGame();
-        }
+       // if (r1.isRound1 && r2.isRound1)
+       // {
+           // JoinRandomMiniGame();
+      //  }
     }
 
     // =========================================================

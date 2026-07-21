@@ -99,7 +99,7 @@ public class PummelLaserHub : MonoBehaviour
         }
         
         if (AudioManager.Instance != null)
-            AudioManager.Instance.PlayEnvironment(AudioManager.Instance.laserMoveClip);
+            AudioManager.Instance.PlaySFXNoOneShot(AudioManager.Instance.laserMoveClip);
             
         StartCoroutine(VIPPatternRoutine());
     }
@@ -188,9 +188,9 @@ public class PummelLaserHub : MonoBehaviour
         {
             if (laser != null) laser.SetLaserActive(false);
         }
-        
+
         if (AudioManager.Instance != null)
-            AudioManager.Instance.StopEnvironment();
+            AudioManager.Instance.StopSFXNoOneShot();
             
         float duration = 1.5f;
         Vector3 startPos = transform.position;

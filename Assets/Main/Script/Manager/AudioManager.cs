@@ -132,13 +132,15 @@ public class AudioManager : MonoBehaviour
         }
 
         musicSource.loop = true;
-        sfxSource.loop = false;
+      //  sfxSource.loop = true;
         specialSource.loop = false;
         environmentSource.loop = true;
     }
     private void Start()
     {
         SetupMainGameAudio();
+        AudioManager.Instance.PlayMusic(AudioManager.Instance.musicMainClip);
+
     }
 
 
@@ -164,6 +166,22 @@ public class AudioManager : MonoBehaviour
         if (clip == null) return;
 
         sfxSource.PlayOneShot(clip);
+    }
+    public void PlaySFXNoOneShot(AudioClip clip, bool loop = true)
+    {
+        if (clip == null) return;
+
+        sfxSource.Stop();
+        sfxSource.clip = clip;
+        sfxSource.loop = loop;
+        sfxSource.Play();
+    }
+
+    public void StopSFXNoOneShot()
+    {
+        sfxSource.Stop();
+        sfxSource.clip = null;
+        sfxSource.loop = false;
     }
     public void StopMusic()
     {

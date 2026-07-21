@@ -62,6 +62,8 @@ public class SettingManager : MonoBehaviour
 
         if (backToMainMenuButton != null)
             backToMainMenuButton.onClick.AddListener(OnClickBackToMainMenu);
+
+        
     }
 
     private void SetupDefaultValue()
