@@ -269,7 +269,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &5750913060764733629
 Transform:
   m_ObjectHideFlags: 0
@@ -977,8 +977,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.44, y: 2, z: 11.2}
-  m_Center: {x: 0, y: 0, z: 1.16}
+  m_Size: {x: 1.44, y: 2, z: 13.8675585}
+  m_Center: {x: -0.0000000110144995, y: 0, z: 2.4937894}
 --- !u!114 &7163271382470066698
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1017,7 +1017,7 @@ MonoBehaviour:
   rightWallImpact: {fileID: 3104303075598540642}
   impactOffset: 0.05
   hitCooldown: 0.5
-  coinPenalty: 5
+  coinPenalty: 1
   stunTime: 0.2
   playerShakeAmount: 0.08
   flashDuration: 0.4
@@ -2037,9 +2037,9 @@ GameObject:
   - component: {fileID: 6023027006633044052}
   - component: {fileID: 13906784980203868}
   - component: {fileID: 5907147162225673640}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Block (3)
-  m_TagString: Untagged
+  m_TagString: Block
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 2147483647
@@ -2149,9 +2149,9 @@ GameObject:
   - component: {fileID: 2751438062914490863}
   - component: {fileID: 2182031858934892995}
   - component: {fileID: 7963868489082270372}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Block
-  m_TagString: Untagged
+  m_TagString: Block
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 2147483647
@@ -2546,9 +2546,9 @@ GameObject:
   - component: {fileID: 6541664150981475190}
   - component: {fileID: 5756583094161206964}
   - component: {fileID: 1220290787582436001}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Block
-  m_TagString: Untagged
+  m_TagString: Block
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 2147483647
@@ -2646,6 +2646,59 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &5362395533888090502
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 668784169574532027}
+  - component: {fileID: 4066355888185006568}
+  m_Layer: 0
+  m_Name: Fix Bug MiniGame 3
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &668784169574532027
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5362395533888090502}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4237812240865113896}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4066355888185006568
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5362395533888090502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4cd06d0c0cd699f40abe33e77d7ba7a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  miniGameManager: {fileID: 0}
+  recoverDelay: 3
+  player1: {fileID: 0}
+  player2: {fileID: 0}
+  player1NeedRecover: 0
+  player2NeedRecover: 0
+  player1RecoverTimer: 0
+  player2RecoverTimer: 0
+  isRunning: 0
 --- !u!1 &5482768001693103646
 GameObject:
   m_ObjectHideFlags: 0
@@ -2820,9 +2873,9 @@ GameObject:
   - component: {fileID: 6155711774239693185}
   - component: {fileID: 1492715658700750520}
   - component: {fileID: 2706472599341216860}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Block
-  m_TagString: Untagged
+  m_TagString: Block
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 2147483647
@@ -3480,9 +3533,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2990621659799423199}
+  - component: {fileID: 3702663743418123463}
   m_Layer: 0
   m_Name: Blocks
-  m_TagString: Untagged
+  m_TagString: Block
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3510,6 +3564,28 @@ Transform:
   - {fileID: 7564887102245054472}
   m_Father: {fileID: 5750913060764733629}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!64 &3702663743418123463
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7861786872460684195}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 0}
 --- !u!1 &8067006920266393700
 GameObject:
   m_ObjectHideFlags: 0
@@ -3522,9 +3598,9 @@ GameObject:
   - component: {fileID: 1001715331227655321}
   - component: {fileID: 3160374959234216034}
   - component: {fileID: 5303824651822445077}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Block (1)
-  m_TagString: Untagged
+  m_TagString: Block
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 2147483647
@@ -3802,8 +3878,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.44, y: 2, z: 11.2}
-  m_Center: {x: 0, y: 0, z: 1.16}
+  m_Size: {x: 1.44, y: 2, z: 14.085823}
+  m_Center: {x: -2.000628e-10, y: 0, z: 2.6028867}
 --- !u!114 &6366231829119395995
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3842,7 +3918,7 @@ MonoBehaviour:
   rightWallImpact: {fileID: 3104303075598540642}
   impactOffset: 0.05
   hitCooldown: 0.5
-  coinPenalty: 5
+  coinPenalty: 1
   stunTime: 0.2
   playerShakeAmount: 0.08
   flashDuration: 0.4
@@ -3863,9 +3939,9 @@ GameObject:
   - component: {fileID: 832844575728782745}
   - component: {fileID: 3075285727004970718}
   - component: {fileID: 4709518299730054214}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Block (2)
-  m_TagString: Untagged
+  m_TagString: Block
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 2147483647
@@ -3988,7 +4064,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8586582966760187573}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 20020.158, y: -2278.0686, z: -8209.693}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -4002,6 +4078,7 @@ Transform:
   - {fileID: 6171620058086531998}
   - {fileID: 9035290117150032067}
   - {fileID: 340364100078206099}
+  - {fileID: 668784169574532027}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &243000555435908583
@@ -4017,19 +4094,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LaserSpamManager
   manager: {fileID: 0}
-  totalGameTime: 160
+  fixBugMiniGame3: {fileID: 4066355888185006568}
+  totalGameTime: 120
   phase1_Hub:
     startTime: 0
   phase2_Fire:
-    startTime: 15
+    startTime: 30
   phase3_Spam:
-    startTime: 35
+    startTime: 70
     laserSpeed: 6
     lasersPerWave: 4
     waveDelay: 3.5
     delayBetweenLasers: 1.2
   phase4_Hard:
-    startTime: 55
+    startTime: 100
     laserSpeed: 8.5
     lasersPerWave: 5
     waveDelay: 3
@@ -4043,7 +4121,7 @@ MonoBehaviour:
   - {fileID: 5547223021197048762}
   - {fileID: 4870238019442261783}
   - {fileID: 2548161551497143306}
-  flamethrowerBrain: {fileID: 0}
+  flamethrowerBrain: {fileID: 4284937002474454800}
   isRunning: 1
 --- !u!1 &8867635774127722855
 GameObject:
@@ -4057,9 +4135,9 @@ GameObject:
   - component: {fileID: 3059984865228573381}
   - component: {fileID: 3432213336959520213}
   - component: {fileID: 8517325465691926787}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Block (4)
-  m_TagString: Untagged
+  m_TagString: Block
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 2147483647
@@ -4169,9 +4247,9 @@ GameObject:
   - component: {fileID: 6330324633848038481}
   - component: {fileID: 1523684019926738553}
   - component: {fileID: 885296078690066819}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Block
-  m_TagString: Untagged
+  m_TagString: Block
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 2147483647
@@ -4416,7 +4494,7 @@ MonoBehaviour:
   - {fileID: 5702568367403885868}
   - {fileID: 2261026426999082338}
   defaultPoint: {fileID: 4545216586137512570}
-  moveSpeed: 3
+  moveSpeed: 5
   rotateSpeed: 240
   waitAtPoint: 0
 --- !u!1 &9088925599683005500
@@ -4760,7 +4838,7 @@ PrefabInstance:
       objectReference: {fileID: 7690847831565025528}
     - target: {fileID: 3700520442316322001, guid: 438b341ee715d354fa76cb609ccc3075, type: 3}
       propertyPath: coinPenalty
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3700520442316322001, guid: 438b341ee715d354fa76cb609ccc3075, type: 3}
       propertyPath: hitCooldown
@@ -4782,6 +4860,10 @@ PrefabInstance:
       propertyPath: obstacleLayer.m_Bits
       value: 512
       objectReference: {fileID: 0}
+    - target: {fileID: 4870594117406860297, guid: 438b341ee715d354fa76cb609ccc3075, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 5141028888679393341, guid: 438b341ee715d354fa76cb609ccc3075, type: 3}
       propertyPath: m_Enabled
       value: 1
@@ -4796,7 +4878,7 @@ PrefabInstance:
       objectReference: {fileID: 2478995828003372032}
     - target: {fileID: 5860015386694972697, guid: 438b341ee715d354fa76cb609ccc3075, type: 3}
       propertyPath: coinPenalty
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5860015386694972697, guid: 438b341ee715d354fa76cb609ccc3075, type: 3}
       propertyPath: hitCooldown
@@ -4857,6 +4939,10 @@ PrefabInstance:
     - target: {fileID: 5929118485376587973, guid: 438b341ee715d354fa76cb609ccc3075, type: 3}
       propertyPath: possibleColors.Array.data[2].g
       value: 0.92156863
+      objectReference: {fileID: 0}
+    - target: {fileID: 6033342583105289280, guid: 438b341ee715d354fa76cb609ccc3075, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 7002402695337131441, guid: 438b341ee715d354fa76cb609ccc3075, type: 3}
       propertyPath: m_Enabled
@@ -5049,8 +5135,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.9648883, y: 2.3832817, z: 1.5500925}
-  m_Center: {x: 0.123133, y: -0.1916405, z: 0.025167014}
+  m_Size: {x: 1.9648883, y: 6.7750993, z: 1.5500925}
+  m_Center: {x: 0.123133, y: 2.0042677, z: 0.025167046}
 --- !u!1001 &3014323337947289024
 PrefabInstance:
   m_ObjectHideFlags: 0
