@@ -38,8 +38,8 @@ public class FixBugMiniGame3 : MonoBehaviour
     private readonly List<Color> player1OriginalColors =
         new List<Color>();
 
-    private Vector3 player1PositionBeforeEffect;
-    private bool player1PositionSaved;
+    private float player1OriginalHeight;
+    private float player1OriginalCenterY;
 
     // =========================
     // PLAYER 2 DATA
@@ -53,8 +53,8 @@ public class FixBugMiniGame3 : MonoBehaviour
     private readonly List<Color> player2OriginalColors =
         new List<Color>();
 
-    private Vector3 player2PositionBeforeEffect;
-    private bool player2PositionSaved;
+    private float player2OriginalHeight;
+    private float player2OriginalCenterY;
 
     private void Awake()
     {
@@ -120,6 +120,18 @@ public class FixBugMiniGame3 : MonoBehaviour
             player2OriginalColors
         );
 
+        SaveControllerData(
+            player1,
+            out player1OriginalHeight,
+            out player1OriginalCenterY
+        );
+
+        SaveControllerData(
+            player2,
+            out player2OriginalHeight,
+            out player2OriginalCenterY
+        );
+
         isRunning = true;
 
         Debug.Log(
@@ -138,10 +150,37 @@ public class FixBugMiniGame3 : MonoBehaviour
         if (move != null)
             return move;
 
-        move = playerObject
+        return playerObject
             .GetComponentInChildren<PlayerMove>(true);
+    }
 
-        return move;
+    private void SaveControllerData(
+        PlayerMove move,
+        out float originalHeight,
+        out float originalCenterY)
+    {
+        originalHeight = 0f;
+        originalCenterY = 0f;
+
+        if (move == null || move.controller == null)
+        {
+            if (move != null)
+            {
+                Debug.LogWarning(
+                    $"[FixBugMiniGame3] {move.name} chưa có CharacterController."
+                );
+            }
+
+            return;
+        }
+
+        originalHeight = move.controller.height;
+        originalCenterY = move.controller.center.y;
+
+        Debug.Log(
+            $"[FixBugMiniGame3] Đã lưu {move.name}: " +
+            $"Height = {originalHeight}, Center Y = {originalCenterY}"
+        );
     }
 
     private void SaveOriginalPlayerData(
@@ -234,10 +273,6 @@ public class FixBugMiniGame3 : MonoBehaviour
             return;
 
         ForceRecoverPlayer(player1);
-
-        player1NeedRecover = false;
-        player1RecoverTimer = 0f;
-        player1PositionSaved = false;
     }
 
     private void UpdatePlayer2Recover()
@@ -261,10 +296,6 @@ public class FixBugMiniGame3 : MonoBehaviour
             return;
 
         ForceRecoverPlayer(player2);
-
-        player2NeedRecover = false;
-        player2RecoverTimer = 0f;
-        player2PositionSaved = false;
     }
 
     // =====================================================
@@ -272,8 +303,8 @@ public class FixBugMiniGame3 : MonoBehaviour
     // =====================================================
 
     /// <summary>
-    /// Chỉ cần gọi một lần khi player vừa dính điện hoặc lửa.
-    /// Không cần gọi false ở cuối hiệu ứng.
+    /// Gọi một lần khi player vừa dính điện hoặc lửa.
+    /// Script không lưu và không thay đổi vị trí player.
     /// </summary>
     public void SetNeedRecover(PlayerMove move)
     {
@@ -285,11 +316,6 @@ public class FixBugMiniGame3 : MonoBehaviour
             player1NeedRecover = true;
             player1RecoverTimer = 0f;
 
-            player1PositionBeforeEffect =
-                move.transform.localPosition;
-
-            player1PositionSaved = true;
-
             Debug.Log(
                 "[FixBugMiniGame3] Player 1 đã bật cờ sửa lỗi."
             );
@@ -298,11 +324,6 @@ public class FixBugMiniGame3 : MonoBehaviour
         {
             player2NeedRecover = true;
             player2RecoverTimer = 0f;
-
-            player2PositionBeforeEffect =
-                move.transform.localPosition;
-
-            player2PositionSaved = true;
 
             Debug.Log(
                 "[FixBugMiniGame3] Player 2 đã bật cờ sửa lỗi."
@@ -345,7 +366,6 @@ public class FixBugMiniGame3 : MonoBehaviour
         if (move == null)
             return;
 
-        // Mở lại khả năng di chuyển và nhảy
         move.isMove = true;
         move.isJump = true;
 
@@ -356,13 +376,12 @@ public class FixBugMiniGame3 : MonoBehaviour
                 player1Renderers,
                 player1Materials,
                 player1OriginalColors,
-                player1PositionBeforeEffect,
-                player1PositionSaved
+                player1OriginalHeight,
+                player1OriginalCenterY
             );
 
             player1NeedRecover = false;
             player1RecoverTimer = 0f;
-            player1PositionSaved = false;
         }
         else if (move == player2)
         {
@@ -371,13 +390,16 @@ public class FixBugMiniGame3 : MonoBehaviour
                 player2Renderers,
                 player2Materials,
                 player2OriginalColors,
-                player2PositionBeforeEffect,
-                player2PositionSaved
+                player2OriginalHeight,
+                player2OriginalCenterY
             );
 
             player2NeedRecover = false;
             player2RecoverTimer = 0f;
-            player2PositionSaved = false;
+        }
+        else
+        {
+            return;
         }
 
         RemoveEffectObjects(move);
@@ -393,21 +415,23 @@ public class FixBugMiniGame3 : MonoBehaviour
         Renderer[] renderers,
         List<Material> materials,
         List<Color> originalColors,
-        Vector3 positionBeforeEffect,
-        bool hasSavedPosition)
+        float originalHeight,
+        float originalCenterY)
     {
         if (move == null)
             return;
 
-        // Trả vị trí về trước lúc hiệu ứng bắt đầu.
-        // Dùng để sửa lỗi rung làm lệch player.
-        if (hasSavedPosition)
+        // Không thay đổi transform position của player.
+
+        if (move.controller != null)
         {
-            move.transform.localPosition =
-                positionBeforeEffect;
+            move.controller.height = originalHeight;
+
+            Vector3 center = move.controller.center;
+            center.y = originalCenterY;
+            move.controller.center = center;
         }
 
-        // Bật lại toàn bộ Renderer
         if (renderers != null)
         {
             foreach (Renderer currentRenderer in renderers)
@@ -419,7 +443,6 @@ public class FixBugMiniGame3 : MonoBehaviour
             }
         }
 
-        // Trả toàn bộ material về màu gốc
         int materialCount = Mathf.Min(
             materials.Count,
             originalColors.Count
@@ -467,9 +490,6 @@ public class FixBugMiniGame3 : MonoBehaviour
             return;
 
         animator.SetFloat("Walk", 0f);
-
-        // Chuyển Animator về trạng thái mặc định.
-        // Tránh player bị kẹt trong animation Lie.
         animator.Rebind();
         animator.Update(0f);
     }
@@ -494,7 +514,6 @@ public class FixBugMiniGame3 : MonoBehaviour
             if (child == move.transform)
                 continue;
 
-            // Xóa hiệu ứng lửa có tag Fire
             if (child.CompareTag("Fire"))
             {
                 Destroy(child.gameObject);
@@ -513,7 +532,6 @@ public class FixBugMiniGame3 : MonoBehaviour
     {
         isRunning = false;
 
-        // Khôi phục ngay lập tức khi thoát minigame
         if (player1 != null)
         {
             ForceRecoverPlayer(player1);
@@ -550,11 +568,11 @@ public class FixBugMiniGame3 : MonoBehaviour
         player1RecoverTimer = 0f;
         player2RecoverTimer = 0f;
 
-        player1PositionSaved = false;
-        player2PositionSaved = false;
+        player1OriginalHeight = 0f;
+        player1OriginalCenterY = 0f;
 
-        player1PositionBeforeEffect = Vector3.zero;
-        player2PositionBeforeEffect = Vector3.zero;
+        player2OriginalHeight = 0f;
+        player2OriginalCenterY = 0f;
 
         player1 = null;
         player2 = null;
