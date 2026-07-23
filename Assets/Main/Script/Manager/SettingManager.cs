@@ -48,11 +48,23 @@ public class SettingManager : MonoBehaviour
     // Thứ tự từ thấp lên cao
     private readonly Vector2Int[] resolutionPresets =
     {
+         // Thấp
+        new Vector2Int(1280, 720),   // HD
+
+        new Vector2Int(1366, 768),   // HD Laptop
+
+        new Vector2Int(1600, 900),   // HD+
         new Vector2Int(1920, 1080),
         new Vector2Int(1920, 1200),
         new Vector2Int(2560, 1440),
-        new Vector2Int(2560, 1600)
+        new Vector2Int(2560, 1600),
+        new Vector2Int(3840, 2160)
     };
+    [Header("Display Mode")]
+    public TMP_Dropdown displayModeDropdown; [Header("Windowed Size")]
+    [SerializeField] private int windowedWidth = 1280;
+    [SerializeField] private int windowedHeight = 720;
+
 
     private void Awake()
     {
@@ -80,7 +92,7 @@ public class SettingManager : MonoBehaviour
 
         // Tạo danh sách và tự chọn Resolution
         SetupResolutionDropdown();
-
+        SetupDisplayModeDropdown();
         AddListeners();
         ApplySettings();
         ResetSetting();
@@ -325,6 +337,10 @@ public class SettingManager : MonoBehaviour
                 ToggleGuide
             );
         }
+        if (displayModeDropdown != null)
+        {
+            displayModeDropdown.onValueChanged.AddListener(SetDisplayMode);
+        }
     }
 
     private void RemoveListeners()
@@ -377,6 +393,112 @@ public class SettingManager : MonoBehaviour
                 OnClickBackToMainMenu
             );
         }
+        if (displayModeDropdown != null)
+        {
+            displayModeDropdown.onValueChanged.RemoveListener(SetDisplayMode);
+        }
+    }
+    private void SetupDisplayModeDropdown()
+    {
+        if (displayModeDropdown == null)
+            return;
+
+        displayModeDropdown.ClearOptions();
+
+        List<string> options = new List<string>()
+    {
+        "Fullscreen",
+        "Borderless",
+        "Windowed"
+    };
+
+        displayModeDropdown.AddOptions(options);
+
+        int selectedIndex = 0;
+
+        switch (Screen.fullScreenMode)
+        {
+            case FullScreenMode.ExclusiveFullScreen:
+                selectedIndex = 0;
+                break;
+
+            case FullScreenMode.FullScreenWindow:
+                selectedIndex = 1;
+                break;
+
+            case FullScreenMode.Windowed:
+                selectedIndex = 2;
+                break;
+        }
+
+        displayModeDropdown.SetValueWithoutNotify(selectedIndex);
+        displayModeDropdown.RefreshShownValue();
+    }
+    public void SetDisplayMode(int index)
+    {
+        switch (index)
+        {
+            // Fullscreen
+            case 0:
+                {
+                    SetResolutionByMode(FullScreenMode.ExclusiveFullScreen);
+                    break;
+                }
+
+            // Borderless
+            case 1:
+                {
+                    Screen.SetResolution(
+                        Display.main.systemWidth,
+                        Display.main.systemHeight,
+                        FullScreenMode.FullScreenWindow
+                    );
+                    break;
+                }
+
+            // Windowed
+            case 2:
+                {
+                    SetResolutionByMode(FullScreenMode.Windowed);
+                    break;
+                }
+        }
+    }
+    private void SetResolutionByMode(FullScreenMode mode)
+    {
+        if (resolutionDropdown == null || availableResolutions.Count == 0)
+            return;
+
+        int index = Mathf.Clamp(
+            resolutionDropdown.value,
+            0,
+            availableResolutions.Count - 1
+        );
+
+        Vector2Int resolution = availableResolutions[index];
+
+        Screen.SetResolution(
+            resolution.x,
+            resolution.y,
+            mode
+        );
+    }
+
+    private Vector2Int GetSelectedResolution()
+    {
+        if (resolutionDropdown != null &&
+            availableResolutions.Count > 0)
+        {
+            int index = Mathf.Clamp(
+                resolutionDropdown.value,
+                0,
+                availableResolutions.Count - 1
+            );
+
+            return availableResolutions[index];
+        }
+
+        return new Vector2Int(1920, 1080);
     }
 
     // ==================================================
@@ -492,40 +614,27 @@ public class SettingManager : MonoBehaviour
     {
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.ApplyMusicSetting(
-                musicValue
-            );
-
-            AudioManager.Instance.ApplySFXSetting(
-                sfxValue
-            );
+            AudioManager.Instance.ApplyMusicSetting(musicValue);
+            AudioManager.Instance.ApplySFXSetting(sfxValue);
         }
 
         if (VolumeManager.Instance != null)
         {
-            int graphicValue = 2;
-
-            if (qualityGraphicDropDown != null)
-            {
-                graphicValue =
-                    qualityGraphicDropDown.value;
-            }
-
-            VolumeManager.Instance.SetGraphicsQuality(
-                graphicValue
-            );
+            int graphicValue = qualityGraphicDropDown.value;
+            VolumeManager.Instance.SetGraphicsQuality(graphicValue);
         }
 
-        // Áp dụng Resolution được tự động chọn khi vào game
+        if (displayModeDropdown != null)
+        {
+            SetDisplayMode(displayModeDropdown.value);
+        }
+
         if (resolutionDropdown != null &&
             availableResolutions.Count > 0)
         {
-            SetResolution(
-                resolutionDropdown.value
-            );
+            SetResolution(resolutionDropdown.value);
         }
     }
-
     // ==================================================
     // SETTING PANEL
     // ==================================================
