@@ -19,8 +19,13 @@ public class BirdAmbient : MonoBehaviour
     public float minVolume = 0.2f;
     public float maxVolume = 1f;
 
-   public AudioSource audioSource;
-   private Coroutine birdCoroutine;
+    private AudioSource audioSource;
+    private Coroutine birdCoroutine;
+
+    private void Awake()
+    {
+        audioSource = GetComponent<AudioSource>();
+    }
 
     private void OnEnable()
     {
@@ -45,13 +50,24 @@ public class BirdAmbient : MonoBehaviour
             // Chờ ngẫu nhiên
             yield return new WaitForSeconds(Random.Range(minDelay, maxDelay));
 
-            // Nếu object bị tắt thì bỏ qua
             if (!gameObject.activeInHierarchy)
                 yield break;
 
-            // Âm lượng và pitch ngẫu nhiên
+            // Pitch ngẫu nhiên
             audioSource.pitch = Random.Range(minPitch, maxPitch);
-            audioSource.volume = Random.Range(minVolume, maxVolume);
+
+            // Volume ngẫu nhiên
+            float randomVolume = Random.Range(minVolume, maxVolume);
+
+            // Nhân với Master Volume
+            if (AudioManager.Instance != null)
+            {
+                audioSource.volume = randomVolume * AudioManager.Instance.masterVolume;
+            }
+            else
+            {
+                audioSource.volume = randomVolume;
+            }
 
             // Phát tiếng chim
             audioSource.PlayOneShot(birdClip);

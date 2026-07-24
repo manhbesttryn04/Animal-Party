@@ -11,9 +11,12 @@ public class SettingManager : MonoBehaviour
     public static SettingManager Instance;
 
     [Header("Audio Sliders")]
+    public Slider masterSlider;
     public Slider musicSlider;
     public Slider sfxSlider;
 
+    [Header("UI")]
+    public GameObject settingPanel;
     [Header("Graphics")]
     public TMP_Dropdown qualityGraphicDropDown;
 
@@ -21,6 +24,9 @@ public class SettingManager : MonoBehaviour
     public TMP_Dropdown resolutionDropdown;
 
     [Header("Current Setting Values")]
+    [Range(0f, 1f)]
+    public float masterValue = 1f;
+
     [Range(0f, 1f)]
     public float musicValue = 1f;
 
@@ -73,6 +79,7 @@ public class SettingManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -83,12 +90,6 @@ public class SettingManager : MonoBehaviour
 
     private void Start()
     {
-        var cursor = CursorManager.Instance;
-
-        if (cursor != null)
-        {
-            cursor.ShowGameCursor();
-        }
 
         SetupDefaultValue();
 
@@ -103,6 +104,7 @@ public class SettingManager : MonoBehaviour
         {
             backToMainMenuButton.onClick.AddListener(
                 OnClickBackToMainMenu
+
             );
         }
         isOpenAudioClick = true;
@@ -114,8 +116,16 @@ public class SettingManager : MonoBehaviour
 
     private void SetupDefaultValue()
     {
+        masterValue = 1f;
         musicValue = 1f;
         sfxValue = 1f;
+
+        if (masterSlider != null)
+        {
+            masterSlider.minValue = 0f;
+            masterSlider.maxValue = 1f;
+            masterSlider.value = masterValue;
+        }
 
         if (musicSlider != null)
         {
@@ -299,6 +309,13 @@ public class SettingManager : MonoBehaviour
 
     private void AddListeners()
     {
+        if (masterSlider != null)
+        {
+            masterSlider.onValueChanged.AddListener(
+                SetMasterVolume
+            );
+        }
+
         if (musicSlider != null)
         {
             musicSlider.onValueChanged.AddListener(
@@ -348,6 +365,13 @@ public class SettingManager : MonoBehaviour
 
     private void RemoveListeners()
     {
+        if (masterSlider != null)
+        {
+            masterSlider.onValueChanged.RemoveListener(
+                SetMasterVolume
+            );
+        }
+
         if (musicSlider != null)
         {
             musicSlider.onValueChanged.RemoveListener(
@@ -448,7 +472,7 @@ public class SettingManager : MonoBehaviour
                 );
             }
         }
-      
+
         switch (index)
         {
 
@@ -513,6 +537,20 @@ public class SettingManager : MonoBehaviour
         }
 
         return new Vector2Int(1920, 1080);
+    }
+
+    // ==================================================
+    // MASTER VOLUME SLIDER
+    // ==================================================
+
+    public void SetMasterVolume(float value)
+    {
+        masterValue = Mathf.Clamp01(value);
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.ApplyMasterSetting(masterValue);
+        }
     }
 
     // ==================================================
@@ -614,7 +652,7 @@ public class SettingManager : MonoBehaviour
                 );
             }
         }
-       
+
 
         Debug.Log(
             "Đã đổi Resolution thành: " +
@@ -632,6 +670,7 @@ public class SettingManager : MonoBehaviour
     {
         if (AudioManager.Instance != null)
         {
+            AudioManager.Instance.ApplyMasterSetting(masterValue);
             AudioManager.Instance.ApplyMusicSetting(musicValue);
             AudioManager.Instance.ApplySFXSetting(sfxValue);
         }
@@ -673,7 +712,7 @@ public class SettingManager : MonoBehaviour
             if (UIManager.Instance != null)
             {
                 UIManager.Instance.ActiveSettingPanel(true);
-            }
+            }else settingPanel.SetActive(true     );
         }
         else
         {
@@ -703,7 +742,7 @@ public class SettingManager : MonoBehaviour
         if (UIManager.Instance != null)
         {
             UIManager.Instance.ActiveSettingPanel(false);
-        }
+        }else settingPanel.SetActive(false);
     }
 
     // ==================================================
@@ -725,7 +764,7 @@ public class SettingManager : MonoBehaviour
     private IEnumerator BackToMainMenuRoutine()
     {
         var cursor = CursorManager.Instance;
-        if(cursor != null)
+        if (cursor != null)
         {
             cursor.HideGameCursor();
         }
@@ -733,7 +772,14 @@ public class SettingManager : MonoBehaviour
 
         if (audio != null)
         {
-            audio.StopAllAudio();
+            audio.PauseAudio();
+        }
+        if(UIManager.Instance != null)
+        {
+            ResetSetting();
+            UIManager.Instance.openSettingPanelButton.SetActive(false );
+          
+            UIManager.Instance.canvasNotifi.SetActive(false);
         }
 
         if (LoadingManager.Instance != null)

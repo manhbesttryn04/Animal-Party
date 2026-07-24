@@ -30,6 +30,7 @@ public class UIManager : MonoBehaviour
     public GameObject player2ResultUI;
 
     [Header("Notification UI")]
+    public GameObject canvasNotifi;
     public GameObject notifiPanel;
     public TextMeshProUGUI textNotifi;
     public GameObject diceRollP1;
@@ -105,7 +106,11 @@ public class UIManager : MonoBehaviour
     {
         // Thiết lập Singleton
         if (Instance == null)
+        {
             Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+            
         else
             Destroy(gameObject);
     }
@@ -138,11 +143,13 @@ public class UIManager : MonoBehaviour
     }
 
     public void UpdateAllPlayMainUI()
-    {
-        UpdateCoinPowerUI();
-        UpdateCoinAllPlayer();
-        UpdateIndexPlayerWalk();
-        UpdateCurrentBuffPlayer();
+    {if (playerManager1 != null && playerManager2 != null)
+        {
+            UpdateCoinPowerUI();
+            UpdateCoinAllPlayer();
+            UpdateIndexPlayerWalk();
+            UpdateCurrentBuffPlayer();
+        }
     }
 
 
@@ -480,5 +487,18 @@ public class UIManager : MonoBehaviour
     {
         openSettingPanelButton.SetActive(i);
     }
-   
+   public void FindPlayerManager()
+    {
+        GameObject player1 = GameObject.FindGameObjectWithTag("Player 1");
+        GameObject player2 = GameObject.FindGameObjectWithTag("Player 2");
+        if (player1 != null)
+        {
+            playerManager1 = player1.GetComponent<PlayerManager>();
+        }
+        
+        if (player2 != null)
+        {
+            playerManager2 = player2.GetComponent<PlayerManager>();
+        }
+    }
 }

@@ -170,7 +170,7 @@ public class MiniGameManager : MonoBehaviour
         mapMiniGameList.mapMiniGameList[miniGameIndex].SetActive(true);
 
         // Tắt nhạc map chính
-        AudioManager.Instance.StopMusic();
+        AudioManager.Instance.PauseAudio();
 
         // Ẩn bảng thông báo play
         UIManager.Instance.HideNotifiPlayPanel(false);
