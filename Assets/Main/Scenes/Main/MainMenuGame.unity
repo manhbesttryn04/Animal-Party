@@ -4736,6 +4736,10 @@ PrefabInstance:
       propertyPath: canvasNotifi
       value: 
       objectReference: {fileID: 820836416}
+    - target: {fileID: 621890633700212758, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
+      propertyPath: exitMainMenuButton
+      value: 
+      objectReference: {fileID: 1337368289}
     - target: {fileID: 828353329457502730, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
@@ -6468,7 +6472,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6019446883475792142, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
   m_PrefabInstance: {fileID: 1018710860}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 1337368289}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
@@ -6996,6 +7000,11 @@ Transform:
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 116a4736ebe301c40b5f911851748701, type: 3}
   m_PrefabInstance: {fileID: 1099173095}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1337368289 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8412614740039011491, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
+  m_PrefabInstance: {fileID: 1018710860}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &1345901125 stripped
 Transform:
@@ -8343,6 +8352,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4073895445946916361, guid: 50c9760a63ee4574986bf76912301202, type: 3}
+      propertyPath: m_Volume
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4179340222992171316, guid: 50c9760a63ee4574986bf76912301202, type: 3}
       propertyPath: theNightClip
       value: 
@@ -8605,8 +8618,8 @@ MonoBehaviour:
   m_XRTrackingOrigin: {fileID: 0}
   m_ActionsAsset: {fileID: -944628639613478452, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
   m_PointAction: {fileID: -1654692200621890270, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
-  m_MoveAction: {fileID: -8784545083839296357, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
-  m_SubmitAction: {fileID: 392368643174621059, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_MoveAction: {fileID: 0}
+  m_SubmitAction: {fileID: 0}
   m_CancelAction: {fileID: 7727032971491509709, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
   m_LeftClickAction: {fileID: 3001919216989983466, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
   m_MiddleClickAction: {fileID: -2185481485913320682, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
@@ -9928,9 +9941,17 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 80866010}
     - target: {fileID: 6606635537798309550, guid: a544f097daea4074f9c1f1ecf95a3869, type: 3}
+      propertyPath: isSettingOpen
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6606635537798309550, guid: a544f097daea4074f9c1f1ecf95a3869, type: 3}
       propertyPath: openGuideButton
       value: 
       objectReference: {fileID: 1217827532}
+    - target: {fileID: 6606635537798309550, guid: a544f097daea4074f9c1f1ecf95a3869, type: 3}
+      propertyPath: isOpenExitButton
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6606635537798309550, guid: a544f097daea4074f9c1f1ecf95a3869, type: 3}
       propertyPath: openSettingButton
       value: 
@@ -9939,6 +9960,10 @@ PrefabInstance:
       propertyPath: resolutionDropdown
       value: 
       objectReference: {fileID: 320442508}
+    - target: {fileID: 6606635537798309550, guid: a544f097daea4074f9c1f1ecf95a3869, type: 3}
+      propertyPath: canOpenSettingByEsc
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6606635537798309550, guid: a544f097daea4074f9c1f1ecf95a3869, type: 3}
       propertyPath: displayModeDropdown
       value: 

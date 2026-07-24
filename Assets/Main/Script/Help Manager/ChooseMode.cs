@@ -45,13 +45,16 @@ public class ChooseMode : MonoBehaviour
         }
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.environmentSource.volume = 0.7f;
             AudioManager.Instance.PlayMusic(AudioManager.Instance.musicChooseSceneClip);
             AudioManager.Instance.PlayEnvironment(AudioManager.Instance.theSeaClip);
         }
         if(UIManager.Instance != null)
         {
             UIManager.Instance.openSettingPanelButton.SetActive(true);
+        }
+        if(SettingManager.Instance != null)
+        {
+            SettingManager.Instance.isOpenExitButton = true;
         }
 
     }
@@ -253,6 +256,18 @@ public class ChooseMode : MonoBehaviour
     }
     public void LoadScene(int buildIndex)
     {
+        var ui = UIManager.Instance;
+        if (ui != null)
+        {
+            ui.exitMainMenuButton.SetActive(false);
+        }
+        var setting = SettingManager.Instance;
+        if (setting != null)
+        {
+            setting.isOpenExitButton = false;
+
+        }
+       
         if (AudioManager.Instance != null) AudioManager.Instance.PlayUI(AudioManager.Instance.startGameButtonClickClip);
         indexP1++;
         StartCoroutine(LoadSceneDelay(buildIndex));

@@ -17,7 +17,7 @@ public class AudioManager : MonoBehaviour
     public AudioSource environmentSource; // Môi trường
     public AudioSource specialSource; // Âm thanh đặc biệt
     public AudioSource UISource;
-    public AudioSource[] audioSources;
+    public List<AudioSource> audioSources;
 
 
     [Header("SFX")]
@@ -39,6 +39,12 @@ public class AudioManager : MonoBehaviour
     public AudioClip musicChooseSceneClip;
     public AudioClip doneChooseClickClip;
     public AudioClip startGameButtonClickClip;
+    [Header("CutScene 1")]
+    public AudioClip musicCutScene1Clip;
+    public AudioClip shipVoiceClip;
+    public AudioClip shipMoveClip;
+    [Header("CutScene 2")]
+    public AudioClip musicCutScene2Clip;
 
     [Header("Debuff SFX")]
     public AudioClip cannonClip;
@@ -165,7 +171,7 @@ public class AudioManager : MonoBehaviour
     }
     private void Start()
     {
-        SetupMainGameAudio();
+      
         
     }
 
@@ -414,7 +420,7 @@ public class AudioManager : MonoBehaviour
         if (audioSources == null || baseExtraSourceVolumes == null)
             return;
 
-        int count = Mathf.Min(audioSources.Length, baseExtraSourceVolumes.Length);
+        int count = Mathf.Min(audioSources.Count, baseExtraSourceVolumes.Length);
 
         for (int i = 0; i < count; i++)
         {
@@ -437,9 +443,9 @@ public class AudioManager : MonoBehaviour
             return;
         }
 
-        baseExtraSourceVolumes = new float[audioSources.Length];
+        baseExtraSourceVolumes = new float[audioSources.Count];
 
-        for (int i = 0; i < audioSources.Length; i++)
+        for (int i = 0; i < audioSources.Count; i++)
         {
             baseExtraSourceVolumes[i] =
                 audioSources[i] != null ? audioSources[i].volume : 1f;
@@ -526,7 +532,7 @@ public class AudioManager : MonoBehaviour
     }
     public void StopAllAudio()
     {
-        for (int i = 0; i < audioSources.Length; i++)
+        for (int i = 0; i < audioSources.Count; i++)
         {
             audioSources[i].volume = 0;
         }

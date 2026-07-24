@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Audio;
 
 public class SetUpStartMainScene : MonoBehaviour
 {
@@ -7,8 +8,16 @@ public class SetUpStartMainScene : MonoBehaviour
     {
         if(AudioManager.Instance != null)
         {
+            AudioManager.Instance.SetupMainGameAudio();
             AudioManager.Instance.PlayUI(AudioManager.Instance.moveCamera);
             AudioManager.Instance.PlayMusic(AudioManager.Instance.musicMainClip);
+            AudioSource audio = GameObject.Find("MAP").GetComponent<AudioSource>();
+            if(audio != null)
+            {
+                AudioManager.Instance.audioSources.Add(audio);
+            }
+
+       
         }
        if(UIManager.Instance != null)
         {
@@ -19,6 +28,11 @@ public class SetUpStartMainScene : MonoBehaviour
        if(CursorManager.Instance != null)
         {
             CursorManager.Instance.ShowGameCursor();
+        }
+       var setting = SettingManager.Instance;
+        if(setting != null)
+        {
+            setting.isOpenExitButton = true;
         }
     }
 

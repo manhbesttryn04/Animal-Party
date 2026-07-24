@@ -94,6 +94,7 @@ public class UIManager : MonoBehaviour
     [Header("Settings UI")]
     public GameObject settingPanel;
     public GameObject openSettingPanelButton;
+    public GameObject exitMainMenuButton;
 
     [Header("Bonus UI")]
     public GameObject bonusPanel;

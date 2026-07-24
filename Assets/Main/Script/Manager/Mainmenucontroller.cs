@@ -1,7 +1,9 @@
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;using UnityEngine.SceneManagement;
+using UnityEngine.Rendering.Universal;
+using UnityEngine.SceneManagement;
 
 public class MainMenuController : MonoBehaviour
 {
@@ -24,7 +26,12 @@ public class MainMenuController : MonoBehaviour
         {
             audio.PlayMusic(audio.musicMainMenuClip);
             audio.PlayEnvironment(audio.theNightClip);
-
+            audio.SetupMainGameAudio(); 
+        }
+        var setting = SettingManager.Instance;
+        if(setting != null)
+        {
+            setting.isOpenExitButton = false;
         }
 
     }

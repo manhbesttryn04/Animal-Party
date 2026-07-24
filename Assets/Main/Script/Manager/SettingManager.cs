@@ -72,6 +72,16 @@ public class SettingManager : MonoBehaviour
     [SerializeField] private int windowedHeight = 720;
 
     public bool isOpenAudioClick = false;
+    [Header("Open Setting")]
+    public bool canOpenSettingByEsc = true;
+
+    // Trạng thái bảng Setting khi mở bằng nút bình thường
+    public bool isSettingOpen = false;
+
+    // Trạng thái bảng Setting khi mở bằng ESC trong cutscene
+    public bool isEscSettingOpen = false;
+
+    public bool isOpenExitButton = false;
 
 
     private void Awake()
@@ -87,6 +97,17 @@ public class SettingManager : MonoBehaviour
             return;
         }
     }
+    private void Update()
+    {
+        if (!canOpenSettingByEsc)
+            return;
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            ToggleSettingByEsc();
+        }
+    }
+
 
     private void Start()
     {
@@ -696,53 +717,161 @@ public class SettingManager : MonoBehaviour
     // SETTING PANEL
     // ==================================================
 
+    // Dùng cho nút Setting bình thường
     public void ToggleSetting()
     {
-        countClick++;
+        PlaySettingClickSound();
 
+        if (isSettingOpen)
+        {
+            CloseSettingPanel();
+        }
+        else
+        {
+            OpenSettingPanel();
+        }
+    }
+
+    // Dùng riêng cho phím ESC trong cutscene
+    public void ToggleSettingByEsc()
+    {
+        PlaySettingClickSound();
+
+        if (isEscSettingOpen)
+        {
+            ResetEscSetting();
+        }
+        else
+        {
+            OpenEscSetting();
+        }
+    }
+
+    private void OpenSettingPanel()
+    {
+        isSettingOpen = true;
+        isEscSettingOpen = false;
+        countClick = 1;
+
+       // ShowCursorForSetting();
+        SetSettingPanelActive(true);
+        SetExitButtonActive(isOpenExitButton);
+        ClearSelectedUI();
+    }
+
+    private void CloseSettingPanel()
+    {
+        isSettingOpen = false;
+        isEscSettingOpen = false;
+        countClick = 0;
+
+        SetSettingPanelActive(false);
+        SetExitButtonActive(false);
+        ClearSelectedUI();
+       // HideCursorAfterSetting();
+    }
+
+    private void OpenEscSetting()
+    {
+        isEscSettingOpen = true;
+        isSettingOpen = false;
+        countClick = 0;
+
+        ShowCursorForSetting();
+        SetSettingPanelActive(true);
+        SetExitButtonActive(isOpenExitButton);
+        ClearSelectedUI();
+    }
+
+    // Gắn hàm này vào nút đóng nếu bảng được mở bằng ESC
+    public void ResetEscSetting()
+    {
+        isEscSettingOpen = false;
+        isSettingOpen = false;
+        countClick = 0;
+
+        SetSettingPanelActive(false);
+        SetExitButtonActive(false);
+        ClearSelectedUI();
+        HideCursorAfterSetting();
+    }
+
+    // Reset chung khi đổi scene hoặc muốn đóng toàn bộ Setting
+    public void ResetSetting()
+    {
+        isSettingOpen = false;
+        isEscSettingOpen = false;
+        countClick = 0;
+
+        SetSettingPanelActive(false);
+        SetExitButtonActive(false);
+        ClearSelectedUI();
+        HideCursorAfterSetting();
+    }
+
+    private void SetSettingPanelActive(bool active)
+    {
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ActiveSettingPanel(active);
+        }
+        else if (settingPanel != null)
+        {
+            settingPanel.SetActive(active);
+        }
+    }
+
+    private void SetExitButtonActive(bool active)
+    {
+        if (UIManager.Instance != null &&
+            UIManager.Instance.exitMainMenuButton != null)
+        {
+            UIManager.Instance.exitMainMenuButton.SetActive(active);
+        }
+    }
+
+    private void ShowCursorForSetting()
+    {
+        if (CursorManager.Instance != null)
+        {
+            CursorManager.Instance.ShowGameCursor();
+        }
+        else
+        {
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+        }
+    }
+
+    private void HideCursorAfterSetting()
+    {
+        if (CursorManager.Instance != null)
+        {
+            CursorManager.Instance.HideGameCursor();
+        }
+        else
+        {
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+        }
+    }
+
+    private void PlaySettingClickSound()
+    {
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlayUI(
                 AudioManager.Instance.clickButton
             );
         }
-
-        if (countClick == 1)
-        {
-            if (UIManager.Instance != null)
-            {
-                UIManager.Instance.ActiveSettingPanel(true);
-            }else settingPanel.SetActive(true     );
-        }
-        else
-        {
-            if (UIManager.Instance != null)
-            {
-                UIManager.Instance.ActiveSettingPanel(false);
-            }
-
-            if (EventSystem.current != null)
-            {
-                EventSystem.current.SetSelectedGameObject(null);
-            }
-
-            countClick = 0;
-        }
     }
 
-    public void ResetSetting()
+    private void ClearSelectedUI()
     {
-        countClick = 0;
-
         if (EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
         }
-
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.ActiveSettingPanel(false);
-        }else settingPanel.SetActive(false);
     }
 
     // ==================================================
@@ -772,13 +901,13 @@ public class SettingManager : MonoBehaviour
 
         if (audio != null)
         {
-            audio.PauseAudio();
+            audio.ZeroAllAudio();
         }
-        if(UIManager.Instance != null)
+        if (UIManager.Instance != null)
         {
             ResetSetting();
-            UIManager.Instance.openSettingPanelButton.SetActive(false );
-          
+            UIManager.Instance.openSettingPanelButton.SetActive(false);
+
             UIManager.Instance.canvasNotifi.SetActive(false);
         }
 
