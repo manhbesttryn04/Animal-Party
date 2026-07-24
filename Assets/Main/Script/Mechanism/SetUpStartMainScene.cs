@@ -11,13 +11,6 @@ public class SetUpStartMainScene : MonoBehaviour
             AudioManager.Instance.SetupMainGameAudio();
             AudioManager.Instance.PlayUI(AudioManager.Instance.moveCamera);
             AudioManager.Instance.PlayMusic(AudioManager.Instance.musicMainClip);
-            AudioSource audio = GameObject.Find("MAP").GetComponent<AudioSource>();
-            if(audio != null)
-            {
-                AudioManager.Instance.audioSources.Add(audio);
-            }
-
-       
         }
        if(UIManager.Instance != null)
         {
@@ -33,6 +26,7 @@ public class SetUpStartMainScene : MonoBehaviour
         if(setting != null)
         {
             setting.isOpenExitButton = true;
+            //setting.canOpenSettingByEsc = false;
         }
     }
 
