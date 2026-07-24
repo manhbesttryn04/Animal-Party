@@ -756,7 +756,7 @@ public class SettingManager : MonoBehaviour
        // ShowCursorForSetting();
         SetSettingPanelActive(true);
         SetExitButtonActive(isOpenExitButton);
-        ClearSelectedUI();
+        //ClearSelectedUI();
     }
 
     private void CloseSettingPanel()
@@ -902,6 +902,7 @@ public class SettingManager : MonoBehaviour
         if (audio != null)
         {
             audio.ZeroAllAudio();
+            audio.PauseAudio();
         }
         if (UIManager.Instance != null)
         {
