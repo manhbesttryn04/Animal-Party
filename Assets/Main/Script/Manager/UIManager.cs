@@ -84,6 +84,7 @@ public class UIManager : MonoBehaviour
     public GameObject[] itemsList;
     public GameObject[] itemCardRandomList;
     public GameObject intructInputBuyPanel;
+    public GameObject openInstructBuyButton;
 
     [Header("Screen Transition")]
     public GameObject blackPanel;

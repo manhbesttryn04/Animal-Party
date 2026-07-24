@@ -65,6 +65,8 @@ public class SettingManager : MonoBehaviour
     [SerializeField] private int windowedWidth = 1280;
     [SerializeField] private int windowedHeight = 720;
 
+    public bool isOpenAudioClick = false;
+
 
     private void Awake()
     {
@@ -103,6 +105,7 @@ public class SettingManager : MonoBehaviour
                 OnClickBackToMainMenu
             );
         }
+        isOpenAudioClick = true;
     }
 
     // ==================================================
@@ -436,8 +439,19 @@ public class SettingManager : MonoBehaviour
     }
     public void SetDisplayMode(int index)
     {
+        if (isOpenAudioClick)
+        {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayUI(
+                    AudioManager.Instance.clickButton
+                );
+            }
+        }
+      
         switch (index)
         {
+
             // Fullscreen
             case 0:
                 {
@@ -591,12 +605,16 @@ public class SettingManager : MonoBehaviour
             Screen.fullScreenMode
         );
 
-        if (AudioManager.Instance != null)
+        if (isOpenAudioClick)
         {
-            AudioManager.Instance.PlayUI(
-                AudioManager.Instance.clickButton
-            );
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayUI(
+                    AudioManager.Instance.clickButton
+                );
+            }
         }
+       
 
         Debug.Log(
             "Đã đổi Resolution thành: " +
@@ -706,6 +724,11 @@ public class SettingManager : MonoBehaviour
 
     private IEnumerator BackToMainMenuRoutine()
     {
+        var cursor = CursorManager.Instance;
+        if(cursor != null)
+        {
+            cursor.HideGameCursor();
+        }
         var audio = AudioManager.Instance;
 
         if (audio != null)
