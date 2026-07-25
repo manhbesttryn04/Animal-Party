@@ -1,9 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using TMPro;
 
 public class CutSceneShip : MonoBehaviour
 {
@@ -16,12 +16,6 @@ public class CutSceneShip : MonoBehaviour
     [Header("Speed")]
     public float moveSpeed = 5f;
     public float rotateSpeed = 3f;
-
-    [Header("Audio")]
-    public AudioSource source;
-    public AudioClip shipVoiceClip;
-    public AudioClip shipMoveClip;
-    public List<AudioSource> audioSources;
 
     [Header("Panels")]
     public GameObject blackPanel;
@@ -40,27 +34,29 @@ public class CutSceneShip : MonoBehaviour
     [Header("--- GRADIENT PRESET ---")]
     [Tooltip("NormalGradient: trái #5C2E00, phải #1A0A00")]
     public TMP_ColorGradient normalGradient;
+
     [Tooltip("FinalGradient: 4 góc đều #7A0000")]
     public TMP_ColorGradient finalGradient;
 
     [Header("--- OUTLINE ---")]
-    public Color normalOutlineColor = new Color(1f, 1f, 1f, 0.2f);
-    public Color finalOutlineColor = new Color(1f, 1f, 1f, 0.31f);
+    public Color normalOutlineColor =
+        new Color(1f, 1f, 1f, 0.2f);
+
+    public Color finalOutlineColor =
+        new Color(1f, 1f, 1f, 0.31f);
 
     [Header("--- NARRATOR VOICE ---")]
-    [Tooltip("Kéo 5 file voice vào đây theo thứ tự câu 1→5")]
+    [Tooltip("Kéo 5 file voice vào đây theo thứ tự câu 1 → 5")]
     public AudioClip[] narratorVoices = new AudioClip[5];
-    [Range(0f, 1f)] public float narratorVolume = 0.9f;
 
     [Header("--- TIMING ---")]
     public float typeSpeed = 0.035f;
     public float fadeOutDuration = 0.3f;
     public float betweenLineFade = 0.2f;
 
-    private AudioSource narratorSource;
-    private bool isSkipped = false;
+    private bool isSkipped;
 
-    private string[] storyLines = new string[]
+    private readonly string[] storyLines =
     {
         "Somewhere in the vast ocean, a ship sails toward an unknown island...",
         "On board: five animals, each dreaming of glory and adventure.",
@@ -71,211 +67,457 @@ public class CutSceneShip : MonoBehaviour
 
     private void Start()
     {
-        // Tạo AudioSource riêng cho narrator
-        narratorSource = gameObject.AddComponent<AudioSource>();
-        narratorSource.playOnAwake = false;
-        narratorSource.loop = false;
-        narratorSource.volume = narratorVolume;
+        if (subtitlePanel != null)
+            subtitlePanel.SetActive(false);
 
-        if (subtitlePanel) subtitlePanel.SetActive(false);
-        if (subtitleText) { subtitleText.text = ""; subtitleText.alpha = 1f; }
-        if (skipHintObject) skipHintObject.SetActive(false);
+        if (subtitleText != null)
+        {
+            subtitleText.text = "";
+            subtitleText.alpha = 1f;
+        }
+
+        if (skipHintObject != null)
+            skipHintObject.SetActive(false);
 
         StartCoroutine(CutScene());
         StartCoroutine(ShowSkipHint());
+        var audio = AudioManager.Instance;
+        if (audio != null)
+        {
+            audio.PlayMusic(audio.musicCutScene1Clip);
+        }
+        var setting = SettingManager.Instance;
+        if(setting != null)
+        {
+            setting.canOpenSettingByEsc = true;
+        }
     }
 
     private void Update()
     {
-        if (!isSkipped && (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)))
+        if (isSkipped)
+            return;
+
+        if (Input.GetKeyDown(KeyCode.Space) ||
+            Input.GetKeyDown(KeyCode.Return))
+        {
             SkipCutscene();
+        }
     }
 
     private void SkipCutscene()
     {
+        if (isSkipped)
+            return;
+
         isSkipped = true;
+
+
+        // Dừng toàn bộ coroutine của CutSceneShip.
         StopAllCoroutines();
-        if (narratorSource) narratorSource.Stop();
+
+        var setting = SettingManager.Instance;
+        if (setting != null)
+        {
+            setting.ResetEscSetting();
+            setting.canOpenSettingByEsc = false;
+        }
+        AudioManager audio = AudioManager.Instance;
+
+        if (audio != null)
+        {
+            audio.ZeroAllAudio();
+            audio.PauseAudio();
+
+            if (audio.UISource != null)
+                audio.UISource.Stop();
+        }
+
         HideSubtitleImmediate();
-        if (skipHintObject) skipHintObject.SetActive(false);
+
+        if (skipHintObject != null)
+            skipHintObject.SetActive(false);
+
         StartCoroutine(LoadScene("CutScene 2"));
     }
 
-    IEnumerator ShowSkipHint()
+    private IEnumerator ShowSkipHint()
     {
         yield return new WaitForSeconds(1f);
-        if (skipHintObject) skipHintObject.SetActive(true);
-        if (skipHintText)
+
+        if (isSkipped)
+            yield break;
+
+        if (skipHintObject != null)
+            skipHintObject.SetActive(true);
+
+        if (skipHintText == null)
+            yield break;
+
+        skipHintText.alpha = 0f;
+
+        float time = 0f;
+        const float duration = 0.5f;
+
+        while (time < duration)
         {
-            skipHintText.alpha = 0f;
-            float t = 0f;
-            while (t < 0.5f)
-            {
-                t += Time.deltaTime;
-                skipHintText.alpha = Mathf.Lerp(0f, 0.7f, t / 0.5f);
-                yield return null;
-            }
+            if (isSkipped)
+                yield break;
+
+            time += Time.deltaTime;
+
+            skipHintText.alpha = Mathf.Lerp(
+                0f,
+                0.7f,
+                time / duration
+            );
+
+            yield return null;
         }
+
+        skipHintText.alpha = 0.7f;
     }
 
-    IEnumerator CutScene()
+    private IEnumerator CutScene()
     {
-        source.PlayOneShot(shipVoiceClip);
-        source.PlayOneShot(shipMoveClip);
+        if (!CheckReferences())
+            yield break;
+
+        AudioManager audio = AudioManager.Instance;
+
+        if (audio != null)
+        {
+            audio.PlaySFX(audio.shipVoiceClip);
+            audio.PlaySFX(audio.shipMoveClip);
+            audio.PlaySFX(audio.seaGullClip);
+        }
 
         // Point 1
         StartCoroutine(ShowSubtitleWithVoice(0, false));
-        yield return StartCoroutine(MoveAndRotate(transVideoList[0]));
+
+        yield return StartCoroutine(
+            MoveAndRotate(transVideoList[0])
+        );
+
         yield return new WaitForSeconds(1f);
 
         // Point 2
         StartCoroutine(ShowSubtitleWithVoice(1, false));
-        yield return StartCoroutine(MoveAndRotate(transVideoList[1]));
+
+        yield return StartCoroutine(
+            MoveAndRotate(transVideoList[1])
+        );
+
         yield return new WaitForSeconds(3f);
 
         // Point 3
         StartCoroutine(ShowSubtitleWithVoice(2, false));
-        yield return StartCoroutine(MoveAndRotate(transVideoList[2]));
+
+        yield return StartCoroutine(
+            MoveAndRotate(transVideoList[2])
+        );
+
         yield return new WaitForSeconds(1f);
 
         // Point 4
         StartCoroutine(ShowSubtitleWithVoice(3, false));
-        yield return StartCoroutine(MoveAndRotate(transVideoList[3]));
+
+        yield return StartCoroutine(
+            MoveAndRotate(transVideoList[3])
+        );
+
         yield return new WaitForSeconds(2f);
 
-        // Point 5 — flash đen + teleport
-        if (narratorSource) narratorSource.Stop();
+        // Point 5: dừng narrator, flash đen và dịch chuyển camera.
+        StopNarratorVoice();
         HideSubtitleImmediate();
-        blackFlastPanel.SetActive(true);
-        cam.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
-        cam.transform.position = transVideoList[4].position;
-        yield return new WaitForSeconds(0);
 
-        // Point 6 — câu cuối đỏ son
-        StartCoroutine(MoveAndRotate(transVideoList[5]));
+        if (blackFlastPanel != null)
+            blackFlastPanel.SetActive(true);
+
+        cam.transform.rotation =
+            Quaternion.Euler(0f, 90f, 0f);
+
+        cam.transform.position =
+            transVideoList[4].position;
+
+        yield return null;
+
+        // Point 6
+        StartCoroutine(
+            MoveAndRotate(transVideoList[5])
+        );
+        var setting = SettingManager.Instance;
+        if (setting != null)
+        {
+            setting.ResetEscSetting();
+            setting.canOpenSettingByEsc = false;
+        }
+
         yield return new WaitForSeconds(1.5f);
-        if (skipHintObject) skipHintObject.SetActive(false);
 
-        StartCoroutine(ShowSubtitleWithVoice(4, true));
+        if (skipHintObject != null)
+            skipHintObject.SetActive(false);
+
+        StartCoroutine(
+            ShowSubtitleWithVoice(4, true)
+        );
+
         yield return new WaitForSeconds(3f);
-        StartCoroutine(ShowBlackPanel(4f));
+        
+        yield return StartCoroutine(
+            ShowBlackPanel(5f)
+        );
     }
 
-    IEnumerator ShowSubtitleWithVoice(int index, bool isFinal)
+    private IEnumerator ShowSubtitleWithVoice(
+        int index,
+        bool isFinal)
     {
-        if (narratorSource) narratorSource.Stop();
+        if (isSkipped)
+            yield break;
 
-        // Fade out câu cũ
-        if (subtitleText && subtitleText.text != "")
+        if (index < 0 ||
+            index >= storyLines.Length ||
+            index >= narratorVoices.Length)
+        {
+            Debug.LogWarning(
+                "Narrator index không hợp lệ: " + index
+            );
+
+            yield break;
+        }
+
+        // Dừng câu narrator trước đó.
+        StopNarratorVoice();
+
+        // Fade câu chữ cũ.
+        if (subtitleText != null &&
+            !string.IsNullOrEmpty(subtitleText.text))
         {
             yield return StartCoroutine(FadeOutLine());
             yield return new WaitForSeconds(betweenLineFade);
         }
 
-        if (subtitlePanel) subtitlePanel.SetActive(true);
-        if (subtitleText) subtitleText.alpha = 1f;
+        if (isSkipped)
+            yield break;
 
-        // Áp gradient
-        if (subtitleText)
+        if (subtitlePanel != null)
+            subtitlePanel.SetActive(true);
+
+        if (subtitleText != null)
         {
+            subtitleText.alpha = 1f;
+            subtitleText.text = "";
+
             subtitleText.enableVertexGradient = true;
-            subtitleText.colorGradientPreset = isFinal ? finalGradient : normalGradient;
+            subtitleText.colorGradientPreset =
+                isFinal ? finalGradient : normalGradient;
         }
 
-        // Đổi outline
-        if (subtitleOutline)
-            subtitleOutline.effectColor = isFinal ? finalOutlineColor : normalOutlineColor;
-
-        // Phát narrator voice
-        if (narratorSource && narratorVoices.Length > index && narratorVoices[index] != null)
-            narratorSource.PlayOneShot(narratorVoices[index], narratorVolume);
-
-        // Typewriter (không có blip)
-        string line = storyLines[index];
-        if (subtitleText) subtitleText.text = "";
-        foreach (char c in line)
+        if (subtitleOutline != null)
         {
-            if (subtitleText) subtitleText.text += c;
+            subtitleOutline.effectColor =
+                isFinal
+                    ? finalOutlineColor
+                    : normalOutlineColor;
+        }
+
+        // Phát giọng người dẫn chuyện bằng UISource.
+        AudioManager audio = AudioManager.Instance;
+
+        if (audio != null &&
+            narratorVoices[index] != null)
+        {
+            audio.PlayUI(narratorVoices[index]);
+        }
+
+        // Hiệu ứng gõ từng chữ.
+        string line = storyLines[index];
+
+        foreach (char character in line)
+        {
+            if (isSkipped)
+                yield break;
+
+            if (subtitleText != null)
+                subtitleText.text += character;
+
             yield return new WaitForSeconds(typeSpeed);
         }
 
-        // Chờ voice đọc xong nếu còn đang phát
-        if (narratorSource && narratorSource.isPlaying)
-            yield return new WaitWhile(() => narratorSource.isPlaying);
+        // Chờ giọng người dẫn chuyện phát xong.
+        if (audio != null && audio.UISource != null)
+        {
+            yield return new WaitWhile(
+                () =>
+                    !isSkipped &&
+                    audio != null &&
+                    audio.UISource != null &&
+                    audio.UISource.isPlaying
+            );
+        }
     }
 
     public void HideSubtitle()
     {
-        if (narratorSource) narratorSource.Stop();
+        StopNarratorVoice();
         StartCoroutine(FadeOutLine());
+    }
+
+    private void StopNarratorVoice()
+    {
+        AudioManager audio = AudioManager.Instance;
+
+        if (audio != null && audio.UISource != null)
+            audio.UISource.Stop();
     }
 
     private void HideSubtitleImmediate()
     {
-        if (subtitleText) { subtitleText.alpha = 1f; subtitleText.text = ""; }
-        if (subtitlePanel) subtitlePanel.SetActive(false);
+        if (subtitleText != null)
+        {
+            subtitleText.alpha = 1f;
+            subtitleText.text = "";
+        }
+
+        if (subtitlePanel != null)
+            subtitlePanel.SetActive(false);
     }
 
-    IEnumerator FadeOutLine()
+    private IEnumerator FadeOutLine()
     {
-        if (subtitleText == null) yield break;
+        if (subtitleText == null)
+            yield break;
 
+        float duration = Mathf.Max(0.01f, fadeOutDuration);
         float startAlpha = subtitleText.alpha;
         float time = 0f;
-        while (time < fadeOutDuration)
+
+        while (time < duration)
         {
+            if (isSkipped)
+                yield break;
+
             time += Time.deltaTime;
-            if (subtitleText) subtitleText.alpha = Mathf.Lerp(startAlpha, 0f, time / fadeOutDuration);
+
+            subtitleText.alpha = Mathf.Lerp(
+                startAlpha,
+                0f,
+                time / duration
+            );
+
             yield return null;
         }
 
-        if (subtitleText) { subtitleText.alpha = 1f; subtitleText.text = ""; }
-        if (subtitlePanel) subtitlePanel.SetActive(false);
+        subtitleText.alpha = 1f;
+        subtitleText.text = "";
+
+        if (subtitlePanel != null)
+            subtitlePanel.SetActive(false);
     }
 
-    IEnumerator MoveAndRotate(Transform target)
+    private IEnumerator MoveAndRotate(Transform target)
     {
+        if (cam == null || target == null)
+            yield break;
+
         while (
-            Vector3.Distance(cam.transform.position, target.position) > 0.05f ||
-            Quaternion.Angle(cam.transform.rotation, target.rotation) > 0.1f
-        )
+            Vector3.Distance(
+                cam.transform.position,
+                target.position
+            ) > 0.05f ||
+            Quaternion.Angle(
+                cam.transform.rotation,
+                target.rotation
+            ) > 0.1f)
         {
-            cam.transform.position = Vector3.MoveTowards(cam.transform.position, target.position, moveSpeed * Time.deltaTime);
-            cam.transform.rotation = Quaternion.Slerp(cam.transform.rotation, target.rotation, rotateSpeed * Time.deltaTime);
+            if (isSkipped)
+                yield break;
+
+            cam.transform.position =
+                Vector3.MoveTowards(
+                    cam.transform.position,
+                    target.position,
+                    moveSpeed * Time.deltaTime
+                );
+
+            cam.transform.rotation =
+                Quaternion.Slerp(
+                    cam.transform.rotation,
+                    target.rotation,
+                    rotateSpeed * Time.deltaTime
+                );
+
             yield return null;
         }
+
         cam.transform.position = target.position;
         cam.transform.rotation = target.rotation;
     }
 
-    IEnumerator ShowBlackPanel(float time)
+    private IEnumerator ShowBlackPanel(float waitTime)
     {
-        blackPanel.SetActive(true);
+        if (blackPanel != null)
+            blackPanel.SetActive(true);
+
         HideSubtitleImmediate();
-        if (narratorSource) narratorSource.Stop();
-        StartCoroutine(FadeOutAudio(6f));
-        yield return new WaitForSeconds(time);
-        StartCoroutine(LoadScene("CutScene 2"));
-    }
+        StopNarratorVoice();
 
-    IEnumerator LoadScene(string name)
-    {
-        yield return new WaitForSeconds(0f);
-        SceneManager.LoadScene(name);
-    }
+        if (skipHintObject != null)
+            skipHintObject.SetActive(false);
 
-    IEnumerator FadeOutAudio(float duration)
-    {
-        List<float> startVolumes = new List<float>();
-        foreach (AudioSource audio in audioSources) startVolumes.Add(audio.volume);
-        float time = 0f;
-        while (time < duration)
+        if (AudioManager.Instance != null)
         {
-            time += Time.deltaTime;
-            for (int i = 0; i < audioSources.Count; i++)
-                audioSources[i].volume = Mathf.Lerp(startVolumes[i], 0f, time / duration);
-            yield return null;
+            AudioManager.Instance.FadeOutAllAudio(5f);
         }
-        foreach (AudioSource audio in audioSources) audio.volume = 0f;
+
+        yield return new WaitForSeconds(waitTime);
+
+        yield return StartCoroutine(
+            LoadScene("CutScene 2")
+        );
+    }
+
+    private IEnumerator LoadScene(string sceneName)
+    {
+        yield return null;
+        SceneManager.LoadScene(sceneName);
+    }
+
+    private bool CheckReferences()
+    {
+        if (cam == null)
+        {
+            Debug.LogError(
+                "CutSceneShip chưa được gán Camera."
+            );
+
+            return false;
+        }
+
+        if (transVideoList == null ||
+            transVideoList.Count < 6)
+        {
+            Debug.LogError(
+                "CutSceneShip cần ít nhất 6 waypoint."
+            );
+
+            return false;
+        }
+
+        for (int i = 0; i < 6; i++)
+        {
+            if (transVideoList[i] == null)
+            {
+                Debug.LogError(
+                    "Waypoint " + i + " đang bị thiếu."
+                );
+
+                return false;
+            }
+        }
+
+        return true;
     }
 }

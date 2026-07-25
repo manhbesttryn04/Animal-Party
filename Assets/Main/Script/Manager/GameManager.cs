@@ -505,10 +505,9 @@ public class GameManager : MonoBehaviour
         if(stateGame.hasPlayer1Win || stateGame.hasPlayer2Win)
         {   
             UIManager.Instance.HideUIMain();
-            VolumeManager.Instance.SetGraphicsQuality(2);
+            SettingManager.Instance.ResetSetting();
+            SettingManager.Instance.ResetEscSetting ();
             AudioManager.Instance.StopMusic();
-            AudioManager.Instance.musicSource.volume = 0.3f;
-            AudioManager.Instance.sfxSource.volume = 1f;
             AudioManager.Instance.PlayMusic(AudioManager.Instance.winnerMiniGameClip1);
 
          

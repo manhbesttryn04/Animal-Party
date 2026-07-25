@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -19,130 +20,342 @@ public class CreditScroll : MonoBehaviour
     [Header("Credit Time")]
     public float creditTime = 60f;
 
-    [Header("Outro Panel")]
-    public GameObject outroPanel;
-    public float outroFadeTime = 6f;
+    [Header("Black Outro Panel")]
+    [Tooltip("CanvasGroup chứa một Image màu đen phủ toàn màn hình")]
+    public CanvasGroup outroPanel;
 
-    [Header("Music")]
-    public AudioSource musicSource1;
-    public AudioSource musicSource2;
+    [Tooltip("Thời gian màn hình chuyển dần sang đen")]
+    public float outroFadeTime = 4f;
+
+    [Header("Credit Music")]
+    public AudioClip creditMusicClip;
+
+    [Header("Fade All Audio")]
+    [Tooltip("Thời gian giảm toàn bộ âm thanh về 0")]
+    public float endAudioFadeTime = 4f;
 
     [Header("THE END")]
     public TextMeshProUGUI theEndText;
     public float theEndFadeTime = 1.5f;
-    public float waitAfterTheEnd = 2f;
+
+    [Header("Return To Menu")]
+    [Tooltip("Thời gian chờ sau khi chữ THE END hiện hoàn toàn")]
+    public float waitAfterTheEnd = 7f;
+
+    [Header("Skip")]
+    public KeyCode skipKey = KeyCode.Space;
 
     [Header("Load Scene")]
     public string loadSceneName = "MainMenu";
 
-    private float timer;
+    private float creditTimer;
+
     private bool canScroll;
-    private bool finishCredit;
+    private bool isEnding;
+
+    private Coroutine introCoroutine;
+    private Coroutine endCoroutine;
 
     private void Start()
     {
-        timer = 0f;
+        creditTimer = 0f;
         canScroll = false;
-        finishCredit = false;
+        isEnding = false;
 
-        //==========================
-        // Credit
-        //==========================
+        var volume = VolumeManager.Instance;
+        if(volume != null)
+        {
+           volume.ResetVignette();
+        }
+        var audio = AudioManager.Instance;
+        if(audio != null)
+        {
+            audio.SetupMainGameAudio();
+        }
+        SetupCredit();
+        SetupIntroPanel();
+        SetupOutroPanel();
+        SetupTheEndText();
+
+        PlayCreditMusic();
+
+        introCoroutine = StartCoroutine(IntroRoutine());
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(skipKey))
+        {
+            SkipCredit();
+        }
+
+        if (!canScroll || isEnding)
+            return;
+
+        creditTimer += Time.deltaTime;
+
+        float percent;
+
+        if (creditTime <= 0f)
+        {
+            percent = 1f;
+        }
+        else
+        {
+            percent = Mathf.Clamp01(
+                creditTimer / creditTime
+            );
+        }
 
         if (creditText != null)
-            creditText.anchoredPosition = startPosition;
-
-        //==========================
-        // Intro Panel
-        //==========================
-
-        if (introPanel != null)
         {
-            introPanel.gameObject.SetActive(true);
-            introPanel.alpha = 1f;
+            creditText.anchoredPosition = Vector2.Lerp(
+                startPosition,
+                endPosition,
+                percent
+            );
         }
 
-        //==========================
-        // Outro Panel
-        //==========================
-
-        if (outroPanel != null)
-            outroPanel.SetActive(false);
-
-        //==========================
-        // THE END
-        //==========================
-
-        if (theEndText != null)
+        if (percent >= 1f)
         {
-            Color c = theEndText.color;
-            c.a = 0f;
-            theEndText.color = c;
+            StartEndSequence();
         }
-
-        StartCoroutine(IntroRoutine());
     }
+
+    //==================================================
+    // SETUP
+    //==================================================
+
+    private void SetupCredit()
+    {
+        if (creditText != null)
+        {
+            creditText.anchoredPosition = startPosition;
+        }
+    }
+
+    private void SetupIntroPanel()
+    {
+        if (introPanel == null)
+            return;
+
+        introPanel.gameObject.SetActive(true);
+
+        // Bắt đầu bằng màu đen
+        introPanel.alpha = 1f;
+
+        introPanel.blocksRaycasts = true;
+        introPanel.interactable = false;
+    }
+
+    private void SetupOutroPanel()
+    {
+        if (outroPanel == null)
+            return;
+
+        outroPanel.gameObject.SetActive(false);
+        outroPanel.alpha = 0f;
+        outroPanel.interactable = false;
+        outroPanel.blocksRaycasts = false;
+    }
+
+    private void SetupTheEndText()
+    {
+        if (theEndText == null)
+            return;
+
+        Color color = theEndText.color;
+        color.a = 0f;
+        theEndText.color = color;
+    }
+
+    //==================================================
+    // MUSIC
+    //==================================================
+
+    private void PlayCreditMusic()
+    {
+        AudioManager audio = AudioManager.Instance;
+
+        if (audio == null)
+        {
+            Debug.LogWarning(
+                "CreditScroll: Không tìm thấy AudioManager.Instance."
+            );
+
+            return;
+        }
+
+        if (creditMusicClip == null)
+        {
+            Debug.LogWarning(
+                "CreditScroll: Chưa gán Credit Music Clip."
+            );
+
+            return;
+        }
+
+        audio.PlayMusic(audio.musicMiniGame7);
+    }
+
+    //==================================================
+    // INTRO
+    //==================================================
 
     private IEnumerator IntroRoutine()
     {
+        if (introPanel == null)
+        {
+            canScroll = true;
+            introCoroutine = null;
+
+            yield break;
+        }
+
+        if (introFadeTime <= 0f)
+        {
+            introPanel.alpha = 0f;
+            introPanel.gameObject.SetActive(false);
+
+            canScroll = true;
+            introCoroutine = null;
+
+            yield break;
+        }
+
         float timer = 0f;
 
         while (timer < introFadeTime)
         {
+            if (isEnding)
+                yield break;
+
             timer += Time.deltaTime;
 
-            introPanel.alpha =
-                Mathf.Lerp(1f, 0f, timer / introFadeTime);
+            float percent = Mathf.Clamp01(
+                timer / introFadeTime
+            );
+
+            introPanel.alpha = Mathf.Lerp(
+                1f,
+                0f,
+                percent
+            );
 
             yield return null;
         }
 
         introPanel.alpha = 0f;
+        introPanel.blocksRaycasts = false;
         introPanel.gameObject.SetActive(false);
 
         canScroll = true;
+        introCoroutine = null;
     }
 
-    private void Update()
+    //==================================================
+    // SKIP
+    //==================================================
+
+    public void SkipCredit()
     {
-        if (!canScroll)
+        if (isEnding)
             return;
 
-        if (finishCredit)
-            return;
+        if (introCoroutine != null)
+        {
+            StopCoroutine(introCoroutine);
+            introCoroutine = null;
+        }
 
-        timer += Time.deltaTime;
-
-        float t = Mathf.Clamp01(timer / creditTime);
+        if (introPanel != null)
+        {
+            introPanel.alpha = 0f;
+            introPanel.gameObject.SetActive(false);
+        }
 
         if (creditText != null)
         {
-            creditText.anchoredPosition =
-                Vector2.Lerp(startPosition, endPosition, t);
+            creditText.anchoredPosition = endPosition;
         }
 
-        if (t >= 1f)
+        creditTimer = creditTime;
+
+        StartEndSequence();
+    }
+
+    //==================================================
+    // END SEQUENCE
+    //==================================================
+
+    private void StartEndSequence()
+    {
+        if (isEnding)
+            return;
+
+        isEnding = true;
+        canScroll = false;
+
+        if (endCoroutine != null)
         {
-            finishCredit = true;
-            StartCoroutine(EndRoutine());
+            StopCoroutine(endCoroutine);
         }
+
+        endCoroutine = StartCoroutine(EndRoutine());
     }
 
     private IEnumerator EndRoutine()
     {
-        //==========================
-        // Bật Outro Panel
-        //==========================
-
+        // Bật lớp màn hình đen nhưng alpha ban đầu bằng 0
         if (outroPanel != null)
-            outroPanel.SetActive(true);
+        {
+            outroPanel.gameObject.SetActive(true);
+            outroPanel.alpha = 0f;
+            outroPanel.blocksRaycasts = true;
+        }
 
-        //==========================
-        // Fade Audio
-        //==========================
+        // Fade toàn bộ âm thanh cùng lúc với màn hình đen
+        AudioManager audio = AudioManager.Instance;
 
-        float startVolume1 = musicSource1 != null ? musicSource1.volume : 0f;
-        float startVolume2 = musicSource2 != null ? musicSource2.volume : 0f;
+        if (audio != null)
+        {
+            audio.FadeOutAllAudio(endAudioFadeTime);
+        }
+
+        // Màn hình chuyển dần sang đen
+        yield return StartCoroutine(FadeToBlack());
+
+        // Chỉ sau khi màn hình đen hoàn toàn mới hiện THE END
+        yield return StartCoroutine(FadeTheEnd());
+
+        // Chờ 7 giây sau khi THE END hiện xong
+        if (waitAfterTheEnd > 0f)
+        {
+            yield return new WaitForSeconds(waitAfterTheEnd);
+        }
+
+        if (!string.IsNullOrEmpty(loadSceneName))
+        {
+            SceneManager.LoadScene(loadSceneName);
+        }
+
+        endCoroutine = null;
+    }
+
+    //==================================================
+    // FADE BLACK
+    //==================================================
+
+    private IEnumerator FadeToBlack()
+    {
+        if (outroPanel == null)
+            yield break;
+
+        if (outroFadeTime <= 0f)
+        {
+            outroPanel.alpha = 1f;
+            yield break;
+        }
 
         float timer = 0f;
 
@@ -150,43 +363,25 @@ public class CreditScroll : MonoBehaviour
         {
             timer += Time.deltaTime;
 
-            float percent = Mathf.Clamp01(timer / outroFadeTime);
+            float percent = Mathf.Clamp01(
+                timer / outroFadeTime
+            );
 
-            if (musicSource1 != null)
-                musicSource1.volume =
-                    Mathf.Lerp(startVolume1, 0f, percent);
-
-            if (musicSource2 != null)
-                musicSource2.volume =
-                    Mathf.Lerp(startVolume2, 0f, percent);
+            outroPanel.alpha = Mathf.Lerp(
+                0f,
+                1f,
+                percent
+            );
 
             yield return null;
         }
 
-        if (musicSource1 != null)
-            musicSource1.volume = 0f;
-
-        if (musicSource2 != null)
-            musicSource2.volume = 0f;
-
-        //==========================
-        // Fade THE END
-        //==========================
-
-        yield return StartCoroutine(FadeTheEnd());
-
-        //==========================
-        // Đợi
-        //==========================
-
-        yield return new WaitForSeconds(waitAfterTheEnd);
-
-        //==========================
-        // Load Scene
-        //==========================
-
-      //  SceneManager.LoadScene(loadSceneName);
+        outroPanel.alpha = 1f;
     }
+
+    //==================================================
+    // FADE THE END
+    //==================================================
 
     private IEnumerator FadeTheEnd()
     {
@@ -194,6 +389,16 @@ public class CreditScroll : MonoBehaviour
             yield break;
 
         Color color = theEndText.color;
+        color.a = 0f;
+        theEndText.color = color;
+
+        if (theEndFadeTime <= 0f)
+        {
+            color.a = 1f;
+            theEndText.color = color;
+
+            yield break;
+        }
 
         float timer = 0f;
 
@@ -201,7 +406,15 @@ public class CreditScroll : MonoBehaviour
         {
             timer += Time.deltaTime;
 
-            color.a = Mathf.Lerp(0f, 1f, timer / theEndFadeTime);
+            float percent = Mathf.Clamp01(
+                timer / theEndFadeTime
+            );
+
+            color.a = Mathf.Lerp(
+                0f,
+                1f,
+                percent
+            );
 
             theEndText.color = color;
 

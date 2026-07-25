@@ -97,7 +97,7 @@ public class ShopManager : MonoBehaviour
         
             SettingManager.Instance.ResetGuide();
             ui.openSettingPanelButton.SetActive(false);
-            ui.notifiPlay.SetActive(false);
+           // ui.notifiPlay.SetActive(false);
         AudioManager.Instance.PlaySFX(AudioManager.Instance.openShopClip);
 
         SetupPlayers();
@@ -343,7 +343,7 @@ public class ShopManager : MonoBehaviour
 
         if(ui.intructInputBuyPanel.activeSelf == true) SettingManager.Instance.ResetGuide();
         ui.openSettingPanelButton.SetActive(true    );
-        ui.notifiPlay.SetActive(true);
+        //ui.notifiPlay.SetActive(true);
         ui.shopPanel.SetActive(false);
 
         GameManager.Instance.CheckWinnerOrNextRound();

@@ -17,7 +17,7 @@ public class AudioManager : MonoBehaviour
     public AudioSource environmentSource; // Môi trường
     public AudioSource specialSource; // Âm thanh đặc biệt
     public AudioSource UISource;
-    public AudioSource[] audioSources;
+    public List<AudioSource> audioSources;
 
 
     [Header("SFX")]
@@ -29,6 +29,22 @@ public class AudioManager : MonoBehaviour
     public AudioClip playerTwoClip;
     public AudioClip playerOneWinClip;
     public AudioClip playerTwoWinClip;
+
+    [Header("Main Scene Environment")]
+    public AudioClip theSeaClip;
+    [Header("Main Menu")]
+    public AudioClip theNightClip;
+    public AudioClip musicMainMenuClip;
+    [Header("Choose Scene")]
+    public AudioClip musicChooseSceneClip;
+    public AudioClip doneChooseClickClip;
+    public AudioClip startGameButtonClickClip;
+    [Header("CutScene 1")]
+    public AudioClip musicCutScene1Clip;
+    public AudioClip shipVoiceClip;
+    public AudioClip shipMoveClip;
+    [Header("CutScene 2")]
+    public AudioClip musicCutScene2Clip;
 
     [Header("Debuff SFX")]
     public AudioClip cannonClip;
@@ -44,8 +60,8 @@ public class AudioManager : MonoBehaviour
     public AudioClip coinClip;
     public AudioClip startLeteClip;
     public AudioClip endLeteClip;
-  
-    
+
+
     [Header("Shop SFX")]
     public AudioClip openShopClip;
     public AudioClip movechooseItemClip;
@@ -53,7 +69,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip openCardRamdomClip;
     public AudioClip noCoinBuyItemClip;
     public AudioClip skipBuyClip;
-    
+
     [Header("UI SFX")]
     public AudioClip openResultPanel;
     public AudioClip nextRound;
@@ -115,8 +131,19 @@ public class AudioManager : MonoBehaviour
 
 
     private Coroutine fadeAllAudioCoroutine;
+
+    // Âm lượng gốc của từng nhóm âm thanh.
+    // Master Volume sẽ nhân với các giá trị này, không làm mất tỉ lệ ban đầu.
     private float baseMusicVolume = 1f;
     private float baseSFXVolume = 1f;
+    private float baseEnvironmentVolume = 1f;
+    private float baseSpecialVolume = 1f;
+    private float baseUIVolume = 1f;
+    private float[] baseExtraSourceVolumes;
+
+    public float masterVolume = 1f;
+    private float musicSettingVolume = 1f;
+    private float sfxSettingVolume = 1f;
 
 
     private void Awake()
@@ -131,16 +158,21 @@ public class AudioManager : MonoBehaviour
             Destroy(gameObject);
         }
 
-        musicSource.loop = true;
-      //  sfxSource.loop = true;
-        specialSource.loop = false;
-        environmentSource.loop = true;
+        if (musicSource != null)
+            musicSource.loop = true;
+
+        if (specialSource != null)
+            specialSource.loop = false;
+
+        if (environmentSource != null)
+            environmentSource.loop = true;
+
+        CacheExtraAudioSourceVolumes();
     }
     private void Start()
     {
-        SetupMainGameAudio();
-        AudioManager.Instance.PlayMusic(AudioManager.Instance.musicMainClip);
-
+      
+        
     }
 
 
@@ -250,7 +282,7 @@ public class AudioManager : MonoBehaviour
         }
         else if (indexMiniGame == 2)
         {
-          PlayMusic(AudioManager.Instance.musicMiniGame2);
+            PlayMusic(AudioManager.Instance.musicMiniGame2);
         }
         else if (indexMiniGame == 3)
         {
@@ -258,7 +290,7 @@ public class AudioManager : MonoBehaviour
         }
         else if (indexMiniGame == 4)
         {
-           PlayMusic(AudioManager.Instance.musicMiniGame4);
+            PlayMusic(AudioManager.Instance.musicMiniGame4);
         }
         else if (indexMiniGame == 5)
         {
@@ -270,11 +302,11 @@ public class AudioManager : MonoBehaviour
         }
         else if (indexMiniGame == 7)
         {
-           PlayMusic(AudioManager.Instance.musicMiniGame7);
+            PlayMusic(AudioManager.Instance.musicMiniGame7);
         }
         else if (indexMiniGame == 8)
         {
-           PlayMusic(AudioManager.Instance.musicMiniGame8);
+            PlayMusic(AudioManager.Instance.musicMiniGame8);
         }
         else if (indexMiniGame == 9)
         {
@@ -296,12 +328,10 @@ public class AudioManager : MonoBehaviour
             // Chỉ Music và SFX chịu ảnh hưởng của Setting
             RefreshSettingVolume();
 
-            // Hai nguồn này giữ nguyên theo AudioSetup
-            environmentSource.volume =
-                mainGameAudioSetup.environmentVolume;
+            baseEnvironmentVolume = mainGameAudioSetup.environmentVolume;
+            baseSpecialVolume = mainGameAudioSetup.specialVolume;
 
-            specialSource.volume =
-                mainGameAudioSetup.specialVolume;
+            RefreshSettingVolume();
         }
         else
         {
@@ -334,9 +364,11 @@ public class AudioManager : MonoBehaviour
         // Áp dụng Slider
         RefreshSettingVolume();
 
-        // Environment và Special không chịu ảnh hưởng Slider
-        environmentSource.volume = setup.environmentVolume;
-        specialSource.volume = setup.specialVolume;
+        // Environment và Special chỉ chịu ảnh hưởng của Master Volume.
+        baseEnvironmentVolume = setup.environmentVolume;
+        baseSpecialVolume = setup.specialVolume;
+
+        RefreshSettingVolume();
     }
     //==================================================
     // MUSIC SETTING
@@ -344,13 +376,8 @@ public class AudioManager : MonoBehaviour
 
     public void ApplyMusicSetting(float sliderValue)
     {
-        sliderValue = Mathf.Clamp01(sliderValue);
-
-        if (musicSource != null)
-        {
-            musicSource.volume =
-                baseMusicVolume * sliderValue;
-        }
+        musicSettingVolume = Mathf.Clamp01(sliderValue);
+        RefreshAllVolumes();
     }
 
     //==================================================
@@ -359,13 +386,79 @@ public class AudioManager : MonoBehaviour
 
     public void ApplySFXSetting(float sliderValue)
     {
-        sliderValue = Mathf.Clamp01(sliderValue);
+        sfxSettingVolume = Mathf.Clamp01(sliderValue);
+        RefreshAllVolumes();
+    }
+
+    //==================================================
+    // MASTER VOLUME SETTING
+    //==================================================
+
+    public void ApplyMasterSetting(float sliderValue)
+    {
+        masterVolume = Mathf.Clamp01(sliderValue);
+        RefreshAllVolumes();
+    }
+
+    private void RefreshAllVolumes()
+    {
+        if (musicSource != null)
+            musicSource.volume = baseMusicVolume * musicSettingVolume * masterVolume;
 
         if (sfxSource != null)
+            sfxSource.volume = baseSFXVolume * sfxSettingVolume * masterVolume;
+
+        if (environmentSource != null)
+            environmentSource.volume = baseEnvironmentVolume * masterVolume;
+
+        if (specialSource != null)
+            specialSource.volume = baseSpecialVolume * masterVolume;
+
+        if (UISource != null)
+            UISource.volume = baseUIVolume * masterVolume;
+
+        if (audioSources == null || baseExtraSourceVolumes == null)
+            return;
+
+        int count = Mathf.Min(audioSources.Count, baseExtraSourceVolumes.Length);
+
+        for (int i = 0; i < count; i++)
         {
-            sfxSource.volume =
-                baseSFXVolume * sliderValue;
+            AudioSource source = audioSources[i];
+
+            if (source == null || IsMainAudioSource(source))
+                continue;
+
+            source.volume = baseExtraSourceVolumes[i] * masterVolume;
         }
+    }
+
+    private void CacheExtraAudioSourceVolumes()
+    {
+        baseUIVolume = UISource != null ? UISource.volume : 1f;
+
+        if (audioSources == null)
+        {
+            baseExtraSourceVolumes = new float[0];
+            return;
+        }
+
+        baseExtraSourceVolumes = new float[audioSources.Count];
+
+        for (int i = 0; i < audioSources.Count; i++)
+        {
+            baseExtraSourceVolumes[i] =
+                audioSources[i] != null ? audioSources[i].volume : 1f;
+        }
+    }
+
+    private bool IsMainAudioSource(AudioSource source)
+    {
+        return source == musicSource ||
+               source == sfxSource ||
+               source == environmentSource ||
+               source == specialSource ||
+               source == UISource;
     }
 
     //==================================================
@@ -374,11 +467,15 @@ public class AudioManager : MonoBehaviour
 
     public void RefreshSettingVolume()
     {
+        float masterSliderValue = 1f;
         float musicSliderValue = 1f;
         float sfxSliderValue = 1f;
 
         if (SettingManager.Instance != null)
         {
+            masterSliderValue =
+                SettingManager.Instance.masterValue;
+
             musicSliderValue =
                 SettingManager.Instance.musicValue;
 
@@ -386,8 +483,10 @@ public class AudioManager : MonoBehaviour
                 SettingManager.Instance.sfxValue;
         }
 
-        ApplyMusicSetting(musicSliderValue);
-        ApplySFXSetting(sfxSliderValue);
+        masterVolume = Mathf.Clamp01(masterSliderValue);
+        musicSettingVolume = Mathf.Clamp01(musicSliderValue);
+        sfxSettingVolume = Mathf.Clamp01(sfxSliderValue);
+        RefreshAllVolumes();
     }
 
     /// <summary>
@@ -433,23 +532,30 @@ public class AudioManager : MonoBehaviour
     }
     public void StopAllAudio()
     {
-        for(int i = 0; i < audioSources.Length; i++)
+        for (int i = 0; i < audioSources.Count; i++)
         {
             audioSources[i].volume = 0;
         }
         musicSource.volume = 0;
         StopMusic();
-        environmentSource.volume= 0;
+        environmentSource.volume = 0;
         StopEnvironment();
         specialSource.volume = 0f;
         StopSpecial();
         sfxSource.volume = 0;
     }
+  public void PauseAudio()
+    {
+        StopMusic();
+        StopEnvironment();
+        StopSpecial();
+        StopSFXNoOneShot();
+    }
     public void ZeroAllAudio()
     {
         musicSource.volume = 0;
-        sfxSource.volume= 0;
-        environmentSource.volume= 0;
+        sfxSource.volume = 0;
+        environmentSource.volume = 0;
         specialSource.volume = 0;
     }
 }

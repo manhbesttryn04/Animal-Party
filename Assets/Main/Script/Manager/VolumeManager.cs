@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.SceneManagement;
 
 public class VolumeManager : MonoBehaviour
 {
@@ -20,22 +21,30 @@ public class VolumeManager : MonoBehaviour
     public float vignetteTargetIntensity = 0.25f;
     public float vignetteMoveTime = 0.5f;
 
+    [Header("Current Graphics Quality")]
+    [SerializeField]
+    public int currentQuality = 2;
+
     private Bloom bloom;
     private MotionBlur motionBlur;
     private Vignette vignette;
-
     private Tonemapping tonemapping;
     private ColorAdjustments colorAdjustments;
     private DepthOfField depthOfField;
 
     private Coroutine vignetteRoutine;
+    private Coroutine updateCameraRoutine;
+
+    //==================================================
+    // UNITY
+    //==================================================
 
     private void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
-
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -45,37 +54,99 @@ public class VolumeManager : MonoBehaviour
 
         if (volume == null)
         {
-            Debug.LogError("VolumeManager chưa được gắn Volume!");
+            Debug.LogError(
+                "VolumeManager chưa được gắn Global Volume!"
+            );
+
             return;
         }
 
-        // Tạo Profile riêng để không chỉnh trực tiếp Profile gốc
-        volume.profile = Instantiate(volume.sharedProfile);
+        /*
+         * Tạo Profile riêng lúc runtime.
+         * Không chỉnh trực tiếp Profile Asset gốc.
+         */
+        if (volume.sharedProfile != null)
+        {
+            volume.profile = Instantiate(
+                volume.sharedProfile
+            );
+        }
+        else
+        {
+            Debug.LogError(
+                "Global Volume chưa được gắn Profile!"
+            );
+
+            return;
+        }
+
+        SetupVolumeComponents();
+
+        // Mặc định đầu game là High
+       // currentQuality = 2;
+       // SetGraphicsQuality(currentQuality);
+    }
+
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
+
+    //==================================================
+    // SETUP VOLUME
+    //==================================================
+
+    private void SetupVolumeComponents()
+    {
+        if (volume == null || volume.profile == null)
+        {
+            return;
+        }
 
         //==================================================
-        // Lấy Bloom
+        // BLOOM
         //==================================================
 
         if (volume.profile.TryGet(out bloom))
         {
             bloom.intensity.overrideState = true;
-            bloom.intensity.value = defaultBloomIntensity;
+            bloom.intensity.value =
+                defaultBloomIntensity;
+
             bloom.active = true;
         }
 
         //==================================================
-        // Lấy Motion Blur
+        // MOTION BLUR
         //==================================================
 
         if (volume.profile.TryGet(out motionBlur))
         {
             motionBlur.intensity.overrideState = true;
-            motionBlur.intensity.value = defaultMotionBlurIntensity;
-            motionBlur.active = defaultMotionBlurIntensity > 0f;
+            motionBlur.intensity.value =
+                defaultMotionBlurIntensity;
+
+            motionBlur.active =
+                defaultMotionBlurIntensity > 0f;
         }
 
         //==================================================
-        // Lấy Vignette
+        // VIGNETTE
         //==================================================
 
         if (volume.profile.TryGet(out vignette))
@@ -86,36 +157,69 @@ public class VolumeManager : MonoBehaviour
         }
 
         //==================================================
-        // Lấy Tonemapping
+        // TONEMAPPING
         //==================================================
 
         if (volume.profile.TryGet(out tonemapping))
         {
             tonemapping.mode.overrideState = true;
-            tonemapping.mode.value = TonemappingMode.ACES;
+            tonemapping.mode.value =
+                TonemappingMode.ACES;
+
             tonemapping.active = true;
         }
 
         //==================================================
-        // Lấy Color Adjustments
+        // COLOR ADJUSTMENTS
         //==================================================
 
-        if (volume.profile.TryGet(out colorAdjustments))
+        if (volume.profile.TryGet(
+                out colorAdjustments
+            ))
         {
             colorAdjustments.active = true;
         }
 
         //==================================================
-        // Lấy Depth Of Field
+        // DEPTH OF FIELD
         //==================================================
 
-        if (volume.profile.TryGet(out depthOfField))
+        if (volume.profile.TryGet(
+                out depthOfField
+            ))
         {
             depthOfField.active = true;
         }
+    }
 
-        // Mặc định đầu game dùng High
-        SetGraphicsQuality(2);
+    //==================================================
+    // SCENE LOADED
+    //==================================================
+
+    private void OnSceneLoaded(
+        Scene scene,
+        LoadSceneMode loadMode
+    )
+    {
+        if (updateCameraRoutine != null)
+        {
+            StopCoroutine(updateCameraRoutine);
+        }
+
+        updateCameraRoutine =
+            StartCoroutine(UpdateCameraNextFrame());
+    }
+
+    private IEnumerator UpdateCameraNextFrame()
+    {
+        /*
+         * Chờ camera của scene mới được tạo và Awake xong.
+         */
+        yield return null;
+
+        UpdateAllCamera();
+
+        updateCameraRoutine = null;
     }
 
     //==================================================
@@ -127,64 +231,146 @@ public class VolumeManager : MonoBehaviour
 
     public void SetGraphicsQuality(int quality)
     {
-        switch (quality)
+        Debug.Log("SetGraphicsQuality gọi với: " + quality);
+        currentQuality = Mathf.Clamp(
+            quality,
+            0,
+            2
+        );
+
+        switch (currentQuality)
         {
             //==================================================
             // LOW
-            // Tắt toàn bộ Post Processing trên tất cả Camera
+            // Tắt Post Processing trên tất cả Camera
             //==================================================
 
             case 0:
-                SetAllCameraPostProcessing(false);
+                {
+                    SetAllCameraPostProcessing(false);
 
-                Debug.Log(
-                    "Graphics Quality: LOW - Post Processing OFF"
-                );
-                break;
+                    Debug.Log(
+                        "Graphics Quality: LOW - " +
+                        "Post Processing OFF"
+                    );
+
+                    break;
+                }
 
             //==================================================
             // MEDIUM
-            // Bật Post Processing + Neutral
+            // Post Processing ON
+            // Neutral
+            // Motion Blur OFF
             //==================================================
 
             case 1:
-                SetAllCameraPostProcessing(true);
+                {
+                    SetAllCameraPostProcessing(true);
 
-                SetTonemapping(TonemappingMode.Neutral);
-                SetBloomActive(true);
-                SetMotionBlurActive(false);
-                SetColorAdjustmentsActive(true);
-                SetDepthOfFieldActive(true);
+                    SetTonemapping(
+                        TonemappingMode.Neutral
+                    );
 
-                Debug.Log(
-                    "Graphics Quality: MEDIUM - Post Processing ON"
-                );
-                break;
+                    SetBloomActive(true);
+                    SetMotionBlurActive(false);
+                    SetColorAdjustmentsActive(true);
+                    SetDepthOfFieldActive(true);
+
+                    Debug.Log(
+                        "Graphics Quality: MEDIUM - " +
+                        "Post Processing ON"
+                    );
+
+                    break;
+                }
 
             //==================================================
             // HIGH
-            // Bật Post Processing + ACES
+            // Post Processing ON
+            // ACES
+            // Motion Blur ON
             //==================================================
 
             case 2:
-                SetAllCameraPostProcessing(true);
+                {
+                    SetAllCameraPostProcessing(true);
 
-                SetTonemapping(TonemappingMode.ACES);
-                SetBloomActive(true);
-                SetMotionBlurActive(true);
-                SetColorAdjustmentsActive(true);
-                SetDepthOfFieldActive(true);
+                    SetTonemapping(
+                        TonemappingMode.ACES
+                    );
 
-                Debug.Log(
-                    "Graphics Quality: HIGH - Post Processing ON"
-                );
-                break;
+                    SetBloomActive(true);
+                    SetMotionBlurActive(true);
+                    SetColorAdjustmentsActive(true);
+                    SetDepthOfFieldActive(true);
 
-            default:
-                Debug.LogWarning(
-                    "Graphics Quality chỉ nhận 0, 1 hoặc 2."
-                );
-                break;
+                    Debug.Log(
+                        "Graphics Quality: HIGH - " +
+                        "Post Processing ON"
+                    );
+
+                    break;
+                }
+        }
+    }
+
+    public int GetCurrentQuality()
+    {
+        return currentQuality;
+    }
+
+    //==================================================
+    // UPDATE CAMERA
+    //==================================================
+
+    public void UpdateAllCamera()
+    {
+        /*
+         * Low = tắt Post Processing.
+         * Medium và High = bật Post Processing.
+         */
+        bool enablePostProcessing =
+            currentQuality != 0;
+
+        SetAllCameraPostProcessing(
+            enablePostProcessing
+        );
+
+        Debug.Log(
+            "Đã cập nhật Camera scene mới. Quality: " +
+            currentQuality +
+            " | Post Processing: " +
+            enablePostProcessing
+        );
+    }
+
+    private void SetAllCameraPostProcessing(
+        bool state
+    )
+    {
+        Camera[] cameras =
+            FindObjectsByType<Camera>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None
+            );
+
+        foreach (Camera cameraItem in cameras)
+        {
+            if (cameraItem == null)
+            {
+                continue;
+            }
+
+            UniversalAdditionalCameraData cameraData =
+                cameraItem
+                    .GetUniversalAdditionalCameraData();
+
+            if (cameraData != null)
+            {
+                cameraData.renderPostProcessing =
+                    state;
+            }
         }
     }
 
@@ -192,10 +378,14 @@ public class VolumeManager : MonoBehaviour
     // TONEMAPPING
     //==================================================
 
-    private void SetTonemapping(TonemappingMode mode)
+    private void SetTonemapping(
+        TonemappingMode mode
+    )
     {
         if (tonemapping == null)
+        {
             return;
+        }
 
         tonemapping.active = true;
         tonemapping.mode.overrideState = true;
@@ -209,21 +399,26 @@ public class VolumeManager : MonoBehaviour
     private void SetBloomActive(bool state)
     {
         if (bloom == null)
+        {
             return;
+        }
 
         bloom.active = state;
 
         if (state)
         {
             bloom.intensity.overrideState = true;
-            bloom.intensity.value = defaultBloomIntensity;
+            bloom.intensity.value =
+                defaultBloomIntensity;
         }
     }
 
     public void SetBloomIntensity(float intensity)
     {
         if (bloom == null)
+        {
             return;
+        }
 
         bloom.active = intensity > 0f;
         bloom.intensity.overrideState = true;
@@ -233,7 +428,9 @@ public class VolumeManager : MonoBehaviour
     public float GetBloomIntensity()
     {
         if (bloom != null)
+        {
             return bloom.intensity.value;
+        }
 
         return 0f;
     }
@@ -245,21 +442,28 @@ public class VolumeManager : MonoBehaviour
     private void SetMotionBlurActive(bool state)
     {
         if (motionBlur == null)
+        {
             return;
+        }
 
         motionBlur.active = state;
 
         if (state)
         {
             motionBlur.intensity.overrideState = true;
-            motionBlur.intensity.value = defaultMotionBlurIntensity;
+            motionBlur.intensity.value =
+                defaultMotionBlurIntensity;
         }
     }
 
-    public void SetMotionBlurIntensity(float intensity)
+    public void SetMotionBlurIntensity(
+        float intensity
+    )
     {
         if (motionBlur == null)
+        {
             return;
+        }
 
         motionBlur.active = intensity > 0f;
         motionBlur.intensity.overrideState = true;
@@ -269,26 +473,34 @@ public class VolumeManager : MonoBehaviour
     public void ResetMotionBlur()
     {
         if (motionBlur == null)
+        {
             return;
+        }
 
-        motionBlur.active = defaultMotionBlurIntensity > 0f;
+        motionBlur.active =
+            defaultMotionBlurIntensity > 0f;
+
         motionBlur.intensity.overrideState = true;
-        motionBlur.intensity.value = defaultMotionBlurIntensity;
+        motionBlur.intensity.value =
+            defaultMotionBlurIntensity;
     }
 
     //==================================================
     // COLOR ADJUSTMENTS
     //==================================================
 
-    private void SetColorAdjustmentsActive(bool state)
+    private void SetColorAdjustmentsActive(
+        bool state
+    )
     {
         if (colorAdjustments == null)
+        {
             return;
+        }
 
         colorAdjustments.active = state;
     }
 
-    // Có thể gọi từ script khác
     public void SetColorActive(bool state)
     {
         SetColorAdjustmentsActive(state);
@@ -298,15 +510,18 @@ public class VolumeManager : MonoBehaviour
     // DEPTH OF FIELD
     //==================================================
 
-    private void SetDepthOfFieldActive(bool state)
+    private void SetDepthOfFieldActive(
+        bool state
+    )
     {
         if (depthOfField == null)
+        {
             return;
+        }
 
         depthOfField.active = state;
     }
 
-    // Có thể gọi từ script khác
     public void SetDepthActive(bool state)
     {
         SetDepthOfFieldActive(state);
@@ -319,10 +534,14 @@ public class VolumeManager : MonoBehaviour
     public void StartVignette()
     {
         if (vignette == null)
+        {
             return;
+        }
 
         if (vignetteRoutine != null)
+        {
             StopCoroutine(vignetteRoutine);
+        }
 
         vignetteRoutine = StartCoroutine(
             MoveVignette(
@@ -336,10 +555,14 @@ public class VolumeManager : MonoBehaviour
     public void ResetVignette()
     {
         if (vignette == null)
+        {
             return;
+        }
 
         if (vignetteRoutine != null)
+        {
             StopCoroutine(vignetteRoutine);
+        }
 
         vignetteRoutine = StartCoroutine(
             MoveVignette(
@@ -357,7 +580,9 @@ public class VolumeManager : MonoBehaviour
     )
     {
         if (vignette == null)
+        {
             yield break;
+        }
 
         vignette.active = true;
         vignette.intensity.overrideState = true;
@@ -367,6 +592,7 @@ public class VolumeManager : MonoBehaviour
             vignette.intensity.value = end;
             vignette.active = end > 0f;
             vignetteRoutine = null;
+
             yield break;
         }
 
@@ -376,13 +602,15 @@ public class VolumeManager : MonoBehaviour
         {
             time += Time.deltaTime;
 
-            float progress = Mathf.Clamp01(time / duration);
+            float progress =
+                Mathf.Clamp01(time / duration);
 
-            vignette.intensity.value = Mathf.Lerp(
-                start,
-                end,
-                progress
-            );
+            vignette.intensity.value =
+                Mathf.Lerp(
+                    start,
+                    end,
+                    progress
+                );
 
             yield return null;
         }
@@ -390,33 +618,10 @@ public class VolumeManager : MonoBehaviour
         vignette.intensity.value = end;
 
         if (end <= 0f)
+        {
             vignette.active = false;
+        }
 
         vignetteRoutine = null;
-    }
-    //==================================================
-    // CAMERA POST PROCESSING
-    //==================================================
-
-    private void SetAllCameraPostProcessing(bool state)
-    {
-        Camera[] cameras = FindObjectsByType<Camera>(
-            FindObjectsInactive.Include,
-            FindObjectsSortMode.None
-        );
-
-        foreach (Camera cameraItem in cameras)
-        {
-            if (cameraItem == null)
-                continue;
-
-            UniversalAdditionalCameraData cameraData =
-                cameraItem.GetUniversalAdditionalCameraData();
-
-            if (cameraData != null)
-            {
-                cameraData.renderPostProcessing = state;
-            }
-        }
     }
 }

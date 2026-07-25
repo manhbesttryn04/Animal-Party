@@ -1,9 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using TMPro;
 
 public class CutScene2 : MonoBehaviour
 {
@@ -21,14 +21,15 @@ public class CutScene2 : MonoBehaviour
     public float rotateSpeed = 5f;
 
     [Header("Ship Stop Position")]
-    public Vector3 shipStopPosition = new Vector3(-42.9f, 0.2f, 16f);
+    public Vector3 shipStopPosition =
+        new Vector3(-42.9f, 0.2f, 16f);
+
     public float shipStopDistance = 0.5f;
+
+    [Header("Panels")]
     public GameObject blackPanel;
     public GameObject blackClosePanel;
     public GameObject nameMapPanel;
-
-    [Header("Audio")]
-    public List<AudioSource> audioSources;
 
     [Header("--- SUBTITLE ---")]
     public GameObject subtitlePanel;
@@ -36,32 +37,41 @@ public class CutScene2 : MonoBehaviour
     public Outline subtitleOutline;
 
     [Header("--- SKIP UI ---")]
-    [Tooltip("GameObject chứa chữ 'Press Space to Skip'")]
+    [Tooltip("GameObject chứa chữ Press Space to Skip")]
     public GameObject skipHintObject;
+
     [Tooltip("TMP Text của skip hint")]
     public TMP_Text skipHintText;
 
     [Header("--- GRADIENT PRESET ---")]
     [Tooltip("NormalGradient: trái #5C2E00, phải #1A0A00")]
     public TMP_ColorGradient normalGradient;
+
     [Tooltip("FinalGradient: 4 góc đều #7A0000")]
     public TMP_ColorGradient finalGradient;
 
     [Header("--- OUTLINE COLOR ---")]
-    public Color normalOutlineColor = new Color(1f, 1f, 1f, 0.2f);
-    public Color finalOutlineColor = new Color(1f, 1f, 1f, 0.31f);
+    public Color normalOutlineColor =
+        new Color(1f, 1f, 1f, 0.2f);
+
+    public Color finalOutlineColor =
+        new Color(1f, 1f, 1f, 0.31f);
 
     [Header("--- NARRATOR VOICE ---")]
-    [Tooltip("Kéo file voice vào đây theo thứ tự — để trống nếu không có voice cho câu đó")]
+    [Tooltip("Kéo file voice vào đây theo đúng thứ tự câu")]
     public AudioClip[] narratorVoices;
-    [Range(0f, 1f)] public float narratorVolume = 0.9f;
 
     [Header("--- TIMING ---")]
     public float typeSpeed = 0.05f;
     public float fadeOutDuration = 0.4f;
     public float betweenLineFade = 0.5f;
 
-    private string[] storyLines = new string[]
+    [Header("--- END AUDIO FADE ---")]
+    public float endAudioFadeTime = 4.5f;
+
+    private bool isSkipped;
+
+    private readonly string[] storyLines =
     {
         "Welcome to Party Land — where the fun never stops!",
         "The wildest party on the island is about to begin!",
@@ -72,19 +82,31 @@ public class CutScene2 : MonoBehaviour
         "Two players. One island. Who will claim victory?"
     };
 
-    private AudioSource narratorSource;
-    private bool isSkipped = false;
-
     private void Start()
     {
-        narratorSource = gameObject.AddComponent<AudioSource>();
-        narratorSource.playOnAwake = false;
-        narratorSource.loop = false;
-        narratorSource.volume = narratorVolume;
+        if (subtitlePanel != null)
+            subtitlePanel.SetActive(false);
 
-        if (subtitlePanel) subtitlePanel.SetActive(false);
-        if (subtitleText) { subtitleText.text = ""; subtitleText.alpha = 1f; }
-        if (skipHintObject) skipHintObject.SetActive(false);
+        if (subtitleText != null)
+        {
+            subtitleText.text = "";
+            subtitleText.alpha = 1f;
+        }
+
+        if (skipHintObject != null)
+            skipHintObject.SetActive(false);
+
+        var audio = AudioManager.Instance;
+        if (audio != null)
+        {
+            audio.SetupMainGameAudio();           
+            audio.PlayMusic(audio.musicCutScene2Clip);
+        }
+        var setting = SettingManager.Instance;
+        if (setting != null)
+        {
+            setting.canOpenSettingByEsc = true;
+        }
 
         StartCoroutine(CutScene());
         StartCoroutine(CheckShipStop());
@@ -93,241 +115,566 @@ public class CutScene2 : MonoBehaviour
 
     private void Update()
     {
-        if (!isSkipped && (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)))
+        if (isSkipped)
+            return;
+
+        if (Input.GetKeyDown(KeyCode.Space) ||
+            Input.GetKeyDown(KeyCode.Return))
+        {
             SkipCutscene();
+        }
     }
 
     private void SkipCutscene()
     {
-        isSkipped = true;
-        StopAllCoroutines();
-        if (narratorSource) narratorSource.Stop();
-        HideSubtitleImmediate();
-        if (skipHintObject) skipHintObject.SetActive(false);
+        if (isSkipped)
+            return;
 
-        // Khi skip: dọn dẹp và load thẳng MainScene
+        isSkipped = true;
+
+        StopAllCoroutines();
+        StopNarratorVoice();
+
+        var setting = SettingManager.Instance;
+        if (setting != null)
+        {
+            setting.ResetEscSetting();
+            setting.canOpenSettingByEsc = false;
+        }
+        AudioManager audio = AudioManager.Instance;
+
+        if (audio != null)
+            audio.PauseAudio();
+
+        HideSubtitleImmediate();
+
+        if (skipHintObject != null)
+            skipHintObject.SetActive(false);
+
         StartCoroutine(SkipToEnd());
     }
 
-    IEnumerator SkipToEnd()
+    private IEnumerator SkipToEnd()
     {
-        blackClosePanel.gameObject.SetActive(true);
-        StartCoroutine(FadeOutAudio(0f));
-        yield return new WaitForSeconds(0f);
-        yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
+        if (blackClosePanel != null)
+            blackClosePanel.SetActive(true);
+
+        // Skip thì tắt âm thanh ngay, không cần fade.
+        AudioManager audio = AudioManager.Instance;
+
+        if (audio != null)
+        {
+            audio.ZeroAllAudio();
+            audio.PauseAudio();
+
+            if (audio.UISource != null)
+                audio.UISource.Stop();
+        }
+
+        if (LoadingManager.Instance != null)
+        {
+            yield return StartCoroutine(
+                LoadingManager.Instance.ShowLoading()
+            );
+        }
+
         SceneManager.LoadScene("MainScene");
     }
 
-    IEnumerator ShowSkipHint()
+    private IEnumerator ShowSkipHint()
     {
-        yield return new WaitForSeconds(0f);
-        if (skipHintObject) skipHintObject.SetActive(true);
-        if (skipHintText)
+        yield return null;
+
+        if (isSkipped)
+            yield break;
+
+        if (skipHintObject != null)
+            skipHintObject.SetActive(true);
+
+        if (skipHintText == null)
+            yield break;
+
+        skipHintText.alpha = 0f;
+
+        float time = 0f;
+        const float duration = 0.5f;
+
+        while (time < duration)
         {
-            skipHintText.alpha = 0f;
-            float t = 0f;
-            while (t < 0.5f)
-            {
-                t += Time.deltaTime;
-                skipHintText.alpha = Mathf.Lerp(0f, 1f, t / 0.5f);
-                yield return null;
-            }
+            if (isSkipped)
+                yield break;
+
+            time += Time.deltaTime;
+
+            skipHintText.alpha = Mathf.Lerp(
+                0f,
+                1f,
+                time / duration
+            );
+
+            yield return null;
         }
+
+        skipHintText.alpha = 1f;
     }
 
-    IEnumerator CutScene()
+    private IEnumerator CutScene()
     {
-        // Move -> 0 + câu 0
+        if (!CheckReferences())
+            yield break;
+
+        // Move tới point 0 và hiện câu đầu.
         ShowSubtitleImmediate(storyLines[0], false);
         PlayVoice(0);
-        yield return MoveToTransform(transVideos[0]);
 
-        // Teleport -> 1 + câu 1
+        yield return StartCoroutine(
+            MoveToTransform(transVideos[0])
+        );
+
+        // Teleport tới point 1.
         TeleportToTransform(transVideos[1]);
-        nameMapPanel.SetActive(true);
-        yield return new WaitForSeconds(0.1f);
-        yield return StartCoroutine(ShowSubtitleWithVoice(storyLines[1], 1, false));
-        //yield return new WaitForSeconds(0.5f);
 
-        // Teleport -> 2 
+        if (nameMapPanel != null)
+            nameMapPanel.SetActive(true);
+
+        yield return new WaitForSeconds(0.1f);
+
+        yield return StartCoroutine(
+            ShowSubtitleWithVoice(
+                storyLines[1],
+                1,
+                false
+            )
+        );
+
+        // Teleport tới point 2.
         TeleportToTransform(transVideos[2]);
 
-        // Move -> 3 + câu 2
-      StartCoroutine(ShowSubtitleWithVoice(storyLines[2], 2, false));
-        yield return MoveToTransform(transVideos[3]);
+        // Move tới point 3 và câu số 2.
+        StartCoroutine(
+            ShowSubtitleWithVoice(
+                storyLines[2],
+                2,
+                false
+            )
+        );
 
-        // Teleport -> 4
+        yield return StartCoroutine(
+            MoveToTransform(transVideos[3])
+        );
+
+        // Teleport tới point 4.
         TeleportToTransform(transVideos[4]);
 
-        // Move -> 5 + câu 3
-        StartCoroutine(ShowSubtitleWithVoice(storyLines[3], 3, false));
-        yield return MoveToTransform(transVideos[5]);
+        // Move tới point 5 và câu số 3.
+        StartCoroutine(
+            ShowSubtitleWithVoice(
+                storyLines[3],
+                3,
+                false
+            )
+        );
 
-        // Teleport -> 6
+        yield return StartCoroutine(
+            MoveToTransform(transVideos[5])
+        );
+
+        // Teleport tới point 6.
         TeleportToTransform(transVideos[6]);
-        ship.gameObject.SetActive(false);
-        set.StartCutScene();
-        // Move -> 7 + câu 4
-        StartCoroutine(ShowSubtitleWithVoice(storyLines[4], 4, false));
-        yield return MoveToTransform(transVideos[7]);
 
-        // Teleport -> 8 + câu 5
-        teleport.gameObject.SetActive(true);
+        if (ship != null)
+            ship.gameObject.SetActive(false);
+
+        if (set != null)
+            set.StartCutScene();
+
+        // Move tới point 7 và câu số 4.
+        StartCoroutine(
+            ShowSubtitleWithVoice(
+                storyLines[4],
+                4,
+                false
+            )
+        );
+
+        yield return StartCoroutine(
+            MoveToTransform(transVideos[7])
+        );
+
+        // Teleport tới point 8 và câu số 5.
+        if (teleport != null)
+            teleport.SetActive(true);
+
         TeleportToTransform(transVideos[8]);
-        StartCoroutine(ShowSubtitleWithVoice(storyLines[5], 5, false));
-        nameMapPanel.SetActive(false);
+
+        StartCoroutine(
+            ShowSubtitleWithVoice(
+                storyLines[5],
+                5,
+                false
+            )
+        );
+
+        if (nameMapPanel != null)
+            nameMapPanel.SetActive(false);
+
         yield return new WaitForSeconds(3f);
+
         moveSpeed = 100f;
 
-        // Ẩn skip hint trước câu cuối
-        if (skipHintObject) skipHintObject.SetActive(false);
+        if (skipHintObject != null)
+            skipHintObject.SetActive(false);
 
-        // Move -> 9 + câu 6 (câu cuối đỏ son)
+        // Câu cuối.
         yield return new WaitForSeconds(2f);
+
         typeSpeed = 0.08f;
-        StartCoroutine(ShowSubtitleWithVoice(storyLines[6], 6, true));
-        yield return MoveToTransform(transVideos[9]);
+
+        StartCoroutine(
+            ShowSubtitleWithVoice(
+                storyLines[6],
+                6,
+                true
+            )
+        );
+
+        yield return StartCoroutine(
+            MoveToTransform(transVideos[9])
+        );
+
         yield return new WaitForSeconds(5f);
-
+        var setting = SettingManager.Instance;
+        if (setting != null)
+        {
+            setting.ResetEscSetting();
+            setting.canOpenSettingByEsc = false;
+        }
         HideSubtitleImmediate();
-        set.StartMovePlayer();
-        StartCoroutine(FadeOutAudio(4.5f));
-        blackClosePanel.gameObject.SetActive(true);
-        TeleportToTransform(transVideos[10]);
-        yield return new WaitForSeconds(4.5f);
-        yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
-        SceneManager.LoadScene("MainScene");
+        StopNarratorVoice();
 
-        Debug.Log("CutScene Finished");
+        if (set != null)
+            set.StartMovePlayer();
+
+        if (blackClosePanel != null)
+            blackClosePanel.SetActive(true);
+
+        TeleportToTransform(transVideos[10]);
+
+        // Giảm 4 nguồn âm thanh chính theo thời gian.
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.FadeOutAllAudio(
+                endAudioFadeTime
+            );
+        }
+
+        yield return new WaitForSeconds(
+            endAudioFadeTime
+        );
+
+        if (LoadingManager.Instance != null)
+        {
+            yield return StartCoroutine(
+                LoadingManager.Instance.ShowLoading()
+            );
+        }
+
+        SceneManager.LoadScene("MainScene");
     }
 
-    IEnumerator ShowSubtitleWithVoice(string line, int voiceIndex, bool isFinal)
+    private IEnumerator ShowSubtitleWithVoice(
+        string line,
+        int voiceIndex,
+        bool isFinal)
     {
-        if (narratorSource) narratorSource.Stop();
+        if (isSkipped)
+            yield break;
 
-        if (subtitleText && subtitleText.text != "")
+        StopNarratorVoice();
+
+        if (subtitleText != null &&
+            !string.IsNullOrEmpty(subtitleText.text))
         {
             yield return StartCoroutine(FadeOutLine());
             yield return new WaitForSeconds(betweenLineFade);
         }
 
-        if (subtitlePanel) subtitlePanel.SetActive(true);
-        if (subtitleText) subtitleText.alpha = 1f;
+        if (isSkipped)
+            yield break;
 
-        if (subtitleText)
+        if (subtitlePanel != null)
+            subtitlePanel.SetActive(true);
+
+        if (subtitleText != null)
         {
+            subtitleText.alpha = 1f;
+            subtitleText.text = "";
             subtitleText.enableVertexGradient = true;
-            subtitleText.colorGradientPreset = isFinal ? finalGradient : normalGradient;
+
+            subtitleText.colorGradientPreset =
+                isFinal
+                    ? finalGradient
+                    : normalGradient;
         }
 
-        if (subtitleOutline)
-            subtitleOutline.effectColor = isFinal ? finalOutlineColor : normalOutlineColor;
+        if (subtitleOutline != null)
+        {
+            subtitleOutline.effectColor =
+                isFinal
+                    ? finalOutlineColor
+                    : normalOutlineColor;
+        }
 
         PlayVoice(voiceIndex);
 
-        if (subtitleText) subtitleText.text = "";
-        foreach (char c in line)
+        foreach (char character in line)
         {
-            if (subtitleText) subtitleText.text += c;
+            if (isSkipped)
+                yield break;
+
+            if (subtitleText != null)
+                subtitleText.text += character;
+
             yield return new WaitForSeconds(typeSpeed);
         }
 
-        if (narratorSource && narratorSource.isPlaying)
-            yield return new WaitWhile(() => narratorSource.isPlaying);
+        AudioManager audio = AudioManager.Instance;
+
+        if (audio != null && audio.UISource != null)
+        {
+            yield return new WaitWhile(
+                () =>
+                    !isSkipped &&
+                    AudioManager.Instance != null &&
+                    AudioManager.Instance.UISource != null &&
+                    AudioManager.Instance.UISource.isPlaying
+            );
+        }
     }
 
-    void ShowSubtitleImmediate(string line, bool isFinal)
+    private void ShowSubtitleImmediate(
+        string line,
+        bool isFinal)
     {
-        if (subtitlePanel) subtitlePanel.SetActive(true);
-        if (subtitleText)
+        if (subtitlePanel != null)
+            subtitlePanel.SetActive(true);
+
+        if (subtitleText != null)
         {
             subtitleText.alpha = 1f;
             subtitleText.text = line;
             subtitleText.enableVertexGradient = true;
-            subtitleText.colorGradientPreset = isFinal ? finalGradient : normalGradient;
+
+            subtitleText.colorGradientPreset =
+                isFinal
+                    ? finalGradient
+                    : normalGradient;
         }
-        if (subtitleOutline)
-            subtitleOutline.effectColor = isFinal ? finalOutlineColor : normalOutlineColor;
+
+        if (subtitleOutline != null)
+        {
+            subtitleOutline.effectColor =
+                isFinal
+                    ? finalOutlineColor
+                    : normalOutlineColor;
+        }
     }
 
-    void PlayVoice(int index)
+    private void PlayVoice(int index)
     {
-        if (narratorSource && narratorVoices != null &&
-            narratorVoices.Length > index && narratorVoices[index] != null)
-            narratorSource.PlayOneShot(narratorVoices[index], narratorVolume);
+        if (AudioManager.Instance == null)
+            return;
+
+        if (narratorVoices == null)
+            return;
+
+        if (index < 0 || index >= narratorVoices.Length)
+            return;
+
+        if (narratorVoices[index] == null)
+            return;
+
+        AudioManager.Instance.PlayUI(
+            narratorVoices[index]
+        );
     }
 
-    void HideSubtitleImmediate()
+    private void StopNarratorVoice()
     {
-        if (narratorSource) narratorSource.Stop();
-        if (subtitleText) { subtitleText.alpha = 1f; subtitleText.text = ""; }
-        if (subtitlePanel) subtitlePanel.SetActive(false);
+        AudioManager audio = AudioManager.Instance;
+
+        if (audio != null && audio.UISource != null)
+            audio.UISource.Stop();
     }
 
-    IEnumerator FadeOutLine()
+    private void HideSubtitleImmediate()
     {
-        if (subtitleText == null) yield break;
+        StopNarratorVoice();
+
+        if (subtitleText != null)
+        {
+            subtitleText.alpha = 1f;
+            subtitleText.text = "";
+        }
+
+        if (subtitlePanel != null)
+            subtitlePanel.SetActive(false);
+    }
+
+    private IEnumerator FadeOutLine()
+    {
+        if (subtitleText == null)
+            yield break;
+
+        float duration = Mathf.Max(
+            0.01f,
+            fadeOutDuration
+        );
+
         float startAlpha = subtitleText.alpha;
         float time = 0f;
-        while (time < fadeOutDuration)
+
+        while (time < duration)
         {
+            if (isSkipped)
+                yield break;
+
             time += Time.deltaTime;
-            if (subtitleText) subtitleText.alpha = Mathf.Lerp(startAlpha, 0f, time / fadeOutDuration);
+
+            subtitleText.alpha = Mathf.Lerp(
+                startAlpha,
+                0f,
+                time / duration
+            );
+
             yield return null;
         }
-        if (subtitleText) { subtitleText.alpha = 1f; subtitleText.text = ""; }
-        if (subtitlePanel) subtitlePanel.SetActive(false);
+
+        subtitleText.alpha = 1f;
+        subtitleText.text = "";
+
+        if (subtitlePanel != null)
+            subtitlePanel.SetActive(false);
     }
 
-    IEnumerator CheckShipStop()
+    private IEnumerator CheckShipStop()
     {
-        while (Vector3.Distance(ship.transform.position, shipStopPosition) > shipStopDistance)
+        if (ship == null)
+            yield break;
+
+        while (
+            Vector3.Distance(
+                ship.transform.position,
+                shipStopPosition
+            ) > shipStopDistance)
+        {
+            if (isSkipped)
+                yield break;
+
             yield return null;
+        }
+
         ship.isStop = true;
     }
 
-    IEnumerator MoveToTransform(Transform target)
+    private IEnumerator MoveToTransform(
+        Transform target)
     {
+        if (cam == null || target == null)
+            yield break;
+
         while (
-            Vector3.Distance(cam.transform.position, target.position) > 0.05f ||
-            Quaternion.Angle(cam.transform.rotation, target.rotation) > 0.5f)
+            Vector3.Distance(
+                cam.transform.position,
+                target.position
+            ) > 0.05f ||
+            Quaternion.Angle(
+                cam.transform.rotation,
+                target.rotation
+            ) > 0.5f)
         {
-            cam.transform.position = Vector3.MoveTowards(
-                cam.transform.position, target.position, moveSpeed * Time.deltaTime);
-            cam.transform.rotation = Quaternion.Slerp(
-                cam.transform.rotation, target.rotation, rotateSpeed * Time.deltaTime);
+            if (isSkipped)
+                yield break;
+
+            cam.transform.position =
+                Vector3.MoveTowards(
+                    cam.transform.position,
+                    target.position,
+                    moveSpeed * Time.deltaTime
+                );
+
+            cam.transform.rotation =
+                Quaternion.Slerp(
+                    cam.transform.rotation,
+                    target.rotation,
+                    rotateSpeed * Time.deltaTime
+                );
+
             yield return null;
         }
+
         cam.transform.position = target.position;
         cam.transform.rotation = target.rotation;
     }
 
-    void TeleportToTransform(Transform target)
+    private void TeleportToTransform(
+        Transform target)
     {
-        StartCoroutine(ShowBlackPanel(2));
+        if (cam == null || target == null)
+            return;
+
+        StartCoroutine(ShowBlackPanel(2f));
+
         cam.transform.position = target.position;
         cam.transform.rotation = target.rotation;
     }
 
-    IEnumerator ShowBlackPanel(float time = 1f)
+    private IEnumerator ShowBlackPanel(
+        float time = 1f)
     {
+        if (blackPanel == null)
+            yield break;
+
         blackPanel.SetActive(true);
+
         yield return new WaitForSeconds(time);
+
         blackPanel.SetActive(false);
     }
 
-    IEnumerator FadeOutAudio(float duration)
+    private bool CheckReferences()
     {
-        List<float> startVolumes = new List<float>();
-        foreach (AudioSource audio in audioSources) startVolumes.Add(audio.volume);
-        float time = 0f;
-        while (time < duration)
+        if (cam == null)
         {
-            time += Time.deltaTime;
-            for (int i = 0; i < audioSources.Count; i++)
-                audioSources[i].volume = Mathf.Lerp(startVolumes[i], 0f, time / duration);
-            yield return null;
+            Debug.LogError(
+                "CutScene2 chưa gán Camera."
+            );
+
+            return false;
         }
-        foreach (AudioSource audio in audioSources) audio.volume = 0f;
+
+        if (transVideos == null ||
+            transVideos.Count < 11)
+        {
+            Debug.LogError(
+                "CutScene2 cần ít nhất 11 Transform."
+            );
+
+            return false;
+        }
+
+        for (int i = 0; i < 11; i++)
+        {
+            if (transVideos[i] == null)
+            {
+                Debug.LogError(
+                    "transVideos[" + i + "] chưa được gán."
+                );
+
+                return false;
+            }
+        }
+
+        return true;
     }
 }

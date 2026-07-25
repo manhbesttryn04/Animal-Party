@@ -1,7 +1,9 @@
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;using UnityEngine.SceneManagement;
+using UnityEngine.Rendering.Universal;
+using UnityEngine.SceneManagement;
 
 public class MainMenuController : MonoBehaviour
 {
@@ -9,11 +11,6 @@ public class MainMenuController : MonoBehaviour
     [Tooltip("Tên scene chứa minigame, phải đúng tên trong Build Settings")]
     public string gameSceneName = "GameScene";
 
-    [Header("--- SETTINGS PANEL ---")]
-    [Tooltip("Panel cài đặt âm thanh, kéo vào đây, để Inactive trong Hierarchy")]
-    public GameObject settingsPanel;
-    public Volume volume;
-    private Vignette vignette;
 
 
     // ====== NÚT START ======
@@ -24,32 +21,44 @@ public class MainMenuController : MonoBehaviour
         {
             cursor.ShowGameCursor();
         }
-        if (volume.profile.TryGet(out vignette))
+        var audio = AudioManager.Instance;
+        if(audio != null)
         {
-        
-            vignette.intensity.value = 0f;
-       
+            audio.PlayMusic(audio.musicMainMenuClip);
+            audio.PlayEnvironment(audio.theNightClip);
+            audio.SetupMainGameAudio(); 
         }
+        var setting = SettingManager.Instance;
+        if(setting != null)
+        { 
+            setting.isOpenExitButton = false;
+        }
+        var volume = VolumeManager.Instance;
+        if(volume != null) { 
+            volume.ResetVignette();
+            //volume.SetGraphicsQuality(volume.currentQuality);
+        }
+
     }
     public void OnStartClicked()
     {
-        SafePlayClick();
-        SafeStopMusic();
+        AudioManager.Instance.PlayUI(AudioManager.Instance.clickButton);
 
         StartCoroutine(StartLoadScene());
     }
     IEnumerator StartLoadScene()
     {
-        var audio = AudioManager1.Instance;
+        var audio = AudioManager.Instance;
         if(audio != null)
         {
-            audio.ambientSource.volume = 0;
+            audio.PauseAudio();
         }
         var cursor = CursorManager.Instance;
         if (cursor != null)
         {
             cursor.HideGameCursor();
         }
+        SettingManager.Instance.ResetSetting();
         yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
         SceneManager.LoadScene(gameSceneName);
     }
@@ -57,43 +66,21 @@ public class MainMenuController : MonoBehaviour
     // ====== NÚT SETTINGS ======
     public void OnSettingsClicked()
     {
-        SafePlayClick();
-        if (settingsPanel != null)
-            settingsPanel.SetActive(true);
+        SettingManager.Instance.ToggleSetting();
+        
     }
+
 
     public void OnCloseSettingsClicked()
     {
-        SafePlayClick();
-        if (settingsPanel != null)
-            settingsPanel.SetActive(false);
+        SettingManager.Instance.ResetSetting();
     }
 
-    // ====== SLIDER NHẠC NỀN ======
-    public void OnMusicVolumeChanged(float value)
-    {
-        if (AudioManager1.Instance != null)
-            AudioManager1.Instance.SetMusicVolume(value);
-    }
-
-    // ====== SLIDER AMBIENT (sóng biển, hải âu) ======
-    public void OnAmbientVolumeChanged(float value)
-    {
-        if (AudioManager1.Instance != null)
-            AudioManager1.Instance.SetAmbientVolume(value);
-    }
-
-    // ====== SLIDER ÂM THANH CLICK / SFX ======
-    public void OnSFXVolumeChanged(float value)
-    {
-        if (AudioManager1.Instance != null)
-            AudioManager1.Instance.SetSfxVolume(value);
-    }
 
     // ====== NÚT EXIT GAME ======
     public void OnExitClicked()
     {
-        SafePlayClick();
+      AudioManager.Instance.PlayUI(AudioManager.Instance.clickButton);
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #else
@@ -101,13 +88,5 @@ public class MainMenuController : MonoBehaviour
 #endif
     }
 
-    private void SafePlayClick()
-    {
-        if (AudioManager1.Instance != null) AudioManager1.Instance.PlayClick();
-    }
-
-    private void SafeStopMusic()
-    {
-        if (AudioManager1.Instance != null) AudioManager1.Instance.StopMusic();
-    }
+   
 }

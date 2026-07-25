@@ -31,12 +31,7 @@ public class ChooseMode : MonoBehaviour
     [Header("Start Game")]
     public GameObject buttonStart;
     public string sceneName;
-    [Header("Sound")]
-    public AudioSource source;
-    public AudioClip clickClip;
-    public AudioClip doneChooseClip;
-    public AudioClip startClickClip;
-    public AudioSource[] auidosource;
+   
 
     private void Start()
     {
@@ -47,6 +42,19 @@ public class ChooseMode : MonoBehaviour
         if (cursor != null)
         {
             cursor.ShowGameCursor();
+        }
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayMusic(AudioManager.Instance.musicChooseSceneClip);
+            AudioManager.Instance.PlayEnvironment(AudioManager.Instance.theSeaClip);
+        }
+        if(UIManager.Instance != null)
+        {
+            UIManager.Instance.openSettingPanelButton.SetActive(true);
+        }
+        if(SettingManager.Instance != null)
+        {
+            SettingManager.Instance.isOpenExitButton = true;
         }
 
     }
@@ -106,7 +114,7 @@ public class ChooseMode : MonoBehaviour
     public void PrevPlayer1()
     {
         if (isPlayer1Choose) return;
-        source.PlayOneShot(clickClip);
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI(AudioManager.Instance.movechooseItemClip);
         indexP1--;
 
         if (indexP1 < 0)
@@ -119,7 +127,7 @@ public class ChooseMode : MonoBehaviour
     public void NextPlayer1()
     {
         if (isPlayer1Choose) return;
-        source.PlayOneShot(clickClip);
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI(AudioManager.Instance.movechooseItemClip);
         indexP1++;
 
         if (indexP1 >= player1.Count)
@@ -132,9 +140,10 @@ public class ChooseMode : MonoBehaviour
     public void ChoosePlayer1()
     {
         if (isPlayer1Choose) return;
-        source.PlayOneShot(doneChooseClip);
+       
+       
         PlaySalute(player1[indexP1]);
-
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI(AudioManager.Instance.doneChooseClickClip);
         isPlayer1Choose = true;
 
        
@@ -155,7 +164,8 @@ public class ChooseMode : MonoBehaviour
     public void PrevPlayer2()
     {
         if (isPlayer2Choose) return;
-        source.PlayOneShot(clickClip);
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI(AudioManager.Instance.movechooseItemClip);
+        indexP1++;
         indexP2--;
 
         if (indexP2 < 0)
@@ -167,7 +177,8 @@ public class ChooseMode : MonoBehaviour
     public void NextPlayer2()
     {
         if (isPlayer2Choose) return;
-        source.PlayOneShot(clickClip);
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI(AudioManager.Instance.movechooseItemClip);
+        indexP1++;
         indexP2++;
 
         if (indexP2 >= player2.Count)
@@ -180,8 +191,7 @@ public class ChooseMode : MonoBehaviour
     {
         if (isPlayer2Choose) return;
         PlaySalute(player2[indexP2]);
-
-        source.PlayOneShot(doneChooseClip);
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI(AudioManager.Instance.doneChooseClickClip);
         isPlayer2Choose = true;
 
      
@@ -246,12 +256,25 @@ public class ChooseMode : MonoBehaviour
     }
     public void LoadScene(int buildIndex)
     {
-        source.PlayOneShot(startClickClip);
+        var ui = UIManager.Instance;
+        if (ui != null)
+        {
+            ui.exitMainMenuButton.SetActive(false);
+        }
+        var setting = SettingManager.Instance;
+        if (setting != null)
+        {
+            setting.isOpenExitButton = false;
+
+        }
+       
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI(AudioManager.Instance.startGameButtonClickClip);
+        indexP1++;
         StartCoroutine(LoadSceneDelay(buildIndex));
     }
     private IEnumerator LoadSceneDelay(int buildIndex)
     {
-        source.PlayOneShot(startClickClip);
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI(AudioManager.Instance.startGameButtonClickClip);
 
         Button btn = buttonStart.GetComponent<Button>();
 
@@ -281,13 +304,16 @@ public class ChooseMode : MonoBehaviour
             timer += 2f;
         }
 
-        for (int i = 0; i < auidosource.Length; i++) {
-            auidosource[i].volume = 0;
-        }
+        if (AudioManager.Instance != null) AudioManager.Instance.PauseAudio();
         var cursor = CursorManager.Instance;
         if (cursor != null)
         {
             cursor.HideGameCursor();
+        }
+        if(SettingManager.Instance && UIManager.Instance != null)
+        {
+            SettingManager.Instance.ResetSetting();
+            UIManager.Instance.openSettingPanelButton.SetActive(false);
         }
         yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
         SceneManager.LoadScene("CutScene 1");

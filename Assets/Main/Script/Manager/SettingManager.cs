@@ -11,9 +11,12 @@ public class SettingManager : MonoBehaviour
     public static SettingManager Instance;
 
     [Header("Audio Sliders")]
+    public Slider masterSlider;
     public Slider musicSlider;
     public Slider sfxSlider;
 
+    [Header("UI")]
+    public GameObject settingPanel;
     [Header("Graphics")]
     public TMP_Dropdown qualityGraphicDropDown;
 
@@ -21,6 +24,9 @@ public class SettingManager : MonoBehaviour
     public TMP_Dropdown resolutionDropdown;
 
     [Header("Current Setting Values")]
+    [Range(0f, 1f)]
+    public float masterValue = 1f;
+
     [Range(0f, 1f)]
     public float musicValue = 1f;
 
@@ -66,6 +72,16 @@ public class SettingManager : MonoBehaviour
     [SerializeField] private int windowedHeight = 720;
 
     public bool isOpenAudioClick = false;
+    [Header("Open Setting")]
+    public bool canOpenSettingByEsc = true;
+
+    // Trạng thái bảng Setting khi mở bằng nút bình thường
+    public bool isSettingOpen = false;
+
+    // Trạng thái bảng Setting khi mở bằng ESC trong cutscene
+    public bool isEscSettingOpen = false;
+
+    public bool isOpenExitButton = false;
 
 
     private void Awake()
@@ -73,6 +89,7 @@ public class SettingManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -80,15 +97,20 @@ public class SettingManager : MonoBehaviour
             return;
         }
     }
+    private void Update()
+    {
+        if (!canOpenSettingByEsc)
+            return;
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            ToggleSettingByEsc();
+        }
+    }
+
 
     private void Start()
     {
-        var cursor = CursorManager.Instance;
-
-        if (cursor != null)
-        {
-            cursor.ShowGameCursor();
-        }
 
         SetupDefaultValue();
 
@@ -103,6 +125,7 @@ public class SettingManager : MonoBehaviour
         {
             backToMainMenuButton.onClick.AddListener(
                 OnClickBackToMainMenu
+
             );
         }
         isOpenAudioClick = true;
@@ -114,8 +137,16 @@ public class SettingManager : MonoBehaviour
 
     private void SetupDefaultValue()
     {
+        masterValue = 1f;
         musicValue = 1f;
         sfxValue = 1f;
+
+        if (masterSlider != null)
+        {
+            masterSlider.minValue = 0f;
+            masterSlider.maxValue = 1f;
+            masterSlider.value = masterValue;
+        }
 
         if (musicSlider != null)
         {
@@ -134,8 +165,15 @@ public class SettingManager : MonoBehaviour
         // Mặc định Graphics Quality là High
         if (qualityGraphicDropDown != null)
         {
-            qualityGraphicDropDown.value = 2;
-            qualityGraphicDropDown.RefreshShownValue();
+            if (qualityGraphicDropDown != null &&
+      VolumeManager.Instance != null)
+            {
+                qualityGraphicDropDown.SetValueWithoutNotify(
+                    VolumeManager.Instance.GetCurrentQuality()
+                );
+
+                qualityGraphicDropDown.RefreshShownValue();
+            }
         }
     }
 
@@ -299,6 +337,13 @@ public class SettingManager : MonoBehaviour
 
     private void AddListeners()
     {
+        if (masterSlider != null)
+        {
+            masterSlider.onValueChanged.AddListener(
+                SetMasterVolume
+            );
+        }
+
         if (musicSlider != null)
         {
             musicSlider.onValueChanged.AddListener(
@@ -348,6 +393,13 @@ public class SettingManager : MonoBehaviour
 
     private void RemoveListeners()
     {
+        if (masterSlider != null)
+        {
+            masterSlider.onValueChanged.RemoveListener(
+                SetMasterVolume
+            );
+        }
+
         if (musicSlider != null)
         {
             musicSlider.onValueChanged.RemoveListener(
@@ -448,7 +500,7 @@ public class SettingManager : MonoBehaviour
                 );
             }
         }
-      
+
         switch (index)
         {
 
@@ -513,6 +565,20 @@ public class SettingManager : MonoBehaviour
         }
 
         return new Vector2Int(1920, 1080);
+    }
+
+    // ==================================================
+    // MASTER VOLUME SLIDER
+    // ==================================================
+
+    public void SetMasterVolume(float value)
+    {
+        masterValue = Mathf.Clamp01(value);
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.ApplyMasterSetting(masterValue);
+        }
     }
 
     // ==================================================
@@ -614,7 +680,7 @@ public class SettingManager : MonoBehaviour
                 );
             }
         }
-       
+
 
         Debug.Log(
             "Đã đổi Resolution thành: " +
@@ -632,6 +698,7 @@ public class SettingManager : MonoBehaviour
     {
         if (AudioManager.Instance != null)
         {
+            AudioManager.Instance.ApplyMasterSetting(masterValue);
             AudioManager.Instance.ApplyMusicSetting(musicValue);
             AudioManager.Instance.ApplySFXSetting(sfxValue);
         }
@@ -657,52 +724,160 @@ public class SettingManager : MonoBehaviour
     // SETTING PANEL
     // ==================================================
 
+    // Dùng cho nút Setting bình thường
     public void ToggleSetting()
     {
-        countClick++;
+        PlaySettingClickSound();
 
+        if (isSettingOpen)
+        {
+            CloseSettingPanel();
+        }
+        else
+        {
+            OpenSettingPanel();
+        }
+    }
+
+    // Dùng riêng cho phím ESC trong cutscene
+    public void ToggleSettingByEsc()
+    {
+        PlaySettingClickSound();
+
+        if (isEscSettingOpen)
+        {
+            ResetEscSetting();
+        }
+        else
+        {
+            OpenEscSetting();
+        }
+    }
+
+    private void OpenSettingPanel()
+    {
+        isSettingOpen = true;
+        isEscSettingOpen = false;
+        countClick = 1;
+
+       // ShowCursorForSetting();
+        SetSettingPanelActive(true);
+        SetExitButtonActive(isOpenExitButton);
+        //ClearSelectedUI();
+    }
+
+    private void CloseSettingPanel()
+    {
+        isSettingOpen = false;
+        isEscSettingOpen = false;
+        countClick = 0;
+
+        SetSettingPanelActive(false);
+        SetExitButtonActive(false);
+        ClearSelectedUI();
+       // HideCursorAfterSetting();
+    }
+
+    private void OpenEscSetting()
+    {
+        isEscSettingOpen = true;
+        isSettingOpen = false;
+        countClick = 0;
+
+        ShowCursorForSetting();
+        SetSettingPanelActive(true);
+        SetExitButtonActive(isOpenExitButton);
+        ClearSelectedUI();
+    }
+
+    // Gắn hàm này vào nút đóng nếu bảng được mở bằng ESC
+    public void ResetEscSetting()
+    {
+        isEscSettingOpen = false;
+        isSettingOpen = false;
+        countClick = 0;
+
+        SetSettingPanelActive(false);
+        SetExitButtonActive(false);
+        ClearSelectedUI();
+        HideCursorAfterSetting();
+    }
+
+    // Reset chung khi đổi scene hoặc muốn đóng toàn bộ Setting
+    public void ResetSetting()
+    {
+        isSettingOpen = false;
+        isEscSettingOpen = false;
+        countClick = 0;
+
+        SetSettingPanelActive(false);
+        SetExitButtonActive(false);
+        ClearSelectedUI();
+        HideCursorAfterSetting();
+    }
+
+    private void SetSettingPanelActive(bool active)
+    {
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ActiveSettingPanel(active);
+        }
+        else if (settingPanel != null)
+        {
+            settingPanel.SetActive(active);
+        }
+    }
+
+    private void SetExitButtonActive(bool active)
+    {
+        if (UIManager.Instance != null &&
+            UIManager.Instance.exitMainMenuButton != null)
+        {
+            UIManager.Instance.exitMainMenuButton.SetActive(active);
+        }
+    }
+
+    private void ShowCursorForSetting()
+    {
+        if (CursorManager.Instance != null)
+        {
+            CursorManager.Instance.ShowGameCursor();
+        }
+        else
+        {
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+        }
+    }
+
+    private void HideCursorAfterSetting()
+    {
+        if (CursorManager.Instance != null)
+        {
+            CursorManager.Instance.HideGameCursor();
+        }
+        else
+        {
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+        }
+    }
+
+    private void PlaySettingClickSound()
+    {
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlayUI(
                 AudioManager.Instance.clickButton
             );
         }
-
-        if (countClick == 1)
-        {
-            if (UIManager.Instance != null)
-            {
-                UIManager.Instance.ActiveSettingPanel(true);
-            }
-        }
-        else
-        {
-            if (UIManager.Instance != null)
-            {
-                UIManager.Instance.ActiveSettingPanel(false);
-            }
-
-            if (EventSystem.current != null)
-            {
-                EventSystem.current.SetSelectedGameObject(null);
-            }
-
-            countClick = 0;
-        }
     }
 
-    public void ResetSetting()
+    private void ClearSelectedUI()
     {
-        countClick = 0;
-
         if (EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
-        }
-
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.ActiveSettingPanel(false);
         }
     }
 
@@ -725,7 +900,7 @@ public class SettingManager : MonoBehaviour
     private IEnumerator BackToMainMenuRoutine()
     {
         var cursor = CursorManager.Instance;
-        if(cursor != null)
+        if (cursor != null)
         {
             cursor.HideGameCursor();
         }
@@ -733,7 +908,15 @@ public class SettingManager : MonoBehaviour
 
         if (audio != null)
         {
-            audio.StopAllAudio();
+            audio.ZeroAllAudio();
+            audio.PauseAudio();
+        }
+        if (UIManager.Instance != null)
+        {
+            ResetSetting();
+            UIManager.Instance.openSettingPanelButton.SetActive(false);
+
+            UIManager.Instance.canvasNotifi.SetActive(false);
         }
 
         if (LoadingManager.Instance != null)
@@ -743,7 +926,7 @@ public class SettingManager : MonoBehaviour
 
         if (VolumeManager.Instance != null)
         {
-            VolumeManager.Instance.SetGraphicsQuality(2);
+            VolumeManager.Instance.SetGraphicsQuality(VolumeManager.Instance.currentQuality);
         }
 
         SceneManager.LoadScene(indexScene);
