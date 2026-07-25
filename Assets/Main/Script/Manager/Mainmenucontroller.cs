@@ -30,8 +30,13 @@ public class MainMenuController : MonoBehaviour
         }
         var setting = SettingManager.Instance;
         if(setting != null)
-        {
+        { 
             setting.isOpenExitButton = false;
+        }
+        var volume = VolumeManager.Instance;
+        if(volume != null) { 
+            volume.ResetVignette();
+            //volume.SetGraphicsQuality(volume.currentQuality);
         }
 
     }

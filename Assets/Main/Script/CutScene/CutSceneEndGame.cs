@@ -35,6 +35,13 @@ public class CutSceneEndGame : MonoBehaviour
     public TMP_Text subtitleText;
     public Outline subtitleOutline;
 
+    [Header("--- SKIP UI ---")]
+    [Tooltip("GameObject chứa chữ Press Space to Skip")]
+    public GameObject skipHintObject;
+
+    [Tooltip("TMP Text của skip hint")]
+    public TMP_Text skipHintText;
+
     [Header("--- GRADIENT PRESET ---")]
     public TMP_ColorGradient normalGradient;
     public TMP_ColorGradient finalGradient;
@@ -57,6 +64,11 @@ public class CutSceneEndGame : MonoBehaviour
     public float fadeOutDuration = 0.3f;
     public float betweenLineFade = 0.3f;
 
+    [Header("--- END AUDIO FADE ---")]
+    public float endAudioFadeTime = 4.18f;
+
+    private bool isSkipped;
+
     private readonly string[] storyLines =
     {
         "A gateway to glory... it finally appears.",
@@ -68,7 +80,6 @@ public class CutSceneEndGame : MonoBehaviour
     };
 
     private Vector3 teleportOriginalScale;
-    private AudioSource narratorSource;
 
     private void Awake()
     {
@@ -83,31 +94,130 @@ public class CutSceneEndGame : MonoBehaviour
 
     private void Start()
     {
-        SetupNarrator();
-        PlayCutScene();
-    }
-
-    //==================================================
-    // SETUP NARRATOR
-    //==================================================
-    private void SetupNarrator()
-    {
-        narratorSource = gameObject.AddComponent<AudioSource>();
-
-        narratorSource.playOnAwake = false;
-        narratorSource.loop = false;
-        narratorSource.volume = narratorVolume;
-
         if (subtitlePanel != null)
-        {
             subtitlePanel.SetActive(false);
-        }
 
         if (subtitleText != null)
         {
             subtitleText.text = "";
             subtitleText.alpha = 1f;
         }
+
+        if (skipHintObject != null)
+            skipHintObject.SetActive(false);
+
+        var ui = UIManager.Instance;
+        if (ui != null)
+        {
+            ui.uiMain.SetActive(true);
+            ui.canvasNotifi.SetActive(false);
+            ui.openSettingPanelButton.SetActive(false);
+        }
+        var setting = SettingManager.Instance;
+        if (setting != null)
+        {
+            setting.canOpenSettingByEsc = true;
+            setting.isOpenExitButton = false;
+        }
+           
+      
+
+        PlayCutScene();
+        StartCoroutine(ShowSkipHint());
+    }
+
+    private void Update()
+    {
+        if (isSkipped)
+            return;
+
+        if (Input.GetKeyDown(KeyCode.Space) ||
+            Input.GetKeyDown(KeyCode.Return))
+        {
+            SkipCutscene();
+        }
+    }
+
+    private void SkipCutscene()
+    {
+        if (isSkipped)
+            return;
+
+        isSkipped = true;
+
+        StopAllCoroutines();
+        StopNarratorVoice();
+        StopPlayerMovement();
+
+        var setting = SettingManager.Instance;
+        if (setting != null)
+        {
+            setting.ResetEscSetting();
+            setting.canOpenSettingByEsc = false;
+        }
+
+        HideSubtitleImmediate();
+
+        if (skipHintObject != null)
+            skipHintObject.SetActive(false);
+
+        StartCoroutine(SkipToEnd());
+    }
+
+    private IEnumerator SkipToEnd()
+    {
+        if (blackStopPanel != null)
+            blackStopPanel.SetActive(true);
+
+        AudioManager audio = AudioManager.Instance;
+        if (audio != null)
+        {
+            audio.ZeroAllAudio();
+            audio.PauseAudio();
+
+            if (audio.UISource != null)
+                audio.UISource.Stop();
+        }
+
+        if (LoadingManager.Instance != null)
+        {
+            yield return StartCoroutine(
+                LoadingManager.Instance.ShowLoading()
+            );
+        }
+
+        SceneManager.LoadScene(6);
+    }
+
+    private IEnumerator ShowSkipHint()
+    {
+        yield return null;
+
+        if (isSkipped)
+            yield break;
+
+        if (skipHintObject != null)
+            skipHintObject.SetActive(true);
+
+        if (skipHintText == null)
+            yield break;
+
+        skipHintText.alpha = 0f;
+
+        float time = 0f;
+        const float duration = 0.5f;
+
+        while (time < duration)
+        {
+            if (isSkipped)
+                yield break;
+
+            time += Time.deltaTime;
+            skipHintText.alpha = Mathf.Lerp(0f, 1f, time / duration);
+            yield return null;
+        }
+
+        skipHintText.alpha = 1f;
     }
 
     //==================================================
@@ -123,6 +233,9 @@ public class CutSceneEndGame : MonoBehaviour
     //==================================================
     private IEnumerator CutSceneRoutine()
     {
+        if (isSkipped)
+            yield break;
+
         if (player == null || teleport == null)
         {
             yield break;
@@ -165,13 +278,13 @@ public class CutSceneEndGame : MonoBehaviour
             transPlayerToWalk.Length > 0 &&
             transPlayerToWalk[0] != null)
         {
-           StartCoroutine(
-                ShowSubtitleWithVoice(
-                    storyLines[1],
-                    1,
-                    false
-                )
-            );
+            StartCoroutine(
+                 ShowSubtitleWithVoice(
+                     storyLines[1],
+                     1,
+                     false
+                 )
+             );
 
             PlayerVFX playerVFX =
                 player.GetComponent<PlayerVFX>();
@@ -238,13 +351,13 @@ public class CutSceneEndGame : MonoBehaviour
         //==================================================
         SetCameraToPoint(4);
 
-         StartCoroutine(
-            ShowSubtitleWithVoice(
-                storyLines[3],
-                3,
-                false
-            )
-        );
+        StartCoroutine(
+           ShowSubtitleWithVoice(
+               storyLines[3],
+               3,
+               false
+           )
+       );
 
         yield return StartCoroutine(
             MoveCameraToPoint(5)
@@ -263,13 +376,13 @@ public class CutSceneEndGame : MonoBehaviour
         //==================================================
         SetCameraToPoint(8);
 
-       StartCoroutine(
-            ShowSubtitleWithVoice(
-                storyLines[4],
-                4,
-                false
-            )
-        );
+        StartCoroutine(
+             ShowSubtitleWithVoice(
+                 storyLines[4],
+                 4,
+                 false
+             )
+         );
 
         yield return StartCoroutine(
             MoveCameraToPoint(9)
@@ -301,7 +414,7 @@ public class CutSceneEndGame : MonoBehaviour
                     playerSlowMoveSpeed
                 )
             );
-          
+
             // Camera 12 -> 13
             yield return StartCoroutine(
                 MoveCameraToPoint(13)
@@ -311,7 +424,7 @@ public class CutSceneEndGame : MonoBehaviour
             SetCameraToPoint(14);
 
             // Hiện câu cuối
-           
+
 
             // Camera 14 -> 15
             yield return StartCoroutine(
@@ -325,31 +438,42 @@ public class CutSceneEndGame : MonoBehaviour
 
             // Đợi player đi xong
             yield return playerMoveRoutine;
-           yield return StartCoroutine(
-            ShowSubtitleWithVoice(
-                storyLines[5],
-                5,
-                true
-            )
-        );
+            yield return StartCoroutine(
+             ShowSubtitleWithVoice(
+                 storyLines[5],
+                 5,
+                 true
+             )
+         );
+
+            if (skipHintObject != null)
+                skipHintObject.SetActive(false);
+
+            var setting = SettingManager.Instance;
+            if (setting != null)
+            {
+                setting.ResetEscSetting();
+                setting.canOpenSettingByEsc = false;
+            }
 
             HideSubtitleImmediate();
+            StopNarratorVoice();
 
-            // Hiện panel đen cuối game
             if (blackStopPanel != null)
-            {
                 blackStopPanel.SetActive(true);
-            }
 
-            // Fade toàn bộ âm thanh
             if (audio != null)
+                audio.FadeOutAllAudio(endAudioFadeTime);
+
+            yield return new WaitForSeconds(endAudioFadeTime);
+
+            if (LoadingManager.Instance != null)
             {
-                audio.FadeOutAllAudio(4.18f);
+                yield return StartCoroutine(
+                    LoadingManager.Instance.ShowLoading()
+                );
             }
 
-            yield return new WaitForSeconds(5f);
-
-            // Chuyển scene
             SceneManager.LoadScene(6);
         }
         else
@@ -385,10 +509,10 @@ public class CutSceneEndGame : MonoBehaviour
         bool isFinal
     )
     {
-        if (narratorSource != null)
-        {
-            narratorSource.Stop();
-        }
+        if (isSkipped)
+            yield break;
+
+        StopNarratorVoice();
 
         // Nếu câu cũ còn hiện thì fade ra
         if (subtitleText != null &&
@@ -421,6 +545,9 @@ public class CutSceneEndGame : MonoBehaviour
         // Hiệu ứng chữ chạy
         foreach (char character in line)
         {
+            if (isSkipped)
+                yield break;
+
             if (subtitleText != null)
             {
                 subtitleText.text += character;
@@ -429,12 +556,15 @@ public class CutSceneEndGame : MonoBehaviour
             yield return new WaitForSeconds(typeSpeed);
         }
 
-        // Đợi giọng kể chạy xong
-        if (narratorSource != null &&
-            narratorSource.isPlaying)
+        AudioManager audioManager = AudioManager.Instance;
+        if (audioManager != null && audioManager.UISource != null)
         {
             yield return new WaitWhile(
-                () => narratorSource.isPlaying
+                () =>
+                    !isSkipped &&
+                    AudioManager.Instance != null &&
+                    AudioManager.Instance.UISource != null &&
+                    AudioManager.Instance.UISource.isPlaying
             );
         }
     }
@@ -493,31 +623,27 @@ public class CutSceneEndGame : MonoBehaviour
     //==================================================
     private void PlayVoice(int index)
     {
-        if (narratorSource == null)
-        {
+        if (AudioManager.Instance == null)
             return;
-        }
 
         if (narratorVoices == null)
-        {
             return;
-        }
 
-        if (index < 0 ||
-            index >= narratorVoices.Length)
-        {
+        if (index < 0 || index >= narratorVoices.Length)
             return;
-        }
 
         if (narratorVoices[index] == null)
-        {
             return;
-        }
 
-        narratorSource.PlayOneShot(
-            narratorVoices[index],
-            narratorVolume
-        );
+        AudioManager.Instance.PlayUI(narratorVoices[index]);
+    }
+
+    private void StopNarratorVoice()
+    {
+        AudioManager audio = AudioManager.Instance;
+
+        if (audio != null && audio.UISource != null)
+            audio.UISource.Stop();
     }
 
     //==================================================
@@ -530,17 +656,21 @@ public class CutSceneEndGame : MonoBehaviour
             yield break;
         }
 
+        float duration = Mathf.Max(0.01f, fadeOutDuration);
         float startAlpha = subtitleText.alpha;
         float time = 0f;
 
-        while (time < fadeOutDuration)
+        while (time < duration)
         {
+            if (isSkipped)
+                yield break;
+
             time += Time.deltaTime;
 
             subtitleText.alpha = Mathf.Lerp(
                 startAlpha,
                 0f,
-                time / fadeOutDuration
+                time / duration
             );
 
             yield return null;
@@ -560,10 +690,7 @@ public class CutSceneEndGame : MonoBehaviour
     //==================================================
     private void HideSubtitleImmediate()
     {
-        if (narratorSource != null)
-        {
-            narratorSource.Stop();
-        }
+        StopNarratorVoice();
 
         if (subtitleText != null)
         {
@@ -603,6 +730,9 @@ public class CutSceneEndGame : MonoBehaviour
 
         while (time < duration)
         {
+            if (isSkipped)
+                yield break;
+
             time += Time.deltaTime;
 
             teleport.transform.localScale =
@@ -660,6 +790,9 @@ public class CutSceneEndGame : MonoBehaviour
                    agent.remainingDistance >
                    agent.stoppingDistance)
             {
+                if (isSkipped)
+                    yield break;
+
                 SetPlayerWalk(
                     playerManager,
                     agent.velocity.magnitude
@@ -678,6 +811,9 @@ public class CutSceneEndGame : MonoBehaviour
                        targetPos
                    ) > 0.05f)
             {
+                if (isSkipped)
+                    yield break;
+
                 Vector3 direction =
                     targetPos -
                     playerObj.transform.position;
@@ -797,6 +933,9 @@ public class CutSceneEndGame : MonoBehaviour
 
         while (time < cameraMoveTime)
         {
+            if (isSkipped)
+                yield break;
+
             time += Time.deltaTime;
 
             float percent =
@@ -853,6 +992,21 @@ public class CutSceneEndGame : MonoBehaviour
         yield return new WaitForSeconds(1.6f);
 
         blackPanel.SetActive(false);
+    }
+
+    private void StopPlayerMovement()
+    {
+        if (player == null)
+            return;
+
+        NavMeshAgent agent = player.GetComponent<NavMeshAgent>();
+        if (agent != null && agent.enabled)
+        {
+            agent.isStopped = true;
+            agent.ResetPath();
+        }
+
+        SetPlayerWalk(player.GetComponent<PlayerManager>(), 0f);
     }
 
     //==================================================

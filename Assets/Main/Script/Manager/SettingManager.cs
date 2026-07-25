@@ -165,8 +165,15 @@ public class SettingManager : MonoBehaviour
         // Mặc định Graphics Quality là High
         if (qualityGraphicDropDown != null)
         {
-            qualityGraphicDropDown.value = 2;
-            qualityGraphicDropDown.RefreshShownValue();
+            if (qualityGraphicDropDown != null &&
+      VolumeManager.Instance != null)
+            {
+                qualityGraphicDropDown.SetValueWithoutNotify(
+                    VolumeManager.Instance.GetCurrentQuality()
+                );
+
+                qualityGraphicDropDown.RefreshShownValue();
+            }
         }
     }
 
@@ -919,7 +926,7 @@ public class SettingManager : MonoBehaviour
 
         if (VolumeManager.Instance != null)
         {
-            VolumeManager.Instance.SetGraphicsQuality(2);
+            VolumeManager.Instance.SetGraphicsQuality(VolumeManager.Instance.currentQuality);
         }
 
         SceneManager.LoadScene(indexScene);
