@@ -1,3 +1,4 @@
+﻿
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -49,8 +50,7 @@ public class CursorManager : MonoBehaviour
 
     private void Start()
     {
-        SyncCursorPosition();
-        ShowGameCursor();
+        UpdateCursorByControllerState();
     }
 
     private void Update()
@@ -62,18 +62,48 @@ public class CursorManager : MonoBehaviour
         UpdatePressedSprite();
     }
 
+    // =========================================
+    // REFERENCES
+    // =========================================
+
     private void FindReferences()
     {
         if (cursorRect == null)
         {
-            cursorRect = GetComponentInChildren<RectTransform>(true);
+            cursorRect =
+                GetComponentInChildren<RectTransform>(true);
         }
 
         if (cursorImage == null)
         {
-            cursorImage = GetComponentInChildren<Image>(true);
+            cursorImage =
+                GetComponentInChildren<Image>(true);
         }
     }
+
+    // =========================================
+    // CONTROLLER STATE
+    // =========================================
+
+    public void UpdateCursorByControllerState()
+    {
+        bool hasController =
+            ControllerManager.Instance != null &&
+            ControllerManager.Instance.HasAnyController();
+
+        if (hasController)
+        {
+            HideGameCursor();
+        }
+        else
+        {
+            ShowGameCursor();
+        }
+    }
+
+    // =========================================
+    // CURSOR UPDATE
+    // =========================================
 
     private void SyncCursorPosition()
     {
@@ -81,7 +111,8 @@ public class CursorManager : MonoBehaviour
             return;
 
         cursorRect.position =
-            (Vector2)Input.mousePosition + cursorOffset;
+            (Vector2)Input.mousePosition +
+            cursorOffset;
     }
 
     private void UpdatePressedSprite()
@@ -93,7 +124,8 @@ public class CursorManager : MonoBehaviour
         {
             if (pressedSprite != null)
             {
-                cursorImage.sprite = pressedSprite;
+                cursorImage.sprite =
+                    pressedSprite;
             }
         }
 
@@ -101,10 +133,15 @@ public class CursorManager : MonoBehaviour
         {
             if (normalSprite != null)
             {
-                cursorImage.sprite = normalSprite;
+                cursorImage.sprite =
+                    normalSprite;
             }
         }
     }
+
+    // =========================================
+    // APPLICATION FOCUS
+    // =========================================
 
     private void OnApplicationFocus(bool hasFocus)
     {
@@ -116,12 +153,15 @@ public class CursorManager : MonoBehaviour
 
         if (restoreCursorCoroutine != null)
         {
-            StopCoroutine(restoreCursorCoroutine);
+            StopCoroutine(
+                restoreCursorCoroutine
+            );
         }
 
-        restoreCursorCoroutine = StartCoroutine(
-            RestoreGameCursorRoutine()
-        );
+        restoreCursorCoroutine =
+            StartCoroutine(
+                RestoreGameCursorRoutine()
+            );
     }
 
     private IEnumerator RestoreGameCursorRoutine()
@@ -133,35 +173,21 @@ public class CursorManager : MonoBehaviour
 
         yield return null;
 
-        Cursor.lockState = CursorLockMode.None;
+        Cursor.lockState =
+            CursorLockMode.None;
 
         SyncCursorPosition();
 
         yield return null;
 
-        ShowGameCursor();
+        UpdateCursorByControllerState();
 
         restoreCursorCoroutine = null;
     }
 
-    public void ShowGameCursor()
-    {
-        isGameCursorVisible = true;
-
-        Cursor.lockState = CursorLockMode.None;
-
-        if (hideSystemCursor)
-        {
-            Cursor.visible = false;
-        }
-
-        if (cursorImage != null)
-        {
-            cursorImage.enabled = true;
-        }
-
-        SyncCursorPosition();
-    }
+    // =========================================
+    // SHOW / HIDE CURSOR
+    // =========================================
 
     public void HideGameCursor()
     {
@@ -172,7 +198,30 @@ public class CursorManager : MonoBehaviour
             cursorImage.enabled = false;
         }
 
+        // Ẩn chuột Windows
         Cursor.visible = false;
+
+        // Khóa chuột ở giữa màn hình,
+        // người chơi không thể rê chuột ra ngoài game
+        Cursor.lockState = CursorLockMode.Locked;
+    }
+
+    public void ShowGameCursor()
+    {
+        isGameCursorVisible = true;
+
+        // Mở khóa chuột
+        Cursor.lockState = CursorLockMode.None;
+
+        // Nếu dùng cursor UI riêng thì ẩn cursor Windows
+        Cursor.visible = !hideSystemCursor;
+
+        if (cursorImage != null)
+        {
+            cursorImage.enabled = true;
+        }
+
+        SyncCursorPosition();
     }
 
     public void ShowSystemCursor()
@@ -184,42 +233,70 @@ public class CursorManager : MonoBehaviour
             cursorImage.enabled = false;
         }
 
-        Cursor.lockState = CursorLockMode.None;
+        Cursor.lockState =
+            CursorLockMode.None;
+
         Cursor.visible = true;
     }
 
+    // =========================================
+    // CURSOR SETTINGS
+    // =========================================
+
     public void SetCursorSprite(Sprite newSprite)
     {
-        if (cursorImage == null || newSprite == null)
+        if (cursorImage == null ||
+            newSprite == null)
+        {
             return;
+        }
 
         cursorImage.sprite = newSprite;
     }
 
     public void ResetCursorSprite()
     {
-        if (cursorImage == null || normalSprite == null)
+        if (cursorImage == null ||
+            normalSprite == null)
+        {
             return;
+        }
 
         cursorImage.sprite = normalSprite;
     }
 
-    public void SetCursorOffset(Vector2 newOffset)
+    public void SetCursorOffset(
+        Vector2 newOffset
+    )
     {
         cursorOffset = newOffset;
     }
 
-    public void SetCursorSize(Vector2 newSize)
+    public void SetCursorSize(
+        Vector2 newSize
+    )
     {
         if (cursorRect == null)
             return;
 
-        cursorRect.sizeDelta = newSize;
+        cursorRect.sizeDelta =
+            newSize;
     }
+
+    public bool IsGameCursorVisible()
+    {
+        return isGameCursorVisible;
+    }
+
+    // =========================================
+    // CLEANUP
+    // =========================================
 
     private void OnApplicationQuit()
     {
-        Cursor.lockState = CursorLockMode.None;
+        Cursor.lockState =
+            CursorLockMode.None;
+
         Cursor.visible = true;
     }
 
@@ -230,7 +307,10 @@ public class CursorManager : MonoBehaviour
 
         Instance = null;
 
-        Cursor.lockState = CursorLockMode.None;
+        Cursor.lockState =
+            CursorLockMode.None;
+
         Cursor.visible = true;
     }
 }
+

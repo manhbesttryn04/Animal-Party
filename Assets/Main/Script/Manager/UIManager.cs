@@ -95,6 +95,8 @@ public class UIManager : MonoBehaviour
     public GameObject settingPanel;
     public GameObject openSettingPanelButton;
     public GameObject exitMainMenuButton;
+    [Header("Cosole UI")]
+    public GameObject consoleImage;
 
     [Header("Bonus UI")]
     public GameObject bonusPanel;
@@ -501,5 +503,11 @@ public class UIManager : MonoBehaviour
         {
             playerManager2 = player2.GetComponent<PlayerManager>();
         }
+    }
+    public IEnumerator ShowConsoleConect()
+    {
+        consoleImage.SetActive(true);
+        yield return new WaitForSeconds(1.5f);
+        consoleImage.SetActive(false);
     }
 }

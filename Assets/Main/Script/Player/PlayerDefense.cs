@@ -54,12 +54,16 @@ public class PlayerDefense : MonoBehaviour
         // Player 1
         if (!playerManager.playerType.isPlayer2)
         {
-            defensePressed = Input.GetKeyDown(KeyCode.J);
+            defensePressed =
+                Input.GetKeyDown(KeyCode.J) ||
+                Input.GetKeyDown(KeyCode.Joystick1Button1);
         }
         // Player 2
         else
         {
-            defensePressed = Input.GetKeyDown(KeyCode.Keypad1);
+            defensePressed =
+                Input.GetKeyDown(KeyCode.Keypad1) ||
+                Input.GetKeyDown(KeyCode.Joystick2Button1);
         }
 
         if (!defensePressed)

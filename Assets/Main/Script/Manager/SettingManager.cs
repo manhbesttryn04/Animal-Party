@@ -83,6 +83,45 @@ public class SettingManager : MonoBehaviour
 
     public bool isOpenExitButton = false;
 
+    [Header("Controller Setting Navigation")]
+    [Tooltip("Thứ tự: Master, Music, SFX, Quality, Resolution, Display Mode")]
+    [SerializeField] private List<Image> settingItemBackgrounds = new List<Image>();
+
+    [SerializeField] private Color normalItemColor = Color.white;
+    [SerializeField] private Color focusedItemColor = Color.cyan;
+
+    [Tooltip("Màu của lựa chọn đang lia trong Dropdown, chưa xác nhận.")]
+    [SerializeField] private Color dropdownPreviewColor = new Color(0.2f, 0.2f, 0.2f, 0.9f);
+
+    [Range(0.01f, 0.5f)]
+    [SerializeField] private float sliderControllerStep = 0.05f;
+
+    [Range(0.1f, 1f)]
+    [SerializeField] private float controllerInputThreshold = 0.5f;
+
+    [Range(0f, 0.5f)]
+    [SerializeField] private float controllerResetThreshold = 0.2f;
+
+    [SerializeField] private string verticalP1Axis = "VerticalP1";
+    [SerializeField] private string horizontalP1Axis = "HorizontalP1";
+    [SerializeField] private string verticalP2Axis = "VerticalP2";
+    [SerializeField] private string horizontalP2Axis = "HorizontalP2";
+
+    private Selectable[] settingItems;
+    private int currentSettingIndex;
+
+    private bool canMoveSettingVertical = true;
+    private bool canMoveSettingHorizontal = true;
+
+    private bool isControllerDropdownOpen;
+    private TMP_Dropdown currentControllerDropdown;
+
+    // Giá trị đang lia thử trong Dropdown.
+    // Chỉ áp dụng thật khi nhấn Button 0.
+    private int controllerDropdownPreviewValue;
+
+    private bool hadControllerLastFrame;
+
 
     private void Awake()
     {
@@ -99,13 +138,21 @@ public class SettingManager : MonoBehaviour
     }
     private void Update()
     {
-        if (!canOpenSettingByEsc)
-            return;
-
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (canOpenSettingByEsc &&
+            Input.GetKeyDown(KeyCode.Escape))
         {
             ToggleSettingByEsc();
         }
+
+        HandleControllerConnectionState();
+
+        if (!IsAnySettingPanelOpen())
+            return;
+
+        if (!HasControllerForSetting())
+            return;
+
+        HandleControllerSettingNavigation();
     }
 
 
@@ -117,6 +164,10 @@ public class SettingManager : MonoBehaviour
         // Tạo danh sách và tự chọn Resolution
         SetupResolutionDropdown();
         SetupDisplayModeDropdown();
+
+        // Tạo danh sách 6 mục Setting cho tay cầm
+        SetupControllerSettingItems();
+
         AddListeners();
         ApplySettings();
         ResetSetting();
@@ -721,6 +772,612 @@ public class SettingManager : MonoBehaviour
         }
     }
     // ==================================================
+    // CONTROLLER SETTING NAVIGATION
+    // ==================================================
+
+    private void SetupControllerSettingItems()
+    {
+        settingItems = new Selectable[]
+        {
+        musicSlider,
+        sfxSlider,
+        masterSlider,
+        qualityGraphicDropDown,
+        resolutionDropdown,
+        displayModeDropdown
+        };
+
+        currentSettingIndex = 0;
+
+        UpdateSettingControllerFocus();
+    }
+
+    private bool IsAnySettingPanelOpen()
+    {
+        return isSettingOpen || isEscSettingOpen;
+    }
+
+    private bool HasControllerForSetting()
+    {
+        if (ControllerManager.Instance == null)
+            return false;
+
+        return ControllerManager.Instance.HasAnyController();
+    }
+
+    private bool IsConsole1Available()
+    {
+        if (ControllerManager.Instance == null)
+            return false;
+
+        return ControllerManager.Instance.IsConsole1Connected();
+    }
+
+    private bool IsConsole2Available()
+    {
+        if (ControllerManager.Instance == null)
+            return false;
+
+        return ControllerManager.Instance.IsConsole2Connected();
+    }
+
+    private void HandleControllerConnectionState()
+    {
+        bool hasController = HasControllerForSetting();
+
+        // Vừa cắm tay cầm khi bảng Setting đang mở:
+        // tự focus vào mục đầu tiên.
+        if (hasController &&
+            !hadControllerLastFrame &&
+            IsAnySettingPanelOpen())
+        {
+            FocusFirstSettingItem();
+        }
+        // Không còn tay cầm:
+        // bỏ focus và đóng Dropdown nếu đang mở.
+        else if (!hasController &&
+                 hadControllerLastFrame)
+        {
+            ResetSettingControllerFocus();
+            ClearSelectedUI();
+        }
+
+        hadControllerLastFrame = hasController;
+    }
+
+    private float GetSettingVerticalInput()
+    {
+        // Console 1 luôn được ưu tiên.
+        if (IsConsole1Available())
+        {
+            return Input.GetAxisRaw(verticalP1Axis);
+        }
+
+        // Console 1 bị rút thì Console 2 được điều khiển.
+        if (IsConsole2Available())
+        {
+            return Input.GetAxisRaw(verticalP2Axis);
+        }
+
+        return 0f;
+    }
+
+    private float GetSettingHorizontalInput()
+    {
+        if (IsConsole1Available())
+        {
+            return Input.GetAxisRaw(horizontalP1Axis);
+        }
+
+        if (IsConsole2Available())
+        {
+            return Input.GetAxisRaw(horizontalP2Axis);
+        }
+
+        return 0f;
+    }
+
+    private bool GetSettingSubmitDown()
+    {
+        // Console 1 có mặt thì chỉ Console 1 được quyền nhấn.
+        if (IsConsole1Available())
+        {
+            return Input.GetKeyDown(KeyCode.Joystick1Button0);
+        }
+
+        // Chỉ khi Console 1 không còn thì Console 2 mới được quyền nhấn.
+        if (IsConsole2Available())
+        {
+            return Input.GetKeyDown(KeyCode.Joystick2Button0);
+        }
+
+        return false;
+    }
+
+    private void HandleControllerSettingNavigation()
+    {
+        if (settingItems == null ||
+            settingItems.Length == 0)
+        {
+            return;
+        }
+
+        float vertical = GetSettingVerticalInput();
+        float horizontal = GetSettingHorizontalInput();
+
+        // Khi Dropdown đang mở, Vertical chỉ được dùng trong Dropdown.
+        if (isControllerDropdownOpen)
+        {
+            HandleOpenedDropdown(vertical);
+
+            if (GetSettingSubmitDown())
+            {
+                ConfirmControllerDropdown();
+            }
+
+            return;
+        }
+
+        HandleSettingVertical(vertical);
+        HandleSettingHorizontal(horizontal);
+
+        if (GetSettingSubmitDown())
+        {
+            HandleSettingSubmit();
+        }
+    }
+
+    private void HandleSettingVertical(float vertical)
+    {
+        if (Mathf.Abs(vertical) <= controllerResetThreshold)
+        {
+            canMoveSettingVertical = true;
+            return;
+        }
+
+        if (!canMoveSettingVertical)
+            return;
+
+        if (vertical > controllerInputThreshold)
+        {
+            MoveToPreviousSettingItem();
+            canMoveSettingVertical = false;
+        }
+        else if (vertical < -controllerInputThreshold)
+        {
+            MoveToNextSettingItem();
+            canMoveSettingVertical = false;
+        }
+    }
+
+    private void MoveToPreviousSettingItem()
+    {
+        int startIndex = currentSettingIndex;
+
+        do
+        {
+            currentSettingIndex--;
+
+            if (currentSettingIndex < 0)
+            {
+                currentSettingIndex = settingItems.Length - 1;
+            }
+
+            if (CanUseSettingItem(settingItems[currentSettingIndex]))
+            {
+                UpdateSettingControllerFocus();
+                PlayControllerMoveSound();
+                return;
+            }
+
+        } while (currentSettingIndex != startIndex);
+    }
+
+    private void MoveToNextSettingItem()
+    {
+        int startIndex = currentSettingIndex;
+
+        do
+        {
+            currentSettingIndex++;
+
+            if (currentSettingIndex >= settingItems.Length)
+            {
+                currentSettingIndex = 0;
+            }
+
+            if (CanUseSettingItem(settingItems[currentSettingIndex]))
+            {
+                UpdateSettingControllerFocus();
+                PlayControllerMoveSound();
+                return;
+            }
+
+        } while (currentSettingIndex != startIndex);
+    }
+
+    private bool CanUseSettingItem(Selectable item)
+    {
+        return item != null &&
+               item.gameObject.activeInHierarchy &&
+               item.interactable;
+    }
+
+    private void HandleSettingHorizontal(float horizontal)
+    {
+        // Chỉ ba phần tử đầu là Slider.
+        if (currentSettingIndex < 0 ||
+            currentSettingIndex > 2)
+        {
+            canMoveSettingHorizontal = true;
+            return;
+        }
+
+        if (Mathf.Abs(horizontal) <= controllerResetThreshold)
+        {
+            canMoveSettingHorizontal = true;
+            return;
+        }
+
+        if (!canMoveSettingHorizontal)
+            return;
+
+        Slider selectedSlider =
+            settingItems[currentSettingIndex] as Slider;
+
+        if (selectedSlider == null)
+            return;
+
+        float direction = horizontal > 0f ? 1f : -1f;
+
+        float newValue =
+            selectedSlider.value +
+            direction * sliderControllerStep;
+
+        newValue = Mathf.Clamp(
+            newValue,
+            selectedSlider.minValue,
+            selectedSlider.maxValue
+        );
+
+        selectedSlider.value = newValue;
+
+        canMoveSettingHorizontal = false;
+
+        PlayControllerMoveSound();
+    }
+
+    private void HandleSettingSubmit()
+    {
+        // Ba mục đầu là Slider nên không cần Button 0.
+        if (currentSettingIndex <= 2)
+            return;
+
+        TMP_Dropdown dropdown =
+            settingItems[currentSettingIndex] as TMP_Dropdown;
+
+        if (dropdown == null)
+            return;
+
+        OpenControllerDropdown(dropdown);
+    }
+
+    private void OpenControllerDropdown(TMP_Dropdown dropdown)
+    {
+        if (dropdown == null ||
+            dropdown.options == null ||
+            dropdown.options.Count == 0)
+        {
+            return;
+        }
+
+        currentControllerDropdown = dropdown;
+        isControllerDropdownOpen = true;
+
+        // Lưu giá trị hiện tại làm giá trị xem trước.
+        // Chưa áp dụng Graphics/Resolution/Display Mode ở bước này.
+        controllerDropdownPreviewValue = dropdown.value;
+
+        // Phải trả Vertical về giữa trước khi di chuyển lựa chọn.
+        canMoveSettingVertical = false;
+        canMoveSettingHorizontal = true;
+
+        dropdown.Show();
+
+        // Làm tối lựa chọn hiện đang được lia tới.
+        UpdateDropdownPreviewHighlight();
+
+        if (EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(
+                dropdown.gameObject
+            );
+        }
+
+        PlayControllerClickSound();
+    }
+
+    private void HandleOpenedDropdown(float vertical)
+    {
+        if (currentControllerDropdown == null)
+        {
+            CloseControllerDropdownState();
+            return;
+        }
+
+        if (Mathf.Abs(vertical) <= controllerResetThreshold)
+        {
+            canMoveSettingVertical = true;
+            return;
+        }
+
+        if (!canMoveSettingVertical)
+            return;
+
+        int optionCount =
+            currentControllerDropdown.options.Count;
+
+        if (optionCount <= 0)
+            return;
+
+        int newValue = controllerDropdownPreviewValue;
+
+        if (vertical > controllerInputThreshold)
+        {
+            newValue--;
+
+            if (newValue < 0)
+            {
+                newValue = optionCount - 1;
+            }
+        }
+        else if (vertical < -controllerInputThreshold)
+        {
+            newValue++;
+
+            if (newValue >= optionCount)
+            {
+                newValue = 0;
+            }
+        }
+        else
+        {
+            return;
+        }
+
+        // Chỉ đổi phần hiển thị, không gọi onValueChanged.
+        // Vì vậy Graphics/Resolution/Display Mode chưa được áp dụng.
+        controllerDropdownPreviewValue = newValue;
+        currentControllerDropdown.SetValueWithoutNotify(
+            controllerDropdownPreviewValue
+        );
+        currentControllerDropdown.RefreshShownValue();
+
+        // Chỉ đổi màu lựa chọn đang lia, chưa áp dụng Setting.
+        UpdateDropdownPreviewHighlight();
+
+        canMoveSettingVertical = false;
+
+        PlayControllerMoveSound();
+    }
+
+
+    private void UpdateDropdownPreviewHighlight()
+    {
+        if (currentControllerDropdown == null)
+            return;
+
+        // TMP_Dropdown tạo một object tên "Dropdown List" khi mở.
+        // Tìm các Toggle thuộc đúng danh sách đó.
+        Toggle[] allToggles =
+            currentControllerDropdown.transform.root
+                .GetComponentsInChildren<Toggle>(true);
+
+        List<Toggle> optionToggles = new List<Toggle>();
+
+        foreach (Toggle toggle in allToggles)
+        {
+            if (toggle == null || !toggle.gameObject.activeInHierarchy)
+                continue;
+
+            Transform current = toggle.transform;
+            bool belongsToDropdownList = false;
+
+            while (current != null)
+            {
+                if (current.name == "Dropdown List")
+                {
+                    belongsToDropdownList = true;
+                    break;
+                }
+
+                current = current.parent;
+            }
+
+            if (belongsToDropdownList)
+            {
+                optionToggles.Add(toggle);
+            }
+        }
+
+        for (int i = 0; i < optionToggles.Count; i++)
+        {
+            Toggle toggle = optionToggles[i];
+            ColorBlock colors = toggle.colors;
+
+            bool isPreview = i == controllerDropdownPreviewValue;
+
+            Color normalColor = isPreview
+                ? dropdownPreviewColor
+                : Color.white;
+
+            colors.normalColor = normalColor;
+            colors.selectedColor = normalColor;
+            colors.highlightedColor = normalColor;
+            colors.pressedColor = normalColor;
+
+            toggle.colors = colors;
+
+            if (toggle.targetGraphic != null)
+            {
+                toggle.targetGraphic.color = normalColor;
+            }
+        }
+    }
+
+    private void ConfirmControllerDropdown()
+    {
+        if (currentControllerDropdown == null)
+        {
+            CloseControllerDropdownState();
+            return;
+        }
+
+        // Nhấn Button 0 mới xác nhận và áp dụng giá trị.
+        currentControllerDropdown.SetValueWithoutNotify(
+            controllerDropdownPreviewValue
+        );
+        currentControllerDropdown.RefreshShownValue();
+
+        // Gọi listener đúng 1 lần sau khi đã xác nhận.
+        currentControllerDropdown.onValueChanged.Invoke(
+            controllerDropdownPreviewValue
+        );
+
+        currentControllerDropdown.Hide();
+
+        CloseControllerDropdownState();
+        UpdateSettingControllerFocus();
+
+        PlayControllerClickSound();
+    }
+
+    private void CloseControllerDropdownState()
+    {
+        isControllerDropdownOpen = false;
+        currentControllerDropdown = null;
+        controllerDropdownPreviewValue = 0;
+
+        // Phải thả cần Vertical rồi mới di chuyển sang mục khác.
+        canMoveSettingVertical = false;
+        canMoveSettingHorizontal = true;
+    }
+
+    private void FocusFirstSettingItem()
+    {
+        if (!HasControllerForSetting())
+            return;
+
+        if (settingItems == null ||
+            settingItems.Length == 0)
+        {
+            SetupControllerSettingItems();
+        }
+
+        currentSettingIndex = 0;
+
+        isControllerDropdownOpen = false;
+        currentControllerDropdown = null;
+
+        canMoveSettingVertical = false;
+        canMoveSettingHorizontal = true;
+
+        UpdateSettingControllerFocus();
+    }
+
+    private void UpdateSettingControllerFocus()
+    {
+        if (settingItems == null ||
+            settingItems.Length == 0)
+        {
+            return;
+        }
+
+        currentSettingIndex = Mathf.Clamp(
+            currentSettingIndex,
+            0,
+            settingItems.Length - 1
+        );
+
+        // Đổi màu Image cha của 6 mục Setting.
+        for (int i = 0;
+             i < settingItemBackgrounds.Count;
+             i++)
+        {
+            Image background =
+                settingItemBackgrounds[i];
+
+            if (background == null)
+                continue;
+
+            background.color =
+                i == currentSettingIndex
+                    ? focusedItemColor
+                    : normalItemColor;
+        }
+
+        Selectable selectedItem =
+            settingItems[currentSettingIndex];
+
+        if (!CanUseSettingItem(selectedItem))
+            return;
+
+        if (EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(
+                selectedItem.gameObject
+            );
+        }
+    }
+
+    private void ResetSettingControllerFocus()
+    {
+        if (currentControllerDropdown != null)
+        {
+            currentControllerDropdown.Hide();
+        }
+
+        isControllerDropdownOpen = false;
+        currentControllerDropdown = null;
+
+        canMoveSettingVertical = true;
+        canMoveSettingHorizontal = true;
+
+        for (int i = 0;
+             i < settingItemBackgrounds.Count;
+             i++)
+        {
+            if (settingItemBackgrounds[i] != null)
+            {
+                settingItemBackgrounds[i].color =
+                    normalItemColor;
+            }
+        }
+    }
+
+    private void PlayControllerMoveSound()
+    {
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayUI(
+                AudioManager.Instance.movechooseItemClip
+            );
+        }
+    }
+
+    private void PlayControllerClickSound()
+    {
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayUI(
+                AudioManager.Instance.clickButton
+            );
+        }
+    }
+
+
+    // ==================================================
     // SETTING PANEL
     // ==================================================
 
@@ -760,10 +1417,17 @@ public class SettingManager : MonoBehaviour
         isEscSettingOpen = false;
         countClick = 1;
 
-       // ShowCursorForSetting();
         SetSettingPanelActive(true);
         SetExitButtonActive(isOpenExitButton);
-        //ClearSelectedUI();
+
+        if (HasControllerForSetting())
+        {
+            FocusFirstSettingItem();
+        }
+        else
+        {
+            ClearSelectedUI();
+        }
     }
 
     private void CloseSettingPanel()
@@ -772,10 +1436,11 @@ public class SettingManager : MonoBehaviour
         isEscSettingOpen = false;
         countClick = 0;
 
+        ResetSettingControllerFocus();
+
         SetSettingPanelActive(false);
         SetExitButtonActive(false);
         ClearSelectedUI();
-       // HideCursorAfterSetting();
     }
 
     private void OpenEscSetting()
@@ -787,7 +1452,15 @@ public class SettingManager : MonoBehaviour
         ShowCursorForSetting();
         SetSettingPanelActive(true);
         SetExitButtonActive(isOpenExitButton);
-        ClearSelectedUI();
+
+        if (HasControllerForSetting())
+        {
+            FocusFirstSettingItem();
+        }
+        else
+        {
+            ClearSelectedUI();
+        }
     }
 
     // Gắn hàm này vào nút đóng nếu bảng được mở bằng ESC
@@ -796,6 +1469,8 @@ public class SettingManager : MonoBehaviour
         isEscSettingOpen = false;
         isSettingOpen = false;
         countClick = 0;
+
+        ResetSettingControllerFocus();
 
         SetSettingPanelActive(false);
         SetExitButtonActive(false);
@@ -809,6 +1484,8 @@ public class SettingManager : MonoBehaviour
         isSettingOpen = false;
         isEscSettingOpen = false;
         countClick = 0;
+
+        ResetSettingControllerFocus();
 
         SetSettingPanelActive(false);
         SetExitButtonActive(false);

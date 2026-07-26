@@ -7,14 +7,21 @@ public class PlayerMove : MonoBehaviour
     public PlayerManager manager;
     public bool isPlayer1 = true;
 
+    [Header("Move Settings")]
     public float speed = 5f;
     public float turnSpeed = 10f;
 
+    [Header("Jump Settings")]
     public float jumpHeight = 2f;
     public float gravity = -9.81f;
+
+    [Header("Move State")]
     public bool isGround;
-    public bool isJumpAndMove, isMove, isJump = true;
+    public bool isJumpAndMove;
+    public bool isMove;
+    public bool isJump = true;
     public bool isWalk = false;
+
     public bool IsMoving { get; private set; }
 
     [Header("Lie Settings")]
@@ -27,90 +34,146 @@ public class PlayerMove : MonoBehaviour
     private float normalHeight;
     private Vector3 normalCenter;
 
+    [Header("References")]
     public CharacterController controller;
+
     private Vector3 velocity;
 
-    void Start()
+    private void Start()
     {
         controller = GetComponent<CharacterController>();
         manager = GetComponent<PlayerManager>();
+
         normalHeight = controller.height;
         normalCenter = controller.center;
     }
 
-    void Update()
+    private void Update()
     {
         CheckLieInput();
 
         if (isJumpAndMove)
         {
             if (isMove)
+            {
                 Move();
+            }
+            else
+            {
+                StopMoveAnimation();
+            }
 
             if (isJump)
+            {
                 JumpInput();
-        }
-        ApplyGravity();
-    }
-    void Move()
-    {
-  
-        Vector3 move = Vector3.zero;
-
-        if (!manager.playerType.isPlayer2)
-        {
-            if (Input.GetKey(KeyCode.W)) move += Vector3.forward;
-            if (Input.GetKey(KeyCode.S)) move += Vector3.back;
-            if (Input.GetKey(KeyCode.A)) move += Vector3.left;
-            if (Input.GetKey(KeyCode.D)) move += Vector3.right;
+            }
         }
         else
         {
-            if (Input.GetKey(KeyCode.UpArrow)) move += Vector3.forward;
-            if (Input.GetKey(KeyCode.DownArrow)) move += Vector3.back;
-            if (Input.GetKey(KeyCode.LeftArrow)) move += Vector3.left;
-            if (Input.GetKey(KeyCode.RightArrow)) move += Vector3.right;
+            StopMoveAnimation();
         }
 
-        IsMoving = move.magnitude > 0.1f;
+        ApplyGravity();
+    }
 
-        if (move.magnitude > 0.1f)
+    private void Move()
+    {
+        float horizontal;
+        float vertical;
+
+        if (!manager.playerType.isPlayer2)
         {
-            Quaternion targetRot = Quaternion.LookRotation(move);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, turnSpeed * Time.deltaTime);
+            horizontal = Input.GetAxisRaw("HorizontalP1");
+            vertical = Input.GetAxisRaw("VerticalP1");
+        }
+        else
+        {
+            horizontal = Input.GetAxisRaw("HorizontalP2");
+            vertical = Input.GetAxisRaw("VerticalP2");
+        }
 
-            controller.Move(move.normalized * speed * Time.deltaTime);
+        Vector3 move = new Vector3(horizontal, 0f, vertical);
+
+        // Tránh đi chéo nhanh hơn.
+        if (move.sqrMagnitude > 1f)
+        {
+            move.Normalize();
+        }
+
+        IsMoving = move.sqrMagnitude > 0.01f;
+
+        if (IsMoving)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(move);
+
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation,
+                targetRotation,
+                turnSpeed * Time.deltaTime
+            );
+
+            controller.Move(move * speed * Time.deltaTime);
+        }
+
+        UpdateMoveAnimation(move.magnitude);
+    }
+
+    private void UpdateMoveAnimation(float moveAmount)
+    {
+        if (manager == null ||
+            manager.playerAnimator == null ||
+            manager.playerAnimator.playerAnimator == null)
+        {
+            return;
         }
 
         if (!isWalk)
         {
-            manager.playerAnimator.playerAnimator.SetFloat("Run", move.magnitude);
+            manager.playerAnimator.playerAnimator.SetFloat("Run", moveAmount);
             manager.playerAnimator.playerAnimator.SetFloat("Walk", 0f);
         }
         else
         {
-            manager.playerAnimator.playerAnimator.SetFloat("Walk", move.magnitude);
+            manager.playerAnimator.playerAnimator.SetFloat("Walk", moveAmount);
             manager.playerAnimator.playerAnimator.SetFloat("Run", 0f);
         }
     }
 
-    void JumpInput()
+    private void StopMoveAnimation()
     {
-        bool jumpPressed =
-            !manager.playerType.isPlayer2
-            ? Input.GetKeyDown(KeyCode.Space)
-            : Input.GetKeyDown(KeyCode.Keypad0);
+        IsMoving = false;
+        UpdateMoveAnimation(0f);
+    }
+
+    private void JumpInput()
+    {
+        bool jumpPressed;
+
+        if (!manager.playerType.isPlayer2)
+        {
+            jumpPressed =
+                Input.GetKeyDown(KeyCode.Space) ||
+                Input.GetKeyDown(KeyCode.Joystick1Button0);
+        }
+        else
+        {
+            jumpPressed =
+                Input.GetKeyDown(KeyCode.Keypad0) ||
+                Input.GetKeyDown(KeyCode.Joystick2Button0);
+        }
 
         if (isGround && jumpPressed)
         {
             manager.playerAnimator.playerAnimator.SetTrigger("Jump");
+
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
             isGround = false;
         }
     }
-    void ApplyGravity()
+
+    private void ApplyGravity()
     {
-        if (isGround && velocity.y < 0)
+        if (isGround && velocity.y < 0f)
         {
             velocity.y = -2f;
         }
@@ -119,16 +182,31 @@ public class PlayerMove : MonoBehaviour
         controller.Move(velocity * Time.deltaTime);
     }
 
-    void CheckLieInput()
+    private void CheckLieInput()
     {
-        if (!hasLie) return;
-        if (!canLie) return;
+        if (!hasLie)
+            return;
+
+        if (!canLie)
+            return;
+
         if (!isGround || velocity.y > 0.1f)
             return;
 
-        bool liePressed = !manager.playerType.isPlayer2
-            ? Input.GetKeyDown(KeyCode.L)
-            : Input.GetKeyDown(KeyCode.Keypad2);
+        bool liePressed;
+
+        if (!manager.playerType.isPlayer2)
+        {
+            liePressed =
+                Input.GetKeyDown(KeyCode.L) ||
+                Input.GetKeyDown(KeyCode.Joystick1Button2);
+        }
+        else
+        {
+            liePressed =
+                Input.GetKeyDown(KeyCode.Keypad2) ||
+                Input.GetKeyDown(KeyCode.Joystick2Button2);
+        }
 
         if (liePressed)
         {
@@ -140,17 +218,21 @@ public class PlayerMove : MonoBehaviour
     // Animation Event: frame bắt đầu nằm
     public void StartLie()
     {
-        if (!isGround) return;
+        if (!isGround)
+            return;
+
         isMove = false;
         isJump = false;
 
         if (manager.playerAttack != null)
+        {
             manager.playerAttack.hasAttack = false;
+        }
 
         controller.height = lieHeight;
         controller.center = lieCenter;
 
-        manager.playerAnimator.playerAnimator.SetFloat("Run", 0f);
+        StopMoveAnimation();
     }
 
     // Animation Event: frame đứng dậy / hết nằm
@@ -160,22 +242,21 @@ public class PlayerMove : MonoBehaviour
         isJump = true;
 
         if (manager.playerAttack != null)
+        {
             manager.playerAttack.hasAttack = true;
+        }
 
         controller.height = normalHeight;
         controller.center = normalCenter;
 
         canLie = true;
     }
-  
-    public void OnControllerColliderHit(ControllerColliderHit hit)
+
+    private void OnControllerColliderHit(ControllerColliderHit hit)
     {
         if (hit.gameObject.CompareTag("Ground"))
         {
-            if (!isGround)
-            {
-                isGround = true;
-            }
+            isGround = true;
         }
     }
 }

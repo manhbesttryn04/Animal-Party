@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -18,70 +18,141 @@ public class ChooseMode : MonoBehaviour
     [Header("Character Buttons")]
     public List<Button> ListButtonChoose;
 
+    [Header("Highlight Text")]
     public List<TextMeshProUGUI> listTextHightP1;
     public List<TextMeshProUGUI> listTextHightP2;
 
-
+    [Header("Choose Status")]
     public bool isPlayer1Choose;
     public bool isPlayer2Choose;
 
-    private int indexP1;
-    private int indexP2;
+    [Header("Input Settings")]
+    [Range(0.1f, 1f)]
+    public float inputThreshold = 0.5f;
+
+    [Range(0f, 0.5f)]
+    public float resetThreshold = 0.2f;
 
     [Header("Start Game")]
     public GameObject buttonStart;
     public string sceneName;
-   
+
+    private int indexP1;
+    private int indexP2;
+
+    // Ngăn cần analog chạy liên tục
+    private bool canMoveP1 = true;
+    private bool canMoveP2 = true;
+
+    private bool isStartingGame;
+    private bool waitStartButtonRelease;
 
     private void Start()
     {
         UpdatePlayer1();
         UpdatePlayer2();
 
-        var cursor = CursorManager.Instance;
+        if (buttonStart != null)
+        {
+            buttonStart.SetActive(false);
+        }
+
+        CursorManager cursor =
+            CursorManager.Instance;
+
         if (cursor != null)
         {
             cursor.ShowGameCursor();
         }
+
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.PlayMusic(AudioManager.Instance.musicChooseSceneClip);
-            AudioManager.Instance.PlayEnvironment(AudioManager.Instance.theSeaClip);
+            AudioManager.Instance.PlayMusic(
+                AudioManager.Instance.musicChooseSceneClip
+            );
+
+            AudioManager.Instance.PlayEnvironment(
+                AudioManager.Instance.theSeaClip
+            );
         }
-        if(UIManager.Instance != null)
+
+        if (UIManager.Instance != null)
         {
-            UIManager.Instance.openSettingPanelButton.SetActive(true);
+            UIManager.Instance
+                .openSettingPanelButton
+                .SetActive(true);
         }
-        if(SettingManager.Instance != null)
+
+        if (SettingManager.Instance != null)
         {
             SettingManager.Instance.isOpenExitButton = true;
         }
-
     }
 
     private void Update()
     {
         MoveChoosePlayer1();
         MoveChoosePlayer2();
+        CheckStartInput();
     }
 
-    #region Keyboard
+    #region Input
+
+    private void CheckStartButton()
+    {
+        bool bothSelected =
+            isPlayer1Choose &&
+            isPlayer2Choose;
+
+        if (buttonStart != null)
+        {
+            buttonStart.SetActive(bothSelected);
+        }
+
+        if (bothSelected)
+        {
+            // Không cho lần nhấn chọn nhân vật
+            // kích hoạt luôn nút START.
+            waitStartButtonRelease = true;
+        }
+    }
 
     public void MoveChoosePlayer1()
     {
-        if (isPlayer1Choose) return;
+        if (isPlayer1Choose)
+            return;
 
-        if (Input.GetKeyDown(KeyCode.A))
+        float horizontal =
+            Input.GetAxisRaw("HorizontalP1");
+
+        // Trả cần analog về giữa
+        // thì mới được chọn tiếp.
+        if (Mathf.Abs(horizontal) <= resetThreshold)
         {
-            PrevPlayer1();
+            canMoveP1 = true;
         }
 
-        if (Input.GetKeyDown(KeyCode.D))
+        if (canMoveP1)
         {
-            NextPlayer1();
+            if (horizontal <= -inputThreshold)
+            {
+                PrevPlayer1();
+                canMoveP1 = false;
+            }
+            else if (horizontal >= inputThreshold)
+            {
+                NextPlayer1();
+                canMoveP1 = false;
+            }
         }
 
-        if (Input.GetKeyDown(KeyCode.J))
+        bool confirmPressed =
+            Input.GetKeyDown(KeyCode.J) ||
+            Input.GetKeyDown(
+                KeyCode.Joystick1Button0
+            );
+
+        if (confirmPressed)
         {
             ChoosePlayer1();
         }
@@ -89,19 +160,38 @@ public class ChooseMode : MonoBehaviour
 
     public void MoveChoosePlayer2()
     {
-        if (isPlayer2Choose) return;
+        if (isPlayer2Choose)
+            return;
 
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        float horizontal =
+            Input.GetAxisRaw("HorizontalP2");
+
+        if (Mathf.Abs(horizontal) <= resetThreshold)
         {
-            PrevPlayer2();
+            canMoveP2 = true;
         }
 
-        if (Input.GetKeyDown(KeyCode.RightArrow))
+        if (canMoveP2)
         {
-            NextPlayer2();
+            if (horizontal <= -inputThreshold)
+            {
+                PrevPlayer2();
+                canMoveP2 = false;
+            }
+            else if (horizontal >= inputThreshold)
+            {
+                NextPlayer2();
+                canMoveP2 = false;
+            }
         }
 
-        if (Input.GetKeyDown(KeyCode.Keypad1))
+        bool confirmPressed =
+            Input.GetKeyDown(KeyCode.Keypad1) ||
+            Input.GetKeyDown(
+                KeyCode.Joystick2Button0
+            );
+
+        if (confirmPressed)
         {
             ChoosePlayer2();
         }
@@ -109,110 +199,214 @@ public class ChooseMode : MonoBehaviour
 
     #endregion
 
-    #region Button P1
+    #region Player 1
 
     public void PrevPlayer1()
     {
-        if (isPlayer1Choose) return;
-        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI(AudioManager.Instance.movechooseItemClip);
+        if (isPlayer1Choose ||
+            player1.Count == 0)
+        {
+            return;
+        }
+
+        PlayMoveSound();
+
         indexP1--;
 
         if (indexP1 < 0)
+        {
             indexP1 = player1.Count - 1;
-        StartCoroutine(HighlightText(listTextHightP1[0]));
+        }
+
+        if (listTextHightP1.Count > 0 &&
+            listTextHightP1[0] != null)
+        {
+            StartCoroutine(
+                HighlightText(
+                    listTextHightP1[0]
+                )
+            );
+        }
 
         UpdatePlayer1();
     }
 
     public void NextPlayer1()
     {
-        if (isPlayer1Choose) return;
-        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI(AudioManager.Instance.movechooseItemClip);
+        if (isPlayer1Choose ||
+            player1.Count == 0)
+        {
+            return;
+        }
+
+        PlayMoveSound();
+
         indexP1++;
 
         if (indexP1 >= player1.Count)
+        {
             indexP1 = 0;
-        StartCoroutine(HighlightText(listTextHightP1[1]));
+        }
+
+        if (listTextHightP1.Count > 1 &&
+            listTextHightP1[1] != null)
+        {
+            StartCoroutine(
+                HighlightText(
+                    listTextHightP1[1]
+                )
+            );
+        }
 
         UpdatePlayer1();
     }
 
     public void ChoosePlayer1()
     {
-        if (isPlayer1Choose) return;
-       
-       
+        if (isPlayer1Choose ||
+            player1.Count == 0)
+        {
+            return;
+        }
+
         PlaySalute(player1[indexP1]);
-        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI(AudioManager.Instance.doneChooseClickClip);
+        PlayChooseSound();
+
         isPlayer1Choose = true;
 
-       
+        if (ListButtonChoose.Count > 0 &&
+            ListButtonChoose[0] != null)
+        {
             ListButtonChoose[0].interactable = false;
-        
-       
+        }
+
+        if (stateChooseP1.Count > 1)
+        {
             stateChooseP1[0].SetActive(false);
             stateChooseP1[1].SetActive(true);
+        }
 
-        SendIndexCharacter.Instance.player1Index = indexP1;
+        if (SendIndexCharacter.Instance != null)
+        {
+            SendIndexCharacter.Instance.player1Index =
+                indexP1;
+        }
+
         CheckStartButton();
     }
 
     #endregion
 
-    #region Button P2
+    #region Player 2
 
     public void PrevPlayer2()
     {
-        if (isPlayer2Choose) return;
-        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI(AudioManager.Instance.movechooseItemClip);
-        indexP1++;
+        if (isPlayer2Choose ||
+            player2.Count == 0)
+        {
+            return;
+        }
+
+        PlayMoveSound();
+
         indexP2--;
 
         if (indexP2 < 0)
+        {
             indexP2 = player2.Count - 1;
-        StartCoroutine(HighlightText(listTextHightP2[0]));
+        }
+
+        if (listTextHightP2.Count > 0 &&
+            listTextHightP2[0] != null)
+        {
+            StartCoroutine(
+                HighlightText(
+                    listTextHightP2[0]
+                )
+            );
+        }
+
         UpdatePlayer2();
     }
 
     public void NextPlayer2()
     {
-        if (isPlayer2Choose) return;
-        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI(AudioManager.Instance.movechooseItemClip);
-        indexP1++;
+        if (isPlayer2Choose ||
+            player2.Count == 0)
+        {
+            return;
+        }
+
+        PlayMoveSound();
+
         indexP2++;
 
         if (indexP2 >= player2.Count)
+        {
             indexP2 = 0;
-        StartCoroutine(HighlightText(listTextHightP2[1]));
+        }
+
+        if (listTextHightP2.Count > 1 &&
+            listTextHightP2[1] != null)
+        {
+            StartCoroutine(
+                HighlightText(
+                    listTextHightP2[1]
+                )
+            );
+        }
+
         UpdatePlayer2();
     }
 
     public void ChoosePlayer2()
     {
-        if (isPlayer2Choose) return;
+        if (isPlayer2Choose ||
+            player2.Count == 0)
+        {
+            return;
+        }
+
         PlaySalute(player2[indexP2]);
-        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI(AudioManager.Instance.doneChooseClickClip);
+        PlayChooseSound();
+
         isPlayer2Choose = true;
 
-     
+        if (ListButtonChoose.Count > 1 &&
+            ListButtonChoose[1] != null)
+        {
             ListButtonChoose[1].interactable = false;
-        
+        }
 
-        stateChooseP2[0].SetActive(false);
-        stateChooseP2[1].SetActive(true);
-        SendIndexCharacter.Instance.player2Index = indexP2;
+        if (stateChooseP2.Count > 1)
+        {
+            stateChooseP2[0].SetActive(false);
+            stateChooseP2[1].SetActive(true);
+        }
+
+        if (SendIndexCharacter.Instance != null)
+        {
+            SendIndexCharacter.Instance.player2Index =
+                indexP2;
+        }
+
         CheckStartButton();
     }
 
     #endregion
 
-    #region Character Button
+    #region Mouse Buttons
 
     public void SelectCharacterP1(int index)
     {
-        if (isPlayer1Choose) return;
+        if (isPlayer1Choose)
+            return;
 
-        if (index < 0 || index >= player1.Count) return;
+        if (index < 0 ||
+            index >= player1.Count)
+        {
+            return;
+        }
 
         indexP1 = index;
         UpdatePlayer1();
@@ -220,9 +414,14 @@ public class ChooseMode : MonoBehaviour
 
     public void SelectCharacterP2(int index)
     {
-        if (isPlayer2Choose) return;
+        if (isPlayer2Choose)
+            return;
 
-        if (index < 0 || index >= player2.Count) return;
+        if (index < 0 ||
+            index >= player2.Count)
+        {
+            return;
+        }
 
         indexP2 = index;
         UpdatePlayer2();
@@ -236,7 +435,12 @@ public class ChooseMode : MonoBehaviour
     {
         for (int i = 0; i < player1.Count; i++)
         {
-            player1[i].SetActive(i == indexP1);
+            if (player1[i] != null)
+            {
+                player1[i].SetActive(
+                    i == indexP1
+                );
+            }
         }
     }
 
@@ -244,87 +448,265 @@ public class ChooseMode : MonoBehaviour
     {
         for (int i = 0; i < player2.Count; i++)
         {
-            player2[i].SetActive(i == indexP2);
+            if (player2[i] != null)
+            {
+                player2[i].SetActive(
+                    i == indexP2
+                );
+            }
         }
     }
-    private void CheckStartButton()
+
+    // =====================================================
+    // START INPUT
+    // =====================================================
+
+    private void CheckStartInput()
     {
-        if (isPlayer1Choose && isPlayer2Choose)
+        if (!isPlayer1Choose ||
+            !isPlayer2Choose)
         {
-           buttonStart.SetActive(true);
+            return;
+        }
+
+        if (isStartingGame)
+            return;
+
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        bool console1Connected =
+            controller != null &&
+            controller.IsConsole1Connected();
+
+        bool console2Connected =
+            controller != null &&
+            controller.IsConsole2Connected();
+
+        bool allowedControllerHeld = false;
+
+        /*
+         * Console 1 đang có:
+         * chỉ Joystick 1 được quyền nhấn Start.
+         */
+        if (console1Connected)
+        {
+            allowedControllerHeld =
+                Input.GetKey(
+                    KeyCode.Joystick1Button0
+                );
+        }
+        /*
+         * Console 1 đã rút nhưng Console 2 còn:
+         * Console 2 được quyền nhấn Start.
+         */
+        else if (console2Connected)
+        {
+            allowedControllerHeld =
+                Input.GetKey(
+                    KeyCode.Joystick2Button0
+                );
+        }
+
+        bool keyboardHeld =
+            Input.GetKey(KeyCode.J) ||
+            Input.GetKey(KeyCode.Keypad1);
+
+        bool confirmHeld =
+            allowedControllerHeld ||
+            keyboardHeld;
+
+        /*
+         * Sau khi vừa chọn nhân vật xong,
+         * phải thả Button 0 rồi mới được
+         * nhấn lần nữa để vào game.
+         */
+        if (waitStartButtonRelease)
+        {
+            if (!confirmHeld)
+            {
+                waitStartButtonRelease = false;
+            }
+
+            return;
+        }
+
+        bool allowedControllerPressed = false;
+
+        /*
+         * Console 1 có mặt:
+         * Console 2 không có quyền Start.
+         */
+        if (console1Connected)
+        {
+            allowedControllerPressed =
+                Input.GetKeyDown(
+                    KeyCode.Joystick1Button0
+                );
+        }
+        /*
+         * Console 1 không còn:
+         * Console 2 được quyền Start.
+         */
+        else if (console2Connected)
+        {
+            allowedControllerPressed =
+                Input.GetKeyDown(
+                    KeyCode.Joystick2Button0
+                );
+        }
+
+        bool keyboardPressed =
+            Input.GetKeyDown(KeyCode.J) ||
+            Input.GetKeyDown(KeyCode.Keypad1);
+
+        if (allowedControllerPressed ||
+            keyboardPressed)
+        {
+            LoadScene(0);
         }
     }
+
+    #endregion
+
+    #region Load Scene
+
     public void LoadScene(int buildIndex)
     {
-        var ui = UIManager.Instance;
-        if (ui != null)
+        if (!isPlayer1Choose ||
+            !isPlayer2Choose)
         {
-            ui.exitMainMenuButton.SetActive(false);
+            return;
         }
-        var setting = SettingManager.Instance;
-        if (setting != null)
-        {
-            setting.isOpenExitButton = false;
 
+        if (isStartingGame)
+            return;
+
+        isStartingGame = true;
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance
+                .exitMainMenuButton
+                .SetActive(false);
         }
-       
-        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI(AudioManager.Instance.startGameButtonClickClip);
-        indexP1++;
-        StartCoroutine(LoadSceneDelay(buildIndex));
+
+        if (SettingManager.Instance != null)
+        {
+            SettingManager.Instance.isOpenExitButton =
+                false;
+        }
+
+        StartCoroutine(
+            LoadSceneDelay(buildIndex)
+        );
     }
-    private IEnumerator LoadSceneDelay(int buildIndex)
+
+    private IEnumerator LoadSceneDelay(
+        int buildIndex)
     {
-        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI(AudioManager.Instance.startGameButtonClickClip);
-
-        Button btn = buttonStart.GetComponent<Button>();
-
-        TextMeshProUGUI text =
-            buttonStart.transform.GetChild(0).GetComponent<TextMeshProUGUI>();
-
-        btn.interactable = false;
-
-        text.fontSize = 30;
-
-        float timer = 0f;
-
-        while (timer < 7f)
+        if (AudioManager.Instance != null)
         {
-            text.text = "LOADING";
-            yield return new WaitForSeconds(0.5f);
-
-            text.text = "LOADING.";
-            yield return new WaitForSeconds(0.5f);
-
-            text.text = "LOADING..";
-            yield return new WaitForSeconds(0.5f);
-
-            text.text = "LOADING...";
-            yield return new WaitForSeconds(0.5f);
-
-            timer += 2f;
+            AudioManager.Instance.PlayUI(
+                AudioManager.Instance
+                    .startGameButtonClickClip
+            );
         }
 
-        if (AudioManager.Instance != null) AudioManager.Instance.PauseAudio();
-        var cursor = CursorManager.Instance;
+        if (buttonStart != null)
+        {
+            Button btn =
+                buttonStart.GetComponent<Button>();
+
+            TextMeshProUGUI text =
+                buttonStart
+                    .GetComponentInChildren<
+                        TextMeshProUGUI
+                    >();
+
+            if (btn != null)
+            {
+                btn.interactable = false;
+            }
+
+            if (text != null)
+            {
+                text.fontSize = 30;
+
+                float timer = 0f;
+
+                while (timer < 7f)
+                {
+                    text.text = "LOADING";
+                    yield return new WaitForSeconds(0.5f);
+
+                    text.text = "LOADING.";
+                    yield return new WaitForSeconds(0.5f);
+
+                    text.text = "LOADING..";
+                    yield return new WaitForSeconds(0.5f);
+
+                    text.text = "LOADING...";
+                    yield return new WaitForSeconds(0.5f);
+
+                    timer += 2f;
+                }
+            }
+        }
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PauseAudio();
+        }
+
+        CursorManager cursor =
+            CursorManager.Instance;
+
         if (cursor != null)
         {
             cursor.HideGameCursor();
         }
-        if(SettingManager.Instance && UIManager.Instance != null)
+
+        if (SettingManager.Instance != null &&
+            UIManager.Instance != null)
         {
             SettingManager.Instance.ResetSetting();
-            UIManager.Instance.openSettingPanelButton.SetActive(false);
+
+            UIManager.Instance
+                .openSettingPanelButton
+                .SetActive(false);
         }
-        yield return StartCoroutine(LoadingManager.Instance.ShowLoading());
+
+        if (LoadingManager.Instance != null)
+        {
+            yield return StartCoroutine(
+                LoadingManager.Instance
+                    .ShowLoading()
+            );
+        }
+
         SceneManager.LoadScene("CutScene 1");
     }
 
-    private IEnumerator HighlightText(TextMeshProUGUI text)
-    {
-        Color defaultColor = text.color;
+    #endregion
 
-        Color highlightColor;
-        ColorUtility.TryParseHtmlString("#00FFFF", out highlightColor);
+    #region Effects
+
+    private IEnumerator HighlightText(
+        TextMeshProUGUI text)
+    {
+        if (text == null)
+            yield break;
+
+        Color defaultColor =
+            text.color;
+
+        if (!ColorUtility.TryParseHtmlString(
+                "#00FFFF",
+                out Color highlightColor))
+        {
+            highlightColor = Color.cyan;
+        }
 
         text.color = highlightColor;
 
@@ -332,16 +714,43 @@ public class ChooseMode : MonoBehaviour
 
         text.color = defaultColor;
     }
-    private void PlaySalute(GameObject character)
-    {
-        Animator anim = character.GetComponent<Animator>();
 
-        if (anim != null)
+    private void PlaySalute(
+        GameObject character)
+    {
+        if (character == null)
+            return;
+
+        Animator animator =
+            character.GetComponent<Animator>();
+
+        if (animator != null)
         {
-            anim.SetTrigger("Salute");
+            animator.SetTrigger("Salute");
         }
     }
-}
 
+    private void PlayMoveSound()
+    {
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayUI(
+                AudioManager.Instance
+                    .movechooseItemClip
+            );
+        }
+    }
+
+    private void PlayChooseSound()
+    {
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayUI(
+                AudioManager.Instance
+                    .doneChooseClickClip
+            );
+        }
+    }
 
     #endregion
+}

@@ -26,12 +26,15 @@ public class PlayerAttack : MonoBehaviour
         {
             if (!playerManager.playerType.isPlayer2)
             {
-                attackPressed = Input.GetKeyDown(KeyCode.J);
+                attackPressed =
+                    Input.GetKeyDown(KeyCode.J) ||
+                    Input.GetKeyDown(KeyCode.Joystick1Button1);
             }
-            // Player 2
             else
             {
-                attackPressed = Input.GetKeyDown(KeyCode.Keypad1);
+                attackPressed =
+                    Input.GetKeyDown(KeyCode.Keypad1) ||
+                    Input.GetKeyDown(KeyCode.Joystick2Button1);
             }
 
             if (attackPressed && canAttack)
