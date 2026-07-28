@@ -550,10 +550,14 @@ public class SettingManager : MonoBehaviour
 
         displayModeDropdown.SetValueWithoutNotify(selectedIndex);
         displayModeDropdown.RefreshShownValue();
+
+        UpdateResolutionDropdownInteractable(selectedIndex);
     }
 
     public void SetDisplayMode(int index)
     {
+        index = Mathf.Clamp(index, 0, 2);
+
         if (isOpenAudioClick &&
             AudioManager.Instance != null)
         {
@@ -561,6 +565,8 @@ public class SettingManager : MonoBehaviour
                 AudioManager.Instance.clickButton
             );
         }
+
+        UpdateResolutionDropdownInteractable(index);
 
         switch (index)
         {
@@ -576,6 +582,12 @@ public class SettingManager : MonoBehaviour
                     Display.main.systemHeight,
                     FullScreenMode.FullScreenWindow
                 );
+
+                Debug.Log(
+                    "Borderless sử dụng độ phân giải Desktop: " +
+                    Display.main.systemWidth + "x" +
+                    Display.main.systemHeight
+                );
                 break;
 
             case 2:
@@ -584,6 +596,20 @@ public class SettingManager : MonoBehaviour
                 );
                 break;
         }
+    }
+
+    private void UpdateResolutionDropdownInteractable(
+        int displayModeIndex)
+    {
+        if (resolutionDropdown == null)
+        {
+            return;
+        }
+
+        // Borderless luôn dùng độ phân giải Desktop,
+        // vì vậy không cho thay đổi Resolution riêng.
+        resolutionDropdown.interactable =
+            displayModeIndex != 1;
     }
 
     private void SetResolutionByMode(FullScreenMode mode)
@@ -607,6 +633,12 @@ public class SettingManager : MonoBehaviour
             resolution.x,
             resolution.y,
             mode
+        );
+
+        Debug.Log(
+            mode + ": " +
+            resolution.x + "x" +
+            resolution.y
         );
     }
 
@@ -686,6 +718,26 @@ public class SettingManager : MonoBehaviour
             return;
         }
 
+        // Borderless luôn phải giữ đúng độ phân giải Desktop.
+        // Không cho Resolution Dropdown ghi đè lại.
+        if (Screen.fullScreenMode ==
+            FullScreenMode.FullScreenWindow)
+        {
+            Screen.SetResolution(
+                Display.main.systemWidth,
+                Display.main.systemHeight,
+                FullScreenMode.FullScreenWindow
+            );
+
+            Debug.Log(
+                "Borderless giữ độ phân giải Desktop: " +
+                Display.main.systemWidth + "x" +
+                Display.main.systemHeight
+            );
+
+            return;
+        }
+
         Vector2Int selectedResolution =
             availableResolutions[index];
 
@@ -743,8 +795,12 @@ public class SettingManager : MonoBehaviour
             );
         }
 
+        // Borderless đã tự dùng độ phân giải Desktop trong SetDisplayMode().
+        // Chỉ áp dụng Resolution riêng cho Fullscreen và Windowed.
         if (resolutionDropdown != null &&
-            availableResolutions.Count > 0)
+            availableResolutions.Count > 0 &&
+            Screen.fullScreenMode !=
+            FullScreenMode.FullScreenWindow)
         {
             SetResolution(
                 resolutionDropdown.value
