@@ -101,6 +101,7 @@ public class ChooseMode : MonoBehaviour
         if (SettingManager.Instance != null)
         {
             SettingManager.Instance.isOpenExitButton = true;
+            SettingManager.Instance.canOpenSettingByController = true;
         }
     }
 
@@ -870,6 +871,7 @@ public class ChooseMode : MonoBehaviour
             UIManager.Instance != null)
         {
             SettingManager.Instance.ResetSetting();
+            SettingManager.Instance.canOpenSettingByController = false;
 
             if (UIManager.Instance
                     .openSettingPanelButton != null)

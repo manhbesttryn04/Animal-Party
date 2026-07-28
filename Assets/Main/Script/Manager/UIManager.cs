@@ -95,9 +95,31 @@ public class UIManager : MonoBehaviour
     public GameObject settingPanel;
     public GameObject openSettingPanelButton;
     public GameObject exitMainMenuButton;
+
+    [Header("Settings Animation")]
+    [SerializeField] private Animator settingPanelAnimator;
+    [SerializeField] private string settingOpenTrigger = "Open";
+    [SerializeField] private string settingCloseTrigger = "Close";
+
+    [Min(0f)]
+    [SerializeField] private float settingOpenAnimationTime = 0.5f;
+
+    [Min(0f)]
+    [SerializeField] private float settingCloseAnimationTime = 0.5f;
+
+    private Coroutine settingPanelAnimationCoroutine;
+
+    public bool IsSettingPanelTransitioning
+    {
+        get;
+        private set;
+    }
     [Header("Cosole UI")]
-    public GameObject consoleOpenImage;
-    public GameObject consoleCloseImage;
+    public GameObject consoleOpenImageP1;
+    public GameObject consoleCloseImageP1;
+    public GameObject consoleOpenImageP2;
+    public GameObject consoleCloseImageP2;
+    public GameObject instructConsolePanel;
 
     [Header("Bonus UI")]
     public GameObject bonusPanel;
@@ -114,7 +136,7 @@ public class UIManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
         }
-            
+
         else
             Destroy(gameObject);
     }
@@ -147,7 +169,8 @@ public class UIManager : MonoBehaviour
     }
 
     public void UpdateAllPlayMainUI()
-    {if (playerManager1 != null && playerManager2 != null)
+    {
+        if (playerManager1 != null && playerManager2 != null)
         {
             UpdateCoinPowerUI();
             UpdateCoinAllPlayer();
@@ -239,8 +262,8 @@ public class UIManager : MonoBehaviour
         PlayerMoveAI p1 = playerManager1.playerMoveAI;
         PlayerMoveAI p2 = playerManager2.playerMoveAI;
 
-        indexTextP1.text = $"{p1.currentIndex +1}/33";
-        indexTextP2.text = $"{p2.currentIndex +1}/33";
+        indexTextP1.text = $"{p1.currentIndex + 1}/33";
+        indexTextP2.text = $"{p2.currentIndex + 1}/33";
     }
 
     // =========================================================
@@ -483,15 +506,119 @@ public class UIManager : MonoBehaviour
         uiMain.SetActive(false);
     }
 
-    public void ActiveSettingPanel(bool i)
+    public bool ActiveSettingPanel(bool active)
     {
-        settingPanel.SetActive(i);
+        if (settingPanel == null ||
+            IsSettingPanelTransitioning)
+        {
+            return false;
+        }
+
+        if (settingPanel.activeSelf == active)
+        {
+            return false;
+        }
+
+        settingPanelAnimationCoroutine =
+            StartCoroutine(
+                AnimateSettingPanel(active)
+            );
+
+        return true;
     }
+
+    private IEnumerator AnimateSettingPanel(bool open)
+    {
+        IsSettingPanelTransitioning = true;
+
+        if (settingPanelAnimator == null)
+        {
+            settingPanelAnimator =
+                settingPanel.GetComponent<Animator>();
+        }
+
+        if (open)
+        {
+            settingPanel.SetActive(true);
+
+            if (settingPanelAnimator != null)
+            {
+                settingPanelAnimator.ResetTrigger(
+                    settingCloseTrigger
+                );
+
+                settingPanelAnimator.SetTrigger(
+                    settingOpenTrigger
+                );
+            }
+
+            yield return new WaitForSecondsRealtime(
+                settingOpenAnimationTime
+            );
+        }
+        else
+        {
+            if (settingPanelAnimator != null)
+            {
+                settingPanelAnimator.ResetTrigger(
+                    settingOpenTrigger
+                );
+
+                settingPanelAnimator.SetTrigger(
+                    settingCloseTrigger
+                );
+            }
+
+            yield return new WaitForSecondsRealtime(
+                settingCloseAnimationTime
+            );
+
+            settingPanel.SetActive(false);
+        }
+
+        IsSettingPanelTransitioning = false;
+        settingPanelAnimationCoroutine = null;
+    }
+
+    public void ForceHideSettingPanel()
+    {
+        if (settingPanelAnimationCoroutine != null)
+        {
+            StopCoroutine(settingPanelAnimationCoroutine);
+            settingPanelAnimationCoroutine = null;
+        }
+
+        IsSettingPanelTransitioning = false;
+
+        if (settingPanelAnimator == null &&
+            settingPanel != null)
+        {
+            settingPanelAnimator =
+                settingPanel.GetComponent<Animator>();
+        }
+
+        if (settingPanelAnimator != null)
+        {
+            settingPanelAnimator.ResetTrigger(
+                settingOpenTrigger
+            );
+
+            settingPanelAnimator.ResetTrigger(
+                settingCloseTrigger
+            );
+        }
+
+        if (settingPanel != null)
+        {
+            settingPanel.SetActive(false);
+        }
+    }
+
     public void ActiveOpenSettingButton(bool i)
     {
         openSettingPanelButton.SetActive(i);
     }
-   public void FindPlayerManager()
+    public void FindPlayerManager()
     {
         GameObject player1 = GameObject.FindGameObjectWithTag("Player 1");
         GameObject player2 = GameObject.FindGameObjectWithTag("Player 2");
@@ -499,22 +626,22 @@ public class UIManager : MonoBehaviour
         {
             playerManager1 = player1.GetComponent<PlayerManager>();
         }
-        
+
         if (player2 != null)
         {
             playerManager2 = player2.GetComponent<PlayerManager>();
         }
     }
-    public IEnumerator ShowConsoleConect()
+    public IEnumerator ShowConsoleConect(GameObject ui)
     {
-        consoleOpenImage.SetActive(true);
+        ui.SetActive(true);
         yield return new WaitForSeconds(1.5f);
-        consoleOpenImage.SetActive(false);
+        ui.SetActive(false);
     }
-    public IEnumerator ShowConsoleFailConect()
+    public IEnumerator ShowConsoleFailConect(GameObject ui)
     {
-        consoleCloseImage.SetActive(true);
+        ui.SetActive(true);
         yield return new WaitForSeconds(1.5f);
-        consoleCloseImage.SetActive(false);
+        ui.SetActive(false);
     }
 }

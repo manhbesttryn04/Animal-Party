@@ -40,6 +40,9 @@ public class MainMenuController : MonoBehaviour
     private bool canMoveVertical = true;
     private bool isLoading;
 
+    // Dùng để phát hiện Settings vừa đóng.
+    private bool wasSettingOpen;
+
     // Trạng thái tay cầm ở lần kiểm tra trước.
     private bool previousConsole1Connected;
     private bool previousConsole2Connected;
@@ -89,11 +92,26 @@ public class MainMenuController : MonoBehaviour
         if (activeMenuController == 0)
             return;
 
-        // Khi bảng Setting đang mở, Main Menu phía sau bị khóa.
-        // Button 1 đóng Setting và trả focus về nút Setting.
+        // Khi Settings đang mở, khóa toàn bộ điều khiển Main Menu phía sau.
+        // Nút B/Circle được SettingManager tự xử lý.
         if (IsSettingOpen())
         {
-            HandleCloseSettingInput();
+            wasSettingOpen = true;
+            return;
+        }
+
+        // Settings vừa đóng:
+        // trả focus về nút Settings và chờ analog thả về giữa
+        // trước khi cho Main Menu di chuyển tiếp.
+        if (wasSettingOpen)
+        {
+            wasSettingOpen = false;
+            canMoveVertical = false;
+
+            StartCoroutine(
+                FocusButtonDelay(settingButton)
+            );
+
             return;
         }
 
@@ -146,6 +164,7 @@ public class MainMenuController : MonoBehaviour
         if (setting != null)
         {
             setting.isOpenExitButton = false;
+            setting.canOpenSettingByController = false;
         }
     }
 
@@ -393,25 +412,6 @@ public class MainMenuController : MonoBehaviour
         );
     }
 
-    private bool GetActiveCancelDown()
-    {
-        ControllerManager controller =
-            ControllerManager.Instance;
-
-        if (controller == null ||
-            activeMenuController == 0)
-        {
-            return false;
-        }
-
-        // Button 1:
-        // Xbox B / PlayStation Circle.
-        return controller.GetConsoleButtonDown(
-            activeMenuController,
-            1
-        );
-    }
-
     // =========================================================
     // SETTINGS
     // =========================================================
@@ -426,28 +426,6 @@ public class MainMenuController : MonoBehaviour
 
         return setting.isSettingOpen ||
                setting.isEscSettingOpen;
-    }
-
-    private void HandleCloseSettingInput()
-    {
-        if (!GetActiveCancelDown())
-            return;
-
-        SettingManager setting =
-            SettingManager.Instance;
-
-        if (setting == null)
-            return;
-
-        setting.ResetSetting();
-
-        // Phải thả cần Vertical về giữa trước khi
-        // tiếp tục di chuyển trong Main Menu.
-        canMoveVertical = false;
-
-        StartCoroutine(
-            FocusButtonDelay(settingButton)
-        );
     }
 
     // =========================================================

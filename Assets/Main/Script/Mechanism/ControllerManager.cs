@@ -114,6 +114,7 @@ public class ControllerManager : MonoBehaviour
             GetConnectedControllers();
 
         UpdateControllerSlots(currentControllers);
+        UpdateConsoleInstructionUI();
 
         previousConnectedControllers.Clear();
 
@@ -156,11 +157,13 @@ public class ControllerManager : MonoBehaviour
             previousControllerCount;
 
         UpdateControllerSlots(currentControllers);
+        UpdateConsoleInstructionUI();
 
         previousConnectedControllers.Clear();
 
         previousConnectedControllers.AddRange(
             currentControllers
+
         );
 
         previousControllerCount =
@@ -232,12 +235,30 @@ public class ControllerManager : MonoBehaviour
             {
                 console1LastChange =
                     ControllerChangeType.Disconnected;
+                if (UIManager.Instance != null &&
+                    UIManager.Instance.consoleCloseImageP1 != null)
+                {
+                    StartCoroutine(
+                        UIManager.Instance.ShowConsoleFailConect(
+                            UIManager.Instance.consoleCloseImageP1
+                        )
+                    );
+                }
             }
 
             if (wasConsole2Connected)
             {
                 console2LastChange =
                     ControllerChangeType.Disconnected;
+                if (UIManager.Instance != null &&
+                    UIManager.Instance.consoleCloseImageP2 != null)
+                {
+                    StartCoroutine(
+                        UIManager.Instance.ShowConsoleFailConect(
+                            UIManager.Instance.consoleCloseImageP2
+                        )
+                    );
+                }
             }
 
             Debug.Log(
@@ -262,21 +283,25 @@ public class ControllerManager : MonoBehaviour
         if (console1MatchIndex >= 0)
         {
             ConnectedController matchedController =
-                unassignedControllers[
-                    console1MatchIndex
-                ];
+                unassignedControllers[console1MatchIndex];
 
             AssignConsole1(matchedController);
 
-            unassignedControllers.RemoveAt(
-                console1MatchIndex
-            );
+            unassignedControllers.RemoveAt(console1MatchIndex);
 
             if (!wasConsole1Connected)
             {
                 console1LastChange =
-                    ControllerChangeType
-                        .ReconnectedSameController;
+                    ControllerChangeType.ReconnectedSameController;
+
+                if (UIManager.Instance != null)
+                {
+                    StartCoroutine(
+                        UIManager.Instance.ShowConsoleConect(
+                            UIManager.Instance.consoleOpenImageP1
+                        )
+                    );
+                }
             }
         }
 
@@ -294,21 +319,25 @@ public class ControllerManager : MonoBehaviour
         if (console2MatchIndex >= 0)
         {
             ConnectedController matchedController =
-                unassignedControllers[
-                    console2MatchIndex
-                ];
+                unassignedControllers[console2MatchIndex];
 
             AssignConsole2(matchedController);
 
-            unassignedControllers.RemoveAt(
-                console2MatchIndex
-            );
+            unassignedControllers.RemoveAt(console2MatchIndex);
 
             if (!wasConsole2Connected)
             {
                 console2LastChange =
-                    ControllerChangeType
-                        .ReconnectedSameController;
+                    ControllerChangeType.ReconnectedSameController;
+
+                if (UIManager.Instance != null)
+                {
+                    StartCoroutine(
+                        UIManager.Instance.ShowConsoleConect(
+                            UIManager.Instance.consoleOpenImageP2
+                        )
+                    );
+                }
             }
         }
 
@@ -338,6 +367,15 @@ public class ControllerManager : MonoBehaviour
 
             AssignConsole1(newController);
 
+            if (UIManager.Instance != null &&
+                UIManager.Instance.consoleOpenImageP1 != null)
+            {
+                StartCoroutine(
+                    UIManager.Instance.ShowConsoleConect(
+                        UIManager.Instance.consoleOpenImageP1
+                    )
+                );
+            }
             console1LastChange =
                 isDifferentController
                     ? ControllerChangeType
@@ -371,6 +409,15 @@ public class ControllerManager : MonoBehaviour
                 );
 
             AssignConsole2(newController);
+            if (UIManager.Instance != null &&
+                UIManager.Instance.consoleOpenImageP2 != null)
+            {
+                StartCoroutine(
+                    UIManager.Instance.ShowConsoleConect(
+                        UIManager.Instance.consoleOpenImageP2
+                    )
+                );
+            }
 
             console2LastChange =
                 isDifferentController
@@ -698,6 +745,23 @@ public class ControllerManager : MonoBehaviour
     // UI / CURSOR
     // =========================================================
 
+    private void UpdateConsoleInstructionUI()
+    {
+        if (UIManager.Instance == null ||
+            UIManager.Instance.instructConsolePanel == null)
+        {
+            return;
+        }
+
+        bool hasController =
+            console1Connected ||
+            console2Connected;
+
+        UIManager.Instance.instructConsolePanel.SetActive(
+            hasController
+        );
+    }
+
     private void UpdateCursor()
     {
         if (CursorManager.Instance == null)
@@ -745,20 +809,14 @@ public class ControllerManager : MonoBehaviour
 
     private IEnumerator ShowNotificationRoutine()
     {
-        yield return StartCoroutine(
-            UIManager.Instance
-                .ShowConsoleConect()
-        );
+        yield return new WaitForSeconds(0.5f);
 
         notificationCoroutine = null;
     }
 
     private IEnumerator ShowDisconnectRoutine()
     {
-        yield return StartCoroutine(
-            UIManager.Instance
-                .ShowConsoleFailConect()
-        );
+        yield return new WaitForSeconds(0.5f);
 
         notificationCoroutine = null;
     }

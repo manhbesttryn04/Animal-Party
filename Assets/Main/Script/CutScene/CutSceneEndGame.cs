@@ -118,6 +118,7 @@ public class CutSceneEndGame : MonoBehaviour
         {
             setting.canOpenSettingByEsc = true;
             setting.isOpenExitButton = false;
+            setting.canOpenSettingByController = true;
         }
            
       
@@ -154,6 +155,7 @@ public class CutSceneEndGame : MonoBehaviour
         {
             setting.ResetEscSetting();
             setting.canOpenSettingByEsc = false;
+            setting.canOpenSettingByController = false;
         }
 
         HideSubtitleImmediate();
@@ -454,6 +456,7 @@ public class CutSceneEndGame : MonoBehaviour
             {
                 setting.ResetEscSetting();
                 setting.canOpenSettingByEsc = false;
+                setting.canOpenSettingByController = false;
             }
 
             HideSubtitleImmediate();

@@ -507,6 +507,7 @@ public class GameManager : MonoBehaviour
             UIManager.Instance.HideUIMain();
             SettingManager.Instance.ResetSetting();
             SettingManager.Instance.ResetEscSetting ();
+            SettingManager.Instance.canOpenSettingByEsc = false;
             AudioManager.Instance.StopMusic();
             AudioManager.Instance.PlayMusic(AudioManager.Instance.winnerMiniGameClip1);
 

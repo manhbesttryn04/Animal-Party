@@ -251,6 +251,8 @@ MonoBehaviour:
   isPlayer2Choose: 0
   inputThreshold: 0.5
   resetThreshold: 0.2
+  horizontalJoystick1: HorizontalJoystick1
+  horizontalJoystick2: HorizontalJoystick2
   buttonStart: {fileID: 2142492182}
   sceneName: MainScene
 --- !u!4 &6337193
@@ -18290,6 +18292,7 @@ GameObject:
   - component: {fileID: 908987207}
   - component: {fileID: 908987209}
   - component: {fileID: 908987208}
+  - component: {fileID: 908987210}
   m_Layer: 5
   m_Name: Choose Character mode
   m_TagString: Untagged
@@ -18416,6 +18419,28 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 908987206}
   m_CullTransparentMesh: 1
+--- !u!95 &908987210
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 908987206}
+  m_Enabled: 0
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: d2b1503eed164e94c8c2a7dda2e40644, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1001 &918777175
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -20424,7 +20449,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8935274639612645035, guid: c9b0f8af82f18624ebb62dd44e527772, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9038061665204967668, guid: c9b0f8af82f18624ebb62dd44e527772, type: 3}
       propertyPath: m_RaycastTarget
@@ -38704,7 +38729,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 1
+  m_PresetInfoIsWorld: 0
 --- !u!223 &2050267514
 Canvas:
   m_ObjectHideFlags: 0
@@ -40518,6 +40543,7 @@ GameObject:
   - component: {fileID: 2142492186}
   - component: {fileID: 2142492185}
   - component: {fileID: 2142492184}
+  - component: {fileID: 2142492187}
   m_Layer: 5
   m_Name: Button Start
   m_TagString: Untagged
@@ -40639,6 +40665,28 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2142492182}
   m_CullTransparentMesh: 1
+--- !u!95 &2142492187
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2142492182}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 8060fdb38b79e6d44a6f82d9431c4633, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1001 &1080739862140692483
 PrefabInstance:
   m_ObjectHideFlags: 0

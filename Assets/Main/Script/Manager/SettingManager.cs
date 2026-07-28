@@ -115,6 +115,7 @@ public class SettingManager : MonoBehaviour
     private bool isControllerDropdownOpen;
     private TMP_Dropdown currentControllerDropdown;
     private int controllerDropdownPreviewValue;
+    private int controllerDropdownOriginalValue;
 
     [Header("Controller Open Setting")]
     [Tooltip("Button 7 thường là nút Menu/Start/3 gạch.")]
@@ -126,6 +127,7 @@ public class SettingManager : MonoBehaviour
     private int previousSettingConsole;
 
     private bool waitControllerSettingButtonRelease;
+    private Coroutine closeSettingCoroutine;
 
     public bool IsSettingBlockingInput
     {
@@ -176,6 +178,12 @@ public class SettingManager : MonoBehaviour
         HandleControllerConnectionState();
 
         int activeConsole = GetActiveSettingConsole();
+
+        // Không nhận thêm lệnh trong lúc animation mở/đóng.
+        if (IsSettingPanelTransitioning())
+        {
+            return;
+        }
 
         // Chỉ cho tay cầm mở Setting ở scene được phép.
         if (activeConsole != 0 &&
@@ -909,6 +917,26 @@ public class SettingManager : MonoBehaviour
         );
     }
 
+    private bool GetSettingCancelDown()
+    {
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        int activeConsole = GetActiveSettingConsole();
+
+        if (controller == null ||
+            activeConsole == 0)
+        {
+            return false;
+        }
+
+        // Button 1 thường là B trên Xbox hoặc Circle trên PlayStation.
+        return controller.GetConsoleButtonDown(
+            activeConsole,
+            1
+        );
+    }
+
     private bool GetControllerSettingButtonDown()
     {
         ControllerManager controller =
@@ -972,11 +1000,9 @@ public class SettingManager : MonoBehaviour
 
         waitControllerSettingButtonRelease = true;
 
-        if (IsAnySettingPanelOpen())
-        {
-            CloseControllerSetting();
-        }
-        else
+        // Nút Menu/Start chỉ dùng để mở Setting.
+        // Khi Setting đang mở, nhấn lại nút này sẽ không đóng.
+        if (!IsAnySettingPanelOpen())
         {
             OpenControllerSetting();
         }
@@ -987,6 +1013,21 @@ public class SettingManager : MonoBehaviour
         if (settingItems == null ||
             settingItems.Length == 0)
         {
+            return;
+        }
+
+        // B / Circle: đóng Dropdown trước, sau đó mới đóng toàn bộ Setting.
+        if (GetSettingCancelDown())
+        {
+            if (isControllerDropdownOpen)
+            {
+                CancelControllerDropdown();
+            }
+            else
+            {
+                CloseControllerSetting();
+            }
+
             return;
         }
 
@@ -1187,6 +1228,8 @@ public class SettingManager : MonoBehaviour
         currentControllerDropdown = dropdown;
         isControllerDropdownOpen = true;
 
+        controllerDropdownOriginalValue = dropdown.value;
+
         controllerDropdownPreviewValue =
             dropdown.value;
 
@@ -1375,6 +1418,35 @@ public class SettingManager : MonoBehaviour
         isControllerDropdownOpen = false;
         currentControllerDropdown = null;
         controllerDropdownPreviewValue = 0;
+        controllerDropdownOriginalValue = 0;
+
+        canMoveSettingVertical = false;
+        canMoveSettingHorizontal = true;
+
+        UpdateSettingControllerFocus();
+        PlayControllerClickSound();
+    }
+
+    private void CancelControllerDropdown()
+    {
+        if (currentControllerDropdown == null)
+        {
+            CloseControllerDropdownState();
+            return;
+        }
+
+        // Trả lại giá trị ban đầu trước khi người chơi mở Dropdown.
+        currentControllerDropdown.SetValueWithoutNotify(
+            controllerDropdownOriginalValue
+        );
+
+        currentControllerDropdown.RefreshShownValue();
+        currentControllerDropdown.Hide();
+
+        isControllerDropdownOpen = false;
+        currentControllerDropdown = null;
+        controllerDropdownPreviewValue = 0;
+        controllerDropdownOriginalValue = 0;
 
         canMoveSettingVertical = false;
         canMoveSettingHorizontal = true;
@@ -1388,6 +1460,7 @@ public class SettingManager : MonoBehaviour
         isControllerDropdownOpen = false;
         currentControllerDropdown = null;
         controllerDropdownPreviewValue = 0;
+        controllerDropdownOriginalValue = 0;
 
         canMoveSettingVertical = false;
         canMoveSettingHorizontal = true;
@@ -1520,6 +1593,12 @@ public class SettingManager : MonoBehaviour
 
     private void OpenControllerSetting()
     {
+        if (IsSettingPanelTransitioning() ||
+            IsAnySettingPanelOpen())
+        {
+            return;
+        }
+
         PlaySettingClickSound();
 
         isSettingOpen = true;
@@ -1537,17 +1616,25 @@ public class SettingManager : MonoBehaviour
 
     private void CloseControllerSetting()
     {
-        PlaySettingClickSound();
+        if (IsSettingPanelTransitioning())
+        {
+            return;
+        }
 
-        // Không chạy nút Exit.
+        PlaySettingClickSound();
         CloseSettingPanel();
     }
 
     public void ToggleSetting()
     {
+        if (IsSettingPanelTransitioning())
+        {
+            return;
+        }
+
         PlaySettingClickSound();
 
-        if (isSettingOpen || isEscSettingOpen)
+        if (IsAnySettingPanelOpen())
         {
             CloseSettingPanel();
         }
@@ -1559,11 +1646,16 @@ public class SettingManager : MonoBehaviour
 
     public void ToggleSettingByEsc()
     {
+        if (IsSettingPanelTransitioning())
+        {
+            return;
+        }
+
         PlaySettingClickSound();
 
         if (IsAnySettingPanelOpen())
         {
-            ResetEscSetting();
+            CloseSettingPanel();
         }
         else
         {
@@ -1573,14 +1665,18 @@ public class SettingManager : MonoBehaviour
 
     private void OpenSettingPanel()
     {
+        if (IsSettingPanelTransitioning() ||
+            IsAnySettingPanelOpen())
+        {
+            return;
+        }
+
         isSettingOpen = true;
         isEscSettingOpen = false;
         countClick = 1;
 
         SetSettingPanelActive(true);
         SetExitButtonActive(isOpenExitButton);
-
-        // Báo Setting đang mở.
         SetCursorSettingState(true);
 
         if (HasControllerForSetting())
@@ -1595,30 +1691,59 @@ public class SettingManager : MonoBehaviour
 
     private void CloseSettingPanel()
     {
+        if (IsSettingPanelTransitioning() ||
+            !IsAnySettingPanelOpen() ||
+            closeSettingCoroutine != null)
+        {
+            return;
+        }
+
+        closeSettingCoroutine =
+            StartCoroutine(
+                CloseSettingPanelRoutine()
+            );
+    }
+
+    private IEnumerator CloseSettingPanelRoutine()
+    {
+        ResetSettingControllerFocus();
+        SetExitButtonActive(false);
+        ClearSelectedUI();
+
+        SetSettingPanelActive(false);
+
+        // Trong lúc animation Close chạy,
+        // Settings vẫn được xem là đang mở.
+        while (IsSettingPanelTransitioning())
+        {
+            yield return null;
+        }
+
         isSettingOpen = false;
         isEscSettingOpen = false;
         countClick = 0;
 
-        ResetSettingControllerFocus();
+        waitControllerSettingButtonRelease = false;
 
-        SetSettingPanelActive(false);
-        SetExitButtonActive(false);
-        ClearSelectedUI();
-
-        // Báo Setting đã đóng.
         SetCursorSettingState(false);
+
+        closeSettingCoroutine = null;
     }
 
     private void OpenEscSetting()
     {
+        if (IsSettingPanelTransitioning() ||
+            IsAnySettingPanelOpen())
+        {
+            return;
+        }
+
         isEscSettingOpen = true;
         isSettingOpen = false;
         countClick = 0;
 
         SetSettingPanelActive(true);
         SetExitButtonActive(isOpenExitButton);
-
-        // Báo Setting đang mở.
         SetCursorSettingState(true);
 
         if (GetActiveSettingConsole() != 0)
@@ -1633,22 +1758,17 @@ public class SettingManager : MonoBehaviour
 
     public void ResetEscSetting()
     {
-        isEscSettingOpen = false;
-        isSettingOpen = false;
-        countClick = 0;
-
-        ResetSettingControllerFocus();
-
-        SetSettingPanelActive(false);
-        SetExitButtonActive(false);
-        ClearSelectedUI();
-
-        // Báo Setting đã đóng.
-        SetCursorSettingState(false);
+        CloseSettingPanel();
     }
 
     public void ResetSetting()
     {
+        if (closeSettingCoroutine != null)
+        {
+            StopCoroutine(closeSettingCoroutine);
+            closeSettingCoroutine = null;
+        }
+
         isSettingOpen = false;
         isEscSettingOpen = false;
         countClick = 0;
@@ -1656,13 +1776,24 @@ public class SettingManager : MonoBehaviour
         waitControllerSettingButtonRelease = false;
 
         ResetSettingControllerFocus();
-
-        SetSettingPanelActive(false);
         SetExitButtonActive(false);
         ClearSelectedUI();
-
-        // Báo Setting đã đóng.
         SetCursorSettingState(false);
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ForceHideSettingPanel();
+        }
+        else if (settingPanel != null)
+        {
+            settingPanel.SetActive(false);
+        }
+    }
+
+    private bool IsSettingPanelTransitioning()
+    {
+        return UIManager.Instance != null &&
+               UIManager.Instance.IsSettingPanelTransitioning;
     }
 
     private void SetCursorSettingState(bool open)
