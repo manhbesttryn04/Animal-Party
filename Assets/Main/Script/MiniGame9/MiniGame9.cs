@@ -9,20 +9,20 @@ public class MiniGame9 : MonoBehaviour
     public Transform leftRoller;
     public Transform rightRoller;
 
-    [Header("Cấu hình Tốc Độ Xoay Ngẫu Nhiên")]
+    [Header("Cấu hình Tốc Độ & Đảo Chiều Ngẫu Nhiên")]
     [Tooltip("Tốc độ quay tối thiểu")]
     public float minRotateSpeed = 20f;
 
     [Tooltip("Tốc độ quay tối đa")]
     public float maxRotateSpeed = 65f;
 
-    [Tooltip("Thời gian tối thiểu để đổi tốc độ mới (giây)")]
+    [Tooltip("Thời gian tối thiểu để đổi tốc độ/chiều quay (giây)")]
     public float minChangeInterval = 4f;
 
-    [Tooltip("Thời gian tối đa để đổi tốc độ mới (giây)")]
+    [Tooltip("Thời gian tối đa để đổi tốc độ/chiều quay (giây)")]
     public float maxChangeInterval = 8f;
 
-    [Tooltip("Độ mượt khi chuyển đổi giữa tốc độ cũ và tốc độ mới")]
+    [Tooltip("Độ mượt khi chuyển đổi tốc độ")]
     public float speedLerpSmoothness = 2f;
 
     [Header("Cấu hình Lực Ma Sát Đẩy Player")]
@@ -33,12 +33,12 @@ public class MiniGame9 : MonoBehaviour
     public TextMeshProUGUI timerText;
     public TextMeshProUGUI statusText;
 
-    // Biến lưu tốc độ thực tế (đang biến đổi mượt mà)
+    // Tốc độ hiện tại (Có dấu: Dương = Quay tiến, Âm = Quay lùi)
     private float currentMainSpeed;
     private float currentLeftSpeed;
     private float currentRightSpeed;
 
-    // Biến lưu tốc độ mục tiêu (được Random ngẫu nhiên)
+    // Tốc độ mục tiêu
     private float targetMainSpeed;
     private float targetLeftSpeed;
     private float targetRightSpeed;
@@ -71,71 +71,79 @@ public class MiniGame9 : MonoBehaviour
         timeLeft = gameDuration;
         isPlaying = true;
 
-        // Khởi tạo tốc độ ban đầu
-        currentMainSpeed = Random.Range(minRotateSpeed, maxRotateSpeed);
-        currentLeftSpeed = Random.Range(minRotateSpeed, maxRotateSpeed);
-        currentRightSpeed = Random.Range(minRotateSpeed, maxRotateSpeed);
+        // Khởi tạo tốc độ mục tiêu ban đầu
+        GenerateNewTargetSpeeds();
+        currentMainSpeed = targetMainSpeed;
+        currentLeftSpeed = targetLeftSpeed;
+        currentRightSpeed = targetRightSpeed;
 
-        targetMainSpeed = currentMainSpeed;
-        targetLeftSpeed = currentLeftSpeed;
-        targetRightSpeed = currentRightSpeed;
-
-        if (statusText != null) statusText.text = "CHÚ Ý! TỐC ĐỘ XOAY ĐỔI LIÊN TỤC!";
+        if (statusText != null) statusText.text = "CHÚ Ý! TRỤ ĐỔI HƯỚNG & TỐC ĐỘ XOAY!";
 
         StartCoroutine(GameTimerRoutine());
-        StartCoroutine(RandomSpeedRoutine()); // Chạy bộ quản lý Random tốc độ
+        StartCoroutine(RandomSpeedRoutine());
     }
 
     void Update()
     {
         if (!isPlaying) return;
 
-        // 1. Biến đổi tốc độ hiện tại tiến dần về tốc độ mục tiêu để trụ quay mượt (không bị giật khựng)
+        // Biến đổi tốc độ mượt mà từ hiện tại sang mục tiêu (hỗ trợ đổi chiều không bị khựng)
         currentMainSpeed = Mathf.Lerp(currentMainSpeed, targetMainSpeed, Time.deltaTime * speedLerpSmoothness);
         currentLeftSpeed = Mathf.Lerp(currentLeftSpeed, targetLeftSpeed, Time.deltaTime * speedLerpSmoothness);
         currentRightSpeed = Mathf.Lerp(currentRightSpeed, targetRightSpeed, Time.deltaTime * speedLerpSmoothness);
 
-        // 2. Xoay Trụ Giữa (MainRoller - Chiều thuận)
+        // FIX CHUẨN: Xoay theo Vector3.up nhưng chỉ dùng 1 dấu chuẩn 
+        // Lực ngược chiều được tính toán bằng cách lật hướng trong TargetSpeed
         if (mainRoller != null)
         {
             mainRoller.Rotate(Vector3.up * currentMainSpeed * Time.deltaTime, Space.Self);
         }
 
-        // 3. Xoay Trụ Trái (LeftRoller - Ngược chiều với trụ giữa)
         if (leftRoller != null)
         {
-            leftRoller.Rotate(Vector3.up * (-currentLeftSpeed) * Time.deltaTime, Space.Self);
+            leftRoller.Rotate(Vector3.up * currentLeftSpeed * Time.deltaTime, Space.Self);
         }
 
-        // 4. Xoay Trụ Phải (RightRoller - Ngược chiều với trụ giữa)
         if (rightRoller != null)
         {
-            rightRoller.Rotate(Vector3.up * (-currentRightSpeed) * Time.deltaTime, Space.Self);
+            rightRoller.Rotate(Vector3.up * currentRightSpeed * Time.deltaTime, Space.Self);
         }
 
-        // Tác động lực trượt cho Player
         ApplySurfaceDrag();
-
-        // Kiểm tra điều kiện Rớt (Thua)
         CheckPlayerFall();
     }
 
-    // Coroutine đổi tốc độ ngẫu nhiên độc lập cho từng trụ
     IEnumerator RandomSpeedRoutine()
     {
         while (isPlaying)
         {
-            // Chọn thời gian chờ ngẫu nhiên trước khi đổi tốc độ lần tiếp theo
             float waitTime = Random.Range(minChangeInterval, maxChangeInterval);
             yield return new WaitForSeconds(waitTime);
 
             if (!isPlaying) yield break;
 
-            // Random tốc độ mới cho cả 3 trụ
-            targetMainSpeed = Random.Range(minRotateSpeed, maxRotateSpeed);
-            targetLeftSpeed = Random.Range(minRotateSpeed, maxRotateSpeed);
-            targetRightSpeed = Random.Range(minRotateSpeed, maxRotateSpeed);
+            // Random lại tốc độ và chiều quay mới
+            GenerateNewTargetSpeeds();
         }
+    }
+
+    void GenerateNewTargetSpeeds()
+    {
+        // Random giá trị tốc độ
+        float mainSpd = Random.Range(minRotateSpeed, maxRotateSpeed);
+        float leftSpd = Random.Range(minRotateSpeed, maxRotateSpeed);
+        float rightSpd = Random.Range(minRotateSpeed, maxRotateSpeed);
+
+        // Random chiều quay (50% cơ hội quay tiến, 50% quay lùi)
+        float mainDir = Random.value > 0.5f ? 1f : -1f;
+
+        // Khối MainRoller quay theo chiều mainDir
+        targetMainSpeed = mainSpd * mainDir;
+
+        // Do Left/Right có Z = -90 (được đặt ngược góc 180 độ so với Main Z = 90),
+        // nên ta giữ nguyên dấu mainDir để 2 khối này TỰ ĐỘNG XOAY NGƯỢC CHIỀU với MainRoller!
+        targetLeftSpeed = leftSpd * mainDir;
+        targetRightSpeed = rightSpd * mainDir;
     }
 
     void ApplySurfaceDrag()
@@ -156,28 +164,14 @@ public class MiniGame9 : MonoBehaviour
         Transform currentRoller = GetNearestRoller(player.transform.position);
         if (currentRoller == null) return;
 
-        float currentSpeed = currentMainSpeed;
-        float currentDir = 1f;
+        float speed = 0f;
+        if (currentRoller == mainRoller) speed = currentMainSpeed;
+        else if (currentRoller == leftRoller) speed = currentLeftSpeed;
+        else if (currentRoller == rightRoller) speed = currentRightSpeed;
 
-        if (currentRoller == mainRoller)
-        {
-            currentDir = 1f;
-            currentSpeed = currentMainSpeed;
-        }
-        else if (currentRoller == leftRoller)
-        {
-            currentDir = -1f; // Ngược chiều
-            currentSpeed = currentLeftSpeed;
-        }
-        else if (currentRoller == rightRoller)
-        {
-            currentDir = -1f; // Ngược chiều
-            currentSpeed = currentRightSpeed;
-        }
-
-        // Lực trượt tỉ lệ theo tốc độ hiện tại của trụ đó
-        Vector3 dragDirection = -currentRoller.forward * currentDir;
-        float dynamicSlip = surfaceSlipForce * (currentSpeed / minRotateSpeed);
+        // Tính hướng trượt thực tế dựa theo tốc độ và chiều quay của trụ đó
+        Vector3 dragDirection = -currentRoller.forward * Mathf.Sign(speed);
+        float dynamicSlip = surfaceSlipForce * (Mathf.Abs(speed) / minRotateSpeed);
 
         cc.Move(dragDirection * dynamicSlip * Time.deltaTime);
     }
