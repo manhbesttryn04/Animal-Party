@@ -1,5 +1,4 @@
-﻿
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -20,7 +19,15 @@ public class CursorManager : MonoBehaviour
     [SerializeField] private bool keepBetweenScenes = true;
     [SerializeField] private bool hideSystemCursor = true;
 
-    private bool isGameCursorVisible = true;
+    [Header("Cursor State")]
+    [Tooltip("Scene hiện tại có cho phép hiện chuột hay không. Main Menu = true, Cutscene = false.")]
+    [SerializeField] private bool sceneAllowsCursor = true;
+
+    [Tooltip("Setting đang mở và cần chuột khi không còn tay cầm.")]
+    [SerializeField] private bool settingForcesCursor;
+
+    [SerializeField] private bool isGameCursorVisible;
+
     private Coroutine restoreCursorCoroutine;
 
     private void Awake()
@@ -50,7 +57,7 @@ public class CursorManager : MonoBehaviour
 
     private void Start()
     {
-        UpdateCursorByControllerState();
+        ApplyCursorState();
     }
 
     private void Update()
@@ -62,48 +69,109 @@ public class CursorManager : MonoBehaviour
         UpdatePressedSprite();
     }
 
-    // =========================================
+    // =========================================================
     // REFERENCES
-    // =========================================
+    // =========================================================
 
     private void FindReferences()
     {
         if (cursorRect == null)
         {
-            cursorRect =
-                GetComponentInChildren<RectTransform>(true);
+            cursorRect = GetComponentInChildren<RectTransform>(true);
         }
 
         if (cursorImage == null)
         {
-            cursorImage =
-                GetComponentInChildren<Image>(true);
+            cursorImage = GetComponentInChildren<Image>(true);
         }
     }
 
-    // =========================================
-    // CONTROLLER STATE
-    // =========================================
+    // =========================================================
+    // FINAL CURSOR LOGIC
+    // =========================================================
 
-    public void UpdateCursorByControllerState()
+    private void ApplyCursorState()
     {
         bool hasController =
             ControllerManager.Instance != null &&
             ControllerManager.Instance.HasAnyController();
 
-        if (hasController)
+        /*
+         * Chuột chỉ hiện khi:
+         * 1. Không có tay cầm kết nối.
+         * 2. Scene cho phép chuột HOẶC Setting đang cần chuột.
+         *
+         * Ví dụ Cutscene:
+         * sceneAllowsCursor = false.
+         * Rút tay cầm nhưng Setting chưa mở => chuột vẫn ẩn.
+         * Setting đang mở và rút hết tay cầm => chuột hiện.
+         */
+        bool shouldShowCursor =
+            !hasController &&
+            (sceneAllowsCursor || settingForcesCursor);
+
+        if (shouldShowCursor)
         {
-            HideGameCursor();
+            ShowGameCursorInternal();
         }
         else
         {
-            ShowGameCursor();
+            HideGameCursorInternal();
         }
     }
 
-    // =========================================
+    /// <summary>
+    /// ControllerManager gọi hàm này khi trạng thái tay cầm thay đổi.
+    /// </summary>
+    public void UpdateCursorByControllerState()
+    {
+        ApplyCursorState();
+    }
+
+    // =========================================================
+    // SCENE CURSOR STATE
+    // =========================================================
+
+    /// <summary>
+    /// Đặt trạng thái chuột mặc định của scene.
+    /// Main Menu / màn chọn nhân vật thường dùng true.
+    /// Cutscene / gameplay không cần chuột thường dùng false.
+    /// </summary>
+    public void SetSceneCursorVisible(bool visible)
+    {
+        sceneAllowsCursor = visible;
+        ApplyCursorState();
+    }
+
+    public bool DoesSceneAllowCursor()
+    {
+        return sceneAllowsCursor;
+    }
+
+    // =========================================================
+    // SETTING CURSOR STATE
+    // =========================================================
+
+    /// <summary>
+    /// Gọi true khi Setting mở.
+    /// Gọi false khi Setting đóng.
+    /// Nếu còn tay cầm thì chuột vẫn ẩn.
+    /// Nếu rút hết tay cầm khi Setting đang mở thì chuột tự hiện.
+    /// </summary>
+    public void SetSettingCursorActive(bool active)
+    {
+        settingForcesCursor = active;
+        ApplyCursorState();
+    }
+
+    public bool IsSettingCursorActive()
+    {
+        return settingForcesCursor;
+    }
+
+    // =========================================================
     // CURSOR UPDATE
-    // =========================================
+    // =========================================================
 
     private void SyncCursorPosition()
     {
@@ -124,8 +192,7 @@ public class CursorManager : MonoBehaviour
         {
             if (pressedSprite != null)
             {
-                cursorImage.sprite =
-                    pressedSprite;
+                cursorImage.sprite = pressedSprite;
             }
         }
 
@@ -133,15 +200,14 @@ public class CursorManager : MonoBehaviour
         {
             if (normalSprite != null)
             {
-                cursorImage.sprite =
-                    normalSprite;
+                cursorImage.sprite = normalSprite;
             }
         }
     }
 
-    // =========================================
+    // =========================================================
     // APPLICATION FOCUS
-    // =========================================
+    // =========================================================
 
     private void OnApplicationFocus(bool hasFocus)
     {
@@ -153,15 +219,11 @@ public class CursorManager : MonoBehaviour
 
         if (restoreCursorCoroutine != null)
         {
-            StopCoroutine(
-                restoreCursorCoroutine
-            );
+            StopCoroutine(restoreCursorCoroutine);
         }
 
         restoreCursorCoroutine =
-            StartCoroutine(
-                RestoreGameCursorRoutine()
-            );
+            StartCoroutine(RestoreGameCursorRoutine());
     }
 
     private IEnumerator RestoreGameCursorRoutine()
@@ -173,23 +235,43 @@ public class CursorManager : MonoBehaviour
 
         yield return null;
 
-        Cursor.lockState =
-            CursorLockMode.None;
+        Cursor.lockState = CursorLockMode.None;
 
         SyncCursorPosition();
 
         yield return null;
 
-        UpdateCursorByControllerState();
+        ApplyCursorState();
 
         restoreCursorCoroutine = null;
     }
 
-    // =========================================
-    // SHOW / HIDE CURSOR
-    // =========================================
+    // =========================================================
+    // PUBLIC SHOW / HIDE
+    // =========================================================
 
+    /// <summary>
+    /// Scene yêu cầu ẩn chuột.
+    /// Không dùng hàm này để đóng Setting; đóng Setting hãy dùng
+    /// SetSettingCursorActive(false).
+    /// </summary>
     public void HideGameCursor()
+    {
+        sceneAllowsCursor = false;
+        ApplyCursorState();
+    }
+
+    /// <summary>
+    /// Scene cho phép hiện chuột.
+    /// Nếu đang có tay cầm thì chuột vẫn được giữ ẩn.
+    /// </summary>
+    public void ShowGameCursor()
+    {
+        sceneAllowsCursor = true;
+        ApplyCursorState();
+    }
+
+    private void HideGameCursorInternal()
     {
         isGameCursorVisible = false;
 
@@ -198,22 +280,17 @@ public class CursorManager : MonoBehaviour
             cursorImage.enabled = false;
         }
 
-        // Ẩn chuột Windows
         Cursor.visible = false;
-
-        // Khóa chuột ở giữa màn hình,
-        // người chơi không thể rê chuột ra ngoài game
         Cursor.lockState = CursorLockMode.Locked;
     }
 
-    public void ShowGameCursor()
+    private void ShowGameCursorInternal()
     {
         isGameCursorVisible = true;
 
-        // Mở khóa chuột
         Cursor.lockState = CursorLockMode.None;
 
-        // Nếu dùng cursor UI riêng thì ẩn cursor Windows
+        // Nếu dùng cursor UI riêng thì ẩn cursor Windows.
         Cursor.visible = !hideSystemCursor;
 
         if (cursorImage != null)
@@ -224,6 +301,10 @@ public class CursorManager : MonoBehaviour
         SyncCursorPosition();
     }
 
+    /// <summary>
+    /// Chỉ dùng khi game mất focus hoặc cần chuột Windows thật.
+    /// Hàm này không thay đổi trạng thái scene/setting đã lưu.
+    /// </summary>
     public void ShowSystemCursor()
     {
         isGameCursorVisible = false;
@@ -233,54 +314,41 @@ public class CursorManager : MonoBehaviour
             cursorImage.enabled = false;
         }
 
-        Cursor.lockState =
-            CursorLockMode.None;
-
+        Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
 
-    // =========================================
+    // =========================================================
     // CURSOR SETTINGS
-    // =========================================
+    // =========================================================
 
     public void SetCursorSprite(Sprite newSprite)
     {
-        if (cursorImage == null ||
-            newSprite == null)
-        {
+        if (cursorImage == null || newSprite == null)
             return;
-        }
 
         cursorImage.sprite = newSprite;
     }
 
     public void ResetCursorSprite()
     {
-        if (cursorImage == null ||
-            normalSprite == null)
-        {
+        if (cursorImage == null || normalSprite == null)
             return;
-        }
 
         cursorImage.sprite = normalSprite;
     }
 
-    public void SetCursorOffset(
-        Vector2 newOffset
-    )
+    public void SetCursorOffset(Vector2 newOffset)
     {
         cursorOffset = newOffset;
     }
 
-    public void SetCursorSize(
-        Vector2 newSize
-    )
+    public void SetCursorSize(Vector2 newSize)
     {
         if (cursorRect == null)
             return;
 
-        cursorRect.sizeDelta =
-            newSize;
+        cursorRect.sizeDelta = newSize;
     }
 
     public bool IsGameCursorVisible()
@@ -288,15 +356,13 @@ public class CursorManager : MonoBehaviour
         return isGameCursorVisible;
     }
 
-    // =========================================
+    // =========================================================
     // CLEANUP
-    // =========================================
+    // =========================================================
 
     private void OnApplicationQuit()
     {
-        Cursor.lockState =
-            CursorLockMode.None;
-
+        Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
 
@@ -307,10 +373,7 @@ public class CursorManager : MonoBehaviour
 
         Instance = null;
 
-        Cursor.lockState =
-            CursorLockMode.None;
-
+        Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
 }
-

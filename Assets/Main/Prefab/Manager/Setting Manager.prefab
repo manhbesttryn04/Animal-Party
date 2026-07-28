@@ -47,10 +47,11 @@ MonoBehaviour:
   masterSlider: {fileID: 0}
   musicSlider: {fileID: 0}
   sfxSlider: {fileID: 0}
+  settingPanel: {fileID: 0}
   qualityGraphicDropDown: {fileID: 0}
   resolutionDropdown: {fileID: 0}
   masterValue: 1
-  musicValue: 0
+  musicValue: 1
   sfxValue: 1
   backToMainMenuButton: {fileID: 0}
   openSettingButton: {fileID: 0}
@@ -62,3 +63,24 @@ MonoBehaviour:
   windowedWidth: 1280
   windowedHeight: 720
   isOpenAudioClick: 0
+  canOpenSettingByEsc: 0
+  isSettingOpen: 0
+  isEscSettingOpen: 0
+  isOpenExitButton: 1
+  settingItemBackgrounds:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  normalItemColor: {r: 1, g: 1, b: 1, a: 1}
+  focusedItemColor: {r: 0.54509807, g: 0, b: 0.54509807, a: 1}
+  dropdownPreviewColor: {r: 0.54509807, g: 0, b: 0.54509807, a: 0.98039216}
+  sliderControllerStep: 0.05
+  controllerInputThreshold: 0.5
+  controllerResetThreshold: 0.2
+  verticalP1Axis: VerticalP1
+  horizontalP1Axis: HorizontalP1
+  verticalP2Axis: VerticalP2
+  horizontalP2Axis: HorizontalP2

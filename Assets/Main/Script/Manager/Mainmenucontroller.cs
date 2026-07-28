@@ -19,13 +19,11 @@ public class MainMenuController : MonoBehaviour
     public Button exitButton;
 
     [Header("Controller Axis")]
-    [SerializeField]
-    private string verticalP1AxisName =
-        "VerticalP1";
+    [Tooltip("Axis dọc của Joystick 1 trong Legacy Input Manager.")]
+    [SerializeField] private string verticalP1AxisName = "VerticalP1";
 
-    [SerializeField]
-    private string verticalP2AxisName =
-        "VerticalP2";
+    [Tooltip("Axis dọc của Joystick 2 trong Legacy Input Manager.")]
+    [SerializeField] private string verticalP2AxisName = "VerticalP2";
 
     [Range(0.1f, 1f)]
     [SerializeField] private float inputThreshold = 0.5f;
@@ -42,11 +40,16 @@ public class MainMenuController : MonoBehaviour
     private bool canMoveVertical = true;
     private bool isLoading;
 
-    // Trạng thái tay cầm ở lần kiểm tra trước
+    // Trạng thái tay cầm ở lần kiểm tra trước.
     private bool previousConsole1Connected;
     private bool previousConsole2Connected;
 
-    // Tay cầm hiện đang điều khiển menu
+    // Lưu joystick slot trước đó để phát hiện Unity đổi slot
+    // dù trạng thái Connected vẫn là true.
+    private int previousConsole1JoystickIndex;
+    private int previousConsole2JoystickIndex;
+
+    // Tay cầm hiện đang điều khiển menu:
     // 0 = không có
     // 1 = Console 1
     // 2 = Console 2
@@ -67,8 +70,8 @@ public class MainMenuController : MonoBehaviour
         InitializeControllerState();
 
         if (focusStartButtonOnOpen &&
-    ControllerManager.Instance != null &&
-    ControllerManager.Instance.HasAnyController())
+            ControllerManager.Instance != null &&
+            ControllerManager.Instance.HasAnyController())
         {
             StartCoroutine(
                 FocusButtonDelay(startButton)
@@ -87,7 +90,7 @@ public class MainMenuController : MonoBehaviour
             return;
 
         // Khi bảng Setting đang mở, Main Menu phía sau bị khóa.
-        // Button 1 sẽ đóng Setting và trả focus về nút Setting.
+        // Button 1 đóng Setting và trả focus về nút Setting.
         if (IsSettingOpen())
         {
             HandleCloseSettingInput();
@@ -116,39 +119,29 @@ public class MainMenuController : MonoBehaviour
 
     private void SetupCursor()
     {
-        CursorManager cursor =
-            CursorManager.Instance;
+        CursorManager cursor = CursorManager.Instance;
 
         if (cursor == null)
             return;
 
-        // CursorManager tự kiểm tra trạng thái controller.
-        cursor.UpdateCursorByControllerState();
+        cursor.SetSceneCursorVisible(true);
     }
 
     private void SetupAudio()
     {
-        AudioManager audio =
-            AudioManager.Instance;
+        AudioManager audio = AudioManager.Instance;
 
         if (audio == null)
             return;
 
-        audio.PlayMusic(
-            audio.musicMainMenuClip
-        );
-
-        audio.PlayEnvironment(
-            audio.theNightClip
-        );
-
+        audio.PlayMusic(audio.musicMainMenuClip);
+        audio.PlayEnvironment(audio.theNightClip);
         audio.SetupMainGameAudio();
     }
 
     private void SetupSetting()
     {
-        SettingManager setting =
-            SettingManager.Instance;
+        SettingManager setting = SettingManager.Instance;
 
         if (setting != null)
         {
@@ -158,8 +151,7 @@ public class MainMenuController : MonoBehaviour
 
     private void SetupVolume()
     {
-        VolumeManager volume =
-            VolumeManager.Instance;
+        VolumeManager volume = VolumeManager.Instance;
 
         if (volume != null)
         {
@@ -180,6 +172,10 @@ public class MainMenuController : MonoBehaviour
         {
             previousConsole1Connected = false;
             previousConsole2Connected = false;
+
+            previousConsole1JoystickIndex = 0;
+            previousConsole2JoystickIndex = 0;
+
             activeMenuController = 0;
             return;
         }
@@ -189,6 +185,12 @@ public class MainMenuController : MonoBehaviour
 
         previousConsole2Connected =
             controller.IsConsole2Connected();
+
+        previousConsole1JoystickIndex =
+            controller.GetConsole1JoystickIndex();
+
+        previousConsole2JoystickIndex =
+            controller.GetConsole2JoystickIndex();
 
         SelectActiveMenuController();
     }
@@ -210,22 +212,25 @@ public class MainMenuController : MonoBehaviour
         bool console2Connected =
             controller.IsConsole2Connected();
 
-        bool stateChanged =
-            console1Connected !=
-            previousConsole1Connected ||
-            console2Connected !=
-            previousConsole2Connected;
+        int console1JoystickIndex =
+            controller.GetConsole1JoystickIndex();
 
-        if (!stateChanged)
+        int console2JoystickIndex =
+            controller.GetConsole2JoystickIndex();
+
+        bool connectionChanged =
+            console1Connected != previousConsole1Connected ||
+            console2Connected != previousConsole2Connected;
+
+        bool joystickIndexChanged =
+            console1JoystickIndex != previousConsole1JoystickIndex ||
+            console2JoystickIndex != previousConsole2JoystickIndex;
+
+        if (!connectionChanged &&
+            !joystickIndexChanged)
+        {
             return;
-
-        bool hadAnyController =
-            previousConsole1Connected ||
-            previousConsole2Connected;
-
-        bool hasAnyController =
-            console1Connected ||
-            console2Connected;
+        }
 
         previousConsole1Connected =
             console1Connected;
@@ -233,9 +238,17 @@ public class MainMenuController : MonoBehaviour
         previousConsole2Connected =
             console2Connected;
 
+        previousConsole1JoystickIndex =
+            console1JoystickIndex;
+
+        previousConsole2JoystickIndex =
+            console2JoystickIndex;
+
         SelectActiveMenuController();
 
-        canMoveVertical = true;
+        // Sau khi cắm/rút hoặc đổi joystick slot,
+        // yêu cầu thả analog về giữa trước khi di chuyển tiếp.
+        canMoveVertical = false;
 
         CursorManager cursor =
             CursorManager.Instance;
@@ -245,29 +258,21 @@ public class MainMenuController : MonoBehaviour
             cursor.UpdateCursorByControllerState();
         }
 
-        // Không còn tay cầm nào
+        bool hasAnyController =
+            console1Connected ||
+            console2Connected;
+
         if (!hasAnyController)
         {
             ClearControllerFocus();
             return;
         }
 
-        // Chỉ cần còn ít nhất 1 tay cầm
-        // thì luôn focus nút Start
+        // Khi vừa cắm tay cầm hoặc Unity đổi joystick slot,
+        // focus lại nút Start.
         StartCoroutine(
             FocusButtonDelay(startButton)
         );
-
-        // Nếu không còn tay cầm:
-        // bỏ focus để chuột tự điều khiển.
-        if (!hasAnyController)
-        {
-            ClearControllerFocus();
-        }
-        else
-        {
-            FocusCurrentButton();
-        }
     }
 
     private void SelectActiveMenuController()
@@ -281,25 +286,28 @@ public class MainMenuController : MonoBehaviour
             return;
         }
 
-        // Ưu tiên Console 1.
+        // Luôn ưu tiên Console 1.
         if (controller.IsConsole1Connected())
         {
             activeMenuController = 1;
 
             Debug.Log(
-                "Main Menu sử dụng VerticalP1."
+                "Main Menu dùng Console 1 | Joystick " +
+                controller.GetConsole1JoystickIndex()
             );
 
             return;
         }
 
-        // Console 1 bị rút nhưng Console 2 vẫn còn.
+        // Nếu Console 1 bị rút nhưng Console 2 vẫn còn,
+        // Console 2 được phép điều khiển menu.
         if (controller.IsConsole2Connected())
         {
             activeMenuController = 2;
 
             Debug.Log(
-                "Main Menu sử dụng VerticalP2."
+                "Main Menu dùng Console 2 | Joystick " +
+                controller.GetConsole2JoystickIndex()
             );
 
             return;
@@ -314,13 +322,20 @@ public class MainMenuController : MonoBehaviour
 
     private void SetNoControllerState()
     {
-        if (activeMenuController == 0)
+        if (activeMenuController == 0 &&
+            !previousConsole1Connected &&
+            !previousConsole2Connected)
+        {
             return;
+        }
 
         activeMenuController = 0;
 
         previousConsole1Connected = false;
         previousConsole2Connected = false;
+
+        previousConsole1JoystickIndex = 0;
+        previousConsole2JoystickIndex = 0;
 
         canMoveVertical = true;
 
@@ -335,75 +350,71 @@ public class MainMenuController : MonoBehaviour
         }
     }
 
-    private bool HasAnyControllerConnected()
-    {
-        ControllerManager controller =
-            ControllerManager.Instance;
-
-        return controller != null &&
-               controller.HasAnyController();
-    }
-
     // =========================================================
     // GET ACTIVE CONTROLLER INPUT
     // =========================================================
 
     private float GetActiveVerticalInput()
     {
-        if (activeMenuController == 1)
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        if (controller == null ||
+            activeMenuController == 0)
         {
-            return Input.GetAxisRaw(
-                verticalP1AxisName
-            );
+            return 0f;
         }
 
-        if (activeMenuController == 2)
-        {
-            return Input.GetAxisRaw(
-                verticalP2AxisName
-            );
-        }
-
-        return 0f;
+        // ControllerManager lấy joystick index thật của Console
+        // rồi chọn VerticalP1 hoặc VerticalP2 tương ứng.
+        return controller.GetConsoleAxisRaw(
+            activeMenuController,
+            verticalP1AxisName,
+            verticalP2AxisName
+        );
     }
 
     private bool GetActiveSubmitDown()
     {
-        if (activeMenuController == 1)
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        if (controller == null ||
+            activeMenuController == 0)
         {
-            return Input.GetKeyDown(
-                KeyCode.Joystick1Button0
-            );
+            return false;
         }
 
-        if (activeMenuController == 2)
-        {
-            return Input.GetKeyDown(
-                KeyCode.Joystick2Button0
-            );
-        }
-
-        return false;
+        // Button 0:
+        // Xbox A / PlayStation Cross.
+        return controller.GetConsoleButtonDown(
+            activeMenuController,
+            0
+        );
     }
 
     private bool GetActiveCancelDown()
     {
-        if (activeMenuController == 1)
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        if (controller == null ||
+            activeMenuController == 0)
         {
-            return Input.GetKeyDown(
-                KeyCode.Joystick1Button1
-            );
+            return false;
         }
 
-        if (activeMenuController == 2)
-        {
-            return Input.GetKeyDown(
-                KeyCode.Joystick2Button1
-            );
-        }
-
-        return false;
+        // Button 1:
+        // Xbox B / PlayStation Circle.
+        return controller.GetConsoleButtonDown(
+            activeMenuController,
+            1
+        );
     }
+
+    // =========================================================
+    // SETTINGS
+    // =========================================================
 
     private bool IsSettingOpen()
     {
@@ -483,8 +494,7 @@ public class MainMenuController : MonoBehaviour
             return;
         }
 
-        int startIndex =
-            currentButtonIndex;
+        int startIndex = currentButtonIndex;
 
         do
         {
@@ -505,10 +515,8 @@ public class MainMenuController : MonoBehaviour
                 PlayMoveSound();
                 return;
             }
-
-        } while (
-            currentButtonIndex != startIndex
-        );
+        }
+        while (currentButtonIndex != startIndex);
     }
 
     private void MoveToNextButton()
@@ -519,8 +527,7 @@ public class MainMenuController : MonoBehaviour
             return;
         }
 
-        int startIndex =
-            currentButtonIndex;
+        int startIndex = currentButtonIndex;
 
         do
         {
@@ -541,10 +548,8 @@ public class MainMenuController : MonoBehaviour
                 PlayMoveSound();
                 return;
             }
-
-        } while (
-            currentButtonIndex != startIndex
-        );
+        }
+        while (currentButtonIndex != startIndex);
     }
 
     private bool CanSelectButton(
@@ -561,10 +566,7 @@ public class MainMenuController : MonoBehaviour
 
     private void HandleSubmitInput()
     {
-        bool submitPressed =
-            GetActiveSubmitDown();
-
-        if (!submitPressed)
+        if (!GetActiveSubmitDown())
             return;
 
         if (EventSystem.current == null)
@@ -655,7 +657,8 @@ public class MainMenuController : MonoBehaviour
         }
 
         if (currentButtonIndex < 0 ||
-            currentButtonIndex >= menuButtons.Length)
+            currentButtonIndex >=
+            menuButtons.Length)
         {
             currentButtonIndex = 0;
         }
@@ -783,7 +786,7 @@ public class MainMenuController : MonoBehaviour
     }
 
     // =========================================================
-    // SETTINGS
+    // SETTINGS BUTTONS
     // =========================================================
 
     public void OnSettingsClicked()
@@ -819,6 +822,9 @@ public class MainMenuController : MonoBehaviour
         {
             setting.ResetSetting();
         }
+
+        // Tránh analog đang giữ làm menu nhảy ngay sau khi đóng.
+        canMoveVertical = false;
 
         if (activeMenuController != 0)
         {

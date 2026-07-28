@@ -175,6 +175,7 @@ public class MiniGameManager : MonoBehaviour
         // Ẩn bảng thông báo play
         UIManager.Instance.HideNotifiPlayPanel(false);
         SettingManager.Instance.ResetSetting();
+        SettingManager.Instance.canOpenSettingByController = false;
         var cursor = CursorManager.Instance;
         if (cursor != null)
         {
@@ -407,11 +408,11 @@ public class MiniGameManager : MonoBehaviour
         ui.canvasInstructInput.SetActive(false);
         // Tắt màn đen sau khi chuẩn bị xong
        ui.flastBlackPanel.SetActive(false);
-        UIManager.Instance.ActiveOpenSettingButton(true);
+       /* UIManager.Instance.ActiveOpenSettingButton(true);
         if (cursor != null)
         {
             cursor.ShowGameCursor();
-        }
+        }*/
 
         // =====================================================
         // UNLOCK PLAYER MOVE
@@ -509,6 +510,7 @@ public class MiniGameManager : MonoBehaviour
         // =====================================================
         AudioManager.Instance.ZeroAllAudio();
         SettingManager.Instance.ResetSetting();
+        SettingManager.Instance.canOpenSettingByController = true;
         UIManager.Instance.ActiveOpenSettingButton(false);
         if (cursor != null)
         {

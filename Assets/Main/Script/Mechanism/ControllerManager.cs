@@ -5,24 +5,67 @@ using UnityEngine;
 
 public class ControllerManager : MonoBehaviour
 {
-    public static ControllerManager Instance { get; private set; }
+    public enum ControllerChangeType
+    {
+        None,
+        ConnectedNewController,
+        Disconnected,
+        ReconnectedSameController,
+        ReplacedWithDifferentController
+    }
+
+    private struct ConnectedController
+    {
+        public string name;
+        public int joystickIndex;
+
+        public ConnectedController(
+            string controllerName,
+            int index)
+        {
+            name = controllerName;
+            joystickIndex = index;
+        }
+    }
+
+    public static ControllerManager Instance
+    {
+        get;
+        private set;
+    }
 
     [Header("Current Controller State")]
     [SerializeField] private bool console1Connected;
     [SerializeField] private bool console2Connected;
 
+    [Header("Current Joystick Index")]
+    [Tooltip("Joystick slot thật mà Unity đang gán cho Console 1.")]
+    [SerializeField] private int console1JoystickIndex;
+
+    [Tooltip("Joystick slot thật mà Unity đang gán cho Console 2.")]
+    [SerializeField] private int console2JoystickIndex;
+
     [Header("Saved Controller Names")]
     [SerializeField] private string console1Name = "";
     [SerializeField] private string console2Name = "";
 
+    [Header("Last Controller Change")]
+    [SerializeField]
+    private ControllerChangeType console1LastChange;
+
+    [SerializeField]
+    private ControllerChangeType console2LastChange;
+
     [Header("Update")]
+    [Min(0.05f)]
     [SerializeField] private float checkInterval = 0.25f;
 
     private float checkTimer;
     private int previousControllerCount;
 
-    private readonly List<string> previousConnectedNames =
-        new List<string>();
+    private readonly List<ConnectedController>
+        previousConnectedControllers =
+            new List<ConnectedController>();
 
     private Coroutine notificationCoroutine;
 
@@ -32,13 +75,15 @@ public class ControllerManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        if (Instance != null &&
+            Instance != this)
         {
             Destroy(gameObject);
             return;
         }
 
         Instance = this;
+
         DontDestroyOnLoad(gameObject);
     }
 
@@ -65,65 +110,72 @@ public class ControllerManager : MonoBehaviour
 
     private void InitializeControllerState()
     {
-        List<string> currentNames =
-            GetConnectedControllerNames();
+        List<ConnectedController> currentControllers =
+            GetConnectedControllers();
 
-        UpdateControllerSlots(currentNames);
+        UpdateControllerSlots(currentControllers);
 
-        previousConnectedNames.Clear();
-        previousConnectedNames.AddRange(currentNames);
+        previousConnectedControllers.Clear();
 
-        previousControllerCount = currentNames.Count;
+        previousConnectedControllers.AddRange(
+            currentControllers
+        );
+
+        previousControllerCount =
+            currentControllers.Count;
 
         UpdateCursor();
-
         PrintControllerState();
-
-        // Không gọi UI tại đây.
-        // Vì đây chỉ là trạng thái lúc game vừa mở,
-        // không phải sự kiện vừa cắm tay cầm.
     }
 
     // =========================================================
-    // UPDATE CONTROLLER STATE
+    // REFRESH
     // =========================================================
 
     private void RefreshControllerState()
     {
-        List<string> currentNames =
-            GetConnectedControllerNames();
+        List<ConnectedController> currentControllers =
+            GetConnectedControllers();
 
-        if (AreListsEqual(
-            previousConnectedNames,
-            currentNames))
+        if (AreControllerListsEqual(
+            previousConnectedControllers,
+            currentControllers))
         {
             return;
         }
 
         int currentControllerCount =
-            currentNames.Count;
+            currentControllers.Count;
 
-        // Chỉ true khi số tay cầm tăng:
-        // 0 -> 1 hoặc 1 -> 2
         bool hasNewControllerConnected =
             currentControllerCount >
             previousControllerCount;
 
-        UpdateControllerSlots(currentNames);
+        bool hasControllerDisconnected =
+            currentControllerCount <
+            previousControllerCount;
 
-        previousConnectedNames.Clear();
-        previousConnectedNames.AddRange(currentNames);
+        UpdateControllerSlots(currentControllers);
+
+        previousConnectedControllers.Clear();
+
+        previousConnectedControllers.AddRange(
+            currentControllers
+        );
 
         previousControllerCount =
             currentControllerCount;
 
         UpdateCursor();
 
-        // Chỉ hiện UI khi vừa cắm thêm tay cầm.
-        // Không hiện khi rút.
         if (hasNewControllerConnected)
         {
             ShowControllerNotification();
+        }
+
+        if (hasControllerDisconnected)
+        {
+            ShowControllerDisconnect();
         }
 
         PrintControllerState();
@@ -134,204 +186,253 @@ public class ControllerManager : MonoBehaviour
     // =========================================================
 
     private void UpdateControllerSlots(
-        List<string> currentNames)
+        List<ConnectedController> currentControllers)
     {
-        // Rút hết tay cầm:
-        // reset toàn bộ tên đã lưu.
-        if (currentNames.Count == 0)
-        {
-            console1Connected = false;
-            console2Connected = false;
+        bool wasConsole1Connected =
+            console1Connected;
 
-            console1Name = "";
-            console2Name = "";
+        bool wasConsole2Connected =
+            console2Connected;
+
+        string oldConsole1Name =
+            console1Name;
+
+        string oldConsole2Name =
+            console2Name;
+
+        int oldConsole1JoystickIndex =
+            console1JoystickIndex;
+
+        int oldConsole2JoystickIndex =
+            console2JoystickIndex;
+
+        console1LastChange =
+            ControllerChangeType.None;
+
+        console2LastChange =
+            ControllerChangeType.None;
+
+        console1Connected = false;
+        console2Connected = false;
+
+        console1JoystickIndex = 0;
+        console2JoystickIndex = 0;
+
+        // Tạo danh sách tay cầm chưa được gán.
+        List<ConnectedController>
+            unassignedControllers =
+                new List<ConnectedController>(
+                    currentControllers
+                );
+
+        // Không có tay cầm nào.
+        if (unassignedControllers.Count == 0)
+        {
+            if (wasConsole1Connected)
+            {
+                console1LastChange =
+                    ControllerChangeType.Disconnected;
+            }
+
+            if (wasConsole2Connected)
+            {
+                console2LastChange =
+                    ControllerChangeType.Disconnected;
+            }
 
             Debug.Log(
                 "Đã rút hết tay cầm. " +
-                "Reset Console 1 và Console 2."
+                "Tên tay cầm cũ vẫn được giữ lại."
             );
 
             return;
         }
 
-        bool console1NameStillExists =
-            ContainsControllerName(
-                currentNames,
-                console1Name
+        // =====================================================
+        // TÌM LẠI CONSOLE 1
+        // =====================================================
+
+        int console1MatchIndex =
+            FindBestControllerMatch(
+                unassignedControllers,
+                oldConsole1Name,
+                oldConsole1JoystickIndex
             );
 
-        bool console2NameStillExists =
-            ContainsControllerName(
-                currentNames,
-                console2Name
-            );
-
-        console1Connected =
-            !string.IsNullOrWhiteSpace(console1Name) &&
-            console1NameStillExists;
-
-        console2Connected =
-            !string.IsNullOrWhiteSpace(console2Name) &&
-            console2NameStillExists;
-
-        List<string> unassignedControllers =
-            new List<string>(currentNames);
-
-        // Loại những tay cầm đã được nhận diện khỏi danh sách chưa gán.
-        RemoveOneName(
-            unassignedControllers,
-            console1Connected
-                ? console1Name
-                : ""
-        );
-
-        RemoveOneName(
-            unassignedControllers,
-            console2Connected
-                ? console2Name
-                : ""
-        );
-
-        // Chưa có Console 1:
-        // tay cầm đầu tiên được gán Console 1.
-        if (string.IsNullOrWhiteSpace(console1Name) &&
-            unassignedControllers.Count > 0)
+        if (console1MatchIndex >= 0)
         {
-            console1Name =
-                unassignedControllers[0];
+            ConnectedController matchedController =
+                unassignedControllers[
+                    console1MatchIndex
+                ];
 
-            console1Connected = true;
+            AssignConsole1(matchedController);
 
-            unassignedControllers.RemoveAt(0);
-
-            Debug.Log(
-                "Gán tay cầm vào Console 1: " +
-                console1Name
+            unassignedControllers.RemoveAt(
+                console1MatchIndex
             );
-        }
 
-        // Chưa có Console 2:
-        // tay cầm còn lại được gán Console 2.
-        if (string.IsNullOrWhiteSpace(console2Name) &&
-            unassignedControllers.Count > 0)
-        {
-            console2Name =
-                unassignedControllers[0];
-
-            console2Connected = true;
-
-            unassignedControllers.RemoveAt(0);
-
-            Debug.Log(
-                "Gán tay cầm vào Console 2: " +
-                console2Name
-            );
-        }
-
-        // Console 1 đã có tên nhưng đang bị rút.
-        // Nếu tay cầm cùng tên cắm lại thì trả về Console 1.
-        if (!console1Connected &&
-            !string.IsNullOrWhiteSpace(console1Name))
-        {
-            int matchingIndex =
-                FindNameIndex(
-                    unassignedControllers,
-                    console1Name
-                );
-
-            if (matchingIndex >= 0)
+            if (!wasConsole1Connected)
             {
-                console1Connected = true;
-
-                unassignedControllers.RemoveAt(
-                    matchingIndex
-                );
-
-                Debug.Log(
-                    "Console 1 đã được cắm lại: " +
-                    console1Name
-                );
+                console1LastChange =
+                    ControllerChangeType
+                        .ReconnectedSameController;
             }
         }
 
-        // Console 2 đã có tên nhưng đang bị rút.
-        // Nếu tay cầm cùng tên cắm lại thì trả về Console 2.
-        if (!console2Connected &&
-            !string.IsNullOrWhiteSpace(console2Name))
+        // =====================================================
+        // TÌM LẠI CONSOLE 2
+        // =====================================================
+
+        int console2MatchIndex =
+            FindBestControllerMatch(
+                unassignedControllers,
+                oldConsole2Name,
+                oldConsole2JoystickIndex
+            );
+
+        if (console2MatchIndex >= 0)
         {
-            int matchingIndex =
-                FindNameIndex(
-                    unassignedControllers,
-                    console2Name
-                );
+            ConnectedController matchedController =
+                unassignedControllers[
+                    console2MatchIndex
+                ];
 
-            if (matchingIndex >= 0)
+            AssignConsole2(matchedController);
+
+            unassignedControllers.RemoveAt(
+                console2MatchIndex
+            );
+
+            if (!wasConsole2Connected)
             {
-                console2Connected = true;
-
-                unassignedControllers.RemoveAt(
-                    matchingIndex
-                );
-
-                Debug.Log(
-                    "Console 2 đã được cắm lại: " +
-                    console2Name
-                );
+                console2LastChange =
+                    ControllerChangeType
+                        .ReconnectedSameController;
             }
         }
 
-        // Console 1 đang trống, Console 2 vẫn còn
-        // và có tay cầm mới được cắm vào.
+        // =====================================================
+        // CONSOLE 1 ĐANG TRỐNG
+        // =====================================================
+
         if (!console1Connected &&
             unassignedControllers.Count > 0)
         {
-            console1Name =
+            ConnectedController newController =
                 unassignedControllers[0];
-
-            console1Connected = true;
 
             unassignedControllers.RemoveAt(0);
 
-            Debug.Log(
-                "Gán tay cầm mới vào Console 1: " +
-                console1Name
-            );
+            bool hadSavedController =
+                !string.IsNullOrWhiteSpace(
+                    oldConsole1Name
+                );
+
+            bool isDifferentController =
+                hadSavedController &&
+                !ControllerNamesEqual(
+                    oldConsole1Name,
+                    newController.name
+                );
+
+            AssignConsole1(newController);
+
+            console1LastChange =
+                isDifferentController
+                    ? ControllerChangeType
+                        .ReplacedWithDifferentController
+                    : ControllerChangeType
+                        .ConnectedNewController;
         }
 
-        // Console 2 đang trống và còn tay cầm chưa gán.
+        // =====================================================
+        // CONSOLE 2 ĐANG TRỐNG
+        // =====================================================
+
         if (!console2Connected &&
             unassignedControllers.Count > 0)
         {
-            console2Name =
+            ConnectedController newController =
                 unassignedControllers[0];
-
-            console2Connected = true;
 
             unassignedControllers.RemoveAt(0);
 
-            Debug.Log(
-                "Gán tay cầm mới vào Console 2: " +
-                console2Name
-            );
+            bool hadSavedController =
+                !string.IsNullOrWhiteSpace(
+                    oldConsole2Name
+                );
+
+            bool isDifferentController =
+                hadSavedController &&
+                !ControllerNamesEqual(
+                    oldConsole2Name,
+                    newController.name
+                );
+
+            AssignConsole2(newController);
+
+            console2LastChange =
+                isDifferentController
+                    ? ControllerChangeType
+                        .ReplacedWithDifferentController
+                    : ControllerChangeType
+                        .ConnectedNewController;
         }
+
+        // Nếu trước đó kết nối nhưng giờ không tìm thấy.
+        if (wasConsole1Connected &&
+            !console1Connected)
+        {
+            console1LastChange =
+                ControllerChangeType.Disconnected;
+        }
+
+        if (wasConsole2Connected &&
+            !console2Connected)
+        {
+            console2LastChange =
+                ControllerChangeType.Disconnected;
+        }
+    }
+
+    private void AssignConsole1(
+        ConnectedController controller)
+    {
+        console1Connected = true;
+        console1Name = controller.name;
+        console1JoystickIndex =
+            controller.joystickIndex;
+    }
+
+    private void AssignConsole2(
+        ConnectedController controller)
+    {
+        console2Connected = true;
+        console2Name = controller.name;
+        console2JoystickIndex =
+            controller.joystickIndex;
     }
 
     // =========================================================
     // GET CONNECTED CONTROLLERS
     // =========================================================
 
-    private List<string> GetConnectedControllerNames()
+    private List<ConnectedController>
+        GetConnectedControllers()
     {
         string[] joystickNames =
             Input.GetJoystickNames();
 
-        List<string> connectedNames =
-            new List<string>();
+        List<ConnectedController> controllers =
+            new List<ConnectedController>();
 
         if (joystickNames == null)
-            return connectedNames;
+            return controllers;
 
-        for (int i = 0; i < joystickNames.Length; i++)
+        for (int i = 0;
+             i < joystickNames.Length;
+             i++)
         {
             string controllerName =
                 joystickNames[i];
@@ -342,52 +443,60 @@ public class ControllerManager : MonoBehaviour
                 continue;
             }
 
-            connectedNames.Add(
-                controllerName.Trim()
+            // i bắt đầu từ 0 nhưng Joystick bắt đầu từ 1.
+            int joystickIndex = i + 1;
+
+            controllers.Add(
+                new ConnectedController(
+                    controllerName.Trim(),
+                    joystickIndex
+                )
             );
         }
 
-        return connectedNames;
+        return controllers;
     }
 
     // =========================================================
-    // HELPER METHODS
+    // MATCH CONTROLLER
     // =========================================================
 
-    private bool ContainsControllerName(
-        List<string> names,
-        string targetName)
+    private int FindBestControllerMatch(
+        List<ConnectedController> controllers,
+        string savedName,
+        int savedJoystickIndex)
     {
-        if (string.IsNullOrWhiteSpace(targetName))
-            return false;
-
-        for (int i = 0; i < names.Count; i++)
-        {
-            if (string.Equals(
-                names[i],
-                targetName,
-                StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private int FindNameIndex(
-        List<string> names,
-        string targetName)
-    {
-        if (string.IsNullOrWhiteSpace(targetName))
+        if (string.IsNullOrWhiteSpace(savedName))
             return -1;
 
-        for (int i = 0; i < names.Count; i++)
+        // Ưu tiên cùng tên và cùng joystick slot cũ.
+        for (int i = 0;
+             i < controllers.Count;
+             i++)
         {
-            if (string.Equals(
-                names[i],
-                targetName,
-                StringComparison.OrdinalIgnoreCase))
+            bool sameName =
+                ControllerNamesEqual(
+                    controllers[i].name,
+                    savedName
+                );
+
+            bool sameIndex =
+                controllers[i].joystickIndex ==
+                savedJoystickIndex;
+
+            if (sameName && sameIndex)
+                return i;
+        }
+
+        // Nếu Unity đổi joystick slot,
+        // tìm lại bằng tên tay cầm.
+        for (int i = 0;
+             i < controllers.Count;
+             i++)
+        {
+            if (ControllerNamesEqual(
+                controllers[i].name,
+                savedName))
             {
                 return i;
             }
@@ -396,41 +505,193 @@ public class ControllerManager : MonoBehaviour
         return -1;
     }
 
-    private void RemoveOneName(
-        List<string> names,
-        string targetName)
+    private bool ControllerNamesEqual(
+        string firstName,
+        string secondName)
     {
-        int index =
-            FindNameIndex(
-                names,
-                targetName
-            );
-
-        if (index >= 0)
-        {
-            names.RemoveAt(index);
-        }
+        return string.Equals(
+            firstName,
+            secondName,
+            StringComparison.OrdinalIgnoreCase
+        );
     }
 
-    private bool AreListsEqual(
-        List<string> first,
-        List<string> second)
+    private bool AreControllerListsEqual(
+        List<ConnectedController> first,
+        List<ConnectedController> second)
     {
         if (first.Count != second.Count)
             return false;
 
-        for (int i = 0; i < first.Count; i++)
+        for (int i = 0;
+             i < first.Count;
+             i++)
         {
-            if (!string.Equals(
-                first[i],
-                second[i],
-                StringComparison.OrdinalIgnoreCase))
-            {
+            bool sameName =
+                ControllerNamesEqual(
+                    first[i].name,
+                    second[i].name
+                );
+
+            bool sameIndex =
+                first[i].joystickIndex ==
+                second[i].joystickIndex;
+
+            if (!sameName || !sameIndex)
                 return false;
-            }
         }
 
         return true;
+    }
+
+    // =========================================================
+    // AXIS INPUT
+    // =========================================================
+
+    public float GetConsoleAxisRaw(
+        int consoleNumber,
+        string joystick1Axis,
+        string joystick2Axis)
+    {
+        int joystickIndex =
+            GetConsoleJoystickIndex(
+                consoleNumber
+            );
+
+        if (joystickIndex == 1)
+        {
+            return Input.GetAxisRaw(
+                joystick1Axis
+            );
+        }
+
+        if (joystickIndex == 2)
+        {
+            return Input.GetAxisRaw(
+                joystick2Axis
+            );
+        }
+
+        return 0f;
+    }
+
+    public float GetConsoleHorizontalRaw(
+        int consoleNumber,
+        string horizontalJoystick1,
+        string horizontalJoystick2)
+    {
+        return GetConsoleAxisRaw(
+            consoleNumber,
+            horizontalJoystick1,
+            horizontalJoystick2
+        );
+    }
+
+    public float GetConsoleVerticalRaw(
+        int consoleNumber,
+        string verticalJoystick1,
+        string verticalJoystick2)
+    {
+        return GetConsoleAxisRaw(
+            consoleNumber,
+            verticalJoystick1,
+            verticalJoystick2
+        );
+    }
+
+    // =========================================================
+    // BUTTON INPUT
+    // =========================================================
+
+    public bool GetConsoleButtonDown(
+        int consoleNumber,
+        int buttonIndex)
+    {
+        KeyCode keyCode =
+            GetConsoleButtonKeyCode(
+                consoleNumber,
+                buttonIndex
+            );
+
+        if (keyCode == KeyCode.None)
+            return false;
+
+        return Input.GetKeyDown(keyCode);
+    }
+
+    public bool GetConsoleButton(
+        int consoleNumber,
+        int buttonIndex)
+    {
+        KeyCode keyCode =
+            GetConsoleButtonKeyCode(
+                consoleNumber,
+                buttonIndex
+            );
+
+        if (keyCode == KeyCode.None)
+            return false;
+
+        return Input.GetKey(keyCode);
+    }
+
+    public bool GetConsoleButtonUp(
+        int consoleNumber,
+        int buttonIndex)
+    {
+        KeyCode keyCode =
+            GetConsoleButtonKeyCode(
+                consoleNumber,
+                buttonIndex
+            );
+
+        if (keyCode == KeyCode.None)
+            return false;
+
+        return Input.GetKeyUp(keyCode);
+    }
+
+    private KeyCode GetConsoleButtonKeyCode(
+        int consoleNumber,
+        int buttonIndex)
+    {
+        int joystickIndex =
+            GetConsoleJoystickIndex(
+                consoleNumber
+            );
+
+        return GetJoystickButtonKeyCode(
+            joystickIndex,
+            buttonIndex
+        );
+    }
+
+    private KeyCode GetJoystickButtonKeyCode(
+        int joystickIndex,
+        int buttonIndex)
+    {
+        if (joystickIndex < 1 ||
+            joystickIndex > 8 ||
+            buttonIndex < 0 ||
+            buttonIndex > 19)
+        {
+            return KeyCode.None;
+        }
+
+        string keyName =
+            "Joystick" +
+            joystickIndex +
+            "Button" +
+            buttonIndex;
+
+        if (Enum.TryParse(
+            keyName,
+            out KeyCode keyCode))
+        {
+            return keyCode;
+        }
+
+        return KeyCode.None;
     }
 
     // =========================================================
@@ -464,34 +725,75 @@ public class ControllerManager : MonoBehaviour
             );
     }
 
+    private void ShowControllerDisconnect()
+    {
+        if (UIManager.Instance == null)
+            return;
+
+        if (notificationCoroutine != null)
+        {
+            StopCoroutine(
+                notificationCoroutine
+            );
+        }
+
+        notificationCoroutine =
+            StartCoroutine(
+                ShowDisconnectRoutine()
+            );
+    }
+
     private IEnumerator ShowNotificationRoutine()
     {
         yield return StartCoroutine(
-            UIManager.Instance.ShowConsoleConect()
+            UIManager.Instance
+                .ShowConsoleConect()
         );
 
         notificationCoroutine = null;
     }
+
+    private IEnumerator ShowDisconnectRoutine()
+    {
+        yield return StartCoroutine(
+            UIManager.Instance
+                .ShowConsoleFailConect()
+        );
+
+        notificationCoroutine = null;
+    }
+
+    // =========================================================
+    // DEBUG
+    // =========================================================
 
     private void PrintControllerState()
     {
         Debug.Log(
             "Console 1: " +
             (console1Connected
-                ? "Connected - " + console1Name
-                : "Disconnected - Saved: " + console1Name)
+                ? "Connected | " +
+                  console1Name +
+                  " | Joystick " +
+                  console1JoystickIndex
+                : "Disconnected | Saved: " +
+                  console1Name)
         );
 
         Debug.Log(
             "Console 2: " +
             (console2Connected
-                ? "Connected - " + console2Name
-                : "Disconnected - Saved: " + console2Name)
+                ? "Connected | " +
+                  console2Name +
+                  " | Joystick " +
+                  console2JoystickIndex
+                : "Disconnected | Saved: " +
+                  console2Name)
         );
     }
 
     // =========================================================
-    // PUBLIC METHODS
+    // PUBLIC STATE
     // =========================================================
 
     public bool IsConsole1Connected()
@@ -502,6 +804,18 @@ public class ControllerManager : MonoBehaviour
     public bool IsConsole2Connected()
     {
         return console2Connected;
+    }
+
+    public bool IsConsoleConnected(
+        int consoleNumber)
+    {
+        if (consoleNumber == 1)
+            return console1Connected;
+
+        if (consoleNumber == 2)
+            return console2Connected;
+
+        return false;
     }
 
     public bool HasAnyController()
@@ -531,5 +845,61 @@ public class ControllerManager : MonoBehaviour
     public string GetConsole2Name()
     {
         return console2Name;
+    }
+
+    public int GetConsole1JoystickIndex()
+    {
+        return console1Connected
+            ? console1JoystickIndex
+            : 0;
+    }
+
+    public int GetConsole2JoystickIndex()
+    {
+        return console2Connected
+            ? console2JoystickIndex
+            : 0;
+    }
+
+    public int GetConsoleJoystickIndex(
+        int consoleNumber)
+    {
+        if (consoleNumber == 1)
+        {
+            return GetConsole1JoystickIndex();
+        }
+
+        if (consoleNumber == 2)
+        {
+            return GetConsole2JoystickIndex();
+        }
+
+        return 0;
+    }
+
+    public ControllerChangeType
+        GetConsole1LastChange()
+    {
+        return console1LastChange;
+    }
+
+    public ControllerChangeType
+        GetConsole2LastChange()
+    {
+        return console2LastChange;
+    }
+
+    public bool DidConsole1ControllerChange()
+    {
+        return console1LastChange ==
+               ControllerChangeType
+                   .ReplacedWithDifferentController;
+    }
+
+    public bool DidConsole2ControllerChange()
+    {
+        return console2LastChange ==
+               ControllerChangeType
+                   .ReplacedWithDifferentController;
     }
 }

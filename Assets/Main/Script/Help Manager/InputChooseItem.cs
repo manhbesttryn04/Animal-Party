@@ -26,6 +26,19 @@ public class InputChooseItem : MonoBehaviour
     [SerializeField] private float navigationThreshold = 0.5f;
     [SerializeField] private float resetThreshold = 0.2f;
 
+    [Header("Controller Axis")]
+    [Tooltip("Axis X chỉ dành cho Joystick 1.")]
+    [SerializeField] private string horizontalJoystick1 = "HorizontalJoystick1";
+
+    [Tooltip("Axis X chỉ dành cho Joystick 2.")]
+    [SerializeField] private string horizontalJoystick2 = "HorizontalJoystick2";
+
+    [Tooltip("Axis Y chỉ dành cho Joystick 1.")]
+    [SerializeField] private string verticalJoystick1 = "VerticalJoystick1";
+
+    [Tooltip("Axis Y chỉ dành cho Joystick 2.")]
+    [SerializeField] private string verticalJoystick2 = "VerticalJoystick2";
+
     private bool player1HorizontalReady = true;
     private bool player1VerticalReady = true;
 
@@ -137,28 +150,146 @@ public class InputChooseItem : MonoBehaviour
         }
     }
 
+    private bool IsPlayerUsingController(int playerIndex)
+    {
+        ControllerManager controllerManager =
+            ControllerManager.Instance;
+
+        if (controllerManager == null)
+            return false;
+
+        return playerIndex == 0
+            ? controllerManager.IsConsole1Connected()
+            : controllerManager.IsConsole2Connected();
+    }
+
+    private int GetConsoleNumber(int playerIndex)
+    {
+        return playerIndex == 0 ? 1 : 2;
+    }
+
+    private Vector2 GetPlayerMoveInput(int playerIndex)
+    {
+        /*
+         * Có tay cầm:
+         * chỉ đọc axis của đúng Console.
+         * Không nhận bàn phím của player đó.
+         */
+        if (IsPlayerUsingController(playerIndex))
+        {
+            ControllerManager controllerManager =
+                ControllerManager.Instance;
+
+            int consoleNumber =
+                GetConsoleNumber(playerIndex);
+
+            float horizontal =
+                controllerManager.GetConsoleHorizontalRaw(
+                    consoleNumber,
+                    horizontalJoystick1,
+                    horizontalJoystick2
+                );
+
+            float vertical =
+                controllerManager.GetConsoleVerticalRaw(
+                    consoleNumber,
+                    verticalJoystick1,
+                    verticalJoystick2
+                );
+
+            return new Vector2(horizontal, vertical);
+        }
+
+        /*
+         * Không có tay cầm:
+         * Player 1 dùng WASD.
+         * Player 2 dùng Arrow Keys.
+         */
+        float keyboardHorizontal = 0f;
+        float keyboardVertical = 0f;
+
+        if (playerIndex == 0)
+        {
+            if (Input.GetKey(KeyCode.A))
+                keyboardHorizontal = -1f;
+            else if (Input.GetKey(KeyCode.D))
+                keyboardHorizontal = 1f;
+
+            if (Input.GetKey(KeyCode.S))
+                keyboardVertical = -1f;
+            else if (Input.GetKey(KeyCode.W))
+                keyboardVertical = 1f;
+        }
+        else
+        {
+            if (Input.GetKey(KeyCode.LeftArrow))
+                keyboardHorizontal = -1f;
+            else if (Input.GetKey(KeyCode.RightArrow))
+                keyboardHorizontal = 1f;
+
+            if (Input.GetKey(KeyCode.DownArrow))
+                keyboardVertical = -1f;
+            else if (Input.GetKey(KeyCode.UpArrow))
+                keyboardVertical = 1f;
+        }
+
+        return new Vector2(
+            keyboardHorizontal,
+            keyboardVertical
+        );
+    }
+
+    private bool GetPlayerButtonDown(
+        int playerIndex,
+        int controllerButton,
+        KeyCode keyboardKey)
+    {
+        if (IsPlayerUsingController(playerIndex))
+        {
+            return ControllerManager.Instance
+                .GetConsoleButtonDown(
+                    GetConsoleNumber(playerIndex),
+                    controllerButton
+                );
+        }
+
+        return Input.GetKeyDown(keyboardKey);
+    }
+
     private bool Player1ConfirmDown()
     {
-        return Input.GetKeyDown(KeyCode.J) ||
-               Input.GetKeyDown(KeyCode.Joystick1Button0);
+        return GetPlayerButtonDown(
+            0,
+            0,
+            KeyCode.J
+        );
     }
 
     private bool Player1CancelDown()
     {
-        return Input.GetKeyDown(KeyCode.K) ||
-               Input.GetKeyDown(KeyCode.Joystick1Button1);
+        return GetPlayerButtonDown(
+            0,
+            1,
+            KeyCode.K
+        );
     }
 
     private bool Player2ConfirmDown()
     {
-        return Input.GetKeyDown(KeyCode.Keypad1) ||
-               Input.GetKeyDown(KeyCode.Joystick2Button0);
+        return GetPlayerButtonDown(
+            1,
+            0,
+            KeyCode.Keypad1
+        );
     }
 
     private bool Player2CancelDown()
     {
-        return Input.GetKeyDown(KeyCode.Keypad2) ||
-               Input.GetKeyDown(KeyCode.Joystick2Button1);
+        return GetPlayerButtonDown(
+            1,
+            1,
+            KeyCode.Keypad2
+        );
     }
 
     #endregion
@@ -201,8 +332,11 @@ public class InputChooseItem : MonoBehaviour
         if (current == null)
             return;
 
-        float horizontal = Input.GetAxisRaw("HorizontalP1");
-        float vertical = Input.GetAxisRaw("VerticalP1");
+        Vector2 input =
+            GetPlayerMoveInput(0);
+
+        float horizontal = input.x;
+        float vertical = input.y;
 
         UpdatePlayer1AxisReset(horizontal, vertical);
 
@@ -377,8 +511,11 @@ public class InputChooseItem : MonoBehaviour
         if (current == null)
             return;
 
-        float horizontal = Input.GetAxisRaw("HorizontalP2");
-        float vertical = Input.GetAxisRaw("VerticalP2");
+        Vector2 input =
+            GetPlayerMoveInput(1);
+
+        float horizontal = input.x;
+        float vertical = input.y;
 
         UpdatePlayer2AxisReset(horizontal, vertical);
 
@@ -574,11 +711,11 @@ public class InputChooseItem : MonoBehaviour
     {
         while (true)
         {
-            float horizontal =
-                Input.GetAxisRaw("HorizontalP2");
+            Vector2 input =
+                GetPlayerMoveInput(1);
 
-            float vertical =
-                Input.GetAxisRaw("VerticalP2");
+            float horizontal = input.x;
+            float vertical = input.y;
 
             bool horizontalReleased =
                 Mathf.Abs(horizontal) < resetThreshold;
@@ -683,18 +820,10 @@ public class InputChooseItem : MonoBehaviour
     {
         while (true)
         {
-            float horizontal;
+            Vector2 input =
+                GetPlayerMoveInput(randomCardPlayer);
 
-            if (randomCardPlayer == 0)
-            {
-                horizontal =
-                    Input.GetAxisRaw("HorizontalP1");
-            }
-            else
-            {
-                horizontal =
-                    Input.GetAxisRaw("HorizontalP2");
-            }
+            float horizontal = input.x;
 
             if (Mathf.Abs(horizontal) < resetThreshold)
             {
@@ -770,7 +899,7 @@ public class InputChooseItem : MonoBehaviour
         IndexItem current)
     {
         float horizontal =
-            Input.GetAxisRaw("HorizontalP1");
+            GetPlayerMoveInput(0).x;
 
         if (Mathf.Abs(horizontal) < resetThreshold)
         {
@@ -797,7 +926,7 @@ public class InputChooseItem : MonoBehaviour
         IndexItem current)
     {
         float horizontal =
-            Input.GetAxisRaw("HorizontalP2");
+            GetPlayerMoveInput(1).x;
 
         if (Mathf.Abs(horizontal) < resetThreshold)
         {

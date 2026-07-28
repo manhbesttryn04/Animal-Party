@@ -25,6 +25,11 @@ public class PlayerDefense : MonoBehaviour
 
     private void Start()
     {
+        if (playerManager == null)
+        {
+            playerManager = GetComponent<PlayerManager>();
+        }
+
         if (playerMove == null)
         {
             playerMove = GetComponent<PlayerMove>();
@@ -47,46 +52,106 @@ public class PlayerDefense : MonoBehaviour
         if (playerManager == null ||
             playerManager.playerType == null ||
             playerMove == null)
+        {
             return;
-
-        bool defensePressed;
-
-        // Player 1
-        if (!playerManager.playerType.isPlayer2)
-        {
-            defensePressed =
-                Input.GetKeyDown(KeyCode.J) ||
-                Input.GetKeyDown(KeyCode.Joystick1Button1);
-        }
-        // Player 2
-        else
-        {
-            defensePressed =
-                Input.GetKeyDown(KeyCode.Keypad1) ||
-                Input.GetKeyDown(KeyCode.Joystick2Button1);
         }
 
-        if (!defensePressed)
+        if (!IsDefensePressed())
             return;
 
-        // Đang ở trên không thì không được Defense
+        // Đang ở trên không thì không được Defense.
         if (!playerMove.isGround)
             return;
 
         StartDefense();
     }
 
+    // =========================================================
+    // INPUT
+    // =========================================================
+
+    private bool IsPlayer2()
+    {
+        return playerManager != null &&
+               playerManager.playerType != null &&
+               playerManager.playerType.isPlayer2;
+    }
+
+    private bool IsUsingController()
+    {
+        ControllerManager controllerManager =
+            ControllerManager.Instance;
+
+        if (controllerManager == null)
+            return false;
+
+        if (IsPlayer2())
+        {
+            return controllerManager.IsConsole2Connected();
+        }
+
+        return controllerManager.IsConsole1Connected();
+    }
+
+    private int GetConsoleNumber()
+    {
+        return IsPlayer2() ? 2 : 1;
+    }
+
+    private bool IsDefensePressed()
+    {
+        /*
+         * Có tay cầm:
+         * chỉ nhận Button 1 của đúng Console.
+         * Không nhận bàn phím.
+         */
+        if (IsUsingController())
+        {
+            return ControllerManager.Instance
+                .GetConsoleButtonDown(
+                    GetConsoleNumber(),
+                    1
+                );
+        }
+
+        /*
+         * Không có tay cầm:
+         * mới nhận bàn phím.
+         */
+        if (IsPlayer2())
+        {
+            return Input.GetKeyDown(
+                KeyCode.Keypad1
+            );
+        }
+
+        return Input.GetKeyDown(
+            KeyCode.J
+        );
+    }
+
+    // =========================================================
+    // DEFENSE
+    // =========================================================
+
     private void StartDefense()
     {
         if (!canDefense || isDefending)
             return;
+
+        if (playerMove == null ||
+            !playerMove.isGround)
+        {
+            return;
+        }
 
         if (defenseCoroutine != null)
         {
             StopCoroutine(defenseCoroutine);
         }
 
-        defenseCoroutine = StartCoroutine(DefenseRoutine());
+        defenseCoroutine =
+            StartCoroutine(DefenseRoutine());
     }
 
     private IEnumerator DefenseRoutine()
@@ -94,13 +159,13 @@ public class PlayerDefense : MonoBehaviour
         isDefending = true;
         canDefense = false;
 
-        // Khóa di chuyển và nhảy
+        // Khóa di chuyển và nhảy.
         if (playerMove != null)
         {
             playerMove.isJumpAndMove = false;
         }
 
-        // Chạy animation Defense
+        // Chạy animation Defense.
         if (playerManager != null &&
             playerManager.playerAnimator != null &&
             playerManager.playerAnimator.playerAnimator != null)
@@ -109,19 +174,21 @@ public class PlayerDefense : MonoBehaviour
                 playerManager.playerAnimator.playerAnimator;
 
             animator.SetFloat("Walk", 0f);
+            animator.SetFloat("Run", 0f);
             animator.SetTrigger("Defense");
         }
 
-        // Bật khiên ngay khi Defense bắt đầu
+        // Bật khiên.
         if (shield != null)
         {
             shield.SetActive(true);
         }
 
-        // Khiên tồn tại trong 2.14 giây
-        yield return new WaitForSeconds(defenseDuration);
+        yield return new WaitForSeconds(
+            defenseDuration
+        );
 
-        // Tắt khiên
+        // Tắt khiên.
         if (shield != null)
         {
             shield.SetActive(false);
@@ -129,17 +196,38 @@ public class PlayerDefense : MonoBehaviour
 
         isDefending = false;
 
-        // Mở lại chạy và nhảy
+        // Mở lại di chuyển và nhảy.
         if (playerMove != null)
         {
             playerMove.isJumpAndMove = true;
         }
 
-        // Chờ thêm 2 giây cooldown
-        yield return new WaitForSeconds(defenseCooldown);
+        yield return new WaitForSeconds(
+            defenseCooldown
+        );
 
         canDefense = true;
         defenseCoroutine = null;
+    }
+
+    // =========================================================
+    // RESET
+    // =========================================================
+
+    private void ResetDefenseState()
+    {
+        isDefending = false;
+        canDefense = true;
+
+        if (playerMove != null)
+        {
+            playerMove.isJumpAndMove = true;
+        }
+
+        if (shield != null)
+        {
+            shield.SetActive(false);
+        }
     }
 
     private void OnDisable()
@@ -150,17 +238,6 @@ public class PlayerDefense : MonoBehaviour
             defenseCoroutine = null;
         }
 
-        isDefending = false;
-        canDefense = true;
-
-        if (playerMove != null)
-        {
-            playerMove.isJumpAndMove = true;
-        }
-
-        if (shield != null)
-        {
-            shield.SetActive(false);
-        }
+        ResetDefenseState();
     }
 }

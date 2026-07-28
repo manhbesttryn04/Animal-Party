@@ -33,6 +33,17 @@ public class ChooseMode : MonoBehaviour
     [Range(0f, 0.5f)]
     public float resetThreshold = 0.2f;
 
+    [Header("Controller Horizontal Axis")]
+    [Tooltip("Axis chỉ dành cho Joystick 1, không gán phím bàn phím.")]
+    [SerializeField]
+    private string horizontalJoystick1 =
+        "HorizontalJoystick1";
+
+    [Tooltip("Axis chỉ dành cho Joystick 2, không gán phím bàn phím.")]
+    [SerializeField]
+    private string horizontalJoystick2 =
+        "HorizontalJoystick2";
+
     [Header("Start Game")]
     public GameObject buttonStart;
     public string sceneName;
@@ -40,29 +51,32 @@ public class ChooseMode : MonoBehaviour
     private int indexP1;
     private int indexP2;
 
-    // Ngăn cần analog chạy liên tục
+    // Ngăn analog giữ liên tục làm đổi nhiều lần.
     private bool canMoveP1 = true;
     private bool canMoveP2 = true;
 
+    // Sau khi đóng Setting phải thả input.
+    private bool waitReleaseAfterSetting;
+
     private bool isStartingGame;
     private bool waitStartButtonRelease;
+
+    // =========================================================
+    // UNITY
+    // =========================================================
 
     private void Start()
     {
         UpdatePlayer1();
         UpdatePlayer2();
 
-        if (buttonStart != null)
-        {
-            buttonStart.SetActive(false);
-        }
-
         CursorManager cursor =
             CursorManager.Instance;
 
         if (cursor != null)
         {
-            cursor.ShowGameCursor();
+            cursor.UpdateCursorByControllerState();
+            cursor.SetSceneCursorVisible(true);
         }
 
         if (AudioManager.Instance != null)
@@ -76,7 +90,8 @@ public class ChooseMode : MonoBehaviour
             );
         }
 
-        if (UIManager.Instance != null)
+        if (UIManager.Instance != null &&
+            UIManager.Instance.openSettingPanelButton != null)
         {
             UIManager.Instance
                 .openSettingPanelButton
@@ -91,31 +106,230 @@ public class ChooseMode : MonoBehaviour
 
     private void Update()
     {
+        bool settingOpen =
+            SettingManager.Instance != null &&
+            SettingManager.Instance.IsSettingBlockingInput;
+
+        // Setting đang mở thì khóa ChooseMode.
+        if (settingOpen)
+        {
+            waitReleaseAfterSetting = true;
+
+            canMoveP1 = false;
+            canMoveP2 = false;
+
+            return;
+        }
+
+        /*
+         * Sau khi đóng Setting phải:
+         * - Thả analog
+         * - Thả phím di chuyển
+         * - Thả nút xác nhận
+         */
+        if (waitReleaseAfterSetting)
+        {
+            if (IsChooseInputReleased())
+            {
+                waitReleaseAfterSetting = false;
+
+                canMoveP1 = true;
+                canMoveP2 = true;
+            }
+
+            return;
+        }
+
         MoveChoosePlayer1();
         MoveChoosePlayer2();
         CheckStartInput();
     }
 
-    #region Input
+    // =========================================================
+    // CONTROLLER STATE
+    // =========================================================
 
-    private void CheckStartButton()
+    private bool IsPlayer1UsingController()
     {
-        bool bothSelected =
-            isPlayer1Choose &&
-            isPlayer2Choose;
-
-        if (buttonStart != null)
-        {
-            buttonStart.SetActive(bothSelected);
-        }
-
-        if (bothSelected)
-        {
-            // Không cho lần nhấn chọn nhân vật
-            // kích hoạt luôn nút START.
-            waitStartButtonRelease = true;
-        }
+        return ControllerManager.Instance != null &&
+               ControllerManager.Instance
+                   .IsConsole1Connected();
     }
+
+    private bool IsPlayer2UsingController()
+    {
+        return ControllerManager.Instance != null &&
+               ControllerManager.Instance
+                   .IsConsole2Connected();
+    }
+
+    // =========================================================
+    // PLAYER 1 INPUT
+    // =========================================================
+
+    private float GetPlayer1MoveInput()
+    {
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        /*
+         * Có Console 1:
+         * chỉ nhận Horizontal của Console 1.
+         * Không đọc A/D.
+         */
+        if (IsPlayer1UsingController())
+        {
+            return controller.GetConsoleHorizontalRaw(
+                1,
+                horizontalJoystick1,
+                horizontalJoystick2
+            );
+        }
+
+        /*
+         * Không có Console 1:
+         * mới cho Player 1 dùng A/D.
+         */
+        if (Input.GetKey(KeyCode.A))
+            return -1f;
+
+        if (Input.GetKey(KeyCode.D))
+            return 1f;
+
+        return 0f;
+    }
+
+    private bool IsPlayer1ConfirmPressed()
+    {
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        // Có tay cầm thì không nhận J.
+        if (IsPlayer1UsingController())
+        {
+            return controller.GetConsoleButtonDown(
+                1,
+                0
+            );
+        }
+
+        return Input.GetKeyDown(KeyCode.J);
+    }
+
+    private bool IsPlayer1ConfirmHeld()
+    {
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        // Có tay cầm thì không kiểm tra J.
+        if (IsPlayer1UsingController())
+        {
+            return controller.GetConsoleButton(
+                1,
+                0
+            );
+        }
+
+        return Input.GetKey(KeyCode.J);
+    }
+
+    // =========================================================
+    // PLAYER 2 INPUT
+    // =========================================================
+
+    private float GetPlayer2MoveInput()
+    {
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        /*
+         * Có Console 2:
+         * chỉ nhận Horizontal của Console 2.
+         * Không đọc phím mũi tên.
+         */
+        if (IsPlayer2UsingController())
+        {
+            return controller.GetConsoleHorizontalRaw(
+                2,
+                horizontalJoystick1,
+                horizontalJoystick2
+            );
+        }
+
+        /*
+         * Không có Console 2:
+         * mới cho Player 2 dùng mũi tên.
+         */
+        if (Input.GetKey(KeyCode.LeftArrow))
+            return -1f;
+
+        if (Input.GetKey(KeyCode.RightArrow))
+            return 1f;
+
+        return 0f;
+    }
+
+    private bool IsPlayer2ConfirmPressed()
+    {
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        // Có tay cầm thì không nhận Keypad1.
+        if (IsPlayer2UsingController())
+        {
+            return controller.GetConsoleButtonDown(
+                2,
+                0
+            );
+        }
+
+        return Input.GetKeyDown(KeyCode.Keypad1);
+    }
+
+    private bool IsPlayer2ConfirmHeld()
+    {
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        // Có tay cầm thì không kiểm tra Keypad1.
+        if (IsPlayer2UsingController())
+        {
+            return controller.GetConsoleButton(
+                2,
+                0
+            );
+        }
+
+        return Input.GetKey(KeyCode.Keypad1);
+    }
+
+    // =========================================================
+    // RELEASE INPUT AFTER SETTING
+    // =========================================================
+
+    private bool IsChooseInputReleased()
+    {
+        float moveP1 =
+            GetPlayer1MoveInput();
+
+        float moveP2 =
+            GetPlayer2MoveInput();
+
+        bool movementReleased =
+            Mathf.Abs(moveP1) <= resetThreshold &&
+            Mathf.Abs(moveP2) <= resetThreshold;
+
+        bool confirmReleased =
+            !IsPlayer1ConfirmHeld() &&
+            !IsPlayer2ConfirmHeld();
+
+        return movementReleased &&
+               confirmReleased;
+    }
+
+    // =========================================================
+    // CHOOSE INPUT
+    // =========================================================
 
     public void MoveChoosePlayer1()
     {
@@ -123,10 +337,9 @@ public class ChooseMode : MonoBehaviour
             return;
 
         float horizontal =
-            Input.GetAxisRaw("HorizontalP1");
+            GetPlayer1MoveInput();
 
-        // Trả cần analog về giữa
-        // thì mới được chọn tiếp.
+        // Trả analog hoặc phím về giữa.
         if (Mathf.Abs(horizontal) <= resetThreshold)
         {
             canMoveP1 = true;
@@ -146,13 +359,7 @@ public class ChooseMode : MonoBehaviour
             }
         }
 
-        bool confirmPressed =
-            Input.GetKeyDown(KeyCode.J) ||
-            Input.GetKeyDown(
-                KeyCode.Joystick1Button0
-            );
-
-        if (confirmPressed)
+        if (IsPlayer1ConfirmPressed())
         {
             ChoosePlayer1();
         }
@@ -164,8 +371,9 @@ public class ChooseMode : MonoBehaviour
             return;
 
         float horizontal =
-            Input.GetAxisRaw("HorizontalP2");
+            GetPlayer2MoveInput();
 
+        // Trả analog hoặc phím về giữa.
         if (Mathf.Abs(horizontal) <= resetThreshold)
         {
             canMoveP2 = true;
@@ -185,25 +393,20 @@ public class ChooseMode : MonoBehaviour
             }
         }
 
-        bool confirmPressed =
-            Input.GetKeyDown(KeyCode.Keypad1) ||
-            Input.GetKeyDown(
-                KeyCode.Joystick2Button0
-            );
-
-        if (confirmPressed)
+        if (IsPlayer2ConfirmPressed())
         {
             ChoosePlayer2();
         }
     }
 
-    #endregion
-
-    #region Player 1
+    // =========================================================
+    // PLAYER 1
+    // =========================================================
 
     public void PrevPlayer1()
     {
         if (isPlayer1Choose ||
+            player1 == null ||
             player1.Count == 0)
         {
             return;
@@ -218,7 +421,8 @@ public class ChooseMode : MonoBehaviour
             indexP1 = player1.Count - 1;
         }
 
-        if (listTextHightP1.Count > 0 &&
+        if (listTextHightP1 != null &&
+            listTextHightP1.Count > 0 &&
             listTextHightP1[0] != null)
         {
             StartCoroutine(
@@ -234,6 +438,7 @@ public class ChooseMode : MonoBehaviour
     public void NextPlayer1()
     {
         if (isPlayer1Choose ||
+            player1 == null ||
             player1.Count == 0)
         {
             return;
@@ -248,7 +453,8 @@ public class ChooseMode : MonoBehaviour
             indexP1 = 0;
         }
 
-        if (listTextHightP1.Count > 1 &&
+        if (listTextHightP1 != null &&
+            listTextHightP1.Count > 1 &&
             listTextHightP1[1] != null)
         {
             StartCoroutine(
@@ -264,6 +470,7 @@ public class ChooseMode : MonoBehaviour
     public void ChoosePlayer1()
     {
         if (isPlayer1Choose ||
+            player1 == null ||
             player1.Count == 0)
         {
             return;
@@ -274,16 +481,21 @@ public class ChooseMode : MonoBehaviour
 
         isPlayer1Choose = true;
 
-        if (ListButtonChoose.Count > 0 &&
+        if (ListButtonChoose != null &&
+            ListButtonChoose.Count > 0 &&
             ListButtonChoose[0] != null)
         {
             ListButtonChoose[0].interactable = false;
         }
 
-        if (stateChooseP1.Count > 1)
+        if (stateChooseP1 != null &&
+            stateChooseP1.Count > 1)
         {
-            stateChooseP1[0].SetActive(false);
-            stateChooseP1[1].SetActive(true);
+            if (stateChooseP1[0] != null)
+                stateChooseP1[0].SetActive(false);
+
+            if (stateChooseP1[1] != null)
+                stateChooseP1[1].SetActive(true);
         }
 
         if (SendIndexCharacter.Instance != null)
@@ -295,13 +507,14 @@ public class ChooseMode : MonoBehaviour
         CheckStartButton();
     }
 
-    #endregion
-
-    #region Player 2
+    // =========================================================
+    // PLAYER 2
+    // =========================================================
 
     public void PrevPlayer2()
     {
         if (isPlayer2Choose ||
+            player2 == null ||
             player2.Count == 0)
         {
             return;
@@ -316,7 +529,8 @@ public class ChooseMode : MonoBehaviour
             indexP2 = player2.Count - 1;
         }
 
-        if (listTextHightP2.Count > 0 &&
+        if (listTextHightP2 != null &&
+            listTextHightP2.Count > 0 &&
             listTextHightP2[0] != null)
         {
             StartCoroutine(
@@ -332,6 +546,7 @@ public class ChooseMode : MonoBehaviour
     public void NextPlayer2()
     {
         if (isPlayer2Choose ||
+            player2 == null ||
             player2.Count == 0)
         {
             return;
@@ -346,7 +561,8 @@ public class ChooseMode : MonoBehaviour
             indexP2 = 0;
         }
 
-        if (listTextHightP2.Count > 1 &&
+        if (listTextHightP2 != null &&
+            listTextHightP2.Count > 1 &&
             listTextHightP2[1] != null)
         {
             StartCoroutine(
@@ -362,6 +578,7 @@ public class ChooseMode : MonoBehaviour
     public void ChoosePlayer2()
     {
         if (isPlayer2Choose ||
+            player2 == null ||
             player2.Count == 0)
         {
             return;
@@ -372,16 +589,21 @@ public class ChooseMode : MonoBehaviour
 
         isPlayer2Choose = true;
 
-        if (ListButtonChoose.Count > 1 &&
+        if (ListButtonChoose != null &&
+            ListButtonChoose.Count > 1 &&
             ListButtonChoose[1] != null)
         {
             ListButtonChoose[1].interactable = false;
         }
 
-        if (stateChooseP2.Count > 1)
+        if (stateChooseP2 != null &&
+            stateChooseP2.Count > 1)
         {
-            stateChooseP2[0].SetActive(false);
-            stateChooseP2[1].SetActive(true);
+            if (stateChooseP2[0] != null)
+                stateChooseP2[0].SetActive(false);
+
+            if (stateChooseP2[1] != null)
+                stateChooseP2[1].SetActive(true);
         }
 
         if (SendIndexCharacter.Instance != null)
@@ -393,16 +615,17 @@ public class ChooseMode : MonoBehaviour
         CheckStartButton();
     }
 
-    #endregion
-
-    #region Mouse Buttons
+    // =========================================================
+    // MOUSE BUTTONS
+    // =========================================================
 
     public void SelectCharacterP1(int index)
     {
         if (isPlayer1Choose)
             return;
 
-        if (index < 0 ||
+        if (player1 == null ||
+            index < 0 ||
             index >= player1.Count)
         {
             return;
@@ -417,7 +640,8 @@ public class ChooseMode : MonoBehaviour
         if (isPlayer2Choose)
             return;
 
-        if (index < 0 ||
+        if (player2 == null ||
+            index < 0 ||
             index >= player2.Count)
         {
             return;
@@ -427,12 +651,15 @@ public class ChooseMode : MonoBehaviour
         UpdatePlayer2();
     }
 
-    #endregion
-
-    #region Update UI
+    // =========================================================
+    // UPDATE CHARACTER
+    // =========================================================
 
     private void UpdatePlayer1()
     {
+        if (player1 == null)
+            return;
+
         for (int i = 0; i < player1.Count; i++)
         {
             if (player1[i] != null)
@@ -446,6 +673,9 @@ public class ChooseMode : MonoBehaviour
 
     private void UpdatePlayer2()
     {
+        if (player2 == null)
+            return;
+
         for (int i = 0; i < player2.Count; i++)
         {
             if (player2[i] != null)
@@ -457,9 +687,32 @@ public class ChooseMode : MonoBehaviour
         }
     }
 
-    // =====================================================
-    // START INPUT
-    // =====================================================
+    // =========================================================
+    // START BUTTON
+    // =========================================================
+
+    private void CheckStartButton()
+    {
+        bool bothSelected =
+            isPlayer1Choose &&
+            isPlayer2Choose;
+
+        if (buttonStart != null)
+        {
+            buttonStart.SetActive(
+                bothSelected
+            );
+        }
+
+        if (bothSelected)
+        {
+            /*
+             * Không cho lần nhấn chọn nhân vật cuối
+             * kích hoạt luôn nút Start.
+             */
+            waitStartButtonRelease = true;
+        }
+    }
 
     private void CheckStartInput()
     {
@@ -472,55 +725,27 @@ public class ChooseMode : MonoBehaviour
         if (isStartingGame)
             return;
 
-        ControllerManager controller =
-            ControllerManager.Instance;
-
-        bool console1Connected =
-            controller != null &&
-            controller.IsConsole1Connected();
-
-        bool console2Connected =
-            controller != null &&
-            controller.IsConsole2Connected();
-
-        bool allowedControllerHeld = false;
-
         /*
-         * Console 1 đang có:
-         * chỉ Joystick 1 được quyền nhấn Start.
+         * Chỉ kiểm tra input được phép của từng player:
+         *
+         * P1 có Console 1:
+         * - Button 0
+         * - Không nhận J
+         *
+         * P1 không có Console 1:
+         * - J
+         *
+         * P2 có Console 2:
+         * - Button 0
+         * - Không nhận Keypad1
+         *
+         * P2 không có Console 2:
+         * - Keypad1
          */
-        if (console1Connected)
-        {
-            allowedControllerHeld =
-                Input.GetKey(
-                    KeyCode.Joystick1Button0
-                );
-        }
-        /*
-         * Console 1 đã rút nhưng Console 2 còn:
-         * Console 2 được quyền nhấn Start.
-         */
-        else if (console2Connected)
-        {
-            allowedControllerHeld =
-                Input.GetKey(
-                    KeyCode.Joystick2Button0
-                );
-        }
-
-        bool keyboardHeld =
-            Input.GetKey(KeyCode.J) ||
-            Input.GetKey(KeyCode.Keypad1);
-
         bool confirmHeld =
-            allowedControllerHeld ||
-            keyboardHeld;
+            IsPlayer1ConfirmHeld() ||
+            IsPlayer2ConfirmHeld();
 
-        /*
-         * Sau khi vừa chọn nhân vật xong,
-         * phải thả Button 0 rồi mới được
-         * nhấn lần nữa để vào game.
-         */
         if (waitStartButtonRelease)
         {
             if (!confirmHeld)
@@ -531,45 +756,19 @@ public class ChooseMode : MonoBehaviour
             return;
         }
 
-        bool allowedControllerPressed = false;
+        bool confirmPressed =
+            IsPlayer1ConfirmPressed() ||
+            IsPlayer2ConfirmPressed();
 
-        /*
-         * Console 1 có mặt:
-         * Console 2 không có quyền Start.
-         */
-        if (console1Connected)
-        {
-            allowedControllerPressed =
-                Input.GetKeyDown(
-                    KeyCode.Joystick1Button0
-                );
-        }
-        /*
-         * Console 1 không còn:
-         * Console 2 được quyền Start.
-         */
-        else if (console2Connected)
-        {
-            allowedControllerPressed =
-                Input.GetKeyDown(
-                    KeyCode.Joystick2Button0
-                );
-        }
-
-        bool keyboardPressed =
-            Input.GetKeyDown(KeyCode.J) ||
-            Input.GetKeyDown(KeyCode.Keypad1);
-
-        if (allowedControllerPressed ||
-            keyboardPressed)
+        if (confirmPressed)
         {
             LoadScene(0);
         }
     }
 
-    #endregion
-
-    #region Load Scene
+    // =========================================================
+    // LOAD SCENE
+    // =========================================================
 
     public void LoadScene(int buildIndex)
     {
@@ -584,7 +783,8 @@ public class ChooseMode : MonoBehaviour
 
         isStartingGame = true;
 
-        if (UIManager.Instance != null)
+        if (UIManager.Instance != null &&
+            UIManager.Instance.exitMainMenuButton != null)
         {
             UIManager.Instance
                 .exitMainMenuButton
@@ -619,10 +819,9 @@ public class ChooseMode : MonoBehaviour
                 buttonStart.GetComponent<Button>();
 
             TextMeshProUGUI text =
-                buttonStart
-                    .GetComponentInChildren<
-                        TextMeshProUGUI
-                    >();
+                buttonStart.GetComponentInChildren<
+                    TextMeshProUGUI
+                >();
 
             if (btn != null)
             {
@@ -672,9 +871,13 @@ public class ChooseMode : MonoBehaviour
         {
             SettingManager.Instance.ResetSetting();
 
-            UIManager.Instance
-                .openSettingPanelButton
-                .SetActive(false);
+            if (UIManager.Instance
+                    .openSettingPanelButton != null)
+            {
+                UIManager.Instance
+                    .openSettingPanelButton
+                    .SetActive(false);
+            }
         }
 
         if (LoadingManager.Instance != null)
@@ -688,9 +891,9 @@ public class ChooseMode : MonoBehaviour
         SceneManager.LoadScene("CutScene 1");
     }
 
-    #endregion
-
-    #region Effects
+    // =========================================================
+    // EFFECTS
+    // =========================================================
 
     private IEnumerator HighlightText(
         TextMeshProUGUI text)
@@ -712,7 +915,10 @@ public class ChooseMode : MonoBehaviour
 
         yield return new WaitForSeconds(0.1f);
 
-        text.color = defaultColor;
+        if (text != null)
+        {
+            text.color = defaultColor;
+        }
     }
 
     private void PlaySalute(
@@ -751,6 +957,4 @@ public class ChooseMode : MonoBehaviour
             );
         }
     }
-
-    #endregion
 }

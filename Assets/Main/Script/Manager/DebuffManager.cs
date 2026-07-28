@@ -44,11 +44,26 @@ public class DebuffManager : MonoBehaviour
     [SerializeField] private float navigationThreshold = 0.5f;
     [SerializeField] private float resetThreshold = 0.2f;
 
+    [Header("Controller Axis")]
+    [Tooltip("Axis X chỉ dành cho Joystick 1.")]
+    [SerializeField]
+    private string horizontalJoystick1 =
+        "HorizontalJoystick1";
+
+    [Tooltip("Axis X chỉ dành cho Joystick 2.")]
+    [SerializeField]
+    private string horizontalJoystick2 =
+        "HorizontalJoystick2";
+
     private bool leftHorizontalReady = true;
     private bool rightHorizontalReady = true;
 
     private bool isSelectingDebuff;
     public bool isOpen = false;
+
+    // Khi Setting đóng, phải thả cần/phím và nút xác nhận
+    // trước khi DebuffManager nhận input trở lại.
+    private bool waitReleaseAfterSetting;
 
     // =========================================================
     // UNITY FUNCTIONS
@@ -71,11 +86,43 @@ public class DebuffManager : MonoBehaviour
     private void Start()
     {
         ui = UIManager.Instance;
-        if (isOpen) Open(1);
+        if (isOpen) Open(0);
     }
 
     private void Update()
     {
+        /*
+         * Setting đang mở:
+         * khóa hoàn toàn input chọn Debuff.
+         */
+        if (IsSettingOpen())
+        {
+            waitReleaseAfterSetting = true;
+
+            leftHorizontalReady = false;
+            rightHorizontalReady = false;
+
+            return;
+        }
+
+        /*
+         * Sau khi đóng Setting:
+         * phải thả cần/phím di chuyển và nút xác nhận.
+         * Tránh nút dùng để đóng Setting chọn luôn lá bài.
+         */
+        if (waitReleaseAfterSetting)
+        {
+            if (IsDebuffInputReleased())
+            {
+                waitReleaseAfterSetting = false;
+
+                leftHorizontalReady = true;
+                rightHorizontalReady = true;
+            }
+
+            return;
+        }
+
         if (isSelectingDebuff)
             return;
 
@@ -216,9 +263,8 @@ public class DebuffManager : MonoBehaviour
     {
         while (true)
         {
-            float horizontal = playerIndex == 0
-                ? Input.GetAxisRaw("HorizontalP1")
-                : Input.GetAxisRaw("HorizontalP2");
+            float horizontal =
+                GetHorizontalInput(playerIndex);
 
             if (Mathf.Abs(horizontal) < resetThreshold)
                 break;
@@ -237,6 +283,154 @@ public class DebuffManager : MonoBehaviour
         yield return new WaitForSeconds(2f);
 
         ui.panelNotiifiChooseDebuff.SetActive(false);
+    }
+
+    // =========================================================
+    // INPUT DEVICE
+    // =========================================================
+
+    private bool IsUsingController(int playerIndex)
+    {
+        ControllerManager controllerManager =
+            ControllerManager.Instance;
+
+        if (controllerManager == null)
+            return false;
+
+        return playerIndex == 0
+            ? controllerManager.IsConsole1Connected()
+            : controllerManager.IsConsole2Connected();
+    }
+
+    private int GetConsoleNumber(int playerIndex)
+    {
+        return playerIndex == 0 ? 1 : 2;
+    }
+
+
+    private bool IsSettingOpen()
+    {
+        return SettingManager.Instance != null &&
+               SettingManager.Instance.IsSettingBlockingInput;
+    }
+
+    // =========================================================
+    // HORIZONTAL INPUT
+    // =========================================================
+
+    private float GetHorizontalInput(int playerIndex)
+    {
+        /*
+         * Có tay cầm:
+         * chỉ đọc axis tay cầm giống PlayerMove.
+         * Không đọc bàn phím.
+         */
+        if (IsUsingController(playerIndex))
+        {
+            ControllerManager controllerManager =
+                ControllerManager.Instance;
+
+            return controllerManager
+                .GetConsoleHorizontalRaw(
+                    GetConsoleNumber(playerIndex),
+                    horizontalJoystick1,
+                    horizontalJoystick2
+                );
+        }
+
+        /*
+         * Không có tay cầm:
+         * mới cho phép dùng bàn phím.
+         */
+        if (playerIndex == 0)
+        {
+            // Player 1: A / D
+            if (Input.GetKey(KeyCode.A))
+                return -1f;
+
+            if (Input.GetKey(KeyCode.D))
+                return 1f;
+        }
+        else
+        {
+            // Player 2: Left / Right Arrow
+            if (Input.GetKey(KeyCode.LeftArrow))
+                return -1f;
+
+            if (Input.GetKey(KeyCode.RightArrow))
+                return 1f;
+        }
+
+        return 0f;
+    }
+
+    private bool GetConfirmDown(int playerIndex)
+    {
+        /*
+         * Có tay cầm:
+         * chỉ nhận Button 0 của đúng Console.
+         */
+        if (IsUsingController(playerIndex))
+        {
+            return ControllerManager.Instance
+                .GetConsoleButtonDown(
+                    GetConsoleNumber(playerIndex),
+                    0
+                );
+        }
+
+        /*
+         * Không có tay cầm:
+         * mới dùng bàn phím.
+         */
+        return playerIndex == 0
+            ? Input.GetKeyDown(KeyCode.J)
+            : Input.GetKeyDown(KeyCode.Keypad1);
+    }
+
+
+    private bool GetConfirmHeld(int playerIndex)
+    {
+        /*
+         * Có tay cầm:
+         * chỉ kiểm tra Button 0 của đúng Console.
+         */
+        if (IsUsingController(playerIndex))
+        {
+            return ControllerManager.Instance
+                .GetConsoleButton(
+                    GetConsoleNumber(playerIndex),
+                    0
+                );
+        }
+
+        /*
+         * Không có tay cầm:
+         * mới kiểm tra bàn phím.
+         */
+        return playerIndex == 0
+            ? Input.GetKey(KeyCode.J)
+            : Input.GetKey(KeyCode.Keypad1);
+    }
+
+    private bool IsDebuffInputReleased()
+    {
+        float player1Horizontal =
+            GetHorizontalInput(0);
+
+        float player2Horizontal =
+            GetHorizontalInput(1);
+
+        bool movementReleased =
+            Mathf.Abs(player1Horizontal) < resetThreshold &&
+            Mathf.Abs(player2Horizontal) < resetThreshold;
+
+        bool confirmReleased =
+            !GetConfirmHeld(0) &&
+            !GetConfirmHeld(1);
+
+        return movementReleased &&
+               confirmReleased;
     }
 
     // =========================================================
@@ -273,7 +467,7 @@ public class DebuffManager : MonoBehaviour
             return;
 
         float horizontal =
-            Input.GetAxisRaw("HorizontalP1");
+            GetHorizontalInput(0);
 
         // Khi trục trở về giữa thì mới cho phép
         // di chuyển thêm một lần nữa.
@@ -297,8 +491,7 @@ public class DebuffManager : MonoBehaviour
         }
 
         // Player 1 xác nhận.
-        if (Input.GetKeyDown(KeyCode.J) ||
-            Input.GetKeyDown(KeyCode.Joystick1Button0))
+        if (GetConfirmDown(0))
         {
             Select(
                 ui.leftCardsList[leftIndex],
@@ -374,7 +567,7 @@ public class DebuffManager : MonoBehaviour
             return;
 
         float horizontal =
-            Input.GetAxisRaw("HorizontalP2");
+            GetHorizontalInput(1);
 
         if (Mathf.Abs(horizontal) < resetThreshold)
         {
@@ -396,8 +589,7 @@ public class DebuffManager : MonoBehaviour
         }
 
         // Player 2 xác nhận.
-        if (Input.GetKeyDown(KeyCode.Keypad1) ||
-            Input.GetKeyDown(KeyCode.Joystick2Button0))
+        if (GetConfirmDown(1))
         {
             Select(
                 ui.rightCardsList[rightIndex],
@@ -482,9 +674,9 @@ public class DebuffManager : MonoBehaviour
 
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.PlaySFX(
-                AudioManager.Instance.buyItemClip
-            );
+            /*  AudioManager.Instance.PlaySFX(
+                  AudioManager.Instance.buyItemClip
+              );*/
         }
 
         StartCoroutine(End());

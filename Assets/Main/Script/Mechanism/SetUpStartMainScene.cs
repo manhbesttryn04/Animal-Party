@@ -20,13 +20,18 @@ public class SetUpStartMainScene : MonoBehaviour
         }
        if(CursorManager.Instance != null)
         {
-            CursorManager.Instance.ShowGameCursor();
+
+            CursorManager.Instance.SetSceneCursorVisible(true);
+            CursorManager.Instance.SetSettingCursorActive(true);
         }
        var setting = SettingManager.Instance;
         if(setting != null)
         {
             setting.isOpenExitButton = true;
-            //setting.canOpenSettingByEsc = false;
+            
+            setting.canOpenSettingByEsc = false;
+
+            setting.canOpenSettingByController = true;
         }
     }
 

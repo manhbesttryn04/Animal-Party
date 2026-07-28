@@ -106,6 +106,7 @@ public class CutScene2 : MonoBehaviour
         if (setting != null)
         {
             setting.canOpenSettingByEsc = true;
+            setting.canOpenSettingByController = true;
         }
 
         StartCoroutine(CutScene());
@@ -140,6 +141,7 @@ public class CutScene2 : MonoBehaviour
         {
             setting.ResetEscSetting();
             setting.canOpenSettingByEsc = false;
+            setting.canOpenSettingByController = false;
         }
         AudioManager audio = AudioManager.Instance;
 
@@ -347,7 +349,8 @@ public class CutScene2 : MonoBehaviour
         if (setting != null)
         {
             setting.ResetEscSetting();
-            setting.canOpenSettingByEsc = false;
+            setting.canOpenSettingByEsc = true;
+            setting.canOpenSettingByController = true;
         }
         HideSubtitleImmediate();
         StopNarratorVoice();

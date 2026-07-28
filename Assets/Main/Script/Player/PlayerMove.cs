@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
@@ -24,12 +23,34 @@ public class PlayerMove : MonoBehaviour
 
     public bool IsMoving { get; private set; }
 
+    [Header("Controller Axis")]
+    [Tooltip("Axis X chỉ dành cho Joystick 1.")]
+    [SerializeField]
+    private string horizontalJoystick1 =
+        "HorizontalJoystick1";
+
+    [Tooltip("Axis X chỉ dành cho Joystick 2.")]
+    [SerializeField]
+    private string horizontalJoystick2 =
+        "HorizontalJoystick2";
+
+    [Tooltip("Axis Y chỉ dành cho Joystick 1.")]
+    [SerializeField]
+    private string verticalJoystick1 =
+        "VerticalJoystick1";
+
+    [Tooltip("Axis Y chỉ dành cho Joystick 2.")]
+    [SerializeField]
+    private string verticalJoystick2 =
+        "VerticalJoystick2";
+
     [Header("Lie Settings")]
     public bool hasLie = false;
     private bool canLie = true;
 
     public float lieHeight = 0.5f;
-    public Vector3 lieCenter = new Vector3(0f, 0.25f, 0f);
+    public Vector3 lieCenter =
+        new Vector3(0f, 0.25f, 0f);
 
     private float normalHeight;
     private Vector3 normalCenter;
@@ -39,13 +60,23 @@ public class PlayerMove : MonoBehaviour
 
     private Vector3 velocity;
 
+    // =========================================================
+    // UNITY
+    // =========================================================
+
     private void Start()
     {
-        controller = GetComponent<CharacterController>();
-        manager = GetComponent<PlayerManager>();
+        controller =
+            GetComponent<CharacterController>();
 
-        normalHeight = controller.height;
-        normalCenter = controller.center;
+        manager =
+            GetComponent<PlayerManager>();
+
+        normalHeight =
+            controller.height;
+
+        normalCenter =
+            controller.center;
     }
 
     private void Update()
@@ -76,23 +107,132 @@ public class PlayerMove : MonoBehaviour
         ApplyGravity();
     }
 
-    private void Move()
-    {
-        float horizontal;
-        float vertical;
+    // =========================================================
+    // INPUT DEVICE
+    // =========================================================
 
-        if (!manager.playerType.isPlayer2)
+    private bool IsPlayer2()
+    {
+        return manager != null &&
+               manager.playerType != null &&
+               manager.playerType.isPlayer2;
+    }
+
+    private bool IsUsingController()
+    {
+        ControllerManager controllerManager =
+            ControllerManager.Instance;
+
+        if (controllerManager == null)
+            return false;
+
+        if (IsPlayer2())
         {
-            horizontal = Input.GetAxisRaw("HorizontalP1");
-            vertical = Input.GetAxisRaw("VerticalP1");
+            return controllerManager
+                .IsConsole2Connected();
+        }
+
+        return controllerManager
+            .IsConsole1Connected();
+    }
+
+    private int GetConsoleNumber()
+    {
+        return IsPlayer2() ? 2 : 1;
+    }
+
+    // =========================================================
+    // MOVE INPUT
+    // =========================================================
+
+    private Vector2 GetMoveInput()
+    {
+        /*
+         * Có tay cầm:
+         * chỉ đọc axis tay cầm.
+         * Không đọc bàn phím.
+         */
+        if (IsUsingController())
+        {
+            ControllerManager controllerManager =
+                ControllerManager.Instance;
+
+            int consoleNumber =
+                GetConsoleNumber();
+
+            float horizontal =
+                controllerManager
+                    .GetConsoleHorizontalRaw(
+                        consoleNumber,
+                        horizontalJoystick1,
+                        horizontalJoystick2
+                    );
+
+            float vertical =
+                controllerManager
+                    .GetConsoleVerticalRaw(
+                        consoleNumber,
+                        verticalJoystick1,
+                        verticalJoystick2
+                    );
+
+            return new Vector2(
+                horizontal,
+                vertical
+            );
+        }
+
+        /*
+         * Không có tay cầm:
+         * mới cho phép dùng KeyCode bàn phím.
+         */
+        float keyboardHorizontal = 0f;
+        float keyboardVertical = 0f;
+
+        if (!IsPlayer2())
+        {
+            // Player 1: WASD
+            if (Input.GetKey(KeyCode.A))
+                keyboardHorizontal = -1f;
+            else if (Input.GetKey(KeyCode.D))
+                keyboardHorizontal = 1f;
+
+            if (Input.GetKey(KeyCode.S))
+                keyboardVertical = -1f;
+            else if (Input.GetKey(KeyCode.W))
+                keyboardVertical = 1f;
         }
         else
         {
-            horizontal = Input.GetAxisRaw("HorizontalP2");
-            vertical = Input.GetAxisRaw("VerticalP2");
+            // Player 2: Arrow Keys
+            if (Input.GetKey(KeyCode.LeftArrow))
+                keyboardHorizontal = -1f;
+            else if (Input.GetKey(KeyCode.RightArrow))
+                keyboardHorizontal = 1f;
+
+            if (Input.GetKey(KeyCode.DownArrow))
+                keyboardVertical = -1f;
+            else if (Input.GetKey(KeyCode.UpArrow))
+                keyboardVertical = 1f;
         }
 
-        Vector3 move = new Vector3(horizontal, 0f, vertical);
+        return new Vector2(
+            keyboardHorizontal,
+            keyboardVertical
+        );
+    }
+
+    private void Move()
+    {
+        Vector2 input =
+            GetMoveInput();
+
+        Vector3 move =
+            new Vector3(
+                input.x,
+                0f,
+                input.y
+            );
 
         // Tránh đi chéo nhanh hơn.
         if (move.sqrMagnitude > 1f)
@@ -100,86 +240,130 @@ public class PlayerMove : MonoBehaviour
             move.Normalize();
         }
 
-        IsMoving = move.sqrMagnitude > 0.01f;
+        IsMoving =
+            move.sqrMagnitude > 0.01f;
 
         if (IsMoving)
         {
-            Quaternion targetRotation = Quaternion.LookRotation(move);
+            Quaternion targetRotation =
+                Quaternion.LookRotation(move);
 
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
-                targetRotation,
-                turnSpeed * Time.deltaTime
+            transform.rotation =
+                Quaternion.Slerp(
+                    transform.rotation,
+                    targetRotation,
+                    turnSpeed * Time.deltaTime
+                );
+
+            controller.Move(
+                move *
+                speed *
+                Time.deltaTime
             );
-
-            controller.Move(move * speed * Time.deltaTime);
         }
 
-        UpdateMoveAnimation(move.magnitude);
+        UpdateMoveAnimation(
+            move.magnitude
+        );
     }
 
-    private void UpdateMoveAnimation(float moveAmount)
+    // =========================================================
+    // JUMP INPUT
+    // =========================================================
+
+    private bool IsJumpPressed()
     {
-        if (manager == null ||
-            manager.playerAnimator == null ||
-            manager.playerAnimator.playerAnimator == null)
+        /*
+         * Có tay cầm:
+         * chỉ Button 0 của đúng Console.
+         */
+        if (IsUsingController())
         {
-            return;
+            return ControllerManager.Instance
+                .GetConsoleButtonDown(
+                    GetConsoleNumber(),
+                    0
+                );
         }
 
-        if (!isWalk)
+        /*
+         * Không có tay cầm:
+         * mới dùng phím bàn phím.
+         */
+        if (!IsPlayer2())
         {
-            manager.playerAnimator.playerAnimator.SetFloat("Run", moveAmount);
-            manager.playerAnimator.playerAnimator.SetFloat("Walk", 0f);
+            return Input.GetKeyDown(
+                KeyCode.Space
+            );
         }
-        else
-        {
-            manager.playerAnimator.playerAnimator.SetFloat("Walk", moveAmount);
-            manager.playerAnimator.playerAnimator.SetFloat("Run", 0f);
-        }
-    }
 
-    private void StopMoveAnimation()
-    {
-        IsMoving = false;
-        UpdateMoveAnimation(0f);
+        return Input.GetKeyDown(
+            KeyCode.Keypad0
+        );
     }
 
     private void JumpInput()
     {
-        bool jumpPressed;
+        bool jumpPressed =
+            IsJumpPressed();
 
-        if (!manager.playerType.isPlayer2)
+        if (isGround &&
+            jumpPressed)
         {
-            jumpPressed =
-                Input.GetKeyDown(KeyCode.Space) ||
-                Input.GetKeyDown(KeyCode.Joystick1Button0);
-        }
-        else
-        {
-            jumpPressed =
-                Input.GetKeyDown(KeyCode.Keypad0) ||
-                Input.GetKeyDown(KeyCode.Joystick2Button0);
-        }
+            if (manager != null &&
+                manager.playerAnimator != null &&
+                manager.playerAnimator
+                    .playerAnimator != null)
+            {
+                manager.playerAnimator
+                    .playerAnimator
+                    .SetTrigger("Jump");
+            }
 
-        if (isGround && jumpPressed)
-        {
-            manager.playerAnimator.playerAnimator.SetTrigger("Jump");
+            velocity.y =
+                Mathf.Sqrt(
+                    jumpHeight *
+                    -2f *
+                    gravity
+                );
 
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
             isGround = false;
         }
     }
 
-    private void ApplyGravity()
+    // =========================================================
+    // LIE INPUT
+    // =========================================================
+
+    private bool IsLiePressed()
     {
-        if (isGround && velocity.y < 0f)
+        /*
+         * Có tay cầm:
+         * chỉ Button 2 của đúng Console.
+         */
+        if (IsUsingController())
         {
-            velocity.y = -2f;
+            return ControllerManager.Instance
+                .GetConsoleButtonDown(
+                    GetConsoleNumber(),
+                    2
+                );
         }
 
-        velocity.y += gravity * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
+        /*
+         * Không có tay cầm:
+         * mới dùng bàn phím.
+         */
+        if (!IsPlayer2())
+        {
+            return Input.GetKeyDown(
+                KeyCode.L
+            );
+        }
+
+        return Input.GetKeyDown(
+            KeyCode.Keypad2
+        );
     }
 
     private void CheckLieInput()
@@ -190,32 +374,109 @@ public class PlayerMove : MonoBehaviour
         if (!canLie)
             return;
 
-        if (!isGround || velocity.y > 0.1f)
+        if (!isGround ||
+            velocity.y > 0.1f)
+        {
             return;
-
-        bool liePressed;
-
-        if (!manager.playerType.isPlayer2)
-        {
-            liePressed =
-                Input.GetKeyDown(KeyCode.L) ||
-                Input.GetKeyDown(KeyCode.Joystick1Button2);
-        }
-        else
-        {
-            liePressed =
-                Input.GetKeyDown(KeyCode.Keypad2) ||
-                Input.GetKeyDown(KeyCode.Joystick2Button2);
         }
 
-        if (liePressed)
+        if (IsLiePressed())
         {
             canLie = false;
-            manager.playerAnimator.playerAnimator.SetTrigger("Lie");
+
+            if (manager != null &&
+                manager.playerAnimator != null &&
+                manager.playerAnimator
+                    .playerAnimator != null)
+            {
+                manager.playerAnimator
+                    .playerAnimator
+                    .SetTrigger("Lie");
+            }
         }
     }
 
-    // Animation Event: frame bắt đầu nằm
+    // =========================================================
+    // GRAVITY
+    // =========================================================
+
+    private void ApplyGravity()
+    {
+        if (isGround &&
+            velocity.y < 0f)
+        {
+            velocity.y = -2f;
+        }
+
+        velocity.y +=
+            gravity *
+            Time.deltaTime;
+
+        controller.Move(
+            velocity *
+            Time.deltaTime
+        );
+    }
+
+    // =========================================================
+    // ANIMATION
+    // =========================================================
+
+    private void UpdateMoveAnimation(
+        float moveAmount)
+    {
+        if (manager == null ||
+            manager.playerAnimator == null ||
+            manager.playerAnimator
+                .playerAnimator == null)
+        {
+            return;
+        }
+
+        if (!isWalk)
+        {
+            manager.playerAnimator
+                .playerAnimator
+                .SetFloat(
+                    "Run",
+                    moveAmount
+                );
+
+            manager.playerAnimator
+                .playerAnimator
+                .SetFloat(
+                    "Walk",
+                    0f
+                );
+        }
+        else
+        {
+            manager.playerAnimator
+                .playerAnimator
+                .SetFloat(
+                    "Walk",
+                    moveAmount
+                );
+
+            manager.playerAnimator
+                .playerAnimator
+                .SetFloat(
+                    "Run",
+                    0f
+                );
+        }
+    }
+
+    private void StopMoveAnimation()
+    {
+        IsMoving = false;
+        UpdateMoveAnimation(0f);
+    }
+
+    // =========================================================
+    // LIE ANIMATION EVENTS
+    // =========================================================
+
     public void StartLie()
     {
         if (!isGround)
@@ -224,35 +485,49 @@ public class PlayerMove : MonoBehaviour
         isMove = false;
         isJump = false;
 
-        if (manager.playerAttack != null)
+        if (manager != null &&
+            manager.playerAttack != null)
         {
-            manager.playerAttack.hasAttack = false;
+            manager.playerAttack.hasAttack =
+                false;
         }
 
-        controller.height = lieHeight;
-        controller.center = lieCenter;
+        controller.height =
+            lieHeight;
+
+        controller.center =
+            lieCenter;
 
         StopMoveAnimation();
     }
 
-    // Animation Event: frame đứng dậy / hết nằm
     public void StopLie()
     {
         isMove = true;
         isJump = true;
 
-        if (manager.playerAttack != null)
+        if (manager != null &&
+            manager.playerAttack != null)
         {
-            manager.playerAttack.hasAttack = true;
+            manager.playerAttack.hasAttack =
+                true;
         }
 
-        controller.height = normalHeight;
-        controller.center = normalCenter;
+        controller.height =
+            normalHeight;
+
+        controller.center =
+            normalCenter;
 
         canLie = true;
     }
 
-    private void OnControllerColliderHit(ControllerColliderHit hit)
+    // =========================================================
+    // GROUND
+    // =========================================================
+
+    private void OnControllerColliderHit(
+        ControllerColliderHit hit)
     {
         if (hit.gameObject.CompareTag("Ground"))
         {

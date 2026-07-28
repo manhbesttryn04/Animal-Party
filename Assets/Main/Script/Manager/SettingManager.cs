@@ -17,6 +17,7 @@ public class SettingManager : MonoBehaviour
 
     [Header("UI")]
     public GameObject settingPanel;
+
     [Header("Graphics")]
     public TMP_Dropdown qualityGraphicDropDown;
 
@@ -38,60 +39,58 @@ public class SettingManager : MonoBehaviour
 
     [Header("Buttons")]
     public Button openSettingButton;
-    public int countClick = 0;
+    public int countClick;
 
     [Header("Guide")]
     public Button openGuideButton;
-    public int guideClick = 0;
+    public int guideClick;
 
     public int indexScene;
 
-    // Danh sách Resolution thực tế đang có trong Dropdown
     private readonly List<Vector2Int> availableResolutions =
         new List<Vector2Int>();
 
-    // Danh sách Resolution muốn hiển thị
-    // Thứ tự từ thấp lên cao
     private readonly Vector2Int[] resolutionPresets =
     {
-         // Thấp
-        new Vector2Int(1280, 720),   // HD
-
-        new Vector2Int(1366, 768),   // HD Laptop
-
-        new Vector2Int(1600, 900),   // HD+
+        new Vector2Int(1280, 720),
+        new Vector2Int(1366, 768),
+        new Vector2Int(1600, 900),
         new Vector2Int(1920, 1080),
         new Vector2Int(1920, 1200),
         new Vector2Int(2560, 1440),
         new Vector2Int(2560, 1600),
         new Vector2Int(3840, 2160)
     };
+
     [Header("Display Mode")]
-    public TMP_Dropdown displayModeDropdown; [Header("Windowed Size")]
+    public TMP_Dropdown displayModeDropdown;
+
+    [Header("Windowed Size")]
     [SerializeField] private int windowedWidth = 1280;
     [SerializeField] private int windowedHeight = 720;
 
-    public bool isOpenAudioClick = false;
+    public bool isOpenAudioClick;
+
     [Header("Open Setting")]
     public bool canOpenSettingByEsc = true;
 
-    // Trạng thái bảng Setting khi mở bằng nút bình thường
-    public bool isSettingOpen = false;
-
-    // Trạng thái bảng Setting khi mở bằng ESC trong cutscene
-    public bool isEscSettingOpen = false;
-
-    public bool isOpenExitButton = false;
+    public bool isSettingOpen;
+    public bool isEscSettingOpen;
+    public bool canOpenSettingByController = true;
+    public bool isOpenExitButton;
 
     [Header("Controller Setting Navigation")]
-    [Tooltip("Thứ tự: Master, Music, SFX, Quality, Resolution, Display Mode")]
-    [SerializeField] private List<Image> settingItemBackgrounds = new List<Image>();
+    [Tooltip("Không thêm Background của nút Exit vào danh sách này.")]
+    [SerializeField]
+    private List<Image> settingItemBackgrounds = new List<Image>();
 
     [SerializeField] private Color normalItemColor = Color.white;
     [SerializeField] private Color focusedItemColor = Color.cyan;
 
     [Tooltip("Màu của lựa chọn đang lia trong Dropdown, chưa xác nhận.")]
-    [SerializeField] private Color dropdownPreviewColor = new Color(0.2f, 0.2f, 0.2f, 0.9f);
+    [SerializeField]
+    private Color dropdownPreviewColor =
+        new Color(0.2f, 0.2f, 0.2f, 0.9f);
 
     [Range(0.01f, 0.5f)]
     [SerializeField] private float sliderControllerStep = 0.05f;
@@ -115,13 +114,26 @@ public class SettingManager : MonoBehaviour
 
     private bool isControllerDropdownOpen;
     private TMP_Dropdown currentControllerDropdown;
-
-    // Giá trị đang lia thử trong Dropdown.
-    // Chỉ áp dụng thật khi nhấn Button 0.
     private int controllerDropdownPreviewValue;
 
-    private bool hadControllerLastFrame;
+    [Header("Controller Open Setting")]
+    [Tooltip("Button 7 thường là nút Menu/Start/3 gạch.")]
+    [SerializeField] private int controllerSettingButtonIndex = 7;
 
+    // 0 = không có console
+    // 1 = Console 1
+    // 2 = Console 2
+    private int previousSettingConsole;
+
+    private bool waitControllerSettingButtonRelease;
+
+    public bool IsSettingBlockingInput
+    {
+        get
+        {
+            return isSettingOpen || isEscSettingOpen;
+        }
+    }
 
     private void Awake()
     {
@@ -136,36 +148,13 @@ public class SettingManager : MonoBehaviour
             return;
         }
     }
-    private void Update()
-    {
-        if (canOpenSettingByEsc &&
-            Input.GetKeyDown(KeyCode.Escape))
-        {
-            ToggleSettingByEsc();
-        }
-
-        HandleControllerConnectionState();
-
-        if (!IsAnySettingPanelOpen())
-            return;
-
-        if (!HasControllerForSetting())
-            return;
-
-        HandleControllerSettingNavigation();
-    }
-
 
     private void Start()
     {
-
         SetupDefaultValue();
 
-        // Tạo danh sách và tự chọn Resolution
         SetupResolutionDropdown();
         SetupDisplayModeDropdown();
-
-        // Tạo danh sách 6 mục Setting cho tay cầm
         SetupControllerSettingItems();
 
         AddListeners();
@@ -176,10 +165,40 @@ public class SettingManager : MonoBehaviour
         {
             backToMainMenuButton.onClick.AddListener(
                 OnClickBackToMainMenu
-
             );
         }
+
         isOpenAudioClick = true;
+    }
+
+    private void Update()
+    {
+        HandleControllerConnectionState();
+
+        int activeConsole = GetActiveSettingConsole();
+
+        // Chỉ cho tay cầm mở Setting ở scene được phép.
+        if (activeConsole != 0 &&
+            canOpenSettingByController)
+        {
+            HandleControllerSettingButton();
+        }
+
+        // ESC là bàn phím, vẫn hoạt động dù có tay cầm đang cắm.
+        if (canOpenSettingByEsc &&
+            Input.GetKeyDown(KeyCode.Escape))
+        {
+            ToggleSettingByEsc();
+        }
+
+        if (!IsAnySettingPanelOpen())
+            return;
+
+        // Không có tay cầm thì sử dụng chuột.
+        if (activeConsole == 0)
+            return;
+
+        HandleControllerSettingNavigation();
     }
 
     // ==================================================
@@ -213,23 +232,19 @@ public class SettingManager : MonoBehaviour
             sfxSlider.value = sfxValue;
         }
 
-        // Mặc định Graphics Quality là High
-        if (qualityGraphicDropDown != null)
+        if (qualityGraphicDropDown != null &&
+            VolumeManager.Instance != null)
         {
-            if (qualityGraphicDropDown != null &&
-      VolumeManager.Instance != null)
-            {
-                qualityGraphicDropDown.SetValueWithoutNotify(
-                    VolumeManager.Instance.GetCurrentQuality()
-                );
+            qualityGraphicDropDown.SetValueWithoutNotify(
+                VolumeManager.Instance.GetCurrentQuality()
+            );
 
-                qualityGraphicDropDown.RefreshShownValue();
-            }
+            qualityGraphicDropDown.RefreshShownValue();
         }
     }
 
     // ==================================================
-    // RESOLUTION SETUP
+    // RESOLUTION
     // ==================================================
 
     private void SetupResolutionDropdown()
@@ -248,23 +263,17 @@ public class SettingManager : MonoBehaviour
 
         Resolution[] screenResolutions = Screen.resolutions;
 
-        // Kiểm tra từng Resolution preset có được màn hình hỗ trợ không
         foreach (Vector2Int preset in resolutionPresets)
         {
             if (IsResolutionSupported(
                     preset.x,
                     preset.y,
-                    screenResolutions
-                ))
+                    screenResolutions))
             {
                 availableResolutions.Add(preset);
             }
         }
 
-        /*
-         * Luôn thêm 1920x1080 làm Resolution mặc định
-         * nếu Screen.resolutions không trả về nó.
-         */
         Vector2Int fullHD = new Vector2Int(1920, 1080);
 
         if (!availableResolutions.Contains(fullHD))
@@ -289,16 +298,10 @@ public class SettingManager : MonoBehaviour
         resolutionDropdown.RefreshShownValue();
     }
 
-    /// <summary>
-    /// Kiểm tra Resolution có nằm trong danh sách
-    /// màn hình hỗ trợ hay không.
-    /// Refresh Rate khác nhau không tạo mục trùng.
-    /// </summary>
     private bool IsResolutionSupported(
         int width,
         int height,
-        Resolution[] screenResolutions
-    )
+        Resolution[] screenResolutions)
     {
         foreach (Resolution resolution in screenResolutions)
         {
@@ -312,15 +315,6 @@ public class SettingManager : MonoBehaviour
         return false;
     }
 
-    /// <summary>
-    /// Tự chọn Resolution tốt nhất khi mở game.
-    ///
-    /// Ví dụ:
-    /// Màn hình 2560x1600 -> chọn 2560x1600.
-    /// Nếu không có -> chọn 2560x1440.
-    /// Nếu không có -> chọn 1920x1200.
-    /// Cuối cùng -> 1920x1080.
-    /// </summary>
     private int FindBestResolutionIndex()
     {
         if (availableResolutions.Count == 0)
@@ -328,12 +322,12 @@ public class SettingManager : MonoBehaviour
             return 0;
         }
 
-        // Độ phân giải thật của màn hình laptop/PC
         int monitorWidth = Display.main.systemWidth;
         int monitorHeight = Display.main.systemHeight;
 
-        // 1. Ưu tiên trùng chính xác với màn hình
-        for (int i = 0; i < availableResolutions.Count; i++)
+        for (int i = 0;
+             i < availableResolutions.Count;
+             i++)
         {
             Vector2Int resolution = availableResolutions[i];
 
@@ -344,14 +338,9 @@ public class SettingManager : MonoBehaviour
             }
         }
 
-        /*
-         * 2. Nếu không trùng chính xác:
-         * tìm Resolution cao nhất nhưng không vượt quá màn hình.
-         *
-         * Vì danh sách đang sắp từ thấp lên cao,
-         * nên duyệt từ cuối về đầu.
-         */
-        for (int i = availableResolutions.Count - 1; i >= 0; i--)
+        for (int i = availableResolutions.Count - 1;
+             i >= 0;
+             i--)
         {
             Vector2Int resolution = availableResolutions[i];
 
@@ -362,13 +351,14 @@ public class SettingManager : MonoBehaviour
             }
         }
 
-        // 3. Cuối cùng mặc định 1920x1080
         return FindResolutionIndex(1920, 1080);
     }
 
     private int FindResolutionIndex(int width, int height)
     {
-        for (int i = 0; i < availableResolutions.Count; i++)
+        for (int i = 0;
+             i < availableResolutions.Count;
+             i++)
         {
             Vector2Int resolution = availableResolutions[i];
 
@@ -423,6 +413,13 @@ public class SettingManager : MonoBehaviour
             );
         }
 
+        if (displayModeDropdown != null)
+        {
+            displayModeDropdown.onValueChanged.AddListener(
+                SetDisplayMode
+            );
+        }
+
         if (openSettingButton != null)
         {
             openSettingButton.onClick.AddListener(
@@ -435,10 +432,6 @@ public class SettingManager : MonoBehaviour
             openGuideButton.onClick.AddListener(
                 ToggleGuide
             );
-        }
-        if (displayModeDropdown != null)
-        {
-            displayModeDropdown.onValueChanged.AddListener(SetDisplayMode);
         }
     }
 
@@ -479,6 +472,13 @@ public class SettingManager : MonoBehaviour
             );
         }
 
+        if (displayModeDropdown != null)
+        {
+            displayModeDropdown.onValueChanged.RemoveListener(
+                SetDisplayMode
+            );
+        }
+
         if (openSettingButton != null)
         {
             openSettingButton.onClick.RemoveListener(
@@ -499,24 +499,27 @@ public class SettingManager : MonoBehaviour
                 OnClickBackToMainMenu
             );
         }
-        if (displayModeDropdown != null)
-        {
-            displayModeDropdown.onValueChanged.RemoveListener(SetDisplayMode);
-        }
     }
+
+    // ==================================================
+    // DISPLAY MODE
+    // ==================================================
+
     private void SetupDisplayModeDropdown()
     {
         if (displayModeDropdown == null)
+        {
             return;
+        }
 
         displayModeDropdown.ClearOptions();
 
-        List<string> options = new List<string>()
-    {
-        "Fullscreen",
-        "Borderless",
-        "Windowed"
-    };
+        List<string> options = new List<string>
+        {
+            "Fullscreen",
+            "Borderless",
+            "Windowed"
+        };
 
         displayModeDropdown.AddOptions(options);
 
@@ -540,51 +543,48 @@ public class SettingManager : MonoBehaviour
         displayModeDropdown.SetValueWithoutNotify(selectedIndex);
         displayModeDropdown.RefreshShownValue();
     }
+
     public void SetDisplayMode(int index)
     {
-        if (isOpenAudioClick)
+        if (isOpenAudioClick &&
+            AudioManager.Instance != null)
         {
-            if (AudioManager.Instance != null)
-            {
-                AudioManager.Instance.PlayUI(
-                    AudioManager.Instance.clickButton
-                );
-            }
+            AudioManager.Instance.PlayUI(
+                AudioManager.Instance.clickButton
+            );
         }
 
         switch (index)
         {
-
-            // Fullscreen
             case 0:
-                {
-                    SetResolutionByMode(FullScreenMode.ExclusiveFullScreen);
-                    break;
-                }
+                SetResolutionByMode(
+                    FullScreenMode.ExclusiveFullScreen
+                );
+                break;
 
-            // Borderless
             case 1:
-                {
-                    Screen.SetResolution(
-                        Display.main.systemWidth,
-                        Display.main.systemHeight,
-                        FullScreenMode.FullScreenWindow
-                    );
-                    break;
-                }
+                Screen.SetResolution(
+                    Display.main.systemWidth,
+                    Display.main.systemHeight,
+                    FullScreenMode.FullScreenWindow
+                );
+                break;
 
-            // Windowed
             case 2:
-                {
-                    SetResolutionByMode(FullScreenMode.Windowed);
-                    break;
-                }
+                SetResolutionByMode(
+                    FullScreenMode.Windowed
+                );
+                break;
         }
     }
+
     private void SetResolutionByMode(FullScreenMode mode)
     {
-        if (resolutionDropdown == null || availableResolutions.Count == 0)
+        if (resolutionDropdown == null ||
+            availableResolutions.Count == 0)
+        {
             return;
+        }
 
         int index = Mathf.Clamp(
             resolutionDropdown.value,
@@ -592,7 +592,8 @@ public class SettingManager : MonoBehaviour
             availableResolutions.Count - 1
         );
 
-        Vector2Int resolution = availableResolutions[index];
+        Vector2Int resolution =
+            availableResolutions[index];
 
         Screen.SetResolution(
             resolution.x,
@@ -601,25 +602,8 @@ public class SettingManager : MonoBehaviour
         );
     }
 
-    private Vector2Int GetSelectedResolution()
-    {
-        if (resolutionDropdown != null &&
-            availableResolutions.Count > 0)
-        {
-            int index = Mathf.Clamp(
-                resolutionDropdown.value,
-                0,
-                availableResolutions.Count - 1
-            );
-
-            return availableResolutions[index];
-        }
-
-        return new Vector2Int(1920, 1080);
-    }
-
     // ==================================================
-    // MASTER VOLUME SLIDER
+    // AUDIO
     // ==================================================
 
     public void SetMasterVolume(float value)
@@ -628,13 +612,11 @@ public class SettingManager : MonoBehaviour
 
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.ApplyMasterSetting(masterValue);
+            AudioManager.Instance.ApplyMasterSetting(
+                masterValue
+            );
         }
     }
-
-    // ==================================================
-    // MUSIC SLIDER
-    // ==================================================
 
     public void SetMusicVolume(float value)
     {
@@ -647,10 +629,6 @@ public class SettingManager : MonoBehaviour
             );
         }
     }
-
-    // ==================================================
-    // SFX SLIDER
-    // ==================================================
 
     public void SetSFXVolume(float value)
     {
@@ -665,10 +643,7 @@ public class SettingManager : MonoBehaviour
     }
 
     // ==================================================
-    // GRAPHICS QUALITY
-    // 0 = Low
-    // 1 = Medium
-    // 2 = High
+    // GRAPHICS
     // ==================================================
 
     public void SetGraphicQuality(int value)
@@ -690,10 +665,6 @@ public class SettingManager : MonoBehaviour
         }
     }
 
-    // ==================================================
-    // SET RESOLUTION
-    // ==================================================
-
     public void SetResolution(int index)
     {
         if (availableResolutions.Count == 0)
@@ -710,28 +681,19 @@ public class SettingManager : MonoBehaviour
         Vector2Int selectedResolution =
             availableResolutions[index];
 
-        /*
-         * Giữ nguyên chế độ màn hình hiện tại:
-         * Fullscreen, Borderless hoặc Windowed.
-         *
-         * Refresh Rate không cần chọn riêng.
-         */
         Screen.SetResolution(
             selectedResolution.x,
             selectedResolution.y,
             Screen.fullScreenMode
         );
 
-        if (isOpenAudioClick)
+        if (isOpenAudioClick &&
+            AudioManager.Instance != null)
         {
-            if (AudioManager.Instance != null)
-            {
-                AudioManager.Instance.PlayUI(
-                    AudioManager.Instance.clickButton
-                );
-            }
+            AudioManager.Instance.PlayUI(
+                AudioManager.Instance.clickButton
+            );
         }
-
 
         Debug.Log(
             "Đã đổi Resolution thành: " +
@@ -741,54 +703,65 @@ public class SettingManager : MonoBehaviour
         );
     }
 
-    // ==================================================
-    // APPLY ALL SETTINGS
-    // ==================================================
-
     private void ApplySettings()
     {
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.ApplyMasterSetting(masterValue);
-            AudioManager.Instance.ApplyMusicSetting(musicValue);
-            AudioManager.Instance.ApplySFXSetting(sfxValue);
+            AudioManager.Instance.ApplyMasterSetting(
+                masterValue
+            );
+
+            AudioManager.Instance.ApplyMusicSetting(
+                musicValue
+            );
+
+            AudioManager.Instance.ApplySFXSetting(
+                sfxValue
+            );
         }
 
-        if (VolumeManager.Instance != null)
+        if (VolumeManager.Instance != null &&
+            qualityGraphicDropDown != null)
         {
-            int graphicValue = qualityGraphicDropDown.value;
-            VolumeManager.Instance.SetGraphicsQuality(graphicValue);
+            VolumeManager.Instance.SetGraphicsQuality(
+                qualityGraphicDropDown.value
+            );
         }
 
         if (displayModeDropdown != null)
         {
-            SetDisplayMode(displayModeDropdown.value);
+            SetDisplayMode(
+                displayModeDropdown.value
+            );
         }
 
         if (resolutionDropdown != null &&
             availableResolutions.Count > 0)
         {
-            SetResolution(resolutionDropdown.value);
+            SetResolution(
+                resolutionDropdown.value
+            );
         }
     }
+
     // ==================================================
-    // CONTROLLER SETTING NAVIGATION
+    // CONTROLLER SETTING
     // ==================================================
 
     private void SetupControllerSettingItems()
     {
         settingItems = new Selectable[]
         {
-        musicSlider,
-        sfxSlider,
-        masterSlider,
-        qualityGraphicDropDown,
-        resolutionDropdown,
-        displayModeDropdown
+            musicSlider,
+            sfxSlider,
+            masterSlider,
+            qualityGraphicDropDown,
+            resolutionDropdown,
+            displayModeDropdown,
+            backToMainMenuButton
         };
 
         currentSettingIndex = 0;
-
         UpdateSettingControllerFocus();
     }
 
@@ -799,99 +772,214 @@ public class SettingManager : MonoBehaviour
 
     private bool HasControllerForSetting()
     {
-        if (ControllerManager.Instance == null)
-            return false;
-
-        return ControllerManager.Instance.HasAnyController();
+        return GetActiveSettingConsole() != 0;
     }
 
-    private bool IsConsole1Available()
+    private int GetActiveSettingConsole()
     {
-        if (ControllerManager.Instance == null)
-            return false;
+        ControllerManager controller =
+            ControllerManager.Instance;
 
-        return ControllerManager.Instance.IsConsole1Connected();
-    }
+        if (controller == null)
+        {
+            return 0;
+        }
 
-    private bool IsConsole2Available()
-    {
-        if (ControllerManager.Instance == null)
-            return false;
+        // Console 1 luôn được ưu tiên.
+        if (controller.IsConsole1Connected())
+        {
+            return 1;
+        }
 
-        return ControllerManager.Instance.IsConsole2Connected();
+        // Console 2 chỉ điều khiển khi Console 1 mất kết nối.
+        if (controller.IsConsole2Connected())
+        {
+            return 2;
+        }
+
+        return 0;
     }
 
     private void HandleControllerConnectionState()
     {
-        bool hasController = HasControllerForSetting();
+        int activeConsole = GetActiveSettingConsole();
 
-        // Vừa cắm tay cầm khi bảng Setting đang mở:
-        // tự focus vào mục đầu tiên.
-        if (hasController &&
-            !hadControllerLastFrame &&
-            IsAnySettingPanelOpen())
+        bool hasController = activeConsole != 0;
+        bool hadController = previousSettingConsole != 0;
+
+        // Vừa cắm tay cầm.
+        if (!hadController && hasController)
         {
-            FocusFirstSettingItem();
+            if (IsAnySettingPanelOpen())
+            {
+                FocusFirstSettingItem();
+            }
         }
-        // Không còn tay cầm:
-        // bỏ focus và đóng Dropdown nếu đang mở.
-        else if (!hasController &&
-                 hadControllerLastFrame)
+        // Vừa rút hết tay cầm.
+        else if (hadController && !hasController)
         {
             ResetSettingControllerFocus();
             ClearSelectedUI();
+
+            waitControllerSettingButtonRelease = false;
+
+            /*
+             * Không gọi ShowGameCursor() ở đây.
+             *
+             * ControllerManager sẽ báo trạng thái tay cầm
+             * cho CursorManager.
+             *
+             * CursorManager tự hiện chuột nếu:
+             * - Setting đang mở.
+             * - Không còn tay cầm.
+             */
+        }
+        // Chuyển quyền từ Console 1 sang Console 2
+        // hoặc từ Console 2 về Console 1.
+        else if (hasController &&
+                 activeConsole != previousSettingConsole)
+        {
+            waitControllerSettingButtonRelease = false;
+
+            if (IsAnySettingPanelOpen())
+            {
+                FocusFirstSettingItem();
+            }
         }
 
-        hadControllerLastFrame = hasController;
+        previousSettingConsole = activeConsole;
     }
 
     private float GetSettingVerticalInput()
     {
-        // Console 1 luôn được ưu tiên.
-        if (IsConsole1Available())
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        int activeConsole = GetActiveSettingConsole();
+
+        if (controller == null ||
+            activeConsole == 0)
         {
-            return Input.GetAxisRaw(verticalP1Axis);
+            return 0f;
         }
 
-        // Console 1 bị rút thì Console 2 được điều khiển.
-        if (IsConsole2Available())
-        {
-            return Input.GetAxisRaw(verticalP2Axis);
-        }
-
-        return 0f;
+        return controller.GetConsoleAxisRaw(
+            activeConsole,
+            verticalP1Axis,
+            verticalP2Axis
+        );
     }
 
     private float GetSettingHorizontalInput()
     {
-        if (IsConsole1Available())
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        int activeConsole = GetActiveSettingConsole();
+
+        if (controller == null ||
+            activeConsole == 0)
         {
-            return Input.GetAxisRaw(horizontalP1Axis);
+            return 0f;
         }
 
-        if (IsConsole2Available())
-        {
-            return Input.GetAxisRaw(horizontalP2Axis);
-        }
-
-        return 0f;
+        return controller.GetConsoleAxisRaw(
+            activeConsole,
+            horizontalP1Axis,
+            horizontalP2Axis
+        );
     }
 
     private bool GetSettingSubmitDown()
     {
-        // Console 1 có mặt thì chỉ Console 1 được quyền nhấn.
-        if (IsConsole1Available())
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        int activeConsole = GetActiveSettingConsole();
+
+        if (controller == null ||
+            activeConsole == 0)
         {
-            return Input.GetKeyDown(KeyCode.Joystick1Button0);
+            return false;
         }
 
-        // Chỉ khi Console 1 không còn thì Console 2 mới được quyền nhấn.
-        if (IsConsole2Available())
+        return controller.GetConsoleButtonDown(
+            activeConsole,
+            0
+        );
+    }
+
+    private bool GetControllerSettingButtonDown()
+    {
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        int activeConsole = GetActiveSettingConsole();
+
+        if (controller == null ||
+            activeConsole == 0)
         {
-            return Input.GetKeyDown(KeyCode.Joystick2Button0);
+            return false;
         }
 
-        return false;
+        return controller.GetConsoleButtonDown(
+            activeConsole,
+            controllerSettingButtonIndex
+        );
+    }
+
+    private bool GetControllerSettingButtonHeld()
+    {
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        int activeConsole = GetActiveSettingConsole();
+
+        if (controller == null ||
+            activeConsole == 0)
+        {
+            return false;
+        }
+
+        return controller.GetConsoleButton(
+            activeConsole,
+            controllerSettingButtonIndex
+        );
+    }
+
+    private void HandleControllerSettingButton()
+    {
+        if (GetActiveSettingConsole() == 0)
+        {
+            waitControllerSettingButtonRelease = false;
+            return;
+        }
+
+        if (waitControllerSettingButtonRelease)
+        {
+            if (!GetControllerSettingButtonHeld())
+            {
+                waitControllerSettingButtonRelease = false;
+            }
+
+            return;
+        }
+
+        if (!GetControllerSettingButtonDown())
+        {
+            return;
+        }
+
+        waitControllerSettingButtonRelease = true;
+
+        if (IsAnySettingPanelOpen())
+        {
+            CloseControllerSetting();
+        }
+        else
+        {
+            OpenControllerSetting();
+        }
     }
 
     private void HandleControllerSettingNavigation()
@@ -905,7 +993,6 @@ public class SettingManager : MonoBehaviour
         float vertical = GetSettingVerticalInput();
         float horizontal = GetSettingHorizontalInput();
 
-        // Khi Dropdown đang mở, Vertical chỉ được dùng trong Dropdown.
         if (isControllerDropdownOpen)
         {
             HandleOpenedDropdown(vertical);
@@ -936,7 +1023,9 @@ public class SettingManager : MonoBehaviour
         }
 
         if (!canMoveSettingVertical)
+        {
             return;
+        }
 
         if (vertical > controllerInputThreshold)
         {
@@ -960,10 +1049,12 @@ public class SettingManager : MonoBehaviour
 
             if (currentSettingIndex < 0)
             {
-                currentSettingIndex = settingItems.Length - 1;
+                currentSettingIndex =
+                    settingItems.Length - 1;
             }
 
-            if (CanUseSettingItem(settingItems[currentSettingIndex]))
+            if (CanUseSettingItem(
+                    settingItems[currentSettingIndex]))
             {
                 UpdateSettingControllerFocus();
                 PlayControllerMoveSound();
@@ -986,7 +1077,8 @@ public class SettingManager : MonoBehaviour
                 currentSettingIndex = 0;
             }
 
-            if (CanUseSettingItem(settingItems[currentSettingIndex]))
+            if (CanUseSettingItem(
+                    settingItems[currentSettingIndex]))
             {
                 UpdateSettingControllerFocus();
                 PlayControllerMoveSound();
@@ -1005,7 +1097,6 @@ public class SettingManager : MonoBehaviour
 
     private void HandleSettingHorizontal(float horizontal)
     {
-        // Chỉ ba phần tử đầu là Slider.
         if (currentSettingIndex < 0 ||
             currentSettingIndex > 2)
         {
@@ -1013,22 +1104,28 @@ public class SettingManager : MonoBehaviour
             return;
         }
 
-        if (Mathf.Abs(horizontal) <= controllerResetThreshold)
+        if (Mathf.Abs(horizontal) <=
+            controllerResetThreshold)
         {
             canMoveSettingHorizontal = true;
             return;
         }
 
         if (!canMoveSettingHorizontal)
+        {
             return;
+        }
 
         Slider selectedSlider =
             settingItems[currentSettingIndex] as Slider;
 
         if (selectedSlider == null)
+        {
             return;
+        }
 
-        float direction = horizontal > 0f ? 1f : -1f;
+        float direction =
+            horizontal > 0f ? 1f : -1f;
 
         float newValue =
             selectedSlider.value +
@@ -1049,20 +1146,36 @@ public class SettingManager : MonoBehaviour
 
     private void HandleSettingSubmit()
     {
-        // Ba mục đầu là Slider nên không cần Button 0.
+        // Ba mục đầu là Slider.
         if (currentSettingIndex <= 2)
+        {
             return;
+        }
+
+        Selectable selectedItem =
+            settingItems[currentSettingIndex];
+
+        Button button = selectedItem as Button;
+
+        if (button != null)
+        {
+            button.onClick.Invoke();
+            return;
+        }
 
         TMP_Dropdown dropdown =
-            settingItems[currentSettingIndex] as TMP_Dropdown;
+            selectedItem as TMP_Dropdown;
 
         if (dropdown == null)
+        {
             return;
+        }
 
         OpenControllerDropdown(dropdown);
     }
 
-    private void OpenControllerDropdown(TMP_Dropdown dropdown)
+    private void OpenControllerDropdown(
+        TMP_Dropdown dropdown)
     {
         if (dropdown == null ||
             dropdown.options == null ||
@@ -1074,17 +1187,14 @@ public class SettingManager : MonoBehaviour
         currentControllerDropdown = dropdown;
         isControllerDropdownOpen = true;
 
-        // Lưu giá trị hiện tại làm giá trị xem trước.
-        // Chưa áp dụng Graphics/Resolution/Display Mode ở bước này.
-        controllerDropdownPreviewValue = dropdown.value;
+        controllerDropdownPreviewValue =
+            dropdown.value;
 
-        // Phải trả Vertical về giữa trước khi di chuyển lựa chọn.
         canMoveSettingVertical = false;
         canMoveSettingHorizontal = true;
 
         dropdown.Show();
 
-        // Làm tối lựa chọn hiện đang được lia tới.
         UpdateDropdownPreviewHighlight();
 
         if (EventSystem.current != null)
@@ -1105,22 +1215,28 @@ public class SettingManager : MonoBehaviour
             return;
         }
 
-        if (Mathf.Abs(vertical) <= controllerResetThreshold)
+        if (Mathf.Abs(vertical) <=
+            controllerResetThreshold)
         {
             canMoveSettingVertical = true;
             return;
         }
 
         if (!canMoveSettingVertical)
+        {
             return;
+        }
 
         int optionCount =
             currentControllerDropdown.options.Count;
 
         if (optionCount <= 0)
+        {
             return;
+        }
 
-        int newValue = controllerDropdownPreviewValue;
+        int newValue =
+            controllerDropdownPreviewValue;
 
         if (vertical > controllerInputThreshold)
         {
@@ -1131,7 +1247,8 @@ public class SettingManager : MonoBehaviour
                 newValue = optionCount - 1;
             }
         }
-        else if (vertical < -controllerInputThreshold)
+        else if (vertical <
+                 -controllerInputThreshold)
         {
             newValue++;
 
@@ -1145,15 +1262,14 @@ public class SettingManager : MonoBehaviour
             return;
         }
 
-        // Chỉ đổi phần hiển thị, không gọi onValueChanged.
-        // Vì vậy Graphics/Resolution/Display Mode chưa được áp dụng.
         controllerDropdownPreviewValue = newValue;
+
         currentControllerDropdown.SetValueWithoutNotify(
             controllerDropdownPreviewValue
         );
+
         currentControllerDropdown.RefreshShownValue();
 
-        // Chỉ đổi màu lựa chọn đang lia, chưa áp dụng Setting.
         UpdateDropdownPreviewHighlight();
 
         canMoveSettingVertical = false;
@@ -1161,24 +1277,27 @@ public class SettingManager : MonoBehaviour
         PlayControllerMoveSound();
     }
 
-
     private void UpdateDropdownPreviewHighlight()
     {
         if (currentControllerDropdown == null)
+        {
             return;
+        }
 
-        // TMP_Dropdown tạo một object tên "Dropdown List" khi mở.
-        // Tìm các Toggle thuộc đúng danh sách đó.
         Toggle[] allToggles =
             currentControllerDropdown.transform.root
                 .GetComponentsInChildren<Toggle>(true);
 
-        List<Toggle> optionToggles = new List<Toggle>();
+        List<Toggle> optionToggles =
+            new List<Toggle>();
 
         foreach (Toggle toggle in allToggles)
         {
-            if (toggle == null || !toggle.gameObject.activeInHierarchy)
+            if (toggle == null ||
+                !toggle.gameObject.activeInHierarchy)
+            {
                 continue;
+            }
 
             Transform current = toggle.transform;
             bool belongsToDropdownList = false;
@@ -1200,16 +1319,20 @@ public class SettingManager : MonoBehaviour
             }
         }
 
-        for (int i = 0; i < optionToggles.Count; i++)
+        for (int i = 0;
+             i < optionToggles.Count;
+             i++)
         {
             Toggle toggle = optionToggles[i];
             ColorBlock colors = toggle.colors;
 
-            bool isPreview = i == controllerDropdownPreviewValue;
+            bool isPreview =
+                i == controllerDropdownPreviewValue;
 
-            Color normalColor = isPreview
-                ? dropdownPreviewColor
-                : Color.white;
+            Color normalColor =
+                isPreview
+                    ? dropdownPreviewColor
+                    : Color.white;
 
             colors.normalColor = normalColor;
             colors.selectedColor = normalColor;
@@ -1220,7 +1343,8 @@ public class SettingManager : MonoBehaviour
 
             if (toggle.targetGraphic != null)
             {
-                toggle.targetGraphic.color = normalColor;
+                toggle.targetGraphic.color =
+                    normalColor;
             }
         }
     }
@@ -1233,22 +1357,29 @@ public class SettingManager : MonoBehaviour
             return;
         }
 
-        // Nhấn Button 0 mới xác nhận và áp dụng giá trị.
-        currentControllerDropdown.SetValueWithoutNotify(
-            controllerDropdownPreviewValue
-        );
-        currentControllerDropdown.RefreshShownValue();
+        TMP_Dropdown dropdown =
+            currentControllerDropdown;
 
-        // Gọi listener đúng 1 lần sau khi đã xác nhận.
-        currentControllerDropdown.onValueChanged.Invoke(
+        dropdown.SetValueWithoutNotify(
             controllerDropdownPreviewValue
         );
 
-        currentControllerDropdown.Hide();
+        dropdown.RefreshShownValue();
 
-        CloseControllerDropdownState();
+        dropdown.onValueChanged.Invoke(
+            controllerDropdownPreviewValue
+        );
+
+        dropdown.Hide();
+
+        isControllerDropdownOpen = false;
+        currentControllerDropdown = null;
+        controllerDropdownPreviewValue = 0;
+
+        canMoveSettingVertical = false;
+        canMoveSettingHorizontal = true;
+
         UpdateSettingControllerFocus();
-
         PlayControllerClickSound();
     }
 
@@ -1258,7 +1389,6 @@ public class SettingManager : MonoBehaviour
         currentControllerDropdown = null;
         controllerDropdownPreviewValue = 0;
 
-        // Phải thả cần Vertical rồi mới di chuyển sang mục khác.
         canMoveSettingVertical = false;
         canMoveSettingHorizontal = true;
     }
@@ -1266,7 +1396,9 @@ public class SettingManager : MonoBehaviour
     private void FocusFirstSettingItem()
     {
         if (!HasControllerForSetting())
+        {
             return;
+        }
 
         if (settingItems == null ||
             settingItems.Length == 0)
@@ -1299,7 +1431,6 @@ public class SettingManager : MonoBehaviour
             settingItems.Length - 1
         );
 
-        // Đổi màu Image cha của 6 mục Setting.
         for (int i = 0;
              i < settingItemBackgrounds.Count;
              i++)
@@ -1308,7 +1439,9 @@ public class SettingManager : MonoBehaviour
                 settingItemBackgrounds[i];
 
             if (background == null)
+            {
                 continue;
+            }
 
             background.color =
                 i == currentSettingIndex
@@ -1320,11 +1453,16 @@ public class SettingManager : MonoBehaviour
             settingItems[currentSettingIndex];
 
         if (!CanUseSettingItem(selectedItem))
+        {
             return;
+        }
 
         if (EventSystem.current != null)
         {
-            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(
+                null
+            );
+
             EventSystem.current.SetSelectedGameObject(
                 selectedItem.gameObject
             );
@@ -1376,17 +1514,40 @@ public class SettingManager : MonoBehaviour
         }
     }
 
-
     // ==================================================
     // SETTING PANEL
     // ==================================================
 
-    // Dùng cho nút Setting bình thường
+    private void OpenControllerSetting()
+    {
+        PlaySettingClickSound();
+
+        isSettingOpen = true;
+        isEscSettingOpen = false;
+        countClick = 1;
+
+        SetSettingPanelActive(true);
+        SetExitButtonActive(isOpenExitButton);
+
+        // Báo Setting đang mở cho CursorManager.
+        SetCursorSettingState(true);
+
+        FocusFirstSettingItem();
+    }
+
+    private void CloseControllerSetting()
+    {
+        PlaySettingClickSound();
+
+        // Không chạy nút Exit.
+        CloseSettingPanel();
+    }
+
     public void ToggleSetting()
     {
         PlaySettingClickSound();
 
-        if (isSettingOpen)
+        if (isSettingOpen || isEscSettingOpen)
         {
             CloseSettingPanel();
         }
@@ -1396,12 +1557,11 @@ public class SettingManager : MonoBehaviour
         }
     }
 
-    // Dùng riêng cho phím ESC trong cutscene
     public void ToggleSettingByEsc()
     {
         PlaySettingClickSound();
 
-        if (isEscSettingOpen)
+        if (IsAnySettingPanelOpen())
         {
             ResetEscSetting();
         }
@@ -1419,6 +1579,9 @@ public class SettingManager : MonoBehaviour
 
         SetSettingPanelActive(true);
         SetExitButtonActive(isOpenExitButton);
+
+        // Báo Setting đang mở.
+        SetCursorSettingState(true);
 
         if (HasControllerForSetting())
         {
@@ -1441,6 +1604,9 @@ public class SettingManager : MonoBehaviour
         SetSettingPanelActive(false);
         SetExitButtonActive(false);
         ClearSelectedUI();
+
+        // Báo Setting đã đóng.
+        SetCursorSettingState(false);
     }
 
     private void OpenEscSetting()
@@ -1449,11 +1615,13 @@ public class SettingManager : MonoBehaviour
         isSettingOpen = false;
         countClick = 0;
 
-        ShowCursorForSetting();
         SetSettingPanelActive(true);
         SetExitButtonActive(isOpenExitButton);
 
-        if (HasControllerForSetting())
+        // Báo Setting đang mở.
+        SetCursorSettingState(true);
+
+        if (GetActiveSettingConsole() != 0)
         {
             FocusFirstSettingItem();
         }
@@ -1463,7 +1631,6 @@ public class SettingManager : MonoBehaviour
         }
     }
 
-    // Gắn hàm này vào nút đóng nếu bảng được mở bằng ESC
     public void ResetEscSetting()
     {
         isEscSettingOpen = false;
@@ -1475,22 +1642,35 @@ public class SettingManager : MonoBehaviour
         SetSettingPanelActive(false);
         SetExitButtonActive(false);
         ClearSelectedUI();
-        HideCursorAfterSetting();
+
+        // Báo Setting đã đóng.
+        SetCursorSettingState(false);
     }
 
-    // Reset chung khi đổi scene hoặc muốn đóng toàn bộ Setting
     public void ResetSetting()
     {
         isSettingOpen = false;
         isEscSettingOpen = false;
         countClick = 0;
 
+        waitControllerSettingButtonRelease = false;
+
         ResetSettingControllerFocus();
 
         SetSettingPanelActive(false);
         SetExitButtonActive(false);
         ClearSelectedUI();
-        HideCursorAfterSetting();
+
+        // Báo Setting đã đóng.
+        SetCursorSettingState(false);
+    }
+
+    private void SetCursorSettingState(bool open)
+    {
+        if (CursorManager.Instance != null)
+        {
+            CursorManager.Instance.SetSettingCursorActive(open);
+        }
     }
 
     private void SetSettingPanelActive(bool active)
@@ -1510,33 +1690,9 @@ public class SettingManager : MonoBehaviour
         if (UIManager.Instance != null &&
             UIManager.Instance.exitMainMenuButton != null)
         {
-            UIManager.Instance.exitMainMenuButton.SetActive(active);
-        }
-    }
-
-    private void ShowCursorForSetting()
-    {
-        if (CursorManager.Instance != null)
-        {
-            CursorManager.Instance.ShowGameCursor();
-        }
-        else
-        {
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
-        }
-    }
-
-    private void HideCursorAfterSetting()
-    {
-        if (CursorManager.Instance != null)
-        {
-            CursorManager.Instance.HideGameCursor();
-        }
-        else
-        {
-            Cursor.visible = false;
-            Cursor.lockState = CursorLockMode.Locked;
+            UIManager.Instance.exitMainMenuButton.SetActive(
+                active
+            );
         }
     }
 
@@ -1554,7 +1710,9 @@ public class SettingManager : MonoBehaviour
     {
         if (EventSystem.current != null)
         {
-            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(
+                null
+            );
         }
     }
 
@@ -1576,24 +1734,35 @@ public class SettingManager : MonoBehaviour
 
     private IEnumerator BackToMainMenuRoutine()
     {
-        var cursor = CursorManager.Instance;
-        if (cursor != null)
-        {
-            cursor.HideGameCursor();
-        }
-        var audio = AudioManager.Instance;
+        /*
+         * Đóng trạng thái Setting trước khi chuyển scene.
+         * Không gọi HideGameCursor trực tiếp.
+         */
+        ResetSetting();
+
+        AudioManager audio = AudioManager.Instance;
 
         if (audio != null)
         {
             audio.ZeroAllAudio();
             audio.PauseAudio();
         }
+
         if (UIManager.Instance != null)
         {
-            ResetSetting();
-            UIManager.Instance.openSettingPanelButton.SetActive(false);
+            if (UIManager.Instance.openSettingPanelButton != null)
+            {
+                UIManager.Instance.openSettingPanelButton.SetActive(
+                    false
+                );
+            }
 
-            UIManager.Instance.canvasNotifi.SetActive(false);
+            if (UIManager.Instance.canvasNotifi != null)
+            {
+                UIManager.Instance.canvasNotifi.SetActive(
+                    false
+                );
+            }
         }
 
         if (LoadingManager.Instance != null)
@@ -1603,14 +1772,16 @@ public class SettingManager : MonoBehaviour
 
         if (VolumeManager.Instance != null)
         {
-            VolumeManager.Instance.SetGraphicsQuality(VolumeManager.Instance.currentQuality);
+            VolumeManager.Instance.SetGraphicsQuality(
+                VolumeManager.Instance.currentQuality
+            );
         }
 
         SceneManager.LoadScene(indexScene);
     }
 
     // ==================================================
-    // GUIDE PANEL
+    // GUIDE
     // ==================================================
 
     public void ToggleGuide()
@@ -1629,7 +1800,9 @@ public class SettingManager : MonoBehaviour
             if (UIManager.Instance != null &&
                 UIManager.Instance.intructInputBuyPanel != null)
             {
-                UIManager.Instance.intructInputBuyPanel.SetActive(true);
+                UIManager.Instance.intructInputBuyPanel.SetActive(
+                    true
+                );
             }
         }
         else
@@ -1637,13 +1810,12 @@ public class SettingManager : MonoBehaviour
             if (UIManager.Instance != null &&
                 UIManager.Instance.intructInputBuyPanel != null)
             {
-                UIManager.Instance.intructInputBuyPanel.SetActive(false);
+                UIManager.Instance.intructInputBuyPanel.SetActive(
+                    false
+                );
             }
 
-            if (EventSystem.current != null)
-            {
-                EventSystem.current.SetSelectedGameObject(null);
-            }
+            ClearSelectedUI();
 
             guideClick = 0;
         }
@@ -1653,15 +1825,14 @@ public class SettingManager : MonoBehaviour
     {
         guideClick = 0;
 
-        if (EventSystem.current != null)
-        {
-            EventSystem.current.SetSelectedGameObject(null);
-        }
+        ClearSelectedUI();
 
         if (UIManager.Instance != null &&
             UIManager.Instance.intructInputBuyPanel != null)
         {
-            UIManager.Instance.intructInputBuyPanel.SetActive(false);
+            UIManager.Instance.intructInputBuyPanel.SetActive(
+                false
+            );
         }
     }
 

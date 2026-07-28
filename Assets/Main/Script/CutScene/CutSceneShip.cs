@@ -67,6 +67,13 @@ public class CutSceneShip : MonoBehaviour
 
     private void Start()
     {
+        // Cutscene không cho hiện chuột.
+        if (CursorManager.Instance != null)
+        {
+            CursorManager.Instance.SetSceneCursorVisible(false);
+            CursorManager.Instance.SetSettingCursorActive(false);
+        }
+
         if (subtitlePanel != null)
             subtitlePanel.SetActive(false);
 
@@ -81,15 +88,22 @@ public class CutSceneShip : MonoBehaviour
 
         StartCoroutine(CutScene());
         StartCoroutine(ShowSkipHint());
-        var audio = AudioManager.Instance;
+
+        AudioManager audio = AudioManager.Instance;
+
         if (audio != null)
         {
             audio.PlayMusic(audio.musicCutScene1Clip);
         }
-        var setting = SettingManager.Instance;
-        if(setting != null)
+
+        SettingManager setting = SettingManager.Instance;
+
+        if (setting != null)
         {
             setting.canOpenSettingByEsc = true;
+
+            // Không cho nút Menu của tay cầm mở Setting.
+            setting.canOpenSettingByController = true;
         }
     }
 
@@ -121,6 +135,7 @@ public class CutSceneShip : MonoBehaviour
         {
             setting.ResetEscSetting();
             setting.canOpenSettingByEsc = false;
+            setting.canOpenSettingByController = false;
         }
         AudioManager audio = AudioManager.Instance;
 
@@ -252,6 +267,7 @@ public class CutSceneShip : MonoBehaviour
         {
             setting.ResetEscSetting();
             setting.canOpenSettingByEsc = false;
+            setting.canOpenSettingByController = false;
         }
 
         yield return new WaitForSeconds(1.5f);

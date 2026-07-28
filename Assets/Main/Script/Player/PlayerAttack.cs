@@ -10,101 +10,191 @@ public class PlayerAttack : MonoBehaviour
     public float attackCooldown = 2f;
     public float aimDistance = 3f;
     public bool hasAttack;
+
     private bool canAttack = true;
 
     private void Start()
     {
         if (kickCollider != null)
+        {
             kickCollider.enabled = false;
+        }
+
+        if (playerManager == null)
+        {
+            playerManager = GetComponent<PlayerManager>();
+        }
     }
 
     private void Update()
     {
-        bool attackPressed = false;
+        if (!hasAttack)
+            return;
 
-        if (hasAttack)
+        if (!canAttack)
+            return;
+
+        if (IsAttackPressed())
         {
-            if (!playerManager.playerType.isPlayer2)
-            {
-                attackPressed =
-                    Input.GetKeyDown(KeyCode.J) ||
-                    Input.GetKeyDown(KeyCode.Joystick1Button1);
-            }
-            else
-            {
-                attackPressed =
-                    Input.GetKeyDown(KeyCode.Keypad1) ||
-                    Input.GetKeyDown(KeyCode.Joystick2Button1);
-            }
-
-            if (attackPressed && canAttack)
-            {
-                Attack();
-            }
+            Attack();
         }
-        
     }
+
+    // =========================================================
+    // INPUT
+    // =========================================================
+
+    private bool IsPlayer2()
+    {
+        return playerManager != null &&
+               playerManager.playerType != null &&
+               playerManager.playerType.isPlayer2;
+    }
+
+    private bool IsUsingController()
+    {
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        if (controller == null)
+            return false;
+
+        if (IsPlayer2())
+        {
+            return controller.IsConsole2Connected();
+        }
+
+        return controller.IsConsole1Connected();
+    }
+
+    private int GetConsoleNumber()
+    {
+        return IsPlayer2() ? 2 : 1;
+    }
+
+    private bool IsAttackPressed()
+    {
+        /*
+         * Có tay cầm:
+         * chỉ nhận Button 1 của đúng Console.
+         * Không nhận J hoặc Keypad1.
+         */
+        if (IsUsingController())
+        {
+            return ControllerManager.Instance
+                .GetConsoleButtonDown(
+                    GetConsoleNumber(),
+                    1
+                );
+        }
+
+        /*
+         * Không có tay cầm:
+         * mới cho phép dùng bàn phím.
+         */
+        if (IsPlayer2())
+        {
+            return Input.GetKeyDown(
+                KeyCode.Keypad1
+            );
+        }
+
+        return Input.GetKeyDown(
+            KeyCode.J
+        );
+    }
+
+    // =========================================================
+    // ATTACK
+    // =========================================================
 
     private void Attack()
     {
-        Transform target = FindTarget();
+        Transform target =
+            FindTarget();
 
         if (target != null)
         {
-            float distance = Vector3.Distance(transform.position, target.position);
+            float distance =
+                Vector3.Distance(
+                    transform.position,
+                    target.position
+                );
 
-            // Nếu đối thủ đủ gần thì tự động xoay mặt về phía đối thủ
+            // Đối thủ đủ gần thì tự xoay mặt về phía đối thủ.
             if (distance <= aimDistance)
             {
-                Vector3 dir = target.position - transform.position;
-                dir.y = 0f;
+                Vector3 direction =
+                    target.position -
+                    transform.position;
 
-                if (dir != Vector3.zero)
+                direction.y = 0f;
+
+                if (direction.sqrMagnitude > 0.001f)
                 {
-                    transform.rotation = Quaternion.LookRotation(dir);
+                    transform.rotation =
+                        Quaternion.LookRotation(
+                            direction
+                        );
                 }
             }
-        }
-        else //Debug.Log("Ko");
-
-            canAttack = false;
-
-        if (playerManager != null &&
-            playerManager.playerAnimator.playerAnimator != null)
-        {
-            playerManager.playerAnimator.playerAnimator.SetTrigger("Attack");
         }
 
         canAttack = false;
 
-        Invoke(nameof(ResetAttack), attackCooldown);
+        if (playerManager != null &&
+            playerManager.playerAnimator != null &&
+            playerManager.playerAnimator.playerAnimator != null)
+        {
+            playerManager.playerAnimator
+                .playerAnimator
+                .SetTrigger("Attack");
+        }
+
+        Invoke(
+            nameof(ResetAttack),
+            attackCooldown
+        );
     }
+
+    // =========================================================
+    // TARGET
+    // =========================================================
 
     private Transform FindTarget()
     {
-        GameObject[] players;
-        if (playerManager.playerType.isPlayer2)
+        string targetTag =
+            IsPlayer2()
+                ? "Player 1"
+                : "Player 2";
+
+        GameObject[] players =
+            GameObject.FindGameObjectsWithTag(
+                targetTag
+            );
+
+        Transform nearest = null;
+        float nearestDistance =
+            Mathf.Infinity;
+
+        foreach (GameObject player in players)
         {
-            players = GameObject.FindGameObjectsWithTag("Player 1");
-        }
-        else players = GameObject.FindGameObjectsWithTag("Player 2");
-
-
-            Transform nearest = null;
-        float nearestDistance = Mathf.Infinity;
-
-        foreach (GameObject p in players)
-        {
-            // Bỏ qua chính mình
-            if (p == gameObject)
+            if (player == null ||
+                player == gameObject)
+            {
                 continue;
+            }
 
-            float distance = Vector3.Distance(transform.position, p.transform.position);
+            float distance =
+                Vector3.Distance(
+                    transform.position,
+                    player.transform.position
+                );
 
             if (distance < nearestDistance)
             {
                 nearestDistance = distance;
-                nearest = p.transform;
+                nearest = player.transform;
             }
         }
 
@@ -116,17 +206,37 @@ public class PlayerAttack : MonoBehaviour
         canAttack = true;
     }
 
-    // Animation Event
+    // =========================================================
+    // ANIMATION EVENTS
+    // =========================================================
+
     public void EnableKickCollider()
     {
         if (kickCollider != null)
+        {
             kickCollider.enabled = true;
+        }
     }
 
-    // Animation Event
     public void DisableKickCollider()
     {
         if (kickCollider != null)
+        {
             kickCollider.enabled = false;
+        }
+    }
+
+    private void OnDisable()
+    {
+        CancelInvoke(
+            nameof(ResetAttack)
+        );
+
+        canAttack = true;
+
+        if (kickCollider != null)
+        {
+            kickCollider.enabled = false;
+        }
     }
 }
