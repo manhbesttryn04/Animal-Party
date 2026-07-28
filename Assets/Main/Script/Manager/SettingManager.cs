@@ -435,12 +435,6 @@ public class SettingManager : MonoBehaviour
             );
         }
 
-        if (openGuideButton != null)
-        {
-            openGuideButton.onClick.AddListener(
-                ToggleGuide
-            );
-        }
     }
 
     private void RemoveListeners()
@@ -494,12 +488,7 @@ public class SettingManager : MonoBehaviour
             );
         }
 
-        if (openGuideButton != null)
-        {
-            openGuideButton.onClick.RemoveListener(
-                ToggleGuide
-            );
-        }
+ 
 
         if (backToMainMenuButton != null)
         {
@@ -1971,58 +1960,9 @@ public class SettingManager : MonoBehaviour
     // GUIDE
     // ==================================================
 
-    public void ToggleGuide()
-    {
-        guideClick++;
+   
 
-        if (AudioManager.Instance != null)
-        {
-            AudioManager.Instance.PlayUI(
-                AudioManager.Instance.clickButton
-            );
-        }
-
-        if (guideClick == 1)
-        {
-            if (UIManager.Instance != null &&
-                UIManager.Instance.intructInputBuyPanel != null)
-            {
-                UIManager.Instance.intructInputBuyPanel.SetActive(
-                    true
-                );
-            }
-        }
-        else
-        {
-            if (UIManager.Instance != null &&
-                UIManager.Instance.intructInputBuyPanel != null)
-            {
-                UIManager.Instance.intructInputBuyPanel.SetActive(
-                    false
-                );
-            }
-
-            ClearSelectedUI();
-
-            guideClick = 0;
-        }
-    }
-
-    public void ResetGuide()
-    {
-        guideClick = 0;
-
-        ClearSelectedUI();
-
-        if (UIManager.Instance != null &&
-            UIManager.Instance.intructInputBuyPanel != null)
-        {
-            UIManager.Instance.intructInputBuyPanel.SetActive(
-                false
-            );
-        }
-    }
-
+ 
     private void OnDestroy()
     {
         RemoveListeners();

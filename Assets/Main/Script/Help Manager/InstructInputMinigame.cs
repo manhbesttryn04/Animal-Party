@@ -3,12 +3,7 @@ using UnityEngine;
 
 public class InstructInputMinigame : MonoBehaviour
 {
-    [Header("4 Input UI Player 1")]
-    public List<GameObject> instructInputListP1 = new List<GameObject>();
-
-    [Header("4 Input UI Player 2")]
-    public List<GameObject> instructInputListP2 = new List<GameObject>();
-
+  
     [Header("Input Minigame 1")]
     public List<bool> instructInputMinigame1 = new List<bool>();
 
@@ -110,23 +105,27 @@ public class InstructInputMinigame : MonoBehaviour
     /// </summary>
     private void ApplyBoolToInput(List<bool> boolList)
     {
+        var ui = UIManager.Instance;
         for (int i = 0; i < INPUT_COUNT; i++)
         {
             bool state = i < boolList.Count && boolList[i];
+            if(ui != null)
+            {
+                if (i < ui.instructInputListP1.Count &&
+               ui.instructInputListP1[i] != null)
+                {
+                   ui. instructInputListP1[i].SetActive(state);
+                }
 
+                // Player 2
+                if (i < ui.instructInputListP2.Count &&
+                   ui. instructInputListP2[i] != null)
+                {
+                    ui.instructInputListP2[i].SetActive(state);
+                }
+            }
             // Player 1
-            if (i < instructInputListP1.Count &&
-                instructInputListP1[i] != null)
-            {
-                instructInputListP1[i].SetActive(state);
-            }
-
-            // Player 2
-            if (i < instructInputListP2.Count &&
-                instructInputListP2[i] != null)
-            {
-                instructInputListP2[i].SetActive(state);
-            }
+           
         }
     }
 
@@ -135,7 +134,8 @@ public class InstructInputMinigame : MonoBehaviour
     /// </summary>
     public void HideAllInput()
     {
-        foreach (GameObject inputP1 in instructInputListP1)
+        var ui = UIManager.Instance;
+        foreach (GameObject inputP1 in ui.instructInputListP1)
         {
             if (inputP1 != null)
             {
@@ -143,7 +143,7 @@ public class InstructInputMinigame : MonoBehaviour
             }
         }
 
-        foreach (GameObject inputP2 in instructInputListP2)
+        foreach (GameObject inputP2 in ui. instructInputListP2)
         {
             if (inputP2 != null)
             {

@@ -740,12 +740,6 @@ public class InputChooseItem : MonoBehaviour
     {
         var setting = SettingManager.Instance;
 
-        if (setting != null)
-        {
-            setting.ResetGuide();
-        }
-
-        ui.openInstructBuyButton.SetActive(false);
         ui.canvasRandomCard.SetActive(true);
 
         randomCardPlayer = playerIndex;
@@ -1020,7 +1014,6 @@ public class InputChooseItem : MonoBehaviour
         ClearRandomCardHighlight();
 
         ui.canvasRandomCard.SetActive(false);
-        ui.openInstructBuyButton.SetActive(true);
 
         isChoosingCardRoutine = false;
 

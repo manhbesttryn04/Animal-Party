@@ -95,7 +95,7 @@ public class ShopManager : MonoBehaviour
               cursor.HideGameCursor();
           }*/
         
-            SettingManager.Instance.ResetGuide();
+            
         SettingManager.Instance.canOpenSettingByController = false;
             ui.openSettingPanelButton.SetActive(false);
            // ui.notifiPlay.SetActive(false);
@@ -342,7 +342,6 @@ public class ShopManager : MonoBehaviour
         StopTurnTimer();
         CancelInvoke(nameof(StartPlayer1Turn));
 
-        if(ui.intructInputBuyPanel.activeSelf == true) SettingManager.Instance.ResetGuide();
         SettingManager.Instance.canOpenSettingByController = true;
         ui.openSettingPanelButton.SetActive(true    );
         //ui.notifiPlay.SetActive(true);

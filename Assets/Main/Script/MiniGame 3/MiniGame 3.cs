@@ -412,7 +412,7 @@ public class MiniGame3 : MonoBehaviour
         p1.playerMove.hasLie = true;
         p2.playerMove.hasLie = true;
 
-        //p1.playerAttack.hasAttack = true;
-       // p2.playerAttack.hasAttack = true;
+        p1.playerAttack.hasAttack = false;
+        p2.playerAttack.hasAttack = false;
     }
 }
