@@ -578,13 +578,13 @@ public class MiniGame5 : MonoBehaviour
             {
                 resultText.text = $"P1 win! ({p1Count} vs {p2Count})";
                 resultText.color = Color.blue;
-                AudioManager.Instance.PlayUI(AudioManager.Instance.playerOneWinClip);
+                AudioManager.Instance.PlaySpecial(AudioManager.Instance.playerOneWinClip);
             }
             else if (p2Count > p1Count)
             {
                 resultText.text = $"P2 win! ({p2Count} vs {p1Count})";
                 resultText.color = Color.red;
-                AudioManager.Instance.PlayUI(AudioManager.Instance.playerTwoWinClip);
+                AudioManager.Instance.PlaySpecial(AudioManager.Instance.playerTwoWinClip);
             }
             else
             {

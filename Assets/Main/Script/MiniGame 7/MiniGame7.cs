@@ -1107,13 +1107,13 @@ public class MiniGame7 : MonoBehaviour
         {
             Debug.Log("Player 1 thắng");
             PlayerCheckReward(0);
-            AudioManager.Instance.PlayUI(AudioManager.Instance.playerOneWinClip);
+            AudioManager.Instance.PlaySpecial(AudioManager.Instance.playerOneWinClip);
         }
         else if (winnerIndex == 1)
         {
             Debug.Log("Player 2 thắng");
             PlayerCheckReward(1);
-            AudioManager.Instance.PlayUI(AudioManager.Instance.playerTwoWinClip);
+            AudioManager.Instance.PlaySpecial(AudioManager.Instance.playerTwoWinClip);
         }
         else
         {

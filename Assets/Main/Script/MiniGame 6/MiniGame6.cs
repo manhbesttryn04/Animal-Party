@@ -384,11 +384,11 @@ public class MiniGame6 : MonoBehaviour
         {
             if (isPlayer1Win)
             {
-                AudioManager.Instance.PlayUI(AudioManager.Instance.playerOneWinClip);
+                AudioManager.Instance.PlaySpecial(AudioManager.Instance.playerOneWinClip);
             }
             else
             {
-                AudioManager.Instance.PlayUI(AudioManager.Instance.playerTwoWinClip);
+                AudioManager.Instance.PlaySpecial(AudioManager.Instance.playerTwoWinClip);
             }
         }
 

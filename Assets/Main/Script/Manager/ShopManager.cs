@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+
 
 public class ShopManager : MonoBehaviour
 {
@@ -40,6 +42,29 @@ public class ShopManager : MonoBehaviour
     [Header("Shop Settings")]
     public bool open = true;
 
+    [Header("Setting Input Lock")]
+    [Tooltip(
+        "Các Button của Shop sẽ bị vô hiệu hóa khi Setting mở.\n" +
+        "Để trống danh sách: ShopManager tự tìm Button trong Shop Panel " +
+        "và Canvas Random Card."
+    )]
+    [SerializeField]
+    private List<Button> buttonsBlockedBySetting =
+        new List<Button>();
+
+    [Range(0f, 0.5f)]
+    [SerializeField] private float inputReleaseThreshold = 0.2f;
+
+    [Tooltip("Axis X chỉ dành cho Joystick 1.")]
+    [SerializeField]
+    private string horizontalJoystick1 =
+        "HorizontalJoystick1";
+
+    [Tooltip("Axis X chỉ dành cho Joystick 2.")]
+    [SerializeField]
+    private string horizontalJoystick2 =
+        "HorizontalJoystick2";
+
     private bool[] canErrorCoin = { true, true };
 
     #endregion
@@ -52,6 +77,16 @@ public class ShopManager : MonoBehaviour
 
     private Coroutine turnTimerCoroutine;
     private int currentTime;
+
+    private bool previousSettingBlockingInput;
+    private bool shopInputLockedBySetting;
+    private bool inputChooseItemWasEnabled;
+
+    private Coroutine restoreShopInputCoroutine;
+
+    private readonly Dictionary<Button, bool>
+        buttonInteractableBeforeSetting =
+            new Dictionary<Button, bool>();
 
     #endregion
 
@@ -76,9 +111,39 @@ public class ShopManager : MonoBehaviour
     private void Start()
     {
         ui = UIManager.Instance;
-        if (open) { Open(); }
 
+        CacheButtonsBlockedBySetting();
+
+        if (open)
+        {
+            Open();
+        }
     }
+
+    private void Update()
+    {
+        bool settingBlockingInput =
+            IsSettingBlockingShopInput();
+
+        if (settingBlockingInput ==
+            previousSettingBlockingInput)
+        {
+            return;
+        }
+
+        previousSettingBlockingInput =
+            settingBlockingInput;
+
+        if (settingBlockingInput)
+        {
+            LockShopInputForSetting();
+        }
+        else
+        {
+            BeginRestoreShopInputAfterSetting();
+        }
+    }
+
     #endregion
 
     // =========================================================
@@ -94,11 +159,11 @@ public class ShopManager : MonoBehaviour
           {
               cursor.HideGameCursor();
           }*/
-        
-            
-        SettingManager.Instance.canOpenSettingByController = false;
-            ui.openSettingPanelButton.SetActive(false);
-           // ui.notifiPlay.SetActive(false);
+
+
+        SettingManager.Instance.canOpenSettingByController = true;
+        ui.openSettingPanelButton.SetActive(true);
+        // ui.notifiPlay.SetActive(false);
         AudioManager.Instance.PlaySFX(AudioManager.Instance.openShopClip);
 
         SetupPlayers();
@@ -160,6 +225,236 @@ public class ShopManager : MonoBehaviour
     #endregion
 
     // =========================================================
+    // SETTING INPUT LOCK
+    // =========================================================
+
+    #region Setting Input Lock
+
+    private bool IsSettingBlockingShopInput()
+    {
+        return SettingManager.Instance != null &&
+               SettingManager.Instance.IsSettingBlockingInput;
+    }
+
+    private void CacheButtonsBlockedBySetting()
+    {
+        if (buttonsBlockedBySetting == null)
+        {
+            buttonsBlockedBySetting =
+                new List<Button>();
+        }
+
+        // Có gắn thủ công trong Inspector thì giữ nguyên danh sách đó.
+        if (buttonsBlockedBySetting.Count > 0)
+        {
+            RemoveDuplicateAndNullButtons();
+            return;
+        }
+
+        AddButtonsFromRoot(
+            ui != null ? ui.shopPanel : null
+        );
+
+        AddButtonsFromRoot(
+            ui != null ? ui.canvasRandomCard : null
+        );
+
+        RemoveDuplicateAndNullButtons();
+    }
+
+    private void AddButtonsFromRoot(GameObject root)
+    {
+        if (root == null)
+            return;
+
+        Button[] foundButtons =
+            root.GetComponentsInChildren<Button>(true);
+
+        for (int i = 0; i < foundButtons.Length; i++)
+        {
+            Button button = foundButtons[i];
+
+            if (button != null &&
+                !buttonsBlockedBySetting.Contains(button))
+            {
+                buttonsBlockedBySetting.Add(button);
+            }
+        }
+    }
+
+    private void RemoveDuplicateAndNullButtons()
+    {
+        HashSet<Button> uniqueButtons =
+            new HashSet<Button>();
+
+        for (int i = buttonsBlockedBySetting.Count - 1;
+             i >= 0;
+             i--)
+        {
+            Button button = buttonsBlockedBySetting[i];
+
+            if (button == null ||
+                !uniqueButtons.Add(button))
+            {
+                buttonsBlockedBySetting.RemoveAt(i);
+            }
+        }
+    }
+
+    private void LockShopInputForSetting()
+    {
+        if (restoreShopInputCoroutine != null)
+        {
+            StopCoroutine(restoreShopInputCoroutine);
+            restoreShopInputCoroutine = null;
+        }
+
+        if (shopInputLockedBySetting)
+            return;
+
+        shopInputLockedBySetting = true;
+
+        /*
+         * Khóa script nhận phím/tay cầm của Shop.
+         * Lưu trạng thái cũ để không vô tình bật một component
+         * vốn đã bị tắt trước khi mở Setting.
+         */
+        if (inputChooseItem != null)
+        {
+            inputChooseItemWasEnabled =
+                inputChooseItem.enabled;
+
+            inputChooseItem.enabled = false;
+        }
+
+        CacheButtonsBlockedBySetting();
+        buttonInteractableBeforeSetting.Clear();
+
+        for (int i = 0;
+             i < buttonsBlockedBySetting.Count;
+             i++)
+        {
+            Button button =
+                buttonsBlockedBySetting[i];
+
+            if (button == null)
+                continue;
+
+            buttonInteractableBeforeSetting[button] =
+                button.interactable;
+
+            button.interactable = false;
+        }
+    }
+
+    private void BeginRestoreShopInputAfterSetting()
+    {
+        if (!shopInputLockedBySetting)
+            return;
+
+        if (restoreShopInputCoroutine != null)
+        {
+            StopCoroutine(restoreShopInputCoroutine);
+        }
+
+        restoreShopInputCoroutine =
+            StartCoroutine(
+                RestoreShopInputAfterRelease()
+            );
+    }
+
+    private IEnumerator RestoreShopInputAfterRelease()
+    {
+        /*
+         * Chờ người chơi thả cần/phím và nút xác nhận.
+         * Tránh nút dùng để đóng Setting mua luôn item
+         * hoặc di chuyển lựa chọn ngay lập tức.
+         */
+        while (!IsShopInputReleased())
+        {
+            // Setting được mở lại trước khi thả input.
+            if (IsSettingBlockingShopInput())
+            {
+                restoreShopInputCoroutine = null;
+                yield break;
+            }
+
+            yield return null;
+        }
+
+        RestoreShopInputNow();
+        restoreShopInputCoroutine = null;
+    }
+
+    private void RestoreShopInputNow()
+    {
+        foreach (KeyValuePair<Button, bool> pair
+                 in buttonInteractableBeforeSetting)
+        {
+            if (pair.Key != null)
+            {
+                pair.Key.interactable = pair.Value;
+            }
+        }
+
+        buttonInteractableBeforeSetting.Clear();
+
+        if (inputChooseItem != null)
+        {
+            inputChooseItem.enabled =
+                inputChooseItemWasEnabled;
+        }
+
+        shopInputLockedBySetting = false;
+    }
+
+    private bool IsShopInputReleased()
+    {
+        bool keyboardReleased =
+            !Input.GetKey(KeyCode.A) &&
+            !Input.GetKey(KeyCode.D) &&
+            !Input.GetKey(KeyCode.LeftArrow) &&
+            !Input.GetKey(KeyCode.RightArrow) &&
+            !Input.GetKey(KeyCode.J) &&
+            !Input.GetKey(KeyCode.Keypad1);
+
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        if (controller == null)
+        {
+            return keyboardReleased;
+        }
+
+        float player1Horizontal =
+            controller.GetConsoleHorizontalRaw(
+                1,
+                horizontalJoystick1,
+                horizontalJoystick2
+            );
+
+        float player2Horizontal =
+            controller.GetConsoleHorizontalRaw(
+                2,
+                horizontalJoystick1,
+                horizontalJoystick2
+            );
+
+        bool controllerReleased =
+            Mathf.Abs(player1Horizontal) <=
+                inputReleaseThreshold &&
+            Mathf.Abs(player2Horizontal) <=
+                inputReleaseThreshold &&
+            !controller.GetConsoleButton(1, 0) &&
+            !controller.GetConsoleButton(2, 0);
+
+        return keyboardReleased &&
+               controllerReleased;
+    }
+
+    #endregion
+
+    // =========================================================
     // COIN
     // =========================================================
 
@@ -211,6 +506,13 @@ public class ShopManager : MonoBehaviour
 
     public bool BuyItem(int playerIndex, int itemIndex, int price)
     {
+        // Chặn cả trường hợp Button gửi sự kiện đúng lúc Setting vừa mở.
+        if (IsSettingBlockingShopInput() ||
+            shopInputLockedBySetting)
+        {
+            return false;
+        }
+
         if (playerIndex < 0 || playerIndex >= players.Length)
             return false;
 
@@ -342,12 +644,24 @@ public class ShopManager : MonoBehaviour
         StopTurnTimer();
         CancelInvoke(nameof(StartPlayer1Turn));
 
-        SettingManager.Instance.canOpenSettingByController = true;
-        ui.openSettingPanelButton.SetActive(true    );
+        //  SettingManager.Instance.canOpenSettingByController = true;
+        //ui.openSettingPanelButton.SetActive(true    );
         //ui.notifiPlay.SetActive(true);
+        StartCoroutine(AnimationCloseShop());
+    }
+    public IEnumerator AnimationCloseShop()
+    {
+        Animator anishop =ui.shopPanel.GetComponent<Animator>();
+        if( anishop != null)
+        {
+            anishop.SetTrigger("Close");
+
+        }
+        yield return new WaitForSeconds(0.4f);
         ui.shopPanel.SetActive(false);
 
         GameManager.Instance.CheckWinnerOrNextRound();
+
     }
 
     #endregion
@@ -421,13 +735,13 @@ public class ShopManager : MonoBehaviour
 
     public void ShowPlayer1Turn()
     {
-        AudioManager.Instance.PlayUI(AudioManager.Instance.playerOneClip);
+        AudioManager.Instance.PlaySpecial(AudioManager.Instance.playerOneClip);
         StartCoroutine(ShowPlayerTurn(ui.panelPlayer1Turn));
     }
 
     public void ShowPlayer2Turn()
     {
-        AudioManager.Instance.PlayUI(AudioManager.Instance.playerTwoClip);
+        AudioManager.Instance.PlaySpecial(AudioManager.Instance.playerTwoClip);
         StartCoroutine(ShowPlayerTurn(ui.panelPlayer2Turn));
     }
 
@@ -444,6 +758,29 @@ public class ShopManager : MonoBehaviour
     }
 
     #endregion
+
+    private void OnDestroy()
+    {
+        if (restoreShopInputCoroutine != null)
+        {
+            StopCoroutine(restoreShopInputCoroutine);
+            restoreShopInputCoroutine = null;
+        }
+
+        /*
+         * Nếu object bị hủy lúc Setting đang mở,
+         * trả lại trạng thái Button/component để không lưu khóa sai.
+         */
+        if (shopInputLockedBySetting)
+        {
+            RestoreShopInputNow();
+        }
+
+        if (_instance == this)
+        {
+            _instance = null;
+        }
+    }
 
     // =========================================================
     // SEND BUFF

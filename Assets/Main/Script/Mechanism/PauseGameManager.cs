@@ -16,7 +16,7 @@ public class PauseGameManager : MonoBehaviour
         "Bật: PauseGame() sẽ tạm dừng game.\n" +
         "Tắt: Setting vẫn mở nhưng game không bị tạm dừng."
     )]
-    [SerializeField] private bool enablePauseGame = true;
+    [SerializeField] public bool enablePauseGame = true;
 
     [Header("Resume Time")]
     [Tooltip("Thời gian tăng Time.timeScale từ 0 lên 1.")]
@@ -134,6 +134,11 @@ public class PauseGameManager : MonoBehaviour
             VolumeManager.Instance.StartDepthBlur();
         }
 
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PauseGameplayAudio();
+        }
+
         Time.timeScale = 0f;
     }
 
@@ -199,6 +204,12 @@ public class PauseGameManager : MonoBehaviour
         }
 
         Time.timeScale = 1f;
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.ResumeGameplayAudio();
+        }
+
         isPaused = false;
 
         if (pausePanel != null)
@@ -223,6 +234,12 @@ public class PauseGameManager : MonoBehaviour
         }
 
         Time.timeScale = 1f;
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.ResumeGameplayAudio();
+        }
+
         isPaused = false;
 
         if (pausePanel != null)
@@ -241,6 +258,12 @@ public class PauseGameManager : MonoBehaviour
         if (Instance == this)
         {
             Time.timeScale = 1f;
+
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.ResumeGameplayAudio();
+            }
+
             Instance = null;
         }
     }

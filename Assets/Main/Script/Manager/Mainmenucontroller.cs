@@ -80,6 +80,11 @@ public class MainMenuController : MonoBehaviour
                 FocusButtonDelay(startButton)
             );
         }
+        var ui = UIManager.Instance;
+        if (ui != null)
+        {
+            ui.isShowKeyBoard = false;
+        }
     }
 
     private void Update()
@@ -701,6 +706,16 @@ public class MainMenuController : MonoBehaviour
         if (isLoading)
             return;
 
+        // Reset Pause ngay khi nhấn Start.
+        if (PauseGameManager.Instance != null)
+        {
+            PauseGameManager.Instance.ForceResume();
+        }
+        else
+        {
+            Time.timeScale = 1f;
+        }
+
         isLoading = true;
 
         if (startButton != null)
@@ -708,19 +723,14 @@ public class MainMenuController : MonoBehaviour
             startButton.interactable = false;
         }
 
-        AudioManager audio =
-            AudioManager.Instance;
+        AudioManager audio = AudioManager.Instance;
 
         if (audio != null)
         {
-            audio.PlayUI(
-                audio.clickButton
-            );
+            audio.PlayUI(audio.clickButton);
         }
 
-        StartCoroutine(
-            StartLoadScene()
-        );
+        StartCoroutine(StartLoadScene());
     }
 
     private IEnumerator StartLoadScene()
@@ -741,9 +751,7 @@ public class MainMenuController : MonoBehaviour
             cursor.HideGameCursor();
         }
 
-        SettingManager setting =
-            SettingManager.Instance;
-
+        SettingManager setting = SettingManager.Instance;
         if (setting != null)
         {
             setting.ResetSetting();

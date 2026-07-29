@@ -43,6 +43,13 @@ public class CutScene2 : MonoBehaviour
     [Tooltip("TMP Text của skip hint")]
     public TMP_Text skipHintText;
 
+    [Tooltip(
+        "Button index dùng để skip bằng tay cầm.\n" +
+        "Legacy Input thường dùng Button 1 cho Xbox B / PlayStation Circle."
+    )]
+    [Range(0, 19)]
+    [SerializeField] private int controllerSkipButtonIndex = 1;
+
     [Header("--- GRADIENT PRESET ---")]
     [Tooltip("NormalGradient: trái #5C2E00, phải #1A0A00")]
     public TMP_ColorGradient normalGradient;
@@ -70,6 +77,10 @@ public class CutScene2 : MonoBehaviour
     public float endAudioFadeTime = 4.5f;
 
     private bool isSkipped;
+
+    // Sau khi đóng Setting, phải nhả Space/Enter/B/Circle
+    // rồi mới cho phép skip cutscene.
+    private bool waitSkipReleaseAfterSetting;
 
     private readonly string[] storyLines =
     {
@@ -99,7 +110,7 @@ public class CutScene2 : MonoBehaviour
         var audio = AudioManager.Instance;
         if (audio != null)
         {
-            audio.SetupMainGameAudio();           
+            audio.SetupMainGameAudio();
             audio.PlayMusic(audio.musicCutScene2Clip);
         }
         var setting = SettingManager.Instance;
@@ -119,11 +130,95 @@ public class CutScene2 : MonoBehaviour
         if (isSkipped)
             return;
 
-        if (Input.GetKeyDown(KeyCode.Space) ||
-            Input.GetKeyDown(KeyCode.Return))
+        bool settingOpen =
+            SettingManager.Instance != null &&
+            SettingManager.Instance.IsSettingBlockingInput;
+
+        // Setting đang mở thì không cho phím hoặc tay cầm skip.
+        if (settingOpen)
+        {
+            waitSkipReleaseAfterSetting = true;
+            return;
+        }
+
+        // Sau khi đóng Setting, phải nhả phím/nút trước.
+        // Tránh nút dùng để đóng Setting làm skip luôn cutscene.
+        if (waitSkipReleaseAfterSetting)
+        {
+            bool skipInputHeld =
+                Input.GetKey(KeyCode.Space) ||
+                Input.GetKey(KeyCode.Return) ||
+                IsControllerSkipHeld();
+
+            if (!skipInputHeld)
+            {
+                waitSkipReleaseAfterSetting = false;
+            }
+
+            return;
+        }
+
+        bool keyboardSkipDown =
+            Input.GetKeyDown(KeyCode.Space) ||
+            Input.GetKeyDown(KeyCode.Return);
+
+        bool controllerSkipDown =
+            IsControllerSkipDown();
+
+        if (keyboardSkipDown || controllerSkipDown)
         {
             SkipCutscene();
         }
+    }
+
+    private bool IsControllerSkipDown()
+    {
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        if (controller == null)
+            return false;
+
+        bool console1Skip =
+            controller.IsConsole1Connected() &&
+            controller.GetConsoleButtonDown(
+                1,
+                controllerSkipButtonIndex
+            );
+
+        bool console2Skip =
+            controller.IsConsole2Connected() &&
+            controller.GetConsoleButtonDown(
+                2,
+                controllerSkipButtonIndex
+            );
+
+        return console1Skip || console2Skip;
+    }
+
+    private bool IsControllerSkipHeld()
+    {
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        if (controller == null)
+            return false;
+
+        bool console1SkipHeld =
+            controller.IsConsole1Connected() &&
+            controller.GetConsoleButton(
+                1,
+                controllerSkipButtonIndex
+            );
+
+        bool console2SkipHeld =
+            controller.IsConsole2Connected() &&
+            controller.GetConsoleButton(
+                2,
+                controllerSkipButtonIndex
+            );
+
+        return console1SkipHeld || console2SkipHeld;
     }
 
     private void SkipCutscene()
@@ -169,8 +264,8 @@ public class CutScene2 : MonoBehaviour
             audio.ZeroAllAudio();
             audio.PauseAudio();
 
-            if (audio.UISource != null)
-                audio.UISource.Stop();
+            if (audio.specialSource != null)
+                audio.specialSource.Stop();
         }
 
         if (LoadingManager.Instance != null)
@@ -345,13 +440,13 @@ public class CutScene2 : MonoBehaviour
         );
 
         yield return new WaitForSeconds(5f);
-        var setting = SettingManager.Instance;
-        if (setting != null)
-        {
-            setting.ResetEscSetting();
-            setting.canOpenSettingByEsc = true;
-            setting.canOpenSettingByController = true;
-        }
+        /* var setting = SettingManager.Instance;
+         if (setting != null)
+         {
+             setting.ResetEscSetting();
+             setting.canOpenSettingByEsc = false;
+             setting.canOpenSettingByController = false;
+         }*/
         HideSubtitleImmediate();
         StopNarratorVoice();
 
@@ -374,6 +469,13 @@ public class CutScene2 : MonoBehaviour
         yield return new WaitForSeconds(
             endAudioFadeTime
         );
+        var setting = SettingManager.Instance;
+        if (setting != null)
+        {
+            //setting.ResetEscSetting();
+            setting.canOpenSettingByEsc = false;
+            setting.canOpenSettingByController = false;
+        }
 
         if (LoadingManager.Instance != null)
         {
@@ -443,14 +545,14 @@ public class CutScene2 : MonoBehaviour
 
         AudioManager audio = AudioManager.Instance;
 
-        if (audio != null && audio.UISource != null)
+        if (audio != null && audio.specialSource != null)
         {
             yield return new WaitWhile(
                 () =>
                     !isSkipped &&
                     AudioManager.Instance != null &&
-                    AudioManager.Instance.UISource != null &&
-                    AudioManager.Instance.UISource.isPlaying
+                    AudioManager.Instance.specialSource != null &&
+                    AudioManager.Instance.specialSource.isPlaying
             );
         }
     }
@@ -497,7 +599,7 @@ public class CutScene2 : MonoBehaviour
         if (narratorVoices[index] == null)
             return;
 
-        AudioManager.Instance.PlayUI(
+        AudioManager.Instance.PlaySpecial(
             narratorVoices[index]
         );
     }
@@ -506,8 +608,8 @@ public class CutScene2 : MonoBehaviour
     {
         AudioManager audio = AudioManager.Instance;
 
-        if (audio != null && audio.UISource != null)
-            audio.UISource.Stop();
+        if (audio != null && audio.specialSource != null)
+            audio.specialSource.Stop();
     }
 
     private void HideSubtitleImmediate()

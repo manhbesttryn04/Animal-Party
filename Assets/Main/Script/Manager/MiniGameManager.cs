@@ -6,6 +6,8 @@ using UnityEngine.Video;
 
 public class MiniGameManager : MonoBehaviour
 {
+    #region INSPECTOR / STATE
+
     // =========================================================
     // INDEX
     // =========================================================
@@ -60,7 +62,7 @@ public class MiniGameManager : MonoBehaviour
 
     [Header("Countdown Time")]
     public float countDownTime = 99f;
-     public float timer;
+    public float timer;
 
     // =========================================================
     // STATE
@@ -68,6 +70,10 @@ public class MiniGameManager : MonoBehaviour
 
     [Header("Game State")]
     public bool isPlaying = false;
+
+    #endregion
+
+    #region PUBLIC ENTRY
 
     // =========================================================
     // START MINIGAME
@@ -82,6 +88,10 @@ public class MiniGameManager : MonoBehaviour
         // Chạy toàn bộ quy trình minigame
         StartCoroutine(MiniGameRoutine());
     }
+
+    #endregion
+
+    #region MAIN MINIGAME FLOW
 
     // =========================================================
     // MAIN ROUTINE
@@ -164,7 +174,6 @@ public class MiniGameManager : MonoBehaviour
 
         // Tắt map chính
         mainMap.SetActive(false);
-       
 
         // Bật map minigame theo index
         mapMiniGameList.mapMiniGameList[miniGameIndex].SetActive(true);
@@ -174,14 +183,18 @@ public class MiniGameManager : MonoBehaviour
 
         // Ẩn bảng thông báo play
         UIManager.Instance.HideNotifiPlayPanel(false);
-        SettingManager.Instance.ResetSetting();
+        // SettingManager.Instance.ResetSetting();
         SettingManager.Instance.canOpenSettingByController = false;
         var cursor = CursorManager.Instance;
         if (cursor != null)
         {
             cursor.HideGameCursor();
         }
-        UIManager.Instance.ActiveOpenSettingButton(false);
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ActiveOpenSettingButton(false);
+        }
 
         // =====================================================
         // LOADING
@@ -194,7 +207,7 @@ public class MiniGameManager : MonoBehaviour
         LoadingManager.Instance.HideLoading();
 
         // Bật màn đen nếu muốn che cảnh lúc đổi camera
-      var ui = UIManager.Instance;
+        var ui = UIManager.Instance;
         ui.flastBlackPanel.SetActive(false);
         ui.flastBlackPanel.SetActive(true);
 
@@ -213,7 +226,7 @@ public class MiniGameManager : MonoBehaviour
         // =====================================================
 
         // Hiện text timer
-       // timerText.gameObject.SetActive(true);
+        // timerText.gameObject.SetActive(true);
         ui.timeMiniGameText.gameObject.SetActive(true);
         // =====================================================
         // SPAWN PLAYER
@@ -257,14 +270,14 @@ public class MiniGameManager : MonoBehaviour
         // Lấy script di chuyển
         PlayerMove move1 = currentPlayer1.GetComponent<PlayerMove>();
         PlayerMove move2 = currentPlayer2.GetComponent<PlayerMove>();
-        PlayerVFX  vfx1 = currentPlayer1.GetComponent<PlayerVFX>();
+        PlayerVFX vfx1 = currentPlayer1.GetComponent<PlayerVFX>();
         PlayerVFX vfx2 = currentPlayer2.GetComponent<PlayerVFX>();
 
         // =====================================================
         // CHECK COMPONENT
         // =====================================================
 
-        if( vfx1 == null|| vfx2 == null)
+        if (vfx1 == null || vfx2 == null)
         {
             yield break;
         }
@@ -305,14 +318,14 @@ public class MiniGameManager : MonoBehaviour
 
         if (move2 != null)
             move2.isJumpAndMove = false;
-        
-        if(vfx2 != null)
+
+        if (vfx2 != null)
         {
             StartCoroutine(vfx2.DissolveInRoutine1());
         }
-        if(vfx1 != null)
+        if (vfx1 != null)
         {
-            StartCoroutine (vfx1.DissolveInRoutine1());
+            StartCoroutine(vfx1.DissolveInRoutine1());
         }
         // =====================================================
         // SETUP PLAYER
@@ -330,7 +343,7 @@ public class MiniGameManager : MonoBehaviour
         // =====================================================
 
         // Set avatar player 1
-      //  characterImagePlayer1.sprite = avatar1.avatarCharacter;
+        // characterImagePlayer1.sprite = avatar1.avatarCharacter;
         ui.avatarP1.sprite = avatar1.avatarCharacter;
 
         // Set avatar player 2
@@ -338,13 +351,11 @@ public class MiniGameManager : MonoBehaviour
         ui.avatarP2.sprite = avatar2.avatarCharacter;
 
         // Set coin ban đầu
-       // cointextPlayer1.text = coin1.coinMiniGame.ToString();
+        // cointextPlayer1.text = coin1.coinMiniGame.ToString();
         ui.coinMiniGameTextP1.text = coin1.coinMiniGame.ToString();
 
-      //  cointextPlayer2.text = coin2.coinMiniGame.ToString();
+        // cointextPlayer2.text = coin2.coinMiniGame.ToString();
         ui.coinMiniGameTextP2.text = coin2.coinMiniGame.ToString();
-
-
 
         // =====================================================
         // PLAY CUTSCENE
@@ -364,26 +375,25 @@ public class MiniGameManager : MonoBehaviour
         // =====================================================
 
         // Hiện bảng hướng dẫn
-        //canvasInstruct.SetActive(true);
+        // canvasInstruct.SetActive(true);
         ui.canvasIntructGamePlay.SetActive(true);
 
         // Set text hướng dẫn
-        //textInstrucs.text = intrusTextList.instructTextList[miniGameIndex];
+        // textInstrucs.text = intrusTextList.instructTextList[miniGameIndex];
         ui.instructGamePlayText.text = intrusTextList.instructTextList[miniGameIndex];
 
         // Set tên minigame
-        //textNameMiniGame.text = intrusTextList.nameMiniGameList[miniGameIndex];
+        // textNameMiniGame.text = intrusTextList.nameMiniGameList[miniGameIndex];
         ui.nameMiniGameText.text = intrusTextList.nameMiniGameList[miniGameIndex];
 
         // Set text lỗi / cảnh báo
-       ui.errorGamePlayText.text = intrusTextList.errorTextList[miniGameIndex];
+        ui.errorGamePlayText.text = intrusTextList.errorTextList[miniGameIndex];
 
         // Set video hướng dẫn
         videoIntrucs.clip = videoInstructList.videoInstructList[miniGameIndex];
 
         // Cho người chơi đọc hướng dẫn 5 giây
         yield return new WaitForSeconds(5f);
-
 
         videoIntrucs.Stop();
         videoIntrucs.time = 0;
@@ -394,12 +404,11 @@ public class MiniGameManager : MonoBehaviour
         }
         videoIntrucs.clip = null;
         // Tắt bảng hướng dẫn
-       ui.canvasIntructGamePlay.SetActive(false);
-        
-       
-            ui.canvasInstructInput.SetActive(true);
-        
-        if(inputMinigame != null)
+        ui.canvasIntructGamePlay.SetActive(false);
+
+        ui.canvasInstructInput.SetActive(true);
+
+        if (inputMinigame != null)
         {
             inputMinigame.ShowInputMinigame(indexMiniGame);
         }
@@ -407,12 +416,17 @@ public class MiniGameManager : MonoBehaviour
         inputMinigame.HideAllInput();
         ui.canvasInstructInput.SetActive(false);
         // Tắt màn đen sau khi chuẩn bị xong
-       ui.flastBlackPanel.SetActive(false);
-       /* UIManager.Instance.ActiveOpenSettingButton(true);
+        ui.flastBlackPanel.SetActive(false);
+        UIManager.Instance.ActiveOpenSettingButton(true);
         if (cursor != null)
         {
             cursor.ShowGameCursor();
-        }*/
+        }
+        var setting = SettingManager.Instance;
+        if (setting != null)
+        {
+            setting.canOpenSettingByController = true;
+        }
 
         // =====================================================
         // UNLOCK PLAYER MOVE
@@ -430,7 +444,7 @@ public class MiniGameManager : MonoBehaviour
         // =====================================================
 
         // Hiện UI chính của minigame
-       ui.canvasMiniGame.SetActive(true);
+        ui.canvasMiniGame.SetActive(true);
 
         // =====================================================
         // START MINIGAME LOGIC
@@ -509,8 +523,8 @@ public class MiniGameManager : MonoBehaviour
         // SHOW RESULT
         // =====================================================
         AudioManager.Instance.ZeroAllAudio();
-        SettingManager.Instance.ResetSetting();
-        SettingManager.Instance.canOpenSettingByController = true;
+        // SettingManager.Instance.ResetSetting();
+        SettingManager.Instance.canOpenSettingByController = false;
         UIManager.Instance.ActiveOpenSettingButton(false);
         if (cursor != null)
         {
@@ -546,13 +560,14 @@ public class MiniGameManager : MonoBehaviour
 
         // Tắt loading
         LoadingManager.Instance.HideLoading();
-       
+
         UIManager.Instance.ActiveOpenSettingButton(true);
         if (cursor != null)
         {
+          
             cursor.ShowGameCursor();
         }
-
+        setting.canOpenSettingByController = true;
 
         // =====================================================
         // DISABLE CAMERA
@@ -617,6 +632,10 @@ public class MiniGameManager : MonoBehaviour
         AudioManager.Instance.PlayMusic(AudioManager.Instance.musicMainClip);
     }
 
+    #endregion
+
+    #region MINIGAME START / STOP DISPATCH
+
     // =========================================================
     // START MINIGAME LOGIC BY INDEX
     // =========================================================
@@ -651,7 +670,7 @@ public class MiniGameManager : MonoBehaviour
         }
         else if (indexMiniGame == 7)
         {
-           miniGameList.miniGame7.StartMiniGame();
+            miniGameList.miniGame7.StartMiniGame();
         }
         else if (indexMiniGame == 8)
         {
@@ -697,8 +716,8 @@ public class MiniGameManager : MonoBehaviour
         }
         else if (indexMiniGame == 6)
         {
-            
-        miniGameList.miniGame6.StopMiniGame();
+
+            miniGameList.miniGame6.StopMiniGame();
         }
         else if (indexMiniGame == 7)
         {
@@ -717,6 +736,10 @@ public class MiniGameManager : MonoBehaviour
             // Chưa có minigame 10
         }
     }
+
+    #endregion
+
+    #region AUDIO / TIME / LIGHT
 
     // =========================================================
     // OPEN MUSIC MINIGAME
@@ -786,16 +809,24 @@ public class MiniGameManager : MonoBehaviour
                 break;
         }
     }
-    //Riset Light 
+    // =========================================================
+    // RESET LIGHT
+    // =========================================================
+
     public void ResetLight()
     {
         VolumeManager.Instance.SetBloomIntensity(4);
     }
 
+    // =========================================================
+    // SET INDEX
+    // =========================================================
+
     public void SetIndex()
     {
-      //  indexMiniGame++;
-           // if (indexMiniGame > 7) indexMiniGame = 1;
+        // indexMiniGame++;
+        // if (indexMiniGame > 7) indexMiniGame = 1;
     }
-    
+
+    #endregion
 }

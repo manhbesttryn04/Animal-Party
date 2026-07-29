@@ -121,6 +121,9 @@ public class UIManager : MonoBehaviour
     public GameObject consoleOpenImageP2;
     public GameObject consoleCloseImageP2;
     public GameObject instructConsolePanel;
+    [Header("Key Board")]
+    public GameObject instructKeyBoardPanel;
+    public bool isShowKeyBoard = false;
 
     [Header("Bonus UI")]
     public GameObject bonusPanel;
@@ -154,6 +157,12 @@ public class UIManager : MonoBehaviour
             GameObject.FindGameObjectWithTag("Player 2")
             .GetComponent<PlayerManager>();
         UpdateAllPlayMainUI();
+
+        if (ControllerManager.Instance != null)
+        {
+            ControllerManager.Instance
+                .RefreshInputInstructionUI();
+        }
     }
 
     private void Update()
@@ -583,6 +592,9 @@ public class UIManager : MonoBehaviour
 
             if (settingPanelAnimator != null)
             {
+                settingPanelAnimator.ResetTrigger(
+                    settingOpenTrigger
+                );
 
                 settingPanelAnimator.SetTrigger(
                     settingCloseTrigger

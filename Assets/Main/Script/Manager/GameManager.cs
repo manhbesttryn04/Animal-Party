@@ -350,7 +350,7 @@ public class GameManager : MonoBehaviour
 
             // Tắt follow sau khi camera đã tới
             p1.playerCamera.isFllow2 = false;
-            AudioManager.Instance.PlayUI(AudioManager.Instance.playerOneClip);
+            AudioManager.Instance.PlaySpecial(AudioManager.Instance.playerOneClip);
             // Hiện thông báo roll dice
             yield return StartCoroutine(
                 player1Main.GetComponent<PlayerManager>().playerNotifi.SetNotifi()
@@ -365,7 +365,7 @@ public class GameManager : MonoBehaviour
 
             // Camera vẫn bay tới Player 1 để báo lượt
             p1.playerCamera.isFllow2 = true;
-            AudioManager.Instance.PlaySFX(AudioManager.Instance.skipDiceClip);
+            AudioManager.Instance.PlaySpecial (AudioManager.Instance.skipDiceClip);
             yield return new WaitForSeconds(2f);
 
             p1.playerCamera.isFllow2 = false;
@@ -503,16 +503,27 @@ public class GameManager : MonoBehaviour
     public void CheckWinnerOrNextRound()
     {
         if(stateGame.hasPlayer1Win || stateGame.hasPlayer2Win)
-        {   
-            UIManager.Instance.HideUIMain();
-            SettingManager.Instance.ResetSetting();
-            SettingManager.Instance.ResetEscSetting ();
-            SettingManager.Instance.canOpenSettingByEsc = false;
-            AudioManager.Instance.StopMusic();
-            AudioManager.Instance.PlayMusic(AudioManager.Instance.winnerMiniGameClip1);
-
-         
-            PointCheck.Instance.HideAllTraps();
+        {
+            ResetMagicDebuffAllPlayer();
+            if(UIManager.Instance != null)
+            {
+                UIManager.Instance.HideUIMain();
+                UIManager.Instance.ActiveOpenSettingButton(false);
+            }
+           
+            if(SettingManager.Instance != null)
+            {
+                SettingManager.Instance.canOpenSettingByEsc = true;
+                //SettingManager.Instance.isOpenExitButton = false;
+            }
+            
+           if(AudioManager.Instance != null)
+            {
+                AudioManager.Instance.StopMusic();
+                AudioManager.Instance.PlayMusic(AudioManager.Instance.winnerMiniGameClip1);
+            }
+        
+           // PointCheck.Instance.HideAllTraps();
             StartCutSceneWinner();
         }
         else

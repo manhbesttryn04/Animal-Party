@@ -62,7 +62,7 @@ public class StartGame : MonoBehaviour
         p1.playerCamera.isFllow2 = false;
 
         yield return new WaitForSeconds(0.5f);
-        AudioManager.Instance.PlayUI(AudioManager.Instance.playerOneClip);
+        AudioManager.Instance.PlaySpecial(AudioManager.Instance.playerOneClip);
         yield return StartCoroutine(p1.playerNotifi.SetNotifi());
 
         p1.playerInputDice.isClick = false;
@@ -79,7 +79,7 @@ public class StartGame : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
 
         p2.playerCamera.isFllow2 = false;
-        AudioManager.Instance.PlayUI (AudioManager.Instance.playerTwoClip);
+        AudioManager.Instance.PlaySpecial(AudioManager.Instance.playerTwoClip);
         yield return StartCoroutine(p2.playerNotifi.SetNotifi());
 
         p2.playerInputDice.isClick = false;

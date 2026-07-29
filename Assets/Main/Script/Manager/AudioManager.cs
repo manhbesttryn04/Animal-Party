@@ -171,8 +171,8 @@ public class AudioManager : MonoBehaviour
     }
     private void Start()
     {
-      
-        
+
+
     }
 
 
@@ -544,13 +544,45 @@ public class AudioManager : MonoBehaviour
         StopSpecial();
         sfxSource.volume = 0;
     }
-  public void PauseAudio()
+    public void PauseAudio()
     {
         StopMusic();
         StopEnvironment();
         StopSpecial();
         StopSFXNoOneShot();
     }
+    //==================================================
+    // PAUSE RIÊNG ÂM THANH GAMEPLAY
+    // Chỉ ảnh hưởng: SFX, Environment và Special.
+    // Không ảnh hưởng: Music và UI.
+    //==================================================
+
+    public void PauseGameplayAudio()
+    {
+        if (musicSource != null) musicSource.Pause();
+        if (sfxSource != null)
+            sfxSource.Pause();
+
+        if (environmentSource != null)
+            environmentSource.Pause();
+
+        if (specialSource != null)
+            specialSource.Pause();
+    }
+
+    public void ResumeGameplayAudio()
+    {
+        if (musicSource != null) musicSource.UnPause();
+        if (sfxSource != null)
+            sfxSource.UnPause();
+
+        if (environmentSource != null)
+            environmentSource.UnPause();
+
+        if (specialSource != null)
+            specialSource.UnPause();
+    }
+
     public void ZeroAllAudio()
     {
         musicSource.volume = 0;

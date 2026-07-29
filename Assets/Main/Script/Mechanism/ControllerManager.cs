@@ -102,6 +102,9 @@ public class ControllerManager : MonoBehaviour
         checkTimer = 0f;
 
         RefreshControllerState();
+
+        // Luôn cập nhật UI hướng dẫn, kể cả khi số lượng tay cầm không đổi.
+        UpdateConsoleInstructionUI();
     }
 
     // =========================================================
@@ -745,21 +748,45 @@ public class ControllerManager : MonoBehaviour
     // UI / CURSOR
     // =========================================================
 
+    public void RefreshInputInstructionUI()
+    {
+        UpdateConsoleInstructionUI();
+    }
+
     private void UpdateConsoleInstructionUI()
     {
-        if (UIManager.Instance == null ||
-            UIManager.Instance.instructConsolePanel == null)
+        UIManager ui = UIManager.Instance;
+
+        if (ui == null)
         {
             return;
         }
 
-        bool hasController =
+        bool hasAnyController =
             console1Connected ||
             console2Connected;
 
-        UIManager.Instance.instructConsolePanel.SetActive(
-            hasController
-        );
+        bool hasBothControllers =
+            console1Connected &&
+            console2Connected;
+
+        // Có ít nhất một tay cầm thì hiện hướng dẫn Console.
+        if (ui.instructConsolePanel != null)
+        {
+            ui.instructConsolePanel.SetActive(
+                hasAnyController
+            );
+        }
+
+        // Giống Console Instruction: mỗi lần cập nhật đều SetActive trực tiếp.
+        // 0 hoặc 1 tay cầm: hiện hướng dẫn bàn phím.
+        // Đủ 2 tay cầm: ẩn hướng dẫn bàn phím.
+        if (ui.instructKeyBoardPanel != null && ui.isShowKeyBoard)
+        {
+            ui.instructKeyBoardPanel.SetActive(
+                !hasBothControllers
+            );
+        }
     }
 
     private void UpdateCursor()

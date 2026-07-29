@@ -31,6 +31,11 @@ public class CutSceneShip : MonoBehaviour
     public GameObject skipHintObject;
     public TMP_Text skipHintText;
 
+    [Header("--- CONTROLLER SKIP ---")]
+    [Tooltip("Button 1 thường là B trên Xbox hoặc Circle trên PlayStation.")]
+    [Range(0, 19)]
+    [SerializeField] private int controllerSkipButtonIndex = 1;
+
     [Header("--- GRADIENT PRESET ---")]
     [Tooltip("NormalGradient: trái #5C2E00, phải #1A0A00")]
     public TMP_ColorGradient normalGradient;
@@ -56,6 +61,10 @@ public class CutSceneShip : MonoBehaviour
 
     private bool isSkipped;
 
+    // Sau khi đóng Setting, phải nhả Space/Enter/B/Circle
+    // rồi mới cho phép skip cutscene.
+    private bool waitSkipReleaseAfterSetting;
+
     private readonly string[] storyLines =
     {
         "Somewhere in the vast ocean, a ship sails toward an unknown island...",
@@ -73,6 +82,8 @@ public class CutSceneShip : MonoBehaviour
             CursorManager.Instance.SetSceneCursorVisible(false);
             CursorManager.Instance.SetSettingCursorActive(false);
         }
+
+
 
         if (subtitlePanel != null)
             subtitlePanel.SetActive(false);
@@ -112,11 +123,96 @@ public class CutSceneShip : MonoBehaviour
         if (isSkipped)
             return;
 
-        if (Input.GetKeyDown(KeyCode.Space) ||
-            Input.GetKeyDown(KeyCode.Return))
+        bool settingOpen =
+            SettingManager.Instance != null &&
+            SettingManager.Instance.IsSettingBlockingInput;
+
+        // Setting đang mở thì không cho bàn phím
+        // hoặc nút B/Circle skip cutscene.
+        if (settingOpen)
+        {
+            waitSkipReleaseAfterSetting = true;
+            return;
+        }
+
+        // Sau khi đóng Setting, phải nhả toàn bộ nút skip.
+        // Tránh nút B/Circle dùng để đóng Setting
+        // làm skip luôn cutscene.
+        if (waitSkipReleaseAfterSetting)
+        {
+            bool skipInputHeld =
+                Input.GetKey(KeyCode.Space) ||
+                Input.GetKey(KeyCode.Return) ||
+                IsControllerSkipHeld();
+
+            if (!skipInputHeld)
+            {
+                waitSkipReleaseAfterSetting = false;
+            }
+
+            return;
+        }
+
+        bool keyboardSkipDown =
+            Input.GetKeyDown(KeyCode.Space) ||
+            Input.GetKeyDown(KeyCode.Return);
+
+        if (keyboardSkipDown ||
+            IsControllerSkipDown())
         {
             SkipCutscene();
         }
+    }
+
+    private bool IsControllerSkipDown()
+    {
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        if (controller == null)
+            return false;
+
+        bool console1Skip =
+            controller.IsConsole1Connected() &&
+            controller.GetConsoleButtonDown(
+                1,
+                controllerSkipButtonIndex
+            );
+
+        bool console2Skip =
+            controller.IsConsole2Connected() &&
+            controller.GetConsoleButtonDown(
+                2,
+                controllerSkipButtonIndex
+            );
+
+        return console1Skip || console2Skip;
+    }
+
+    private bool IsControllerSkipHeld()
+    {
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        if (controller == null)
+            return false;
+
+        bool console1SkipHeld =
+            controller.IsConsole1Connected() &&
+            controller.GetConsoleButton(
+                1,
+                controllerSkipButtonIndex
+            );
+
+        bool console2SkipHeld =
+            controller.IsConsole2Connected() &&
+            controller.GetConsoleButton(
+                2,
+                controllerSkipButtonIndex
+            );
+
+        return console1SkipHeld ||
+               console2SkipHeld;
     }
 
     private void SkipCutscene()
@@ -130,13 +226,13 @@ public class CutSceneShip : MonoBehaviour
         // Dừng toàn bộ coroutine của CutSceneShip.
         StopAllCoroutines();
 
-        var setting = SettingManager.Instance;
+        /*var setting = SettingManager.Instance;
         if (setting != null)
         {
             setting.ResetEscSetting();
             setting.canOpenSettingByEsc = false;
             setting.canOpenSettingByController = false;
-        }
+        }*/
         AudioManager audio = AudioManager.Instance;
 
         if (audio != null)
@@ -144,8 +240,8 @@ public class CutSceneShip : MonoBehaviour
             audio.ZeroAllAudio();
             audio.PauseAudio();
 
-            if (audio.UISource != null)
-                audio.UISource.Stop();
+            if (audio.specialSource != null)
+                audio.specialSource.Stop();
         }
 
         HideSubtitleImmediate();
@@ -262,13 +358,13 @@ public class CutSceneShip : MonoBehaviour
         StartCoroutine(
             MoveAndRotate(transVideoList[5])
         );
-        var setting = SettingManager.Instance;
-        if (setting != null)
-        {
-            setting.ResetEscSetting();
-            setting.canOpenSettingByEsc = false;
-            setting.canOpenSettingByController = false;
-        }
+        /*   var setting = SettingManager.Instance;
+           if (setting != null)
+           {
+               setting.ResetEscSetting();
+               setting.canOpenSettingByEsc = false;
+               setting.canOpenSettingByController = false;
+           }*/
 
         yield return new WaitForSeconds(1.5f);
 
@@ -280,7 +376,7 @@ public class CutSceneShip : MonoBehaviour
         );
 
         yield return new WaitForSeconds(3f);
-        
+
         yield return StartCoroutine(
             ShowBlackPanel(5f)
         );
@@ -345,7 +441,7 @@ public class CutSceneShip : MonoBehaviour
         if (audio != null &&
             narratorVoices[index] != null)
         {
-            audio.PlayUI(narratorVoices[index]);
+            audio.PlaySpecial(narratorVoices[index]);
         }
 
         // Hiệu ứng gõ từng chữ.
@@ -363,14 +459,14 @@ public class CutSceneShip : MonoBehaviour
         }
 
         // Chờ giọng người dẫn chuyện phát xong.
-        if (audio != null && audio.UISource != null)
+        if (audio != null && audio.specialSource != null)
         {
             yield return new WaitWhile(
                 () =>
                     !isSkipped &&
                     audio != null &&
-                    audio.UISource != null &&
-                    audio.UISource.isPlaying
+                    audio.specialSource != null &&
+                    audio.specialSource.isPlaying
             );
         }
     }
@@ -385,8 +481,8 @@ public class CutSceneShip : MonoBehaviour
     {
         AudioManager audio = AudioManager.Instance;
 
-        if (audio != null && audio.UISource != null)
-            audio.UISource.Stop();
+        if (audio != null && audio.specialSource != null)
+            audio.specialSource.Stop();
     }
 
     private void HideSubtitleImmediate()

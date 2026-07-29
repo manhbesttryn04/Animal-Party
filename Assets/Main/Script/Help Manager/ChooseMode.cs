@@ -18,6 +18,15 @@ public class ChooseMode : MonoBehaviour
     [Header("Character Buttons")]
     public List<Button> ListButtonChoose;
 
+    [Header("Buttons Blocked By Setting")]
+    [Tooltip(
+        "Thêm tất cả Button thuộc màn hình chọn vào đây. " +
+        "Không thêm Button của bảng Setting."
+    )]
+    [SerializeField]
+    private List<Button> buttonsBlockedBySetting =
+        new List<Button>();
+
     [Header("Highlight Text")]
     public List<TextMeshProUGUI> listTextHightP1;
     public List<TextMeshProUGUI> listTextHightP2;
@@ -58,6 +67,12 @@ public class ChooseMode : MonoBehaviour
     // Sau khi đóng Setting phải thả input.
     private bool waitReleaseAfterSetting;
 
+    // Lưu trạng thái cũ để không bật lại những Button vốn đã bị khóa.
+    private readonly List<bool> buttonInteractableBeforeSetting =
+        new List<bool>();
+
+    private bool areChooseButtonsBlockedBySetting;
+
     private bool isStartingGame;
     private bool waitStartButtonRelease;
 
@@ -96,6 +111,7 @@ public class ChooseMode : MonoBehaviour
             UIManager.Instance
                 .openSettingPanelButton
                 .SetActive(true);
+            UIManager.Instance.isShowKeyBoard = true;
         }
 
         if (SettingManager.Instance != null)
@@ -110,6 +126,8 @@ public class ChooseMode : MonoBehaviour
         bool settingOpen =
             SettingManager.Instance != null &&
             SettingManager.Instance.IsSettingBlockingInput;
+
+        UpdateChooseButtonsSettingLock(settingOpen);
 
         // Setting đang mở thì khóa ChooseMode.
         if (settingOpen)
@@ -144,6 +162,88 @@ public class ChooseMode : MonoBehaviour
         MoveChoosePlayer1();
         MoveChoosePlayer2();
         CheckStartInput();
+    }
+
+    // =========================================================
+    // SETTING BUTTON LOCK
+    // =========================================================
+
+    private void UpdateChooseButtonsSettingLock(bool settingOpen)
+    {
+        // Chỉ chạy một lần khi trạng thái Setting thay đổi.
+        if (areChooseButtonsBlockedBySetting == settingOpen)
+        {
+            return;
+        }
+
+        areChooseButtonsBlockedBySetting = settingOpen;
+
+        if (settingOpen)
+        {
+            SaveAndDisableChooseButtons();
+        }
+        else
+        {
+            RestoreChooseButtons();
+        }
+    }
+
+    private void SaveAndDisableChooseButtons()
+    {
+        buttonInteractableBeforeSetting.Clear();
+
+        if (buttonsBlockedBySetting == null)
+        {
+            return;
+        }
+
+        for (int i = 0;
+             i < buttonsBlockedBySetting.Count;
+             i++)
+        {
+            Button button = buttonsBlockedBySetting[i];
+
+            // Giữ đúng index kể cả khi phần tử bị Null.
+            bool wasInteractable =
+                button != null &&
+                button.interactable;
+
+            buttonInteractableBeforeSetting.Add(
+                wasInteractable
+            );
+
+            if (button != null)
+            {
+                button.interactable = false;
+            }
+        }
+    }
+
+    private void RestoreChooseButtons()
+    {
+        if (buttonsBlockedBySetting == null)
+        {
+            buttonInteractableBeforeSetting.Clear();
+            return;
+        }
+
+        int count = Mathf.Min(
+            buttonsBlockedBySetting.Count,
+            buttonInteractableBeforeSetting.Count
+        );
+
+        for (int i = 0; i < count; i++)
+        {
+            Button button = buttonsBlockedBySetting[i];
+
+            if (button != null)
+            {
+                button.interactable =
+                    buttonInteractableBeforeSetting[i];
+            }
+        }
+
+        buttonInteractableBeforeSetting.Clear();
     }
 
     // =========================================================
