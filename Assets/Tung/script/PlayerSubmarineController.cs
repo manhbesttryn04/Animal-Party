@@ -1,15 +1,3 @@
-/*
-PlayerSubmarineController.cs
-Thay thế PlayerCarController.cs - giữ nguyên khung sườn gameplay (playerId, SetGameActive,
-2 người chơi 2 bộ phím riêng, húc nhau khi va chạm) nhưng đổi hoàn toàn phần vật lý di chuyển:
-- Không dùng WheelCollider/steering kiểu xe.
-- Dùng Rigidbody + AddForce/AddTorque để tàu ngầm tiến/lùi/xoay/nổi/lặn tự do trong nước.
-
-CÁC HÀM PUBLIC GIỮ NGUYÊN TÊN so với PlayerCarController để RaceMiniGame/manager cũ
-đỡ phải sửa nhiều: playerId, SetGameActive(bool), carSpeed (đổi tên currentSpeed nhưng
-giữ lại 1 property carSpeed trỏ qua cho tương thích ngược nếu cần).
-*/
-
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -209,9 +197,6 @@ public class PlayerSubmarineController : MonoBehaviour
         TorpedoProjectile projectile = torpedo.GetComponent<TorpedoProjectile>();
         if (projectile != null)
             projectile.Launch(transform.forward, this);
-
-        // Đã bỏ animator.Play("Shoot") - animation này tự mô phỏng sẵn 1 quả ngư lôi
-        // gắn trên model (Torpedo_L/R), bắn ra sẽ bị trùng với viên đạn code tự spawn ở trên.
     }
 
     // ====== ÁP DỤNG VẬT LÝ ======
@@ -242,7 +227,6 @@ public class PlayerSubmarineController : MonoBehaviour
         }
 
         // Nổi lên / lặn xuống - dùng SmoothDamp để tăng/giảm lực mượt dần, không bật/tắt đột ngột
-        // như AddForce thô (nguyên nhân chính gây giật khi chạm biên minDepthY/maxDepthY)
         float targetVerticalSpeed = 0f;
         if (inputUp) targetVerticalSpeed = maxVerticalSpeed;
         else if (inputDown) targetVerticalSpeed = -maxVerticalSpeed;
@@ -252,7 +236,7 @@ public class PlayerSubmarineController : MonoBehaviour
             currentVel.y,
             targetVerticalSpeed,
             ref verticalVelocitySmoothRef,
-            0.2f // thời gian làm mượt (giây) - tăng lên nếu vẫn còn giật, giảm xuống nếu thấy lì/chậm phản hồi
+            0.2f // thời gian làm mượt (giây)
         );
 
         // Không cho vượt biên ngay tại đây - làm mượt dần về 0 khi gần biên thay vì cắt cứng
@@ -263,23 +247,21 @@ public class PlayerSubmarineController : MonoBehaviour
 
         currentVel.y = smoothedVerticalSpeed;
         subRigidbody.linearVelocity = currentVel;
+    }
 
-        // Giới hạn độ sâu giờ đã xử lý ngay trong ApplyPhysics() (phần SmoothDamp trục dọc)
-        // để tránh 2 hệ thống cùng chỉnh vận tốc Y ở 2 nơi khác nhau trong cùng 1 FixedUpdate.
+    // ====== HÚC NHAU GIỮA 2 TÀU ======
+    // ĐÃ SỬA: đưa ra cấp lớp (trước đây bị lồng trong ApplyPhysics() nên Unity không gọi được)
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (!gameActive) return;
 
-        // ====== HÚC NHAU GIỮA 2 TÀU ======
-        void OnCollisionEnter(Collision collision)
-        {
-            if (!gameActive) return;
+        PlayerSubmarineController otherSub = collision.gameObject.GetComponent<PlayerSubmarineController>();
+        if (otherSub == null) return;
 
-            PlayerSubmarineController otherSub = collision.gameObject.GetComponent<PlayerSubmarineController>();
-            if (otherSub == null) return;
+        Vector3 pushDir = collision.transform.position - transform.position;
+        pushDir.Normalize(); // giữ nguyên cả trục Y - va chạm tàu ngầm có thể đẩy lệch cả chiều sâu
 
-            Vector3 pushDir = collision.transform.position - transform.position;
-            pushDir.Normalize(); // giữ nguyên cả trục Y - va chạm tàu ngầm có thể đẩy lệch cả chiều sâu
-
-            float impactRatio = Mathf.Clamp01(Mathf.Abs(currentSpeed) / maxSpeed);
-            otherSub.GetComponent<Rigidbody>().AddForce(pushDir * pushForce * impactRatio, ForceMode.VelocityChange);
-        }
+        float impactRatio = Mathf.Clamp01(Mathf.Abs(currentSpeed) / maxSpeed);
+        otherSub.GetComponent<Rigidbody>().AddForce(pushDir * pushForce * impactRatio, ForceMode.VelocityChange);
     }
 }
