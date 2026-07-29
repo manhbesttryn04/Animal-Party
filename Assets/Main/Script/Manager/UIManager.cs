@@ -532,6 +532,13 @@ public class UIManager : MonoBehaviour
     {
         IsSettingPanelTransitioning = true;
 
+        if (settingPanel == null)
+        {
+            IsSettingPanelTransitioning = false;
+            settingPanelAnimationCoroutine = null;
+            yield break;
+        }
+
         if (settingPanelAnimator == null)
         {
             settingPanelAnimator =
@@ -553,26 +560,37 @@ public class UIManager : MonoBehaviour
                 );
             }
 
-            yield return new WaitForSecondsRealtime(
-                settingOpenAnimationTime
-            );
+            // Không kiểm tra Animator.
+            // Sau đúng 0.5 giây thì Pause.
+            yield return new WaitForSecondsRealtime(0.5f);
+
+            if (PauseGameManager.Instance != null)
+            {
+                PauseGameManager.Instance.PauseGame();
+            }
         }
         else
         {
+            // Resume trước khi chạy animation đóng.
+            if (PauseGameManager.Instance != null)
+            {
+                PauseGameManager.Instance.ResumeGame();
+            }
+            else
+            {
+                Time.timeScale = 1f;
+            }
+
             if (settingPanelAnimator != null)
             {
-                settingPanelAnimator.ResetTrigger(
-                    settingOpenTrigger
-                );
 
                 settingPanelAnimator.SetTrigger(
                     settingCloseTrigger
                 );
             }
 
-            yield return new WaitForSecondsRealtime(
-                settingCloseAnimationTime
-            );
+            // Sau đúng 0.5 giây thì tắt panel.
+            yield return new WaitForSecondsRealtime(0.5f);
 
             settingPanel.SetActive(false);
         }

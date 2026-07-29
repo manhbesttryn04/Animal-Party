@@ -20,7 +20,12 @@ public class VolumeManager : MonoBehaviour
     [Header("Vignette")]
     public float vignetteTargetIntensity = 0.25f;
     public float vignetteMoveTime = 0.5f;
+    [Header("Depth Of Field")]
+    [SerializeField] private float defaultFocusDistance = 2.2f;
+    [SerializeField] private float pauseFocusDistance = 0f;
+    [SerializeField] private float depthMoveTime = 0.5f;
 
+    private Coroutine depthRoutine;
     [Header("Current Graphics Quality")]
     [SerializeField]
     public int currentQuality = 2;
@@ -83,8 +88,8 @@ public class VolumeManager : MonoBehaviour
         SetupVolumeComponents();
 
         // Mặc định đầu game là High
-       // currentQuality = 2;
-       // SetGraphicsQuality(currentQuality);
+        // currentQuality = 2;
+        // SetGraphicsQuality(currentQuality);
     }
 
     private void OnEnable()
@@ -184,11 +189,15 @@ public class VolumeManager : MonoBehaviour
         // DEPTH OF FIELD
         //==================================================
 
-        if (volume.profile.TryGet(
-                out depthOfField
-            ))
+        if (volume.profile.TryGet(out depthOfField))
         {
             depthOfField.active = true;
+
+            depthOfField.focusDistance.overrideState = true;
+
+            // Focus Distance bình thường luôn là 2.2.
+            depthOfField.focusDistance.value =
+                defaultFocusDistance;
         }
     }
 
@@ -510,9 +519,11 @@ public class VolumeManager : MonoBehaviour
     // DEPTH OF FIELD
     //==================================================
 
-    private void SetDepthOfFieldActive(
-        bool state
-    )
+    //==================================================
+    // DEPTH OF FIELD
+    //==================================================
+
+    private void SetDepthOfFieldActive(bool state)
     {
         if (depthOfField == null)
         {
@@ -525,6 +536,100 @@ public class VolumeManager : MonoBehaviour
     public void SetDepthActive(bool state)
     {
         SetDepthOfFieldActive(state);
+    }
+
+    public void StartDepthBlur()
+    {
+        if (depthOfField == null)
+        {
+            return;
+        }
+
+        if (depthRoutine != null)
+        {
+            StopCoroutine(depthRoutine);
+        }
+
+        depthRoutine = StartCoroutine(
+            MoveDepthFocusDistance(
+                depthOfField.focusDistance.value,
+                pauseFocusDistance,
+                depthMoveTime
+            )
+        );
+    }
+
+    public void ResetDepthBlur()
+    {
+        if (depthOfField == null)
+        {
+            return;
+        }
+
+        if (depthRoutine != null)
+        {
+            StopCoroutine(depthRoutine);
+        }
+
+        depthRoutine = StartCoroutine(
+            MoveDepthFocusDistance(
+                depthOfField.focusDistance.value,
+                defaultFocusDistance,
+                depthMoveTime
+            )
+        );
+    }
+
+    private IEnumerator MoveDepthFocusDistance(
+        float start,
+        float end,
+        float duration
+    )
+    {
+        if (depthOfField == null)
+        {
+            yield break;
+        }
+
+        depthOfField.active = true;
+        depthOfField.focusDistance.overrideState = true;
+
+        if (duration <= 0f)
+        {
+            depthOfField.focusDistance.value = end;
+            depthRoutine = null;
+            yield break;
+        }
+
+        float time = 0f;
+
+        while (time < duration)
+        {
+            // Không bị ảnh hưởng bởi Time.timeScale = 0
+            time += Time.unscaledDeltaTime;
+
+            float progress =
+                Mathf.Clamp01(time / duration);
+
+            // SmoothStep giúp chuyển mờ mềm hơn
+            progress = Mathf.SmoothStep(
+                0f,
+                1f,
+                progress
+            );
+
+            depthOfField.focusDistance.value =
+                Mathf.Lerp(
+                    start,
+                    end,
+                    progress
+                );
+
+            yield return null;
+        }
+
+        depthOfField.focusDistance.value = end;
+        depthRoutine = null;
     }
 
     //==================================================
@@ -624,4 +729,5 @@ public class VolumeManager : MonoBehaviour
 
         vignetteRoutine = null;
     }
+
 }

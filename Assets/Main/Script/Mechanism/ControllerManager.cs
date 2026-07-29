@@ -809,14 +809,14 @@ public class ControllerManager : MonoBehaviour
 
     private IEnumerator ShowNotificationRoutine()
     {
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSecondsRealtime(0.5f);
 
         notificationCoroutine = null;
     }
 
     private IEnumerator ShowDisconnectRoutine()
     {
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSecondsRealtime(0.5f);
 
         notificationCoroutine = null;
     }

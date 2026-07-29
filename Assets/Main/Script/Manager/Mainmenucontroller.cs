@@ -175,6 +175,7 @@ public class MainMenuController : MonoBehaviour
         if (volume != null)
         {
             volume.ResetVignette();
+            volume.ResetDepthBlur();
         }
     }
 

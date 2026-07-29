@@ -128,7 +128,8 @@ public class SettingManager : MonoBehaviour
 
     private bool waitControllerSettingButtonRelease;
     private Coroutine closeSettingCoroutine;
-
+    [Header("Pause Game")]
+    [SerializeField] private bool pauseGameWhenSettingOpen = true;
     public bool IsSettingBlockingInput
     {
         get
@@ -488,7 +489,7 @@ public class SettingManager : MonoBehaviour
             );
         }
 
- 
+
 
         if (backToMainMenuButton != null)
         {
@@ -1911,6 +1912,19 @@ public class SettingManager : MonoBehaviour
     private IEnumerator BackToMainMenuRoutine()
     {
         /*
+         * Resume game trước để animation Loading và các coroutine
+         * sử dụng Time.deltaTime có thể tiếp tục chạy.
+         */
+        if (PauseGameManager.Instance != null)
+        {
+            PauseGameManager.Instance.ForceResume();
+        }
+        else
+        {
+            Time.timeScale = 1f;
+        }
+
+        /*
          * Đóng trạng thái Setting trước khi chuyển scene.
          * Không gọi HideGameCursor trực tiếp.
          */
@@ -1960,9 +1974,9 @@ public class SettingManager : MonoBehaviour
     // GUIDE
     // ==================================================
 
-   
 
- 
+
+
     private void OnDestroy()
     {
         RemoveListeners();
