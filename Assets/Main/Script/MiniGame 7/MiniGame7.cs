@@ -113,7 +113,7 @@ public class MiniGame7 : MonoBehaviour
 
     public void StartMiniGame()
     {
-      
+
         // Dừng lần chơi cũ trước
         StopMiniGame();
         canvasMain.SetActive(true);
@@ -588,13 +588,21 @@ public class MiniGame7 : MonoBehaviour
             List<Transform> selectedCannons =
                 GetRandomCannons(cannonsToFire);
 
-            foreach (Transform cannon in selectedCannons)
+            for (int i = 0; i < selectedCannons.Count; i++)
             {
+                Transform cannon = selectedCannons[i];
+
                 if (cannon == null)
                     continue;
 
+                // Mỗi đợt bắn chỉ cannon đầu tiên phát âm thanh.
+                // Các cannon còn lại vẫn bắn đạn và chạy hiệu ứng bình thường.
+                bool playSound = i == 0;
+
                 Coroutine routine =
-                    StartCoroutine(AnimateAndShoot(cannon));
+                    StartCoroutine(
+                        AnimateAndShoot(cannon, playSound)
+                    );
 
                 activeCannonRoutines.Add(routine);
             }
@@ -604,7 +612,8 @@ public class MiniGame7 : MonoBehaviour
     }
 
     private IEnumerator AnimateAndShoot(
-        Transform cannonTransform
+        Transform cannonTransform,
+        bool playSound
     )
     {
         if (cannonTransform == null)
@@ -655,7 +664,7 @@ public class MiniGame7 : MonoBehaviour
         if (!isPlaying)
             yield break;
 
-        ShootBullet(cannonTransform);
+        ShootBullet(cannonTransform, playSound);
 
         yield return new WaitForSeconds(0.3f);
 
@@ -806,7 +815,10 @@ public class MiniGame7 : MonoBehaviour
             resultMessage
         );
     }
-    private void ShootBullet(Transform cannonTransform)
+    private void ShootBullet(
+        Transform cannonTransform,
+        bool playSound
+    )
     {
         if (bulletPrefab == null || cannonTransform == null)
             return;
@@ -848,8 +860,13 @@ public class MiniGame7 : MonoBehaviour
                 cannonTransform.rotation;
         }
 
-        // Phát âm thanh bắn
-        AudioManager.Instance.PlaySFX(AudioManager.Instance.cannonClip);
+        // Mỗi đợt có bao nhiêu cannon cũng chỉ phát đúng một tiếng.
+        if (playSound && AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(
+                AudioManager.Instance.cannonClip
+            );
+        }
 
         // Tạo viên đạn
         GameObject bullet = Instantiate(
@@ -1072,7 +1089,7 @@ public class MiniGame7 : MonoBehaviour
     {
         // Khóa gameplay ngay lập tức
         isPlaying = false;
-      //  AudioManager.Instance.ZeroAllAudio();
+        //  AudioManager.Instance.ZeroAllAudio();
         // Dừng timer
         if (timerRoutine != null)
         {
@@ -1147,7 +1164,7 @@ public class MiniGame7 : MonoBehaviour
         PlayerDefense p1 = player1Obj.GetComponent<PlayerDefense>();
         PlayerDefense p2 = player2Obj.GetComponent<PlayerDefense>();
 
-        if(p1 != null && p2 != null)
+        if (p1 != null && p2 != null)
         {
             p1.hasDefense = true;
             p2.hasDefense = true;
@@ -1160,17 +1177,19 @@ public class MiniGame7 : MonoBehaviour
         if (i == 0)
         {
             p1.UpCoin(1, 100);
-            p2.UpCoin(0,100);
+            p2.UpCoin(0, 100);
         }
-        else if(i == 1)
+        else if (i == 1)
         {
             p1.UpCoin(0, 100);
             p2.UpCoin(1, 100);
-        }else if(i == 2)
+        }
+        else if (i == 2)
         {
             p1.UpCoin(0, 100);
             p2.UpCoin(0, 100);
-        }else if(i == 3)
+        }
+        else if (i == 3)
         {
             p1.UpCoin(0, 0);
             p2.UpCoin(0, 0);
@@ -1226,5 +1245,5 @@ public class IslandBulletCollision : MonoBehaviour
 
         Destroy(gameObject);
     }
-    
+
 }

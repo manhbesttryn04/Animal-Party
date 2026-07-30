@@ -811,7 +811,7 @@ MonoBehaviour:
   canStartNextRound: 0
   canCheckPlayer2: 1
   canCheckMiniGame: 1
-  canRandomIndexMiniGame: 1
+  canRandomIndexMiniGame: 0
 --- !u!4 &265678874
 Transform:
   m_ObjectHideFlags: 0
@@ -4938,15 +4938,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3548275952067095837, guid: 3a35bb4fdc8f3e64c8e902780ea050e1, type: 3}
       propertyPath: isBuffDice
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3548275952067095837, guid: 3a35bb4fdc8f3e64c8e902780ea050e1, type: 3}
       propertyPath: isBuffCanon
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3548275952067095837, guid: 3a35bb4fdc8f3e64c8e902780ea050e1, type: 3}
       propertyPath: isBuffMagic
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3548275952067095837, guid: 3a35bb4fdc8f3e64c8e902780ea050e1, type: 3}
       propertyPath: countCoinPower
@@ -4954,7 +4954,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3548275952067095837, guid: 3a35bb4fdc8f3e64c8e902780ea050e1, type: 3}
       propertyPath: isBuffDeffense
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5359118050741442794, guid: 3a35bb4fdc8f3e64c8e902780ea050e1, type: 3}
       propertyPath: m_Enabled
@@ -5148,8 +5148,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   ui: {fileID: 1937041803}
   debuffSprite:
-  - {fileID: -9160987577138628238, guid: 215687feeab0b7445b4a1cd86c82c2e1, type: 3}
-  - {fileID: -1999946806344817058, guid: 215687feeab0b7445b4a1cd86c82c2e1, type: 3}
+  - {fileID: 2117336584302238645, guid: 215687feeab0b7445b4a1cd86c82c2e1, type: 3}
+  - {fileID: 1187148374, guid: e26ed103198ee7147b99536270f77132, type: 3}
   cannonPrefab: {fileID: 3025485861563049401, guid: 545d4b28a12fa654e99574cc0bf88887, type: 3}
   leftIndex: 0
   rightIndex: 0
@@ -7801,15 +7801,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3548275952067095837, guid: 3a35bb4fdc8f3e64c8e902780ea050e1, type: 3}
       propertyPath: isBuffDice
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3548275952067095837, guid: 3a35bb4fdc8f3e64c8e902780ea050e1, type: 3}
       propertyPath: isBuffCanon
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3548275952067095837, guid: 3a35bb4fdc8f3e64c8e902780ea050e1, type: 3}
       propertyPath: isBuffMagic
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3548275952067095837, guid: 3a35bb4fdc8f3e64c8e902780ea050e1, type: 3}
       propertyPath: countCoinPower
@@ -7817,7 +7817,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3548275952067095837, guid: 3a35bb4fdc8f3e64c8e902780ea050e1, type: 3}
       propertyPath: isBuffDeffense
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6208376203378758326, guid: 3a35bb4fdc8f3e64c8e902780ea050e1, type: 3}
       propertyPath: m_Name
@@ -10423,9 +10423,41 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4179340222992171316, guid: 50c9760a63ee4574986bf76912301202, type: 3}
+      propertyPath: bombVoiceClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 9ffc0a5974b93cc44a07dcbd32413d24, type: 3}
+    - target: {fileID: 4179340222992171316, guid: 50c9760a63ee4574986bf76912301202, type: 3}
+      propertyPath: bonusDiceVoiceClip
+      value: 
+      objectReference: {fileID: 8300000, guid: fb7c94ef25bdcc14e8451793d56485f3, type: 3}
+    - target: {fileID: 4179340222992171316, guid: 50c9760a63ee4574986bf76912301202, type: 3}
+      propertyPath: powerCannonVoiceClip
+      value: 
+      objectReference: {fileID: 8300000, guid: e2ae3c635c07a5b45abae866c2202b4b, type: 3}
+    - target: {fileID: 4179340222992171316, guid: 50c9760a63ee4574986bf76912301202, type: 3}
+      propertyPath: PositionSwapVoiceClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 36cb37d0681e7cc49a5bf469b25d96e3, type: 3}
+    - target: {fileID: 4179340222992171316, guid: 50c9760a63ee4574986bf76912301202, type: 3}
+      propertyPath: cannonDebuffVoiceClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 0693882b12809494895e31a4846285b1, type: 3}
+    - target: {fileID: 4179340222992171316, guid: 50c9760a63ee4574986bf76912301202, type: 3}
+      propertyPath: cannonShieldVoiceClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 3de3fe647d18c114b9cb728ba13f7203, type: 3}
+    - target: {fileID: 4179340222992171316, guid: 50c9760a63ee4574986bf76912301202, type: 3}
       propertyPath: audioSources.Array.size
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4179340222992171316, guid: 50c9760a63ee4574986bf76912301202, type: 3}
+      propertyPath: petrificatioDebuffVoiceClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 236abad22bad5d34c88c22dd14f52f28, type: 3}
+    - target: {fileID: 4179340222992171316, guid: 50c9760a63ee4574986bf76912301202, type: 3}
+      propertyPath: petrificationImmunityVoiceClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 9a28ad70d58ea1342bc3fee14d937a8f, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

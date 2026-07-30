@@ -52,7 +52,8 @@ public class AudioManager : MonoBehaviour
     public AudioClip boomClip;
     public AudioClip bebuffRockMagicClip;
     public AudioClip skipDiceClip;
-
+    public AudioClip petrificatioDebuffVoiceClip;
+    public AudioClip cannonDebuffVoiceClip;
     [Header("Buff SFX")]
     public AudioClip buffDeffClip;
     public AudioClip buffMagicClip;
@@ -60,7 +61,13 @@ public class AudioManager : MonoBehaviour
     public AudioClip coinClip;
     public AudioClip startLeteClip;
     public AudioClip endLeteClip;
-
+    public AudioClip powerCannonVoiceClip;
+    public AudioClip bonusDiceVoiceClip;
+    public AudioClip cannonShieldVoiceClip;
+    public AudioClip petrificationImmunityVoiceClip;
+    [Header("Trap Main Scene")]
+    public AudioClip PositionSwapVoiceClip;
+    public AudioClip bombVoiceClip;
 
     [Header("Shop SFX")]
     public AudioClip openShopClip;

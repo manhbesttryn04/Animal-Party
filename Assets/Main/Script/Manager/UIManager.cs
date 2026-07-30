@@ -362,7 +362,7 @@ public class UIManager : MonoBehaviour
            if(ui!= null)
         {
             ui.SetActive(true);
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(1.7f);
             ui.SetActive(false);
         }
     }

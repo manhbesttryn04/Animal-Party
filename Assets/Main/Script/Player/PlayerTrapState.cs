@@ -30,7 +30,10 @@ public class PlayerTrapState : MonoBehaviour
             if (trap.hasBom)
             {
                 trap.BomActivated();
-
+                if (AudioManager.Instance != null)
+                {
+                    AudioManager.Instance.PlaySpecial(AudioManager.Instance.bombVoiceClip);
+                }
                 yield return new WaitForSeconds(1f);
 
                 yield return StartCoroutine(a.BoomHitEffect(3));
@@ -44,6 +47,10 @@ public class PlayerTrapState : MonoBehaviour
             if (trap.hasTelep)
             {
                 trap.TelepActivated();
+                if (AudioManager.Instance != null)
+                {
+                    AudioManager.Instance.PlaySpecial(AudioManager.Instance.PositionSwapVoiceClip);
+                }
                 yield return new WaitForSeconds (0.5f);
 
                 yield return StartCoroutine(trap.TeleportRoutine(manager.playerType.isPlayer2));

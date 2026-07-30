@@ -92,7 +92,10 @@ public class BombDebuff : MonoBehaviour
         // =========================
         if (player.playerBuff.isBuffDeffense)
         {
-
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlaySpecial(AudioManager.Instance.cannonShieldVoiceClip);
+            }
             if (UIManager.Instance != null)
             {
                 StartCoroutine(UIManager.Instance.ShowDebuffAndBuffPanel(UIManager.Instance.cannonShieldPanel));

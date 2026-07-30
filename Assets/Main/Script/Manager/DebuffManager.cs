@@ -663,35 +663,56 @@ public class DebuffManager : MonoBehaviour
             return;
         }
 
+        StartCoroutine(
+            SelectCardRoutine(
+                image,
+                card.itemIndex,
+                playerIndex
+            )
+        );
+    }
+
+    private IEnumerator SelectCardRoutine(
+        Image image,
+        int itemIndex,
+        int playerIndex)
+    {
         // Khóa input ngay lập tức để tránh chọn hai lần.
         isSelectingDebuff = true;
 
         leftActive = false;
         rightActive = false;
 
-        image.sprite =
-            debuffSprite[card.itemIndex];
+        // Đổi từ hình dấu sao sang hình vật phẩm đã chọn.
+        image.sprite = debuffSprite[itemIndex];
 
         if (AudioManager.Instance != null)
         {
-            /*  AudioManager.Instance.PlaySFX(
-                  AudioManager.Instance.buyItemClip
-              );*/
+            /* AudioManager.Instance.PlaySFX(
+                   AudioManager.Instance.buyItemClip
+               ); */
         }
 
-        StartCoroutine(End());
+        // Chờ một frame để Unity kịp cập nhật Sprite lên màn hình.
+        yield return null;
+
+        // Giữ hình vật phẩm trên màn hình trước khi đóng thẻ.
+        // Dùng realtime để vẫn hoạt động khi Time.timeScale = 0.
+        yield return new WaitForSeconds(1f);
+
+        HideAll();
 
         // itemIndex 0 = Magic Debuff.
-        if (card.itemIndex == 0)
+        if (itemIndex == 0)
         {
-            StartCoroutine(
+            yield return StartCoroutine(
                 ApplyMagicDebuff(playerIndex)
             );
         }
         // itemIndex 1 = Cannon Debuff.
-        else if (card.itemIndex == 1)
+        else if (itemIndex == 1)
         {
-            StartCoroutine(
+            yield return StartCoroutine(
                 ApplyCannonDebuff(playerIndex)
             );
         }
@@ -703,6 +724,10 @@ public class DebuffManager : MonoBehaviour
 
     private IEnumerator ApplyMagicDebuff(int playerIndex)
     {
+        if(AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySpecial(AudioManager.Instance.petrificatioDebuffVoiceClip);
+        }
         if (UIManager.Instance != null)
         {
             yield return StartCoroutine(UIManager.Instance.ShowDebuffAndBuffPanel(UIManager.Instance.magicDebuffPanel));
@@ -747,6 +772,10 @@ public class DebuffManager : MonoBehaviour
         if (player.playerBuff != null &&
             player.playerBuff.isBuffMagic)
         {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlaySpecial(AudioManager.Instance.petrificationImmunityVoiceClip);
+            }
             if (UIManager.Instance != null)
             {
                 StartCoroutine(UIManager.Instance.ShowDebuffAndBuffPanel(UIManager.Instance.petrificationImmunityPanel));
@@ -800,7 +829,11 @@ public class DebuffManager : MonoBehaviour
 
     private IEnumerator ApplyCannonDebuff(int playerIndex)
     {
-        if(UIManager.Instance != null)
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySpecial(AudioManager.Instance.cannonDebuffVoiceClip);
+        }
+        if (UIManager.Instance != null)
         {
             yield return StartCoroutine(UIManager.Instance.ShowDebuffAndBuffPanel(UIManager.Instance.cannonDebuffPanel));
         }
@@ -869,11 +902,15 @@ public class DebuffManager : MonoBehaviour
         if (ownerBuff != null &&
             ownerBuff.isBuffCanon)
         {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlaySpecial(AudioManager.Instance.powerCannonVoiceClip);
+            }
             if (UIManager.Instance != null)
             {
-               StartCoroutine( UIManager.Instance.ShowDebuffAndBuffPanel(
-                    UIManager.Instance.cannonPowerPanel)
-                );
+               yield return StartCoroutine(UIManager.Instance.ShowDebuffAndBuffPanel(
+                     UIManager.Instance.cannonPowerPanel)
+                 );
             }
         }
 
@@ -978,14 +1015,6 @@ public class DebuffManager : MonoBehaviour
     // =========================================================
     // END SELECT
     // =========================================================
-
-    private IEnumerator End()
-    {
-        // Giữ lại một frame để sprite card được cập nhật.
-        yield return null;
-
-        HideAll();
-    }
 
     private void ReturnToShop()
     {

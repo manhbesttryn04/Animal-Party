@@ -115,9 +115,13 @@ public class PlayerMoveAI : MonoBehaviour
 
     public IEnumerator MoveBonus()
     {
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySpecial(AudioManager.Instance.bonusDiceVoiceClip);
+        }
         StartCoroutine(UIManager.Instance.HideBonusPanel());
 
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(1.7f);
 
         int finishIndex = pointCheck.Count - 1;
         int bonusStep = Mathf.Min(2, finishIndex - currentIndex);
