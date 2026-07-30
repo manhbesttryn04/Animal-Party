@@ -27,7 +27,7 @@ public class PlayerNotifi : MonoBehaviour
   public IEnumerator SetNotifi()
     {
         NotifiPlayer.SetActive(true);
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(1.3f);
         DicePlayer.SetActive(true);
         yield return new WaitForSeconds(0.45f);
         NotifiPlayer.SetActive(false);

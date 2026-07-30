@@ -627,7 +627,7 @@ public class ShopManager : MonoBehaviour
     {
         ShowPlayer1Turn();
 
-        yield return new WaitForSeconds(0.6f);
+        yield return new WaitForSeconds(1.3f);
 
         inputChooseItem.isPlayer1Choose = true;
         inputChooseItem.isPlayer2Choose = false;
@@ -752,7 +752,7 @@ public class ShopManager : MonoBehaviour
 
         panel.SetActive(true);
 
-        yield return new WaitForSeconds(0.9f);
+        yield return new WaitForSeconds(1.5f);
 
         panel.SetActive(false);
     }

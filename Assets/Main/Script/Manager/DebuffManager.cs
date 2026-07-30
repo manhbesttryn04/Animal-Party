@@ -221,7 +221,7 @@ public class DebuffManager : MonoBehaviour
                 animator.GetCurrentAnimatorStateInfo(0);
 
             yield return new WaitForSeconds(
-                stateInfo.length + 0.1f
+                stateInfo.length + 0.5f
             );
         }
         else
@@ -885,6 +885,7 @@ public class DebuffManager : MonoBehaviour
         }
 
         yield return new WaitForSeconds(1.5f);
+        owner.GetComponent<PlayerAnimator>().playerAnimator.SetTrigger("Salute");
 
         CannonDebuff cannonScript =
             cannon.GetComponent<CannonDebuff>();

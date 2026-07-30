@@ -119,6 +119,7 @@ public class PlayerMoveAI : MonoBehaviour
         {
             AudioManager.Instance.PlaySpecial(AudioManager.Instance.bonusDiceVoiceClip);
         }
+
         StartCoroutine(UIManager.Instance.HideBonusPanel());
 
         yield return new WaitForSeconds(1.7f);

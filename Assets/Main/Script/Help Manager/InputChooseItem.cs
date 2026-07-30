@@ -688,10 +688,10 @@ public class InputChooseItem : MonoBehaviour
         ui.itemsList[player2Index]
             .transform.GetChild(2)
             .gameObject.SetActive(false);
-
+        yield return new WaitForSeconds(0.8f);
         shopManager.ShowPlayer2Turn();
 
-        yield return new WaitForSeconds(0.6f);
+        yield return new WaitForSeconds(1.3f);
 
         // Tránh P2 vừa vào lượt đã nhận input đang bị giữ.
         yield return StartCoroutine(WaitForPlayer2AxisRelease());

@@ -79,6 +79,9 @@ public class UIManager : MonoBehaviour
     public GameObject cannonPowerPanel;
     public GameObject cannonShieldPanel;
     public GameObject petrificationImmunityPanel;
+    [Header("Trap UI")]
+    public GameObject bombTrapPanel;
+    public GameObject positionTrapPanel;
 
     [Header("Shop UI")]
     public GameObject shopPanel;
@@ -362,7 +365,7 @@ public class UIManager : MonoBehaviour
            if(ui!= null)
         {
             ui.SetActive(true);
-            yield return new WaitForSeconds(1.7f);
+            yield return new WaitForSeconds(1.4f);
             ui.SetActive(false);
         }
     }
@@ -467,7 +470,7 @@ public class UIManager : MonoBehaviour
     {
         bonusPanel.SetActive(true);
 
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(2f);
 
         bonusPanel.SetActive(false);
     }

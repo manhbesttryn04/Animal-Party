@@ -34,7 +34,11 @@ public class PlayerTrapState : MonoBehaviour
                 {
                     AudioManager.Instance.PlaySpecial(AudioManager.Instance.bombVoiceClip);
                 }
-                yield return new WaitForSeconds(1f);
+                if(UIManager.Instance != null)
+                {
+                   StartCoroutine( UIManager.Instance.ShowDebuffAndBuffPanel(UIManager.Instance.bombTrapPanel));
+                }
+                yield return new WaitForSeconds(1.5f);
 
                 yield return StartCoroutine(a.BoomHitEffect(3));
 
@@ -51,7 +55,11 @@ public class PlayerTrapState : MonoBehaviour
                 {
                     AudioManager.Instance.PlaySpecial(AudioManager.Instance.PositionSwapVoiceClip);
                 }
-                yield return new WaitForSeconds (0.5f);
+                if (UIManager.Instance != null)
+                {
+                    StartCoroutine( UIManager.Instance.ShowDebuffAndBuffPanel(UIManager.Instance.positionTrapPanel));
+                }
+                yield return new WaitForSeconds (1f);
 
                 yield return StartCoroutine(trap.TeleportRoutine(manager.playerType.isPlayer2));
 
