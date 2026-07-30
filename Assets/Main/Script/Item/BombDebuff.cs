@@ -92,6 +92,11 @@ public class BombDebuff : MonoBehaviour
         // =========================
         if (player.playerBuff.isBuffDeffense)
         {
+
+            if (UIManager.Instance != null)
+            {
+                StartCoroutine(UIManager.Instance.ShowDebuffAndBuffPanel(UIManager.Instance.cannonShieldPanel));
+            }
             StartCoroutine(player.playerBuff.ShowDefenseShield());
 
             player.playerBuff.isBuffDeffense = false;

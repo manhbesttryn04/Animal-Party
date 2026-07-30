@@ -703,6 +703,10 @@ public class DebuffManager : MonoBehaviour
 
     private IEnumerator ApplyMagicDebuff(int playerIndex)
     {
+        if (UIManager.Instance != null)
+        {
+            yield return StartCoroutine(UIManager.Instance.ShowDebuffAndBuffPanel(UIManager.Instance.magicDebuffPanel));
+        }
         // Nếu Player 1 chọn thì target là Player 2,
         // ngược lại.
         string targetTag =
@@ -743,6 +747,10 @@ public class DebuffManager : MonoBehaviour
         if (player.playerBuff != null &&
             player.playerBuff.isBuffMagic)
         {
+            if (UIManager.Instance != null)
+            {
+                StartCoroutine(UIManager.Instance.ShowDebuffAndBuffPanel(UIManager.Instance.petrificationImmunityPanel));
+            }
             yield return StartCoroutine(
                 player.playerBuff.ShowMagicShield()
             );
@@ -792,6 +800,10 @@ public class DebuffManager : MonoBehaviour
 
     private IEnumerator ApplyCannonDebuff(int playerIndex)
     {
+        if(UIManager.Instance != null)
+        {
+            yield return StartCoroutine(UIManager.Instance.ShowDebuffAndBuffPanel(UIManager.Instance.cannonDebuffPanel));
+        }
         string ownerTag =
             playerIndex == 0
                 ? "Player 1"
@@ -859,8 +871,8 @@ public class DebuffManager : MonoBehaviour
         {
             if (UIManager.Instance != null)
             {
-                UIManager.Instance.SendNotifi(
-                    "Canon Buff"
+               StartCoroutine( UIManager.Instance.ShowDebuffAndBuffPanel(
+                    UIManager.Instance.cannonPowerPanel)
                 );
             }
         }
@@ -873,7 +885,7 @@ public class DebuffManager : MonoBehaviour
         // Phải kiểm tra bomb trước khi dùng bomb.power.
         if (bomb != null)
         {
-            bomb.power += 1;
+            bomb.power += 3;
         }
 
         Destroy(cannon, 0.5f);

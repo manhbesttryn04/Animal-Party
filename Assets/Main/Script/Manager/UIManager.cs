@@ -73,6 +73,12 @@ public class UIManager : MonoBehaviour
     public GameObject[] leftCardsList;
     public GameObject[] rightCardsList;
     public GameObject panelNotiifiChooseDebuff;
+    public GameObject magicDebuffPanel;
+    public GameObject cannonDebuffPanel;
+    [Header("Buff UI")]
+    public GameObject cannonPowerPanel;
+    public GameObject cannonShieldPanel;
+    public GameObject petrificationImmunityPanel;
 
     [Header("Shop UI")]
     public GameObject shopPanel;
@@ -351,26 +357,13 @@ public class UIManager : MonoBehaviour
     /// <summary>
     /// Hiển thị thông báo trong 2 giây.
     /// </summary>
-    public void SendNotifi(string message)
+  public IEnumerator ShowDebuffAndBuffPanel(GameObject ui)
     {
-        if (notifiPanel != null && textNotifi != null)
+           if(ui!= null)
         {
-            notifiPanel.SetActive(true);
-            textNotifi.text = message;
-
-            // Sau 2 giây sẽ tự ẩn
-            Invoke(nameof(HideNotifi), 2f);
-        }
-    }
-
-    /// <summary>
-    /// Ẩn panel thông báo.
-    /// </summary>
-    private void HideNotifi()
-    {
-        if (notifiPanel != null)
-        {
-            notifiPanel.SetActive(false);
+            ui.SetActive(true);
+            yield return new WaitForSeconds(2f);
+            ui.SetActive(false);
         }
     }
 
