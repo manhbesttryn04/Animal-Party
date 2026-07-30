@@ -50,9 +50,43 @@ public class PlayerSubmarineController : MonoBehaviour
     private float lastFireTime = -10f;
     private bool fireFromLeft = true; // luân phiên trái/phải mỗi lần bắn cho đẹp
 
+    [Header("--- ĐẠN (giới hạn số lượng) ---")]
+    [Tooltip("Số ngư lôi tối đa mang theo. Đặt <= 0 để bắn vô hạn (không giới hạn đạn)")]
+    public int maxAmmo = 5;
+    [Tooltip("Thời gian hồi lại 1 viên đạn (giây). Chỉ có ý nghĩa nếu maxAmmo > 0")]
+    public float ammoReloadTime = 3f;
+    private int currentAmmo;
+    private float ammoReloadTimer = 0f;
+
     [Header("--- STUN (khi trúng ngư lôi) ---")]
     [HideInInspector] public bool isStunned = false;
     private float stunTimer = 0f;
+    [Tooltip("VFX hiển thị khi tàu đang bị stun (optional, kéo prefab particle/vòng xoáy vào đây)")]
+    public GameObject stunVFX;
+    [Tooltip("Renderer thân tàu để nhấp nháy màu khi bị stun (optional)")]
+    public Renderer bodyRenderer;
+    [Tooltip("Màu nhấp nháy khi bị stun")]
+    public Color stunFlashColor = Color.red;
+    [Tooltip("Tốc độ nhấp nháy khi bị stun (lần/giây)")]
+    public float stunFlashSpeed = 8f;
+    private MaterialPropertyBlock stunPropBlock;
+    private static readonly int ColorPropId = Shader.PropertyToID("_BaseColor");
+    private static readonly int ColorPropIdLegacy = Shader.PropertyToID("_Color");
+    private GameObject activeStunVFXInstance;
+
+    [Header("--- CẢM GIÁC LÁI (feel) ---")]
+    [Tooltip("Độ quẹo tối thiểu ngay cả khi gần như đứng yên (0-1). Tăng lên nếu thấy lái bị 'ì' lúc chậm")]
+    [Range(0f, 1f)] public float minTurnFactor = 0.35f;
+    [Tooltip("Thời gian làm mượt khi bắt đầu quẹo/đổi hướng (giây). Nhỏ = phản hồi nhanh, lớn = trôi lì")]
+    public float turnSmoothTime = 0.15f;
+    [Tooltip("Góc tối đa nghiêng mũi tàu khi nổi/lặn (độ) - chỉ để đẹp mắt, không ảnh hưởng vật lý thật")]
+    public float pitchTiltAngle = 15f;
+    [Tooltip("Tốc độ nghiêng mũi tàu theo (độ/giây)")]
+    public float pitchTiltSpeed = 90f;
+
+    float turnInputSmoothRef = 0f;
+    float smoothedTurnInput = 0f;
+    float currentPitch = 0f;
 
     [HideInInspector] public float currentSpeed;
     // Giữ tương thích ngược với code cũ từng đọc carSpeed
@@ -74,6 +108,9 @@ public class PlayerSubmarineController : MonoBehaviour
         subRigidbody.linearDamping = waterDrag;
         subRigidbody.angularDamping = waterDrag * 2f;
 
+        stunPropBlock = new MaterialPropertyBlock();
+        currentAmmo = maxAmmo;
+
         // Mặc định tắt điều khiển, chờ RaceMiniGame gọi SetGameActive(true)
         SetGameActive(false);
     }
@@ -91,6 +128,16 @@ public class PlayerSubmarineController : MonoBehaviour
                 subRigidbody.angularVelocity = Vector3.zero;
             }
             inputForward = inputBackward = inputLeft = inputRight = inputUp = inputDown = false;
+
+            // BUG FIX: nếu ván trước kết thúc lúc đang bị stun, phải reset ngay,
+            // không thì ván mới bắt đầu tàu vẫn bị khóa điều khiển vô lý vài giây.
+            isStunned = false;
+            stunTimer = 0f;
+            UpdateStunVisual();
+
+            // Reset đạn về đầy khi bắt đầu ván mới
+            currentAmmo = maxAmmo;
+            ammoReloadTimer = 0f;
         }
     }
 
@@ -100,6 +147,8 @@ public class PlayerSubmarineController : MonoBehaviour
 
         UpdateAnimation();
         UpdateStunTimer();
+        UpdateStunFlash();
+        UpdateAmmoReload();
 
         if (!gameActive) return;
 
@@ -122,15 +171,76 @@ public class PlayerSubmarineController : MonoBehaviour
         if (stunTimer <= 0f)
         {
             isStunned = false;
+            UpdateStunVisual();
         }
     }
 
     // Gọi từ TorpedoProjectile khi bị bắn trúng
     public void ApplyStun(float duration)
     {
+        bool wasStunned = isStunned;
         isStunned = true;
         stunTimer = Mathf.Max(stunTimer, duration); // không cộng dồn nếu bị bắn liên tiếp, chỉ lấy thời gian dài hơn
+
+        if (!wasStunned)
+        {
+            UpdateStunVisual();
+        }
     }
+
+    // ====== FEEDBACK KHI BỊ STUN (VFX + nhấp nháy màu) ======
+    void UpdateStunVisual()
+    {
+        if (stunVFX != null)
+        {
+            if (isStunned && activeStunVFXInstance == null)
+            {
+                activeStunVFXInstance = Instantiate(stunVFX, transform.position, transform.rotation, transform);
+            }
+            else if (!isStunned && activeStunVFXInstance != null)
+            {
+                Destroy(activeStunVFXInstance);
+                activeStunVFXInstance = null;
+            }
+        }
+
+        if (bodyRenderer != null && !isStunned)
+        {
+            // Trả lại màu gốc (không set gì trong block = dùng màu material mặc định)
+            bodyRenderer.SetPropertyBlock(null);
+        }
+    }
+
+    void UpdateStunFlash()
+    {
+        if (!isStunned || bodyRenderer == null) return;
+
+        // Nhấp nháy giữa màu gốc và stunFlashColor theo sin wave, không tạo material instance mới (đỡ leak memory)
+        float t = (Mathf.Sin(Time.time * stunFlashSpeed) + 1f) * 0.5f;
+        bodyRenderer.GetPropertyBlock(stunPropBlock);
+        Color flashColor = Color.Lerp(Color.white, stunFlashColor, t);
+        stunPropBlock.SetColor(ColorPropId, flashColor);
+        stunPropBlock.SetColor(ColorPropIdLegacy, flashColor);
+        bodyRenderer.SetPropertyBlock(stunPropBlock);
+    }
+
+    // ====== HỒI ĐẠN ======
+    void UpdateAmmoReload()
+    {
+        if (maxAmmo <= 0) return; // bắn vô hạn, không cần hồi đạn
+        if (currentAmmo >= maxAmmo) return;
+
+        ammoReloadTimer += Time.deltaTime;
+        if (ammoReloadTimer >= ammoReloadTime)
+        {
+            ammoReloadTimer = 0f;
+            currentAmmo++;
+        }
+    }
+
+    // Cho UI bên ngoài đọc số đạn còn lại / % hồi đạn viên tiếp theo
+    public int GetCurrentAmmo() => currentAmmo;
+    public float GetAmmoReloadProgress() => maxAmmo <= 0 ? 1f : Mathf.Clamp01(ammoReloadTimer / ammoReloadTime);
 
     // ====== ANIMATION ======
     void UpdateAnimation()
@@ -186,12 +296,20 @@ public class PlayerSubmarineController : MonoBehaviour
         if (Time.time - lastFireTime < fireCooldown) return;
         if (torpedoPrefab == null) return;
 
+        // Giới hạn đạn: nếu maxAmmo > 0 thì phải còn đạn mới bắn được
+        if (maxAmmo > 0 && currentAmmo <= 0) return;
+
         Transform firePoint = fireFromLeft ? torpedoPointLeft : torpedoPointRight;
         if (firePoint == null) firePoint = torpedoPointLeft != null ? torpedoPointLeft : torpedoPointRight;
         if (firePoint == null) return; // chưa gán điểm bắn nào cả
 
         fireFromLeft = !fireFromLeft; // luân phiên bên cho lần bắn sau
         lastFireTime = Time.time;
+
+        if (maxAmmo > 0)
+        {
+            currentAmmo--;
+        }
 
         GameObject torpedo = Instantiate(torpedoPrefab, firePoint.position, transform.rotation);
         TorpedoProjectile projectile = torpedo.GetComponent<TorpedoProjectile>();
@@ -212,16 +330,21 @@ public class PlayerSubmarineController : MonoBehaviour
             subRigidbody.AddForce(-transform.forward * thrustForce * 0.6f, ForceMode.Acceleration);
         }
 
-        // Xoay trái / phải quanh trục Y - chỉ xoay được khi có chút tốc độ, giống tàu thật
-        // Dùng MoveRotation (không phải transform.Rotate) để không bị giật khi Rigidbody có Interpolation
-        float turnFactor = Mathf.Clamp01(Mathf.Abs(currentSpeed) / 2f);
-        float turnInput = 0f;
-        if (inputLeft) turnInput -= 1f;
-        if (inputRight) turnInput += 1f;
+        // Xoay trái / phải quanh trục Y - dùng MoveRotation (không phải transform.Rotate) để không
+        // bị giật khi Rigidbody có Interpolation.
+        float speedTurnFactor = Mathf.Clamp01(Mathf.Abs(currentSpeed) / 2f);
+        float turnFactor = Mathf.Max(speedTurnFactor, minTurnFactor);
 
-        if (turnInput != 0f)
+        float rawTurnInput = 0f;
+        if (inputLeft) rawTurnInput -= 1f;
+        if (inputRight) rawTurnInput += 1f;
+
+        // Làm mượt input quẹo thay vì nhảy thẳng -1/0/1 mỗi frame, giúp đổi hướng không bị "khựng" đột ngột.
+        smoothedTurnInput = Mathf.SmoothDamp(smoothedTurnInput, rawTurnInput, ref turnInputSmoothRef, turnSmoothTime);
+
+        if (Mathf.Abs(smoothedTurnInput) > 0.001f)
         {
-            float turnAngleThisStep = turnInput * turnSpeed * turnFactor * Time.fixedDeltaTime;
+            float turnAngleThisStep = smoothedTurnInput * turnSpeed * turnFactor * Time.fixedDeltaTime;
             Quaternion deltaRotation = Quaternion.Euler(0f, turnAngleThisStep, 0f);
             subRigidbody.MoveRotation(subRigidbody.rotation * deltaRotation);
         }
@@ -247,10 +370,37 @@ public class PlayerSubmarineController : MonoBehaviour
 
         currentVel.y = smoothedVerticalSpeed;
         subRigidbody.linearVelocity = currentVel;
+
+        // Kẹp cứng vị trí thật sự nếu lỡ vọt qua biên (vật lý tích hợp vị trí trước khi code
+        // kịp chặn vận tốc ở trên, nên vẫn cần chặn cả vị trí ở đây cho chắc).
+        if (subRigidbody.position.y > maxDepthY)
+        {
+            Vector3 clampedPos = subRigidbody.position;
+            clampedPos.y = maxDepthY;
+            subRigidbody.position = clampedPos;
+        }
+        else if (subRigidbody.position.y < minDepthY)
+        {
+            Vector3 clampedPos = subRigidbody.position;
+            clampedPos.y = minDepthY;
+            subRigidbody.position = clampedPos;
+        }
+
+        // Nghiêng mũi tàu lên/xuống theo hướng đang di chuyển theo trục Y - chỉ là hiệu ứng
+        // thị giác (visual only), không ảnh hưởng vật lý thật.
+        float targetPitch = 0f;
+        if (smoothedVerticalSpeed > 0.1f) targetPitch = -pitchTiltAngle;      // đang nổi -> ngẩng mũi lên
+        else if (smoothedVerticalSpeed < -0.1f) targetPitch = pitchTiltAngle; // đang lặn -> cúi mũi xuống
+
+        currentPitch = Mathf.MoveTowards(currentPitch, targetPitch, pitchTiltSpeed * Time.fixedDeltaTime);
+
+        // Áp tilt lên local rotation X, giữ nguyên yaw (Y) đã tính ở trên
+        Vector3 currentEuler = subRigidbody.rotation.eulerAngles;
+        Quaternion targetRot = Quaternion.Euler(currentPitch, currentEuler.y, 0f);
+        subRigidbody.MoveRotation(targetRot);
     }
 
     // ====== HÚC NHAU GIỮA 2 TÀU ======
-    // ĐÃ SỬA: đưa ra cấp lớp (trước đây bị lồng trong ApplyPhysics() nên Unity không gọi được)
     private void OnCollisionEnter(Collision collision)
     {
         if (!gameActive) return;
@@ -259,7 +409,8 @@ public class PlayerSubmarineController : MonoBehaviour
         if (otherSub == null) return;
 
         Vector3 pushDir = collision.transform.position - transform.position;
-        pushDir.Normalize(); // giữ nguyên cả trục Y - va chạm tàu ngầm có thể đẩy lệch cả chiều sâu
+        pushDir.y = 0f; // FIX: chỉ đẩy ngang, không đẩy theo chiều sâu - tránh bắn tàu vọt khỏi mặt nước
+        pushDir.Normalize();
 
         float impactRatio = Mathf.Clamp01(Mathf.Abs(currentSpeed) / maxSpeed);
         otherSub.GetComponent<Rigidbody>().AddForce(pushDir * pushForce * impactRatio, ForceMode.VelocityChange);

@@ -1,16 +1,7 @@
 using UnityEngine;
-
-/// <summary>
-/// Ngư lôi bắn ra từ Torpedo_L/Torpedo_R. Bay THẲNG TUYỆT ĐỐI sau khi bắn (không cong,
-/// không đuổi theo) - nhưng lúc bắn ra, nếu có tàu đối phương nằm trong góc ngắm gần đúng,
-/// code tự tính "điểm đón đầu" (dựa theo vận tốc hiện tại của đối phương lúc đó) để nhắm
-/// hộ hướng bắn, giống pháo thủ tàu chiến ngắm đón đầu mục tiêu di chuyển.
-/// Nếu đối phương đổi hướng SAU khi ngư lôi đã bắn ra, ngư lôi KHÔNG tự chỉnh lại - vẫn bay
-/// theo đường thẳng đã tính từ đầu, nên vẫn có thể bắn hụt nếu đoán sai, không phải auto-trúng.
-/// </summary>
 public class TorpedoProjectile : MonoBehaviour
 {
-    public float speed = 20f;
+    public float speed = 100f;
     public float lifeTime = 4f;
     public float stunDuration = 2f;
     public float hitRadius = 0.6f;
@@ -30,7 +21,12 @@ public class TorpedoProjectile : MonoBehaviour
     [Tooltip("Thời gian tự hủy VFX sau khi spawn (giây) - phòng trường hợp prefab VFX không tự hủy sẵn")]
     public float hitVFXLifeTime = 2f;
 
+    [Header("--- VA CHẠM MÔI TRƯỜNG (bug fix) ---")]
+    [Tooltip("Layer của tường/đá/địa hình. Ngư lôi trúng layer này sẽ nổ luôn thay vì bay xuyên qua")]
+    public LayerMask environmentMask;
+
     private Vector3 direction;
+    private Vector3 previousPosition;
     private PlayerSubmarineController owner;
 
     public void Launch(Vector3 dir, PlayerSubmarineController shooter)
@@ -50,6 +46,7 @@ public class TorpedoProjectile : MonoBehaviour
             direction = fallbackDirection;
         }
 
+        previousPosition = transform.position;
         UpdateVisualRotation();
         Destroy(gameObject, lifeTime);
     }
@@ -131,7 +128,18 @@ public class TorpedoProjectile : MonoBehaviour
 
     void Update()
     {
-        transform.position += direction * speed * Time.deltaTime;
+        Vector3 nextPosition = transform.position + direction * speed * Time.deltaTime;
+
+        // BUG FIX: check môi trường bằng Raycast giữa vị trí cũ và mới, tránh trường hợp
+        // di chuyển nhanh "nhảy" qua tường mỏng trong 1 frame (tunneling).
+        if (CheckEnvironmentHit(previousPosition, nextPosition))
+        {
+            previousPosition = nextPosition;
+            return; // đã bị destroy trong CheckEnvironmentHit
+        }
+
+        previousPosition = transform.position;
+        transform.position = nextPosition;
         CheckHit();
     }
 
@@ -140,6 +148,7 @@ public class TorpedoProjectile : MonoBehaviour
         transform.rotation = Quaternion.LookRotation(direction) * Quaternion.Euler(meshRotationOffsetEuler);
     }
 
+    // Trúng tàu đối phương -> stun. Trúng môi trường (tường/đá) xử lý riêng ở CheckEnvironmentHit.
     void CheckHit()
     {
         Collider[] hits = Physics.OverlapSphere(transform.position, hitRadius);
@@ -153,6 +162,25 @@ public class TorpedoProjectile : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+    }
+
+    // BUG FIX: ngư lôi trước đây bay xuyên tường/địa hình vì CheckHit chỉ check tàu, không check môi trường.
+    bool CheckEnvironmentHit(Vector3 from, Vector3 to)
+    {
+        if (environmentMask.value == 0) return false; // chưa gán layer nào -> bỏ qua check (giữ hành vi cũ)
+
+        Vector3 delta = to - from;
+        float dist = delta.magnitude;
+        if (dist <= 0.0001f) return false;
+
+        if (Physics.SphereCast(from, hitRadius, delta.normalized, out RaycastHit hitInfo, dist, environmentMask))
+        {
+            SpawnHitVFX(hitInfo.point);
+            Destroy(gameObject);
+            return true;
+        }
+
+        return false;
     }
 
     void SpawnHitVFX(Vector3 atPosition)

@@ -89,14 +89,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b1b7c4612276c44e8b08942d4699708, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TorpedoProjectile
-  speed: 20
+  speed: 100
   lifeTime: 4
   stunDuration: 2
-  hitRadius: 0.6
-  aimAssistConeAngle: 30
-  aimAssistMaxRange: 30
-  aimAssistTurnRate: 40
-  aimAssistMaxTotalDeviation: 25
+  hitRadius: 1
+  predictionConeAngle: 25
+  predictionMaxRange: 30
   meshRotationOffsetEuler: {x: 90, y: 0, z: 0}
   hitVFXPrefab: {fileID: 7452553202921276299, guid: 84d71e12a413ef547a148cc2cfa5eb86, type: 3}
   hitVFXLifeTime: 2
+  environmentMask:
+    serializedVersion: 2
+    m_Bits: 0
