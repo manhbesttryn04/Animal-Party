@@ -68,6 +68,7 @@ public class ControllerManager : MonoBehaviour
             new List<ConnectedController>();
 
     private Coroutine notificationCoroutine;
+    private bool allowControllerSounds;
 
     // =========================================================
     // UNITY
@@ -87,9 +88,29 @@ public class ControllerManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    private void Start()
+    private IEnumerator Start()
     {
         InitializeControllerState();
+
+        // Chờ UIManager và AudioManager sẵn sàng.
+        float waitTimer = 0f;
+        const float maxWaitTime = 2f;
+
+        while ((UIManager.Instance == null ||
+                AudioManager.Instance == null) &&
+               waitTimer < maxWaitTime)
+        {
+            waitTimer += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        // Từ thời điểm này mới cho phép phát âm thanh,
+        // tránh âm thanh bị gọi hai lần trong lúc khởi tạo.
+        allowControllerSounds = true;
+
+        // Tay cầm đã cắm trước khi vào game vẫn hiện UI
+        // và phát âm thanh kết nối.
+        ShowInitialConnectedControllers();
     }
 
     private void Update()
@@ -130,6 +151,7 @@ public class ControllerManager : MonoBehaviour
 
         UpdateCursor();
         PrintControllerState();
+
     }
 
     // =========================================================
@@ -247,6 +269,7 @@ public class ControllerManager : MonoBehaviour
                         )
                     );
                 }
+                PlayDisconnectSound();
             }
 
             if (wasConsole2Connected)
@@ -262,6 +285,7 @@ public class ControllerManager : MonoBehaviour
                         )
                     );
                 }
+                PlayDisconnectSound();
             }
 
             Debug.Log(
@@ -305,6 +329,7 @@ public class ControllerManager : MonoBehaviour
                         )
                     );
                 }
+                PlayConnectSound();
             }
         }
 
@@ -341,6 +366,7 @@ public class ControllerManager : MonoBehaviour
                         )
                     );
                 }
+                PlayConnectSound();
             }
         }
 
@@ -379,6 +405,9 @@ public class ControllerManager : MonoBehaviour
                     )
                 );
             }
+
+            PlayConnectSound();
+
             console1LastChange =
                 isDifferentController
                     ? ControllerChangeType
@@ -422,6 +451,8 @@ public class ControllerManager : MonoBehaviour
                 );
             }
 
+            PlayConnectSound();
+
             console2LastChange =
                 isDifferentController
                     ? ControllerChangeType
@@ -436,6 +467,18 @@ public class ControllerManager : MonoBehaviour
         {
             console1LastChange =
                 ControllerChangeType.Disconnected;
+
+            if (UIManager.Instance != null &&
+                UIManager.Instance.consoleCloseImageP1 != null)
+            {
+                StartCoroutine(
+                    UIManager.Instance.ShowConsoleFailConect(
+                        UIManager.Instance.consoleCloseImageP1
+                    )
+                );
+            }
+
+            PlayDisconnectSound();
         }
 
         if (wasConsole2Connected &&
@@ -443,6 +486,18 @@ public class ControllerManager : MonoBehaviour
         {
             console2LastChange =
                 ControllerChangeType.Disconnected;
+
+            if (UIManager.Instance != null &&
+                UIManager.Instance.consoleCloseImageP2 != null)
+            {
+                StartCoroutine(
+                    UIManager.Instance.ShowConsoleFailConect(
+                        UIManager.Instance.consoleCloseImageP2
+                    )
+                );
+            }
+
+            PlayDisconnectSound();
         }
     }
 
@@ -796,6 +851,75 @@ public class ControllerManager : MonoBehaviour
 
         CursorManager.Instance
             .UpdateCursorByControllerState();
+    }
+
+    private void ShowInitialConnectedControllers()
+    {
+        UIManager ui = UIManager.Instance;
+
+        if (ui == null)
+            return;
+
+        bool hasShownConnectedUI = false;
+
+        if (console1Connected &&
+            ui.consoleOpenImageP1 != null)
+        {
+            StartCoroutine(
+                ui.ShowConsoleConect(
+                    ui.consoleOpenImageP1
+                )
+            );
+
+            hasShownConnectedUI = true;
+        }
+
+        if (console2Connected &&
+            ui.consoleOpenImageP2 != null)
+        {
+            StartCoroutine(
+                ui.ShowConsoleConect(
+                    ui.consoleOpenImageP2
+                )
+            );
+
+            hasShownConnectedUI = true;
+        }
+
+        // Chỉ phát một lần để tránh hai âm thanh chồng nhau
+        // khi cả hai tay cầm đã được cắm từ trước.
+        if (hasShownConnectedUI)
+        {
+            PlayConnectSound();
+        }
+    }
+
+    private void PlayConnectSound()
+    {
+        if (!allowControllerSounds ||
+            AudioManager.Instance == null ||
+            AudioManager.Instance.consoleControllerConect == null)
+        {
+            return;
+        }
+
+        AudioManager.Instance.PlayUI(
+            AudioManager.Instance.consoleControllerConect
+        );
+    }
+
+    private void PlayDisconnectSound()
+    {
+        if (!allowControllerSounds ||
+            AudioManager.Instance == null ||
+            AudioManager.Instance.consoleControllerDisConect == null)
+        {
+            return;
+        }
+
+        AudioManager.Instance.PlayUI(
+            AudioManager.Instance.consoleControllerDisConect
+        );
     }
 
     private void ShowControllerNotification()

@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class ChooseMode : MonoBehaviour
 {
@@ -27,9 +28,18 @@ public class ChooseMode : MonoBehaviour
     private List<Button> buttonsBlockedBySetting =
         new List<Button>();
 
-    [Header("Highlight Text")]
-    public List<TextMeshProUGUI> listTextHightP1;
-    public List<TextMeshProUGUI> listTextHightP2;
+    [Header("Direction Button Flash")]
+    [Tooltip("Index 0 = Left, Index 1 = Right")]
+    public List<Button> listButtonHighlightP1;
+
+    [Tooltip("Index 0 = Left, Index 1 = Right")]
+    public List<Button> listButtonHighlightP2;
+
+    [SerializeField]
+    private float buttonHighlightTime = 0.08f;
+
+    [SerializeField]
+    private float buttonPressedTime = 0.08f;
 
     [Header("Choose Status")]
     public bool isPlayer1Choose;
@@ -190,32 +200,23 @@ public class ChooseMode : MonoBehaviour
 
     private void SaveAndDisableChooseButtons()
     {
-        buttonInteractableBeforeSetting.Clear();
-
         if (buttonsBlockedBySetting == null)
         {
             return;
         }
 
-        for (int i = 0;
-             i < buttonsBlockedBySetting.Count;
-             i++)
+        for (int i = 0; i < buttonsBlockedBySetting.Count; i++)
         {
             Button button = buttonsBlockedBySetting[i];
 
-            // Giữ đúng index kể cả khi phần tử bị Null.
-            bool wasInteractable =
-                button != null &&
-                button.interactable;
-
-            buttonInteractableBeforeSetting.Add(
-                wasInteractable
-            );
-
-            if (button != null)
+            if (button == null)
             {
-                button.interactable = false;
+                continue;
             }
+
+            // Mở Setting: khóa Button và hiện trạng thái Disabled.
+            button.interactable = false;
+            SetButtonDisabledVisual(button);
         }
     }
 
@@ -223,27 +224,195 @@ public class ChooseMode : MonoBehaviour
     {
         if (buttonsBlockedBySetting == null)
         {
-            buttonInteractableBeforeSetting.Clear();
             return;
         }
 
-        int count = Mathf.Min(
-            buttonsBlockedBySetting.Count,
-            buttonInteractableBeforeSetting.Count
-        );
-
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < buttonsBlockedBySetting.Count; i++)
         {
             Button button = buttonsBlockedBySetting[i];
 
-            if (button != null)
+            if (button == null)
             {
-                button.interactable =
-                    buttonInteractableBeforeSetting[i];
+                continue;
+            }
+
+            bool keepDisabled =
+                IsChosenPlayerButton(button);
+
+            if (keepDisabled)
+            {
+                // Người chơi đã chọn xong:
+                // sau khi đóng Setting vẫn phải khóa và giữ Disabled.
+                button.interactable = false;
+                SetButtonDisabledVisual(button);
+            }
+            else
+            {
+                // Nút chưa chọn xong:
+                // mở lại và trở về Normal.
+                button.interactable = true;
+                ResetButtonToNormal(button);
             }
         }
 
-        buttonInteractableBeforeSetting.Clear();
+        Canvas.ForceUpdateCanvases();
+    }
+
+    private bool IsChosenPlayerButton(Button button)
+    {
+        if (button == null)
+        {
+            return false;
+        }
+
+        bool belongsToPlayer1 =
+            (listButtonHighlightP1 != null &&
+             listButtonHighlightP1.Contains(button)) ||
+            (ListButtonChoose != null &&
+             ListButtonChoose.Count > 0 &&
+             ListButtonChoose[0] == button);
+
+        bool belongsToPlayer2 =
+            (listButtonHighlightP2 != null &&
+             listButtonHighlightP2.Contains(button)) ||
+            (ListButtonChoose != null &&
+             ListButtonChoose.Count > 1 &&
+             ListButtonChoose[1] == button);
+
+        return (belongsToPlayer1 && isPlayer1Choose) ||
+               (belongsToPlayer2 && isPlayer2Choose);
+    }
+
+    private void DisablePlayerHighlightButtons(
+        List<Button> buttonList)
+    {
+        if (buttonList == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < buttonList.Count; i++)
+        {
+            Button button = buttonList[i];
+
+            if (button == null)
+            {
+                continue;
+            }
+
+            button.interactable = false;
+            SetButtonDisabledVisual(button);
+        }
+    }
+
+    private void DisableChooseButton(int playerIndex)
+    {
+        if (ListButtonChoose == null ||
+            playerIndex < 0 ||
+            playerIndex >= ListButtonChoose.Count)
+        {
+            return;
+        }
+
+        Button button = ListButtonChoose[playerIndex];
+
+        if (button == null)
+        {
+            return;
+        }
+
+        button.interactable = false;
+        SetButtonDisabledVisual(button);
+    }
+
+    private void SetButtonDisabledVisual(Button button)
+    {
+        Image image = GetButtonImage(button);
+
+        if (image == null)
+        {
+            return;
+        }
+
+        ColorBlock colors = button.colors;
+        SpriteState sprites = button.spriteState;
+
+        // Dùng đồng thời Disabled Color và Disabled Sprite.
+        image.color = colors.disabledColor;
+
+        if (sprites.disabledSprite != null)
+        {
+            image.overrideSprite = sprites.disabledSprite;
+        }
+
+        image.SetAllDirty();
+    }
+
+    private void ResetButtonToNormal(Button button)
+    {
+        if (button == null)
+        {
+            return;
+        }
+
+        EventSystem eventSystem = EventSystem.current;
+
+        if (eventSystem != null)
+        {
+            PointerEventData pointerData =
+                new PointerEventData(eventSystem)
+                {
+                    button = PointerEventData.InputButton.Left
+                };
+
+            BaseEventData baseEventData =
+                new BaseEventData(eventSystem);
+
+            // Xóa các trạng thái còn giữ lại.
+            button.OnPointerUp(pointerData);
+            button.OnPointerExit(pointerData);
+            button.OnDeselect(baseEventData);
+
+            if (eventSystem.currentSelectedGameObject ==
+                button.gameObject)
+            {
+                eventSystem.SetSelectedGameObject(null);
+            }
+        }
+
+        Image image = GetButtonImage(button);
+
+        if (image == null)
+        {
+            return;
+        }
+
+        ColorBlock colors = button.colors;
+
+        // Trở lại Normal Color.
+        image.color = colors.normalColor;
+
+        // null = trở lại Sprite gốc trong component Image.
+        image.overrideSprite = null;
+
+        image.SetAllDirty();
+    }
+
+    private Image GetButtonImage(Button button)
+    {
+        if (button == null)
+        {
+            return null;
+        }
+
+        Image image = button.targetGraphic as Image;
+
+        if (image == null)
+        {
+            image = button.GetComponent<Image>();
+        }
+
+        return image;
     }
 
     // =========================================================
@@ -522,16 +691,10 @@ public class ChooseMode : MonoBehaviour
             indexP1 = player1.Count - 1;
         }
 
-        if (listTextHightP1 != null &&
-            listTextHightP1.Count > 0 &&
-            listTextHightP1[0] != null)
-        {
-            StartCoroutine(
-                HighlightText(
-                    listTextHightP1[0]
-                )
-            );
-        }
+        FlashDirectionButton(
+            listButtonHighlightP1,
+            0
+        );
 
         UpdatePlayer1();
     }
@@ -554,16 +717,10 @@ public class ChooseMode : MonoBehaviour
             indexP1 = 0;
         }
 
-        if (listTextHightP1 != null &&
-            listTextHightP1.Count > 1 &&
-            listTextHightP1[1] != null)
-        {
-            StartCoroutine(
-                HighlightText(
-                    listTextHightP1[1]
-                )
-            );
-        }
+        FlashDirectionButton(
+            listButtonHighlightP1,
+            1
+        );
 
         UpdatePlayer1();
     }
@@ -577,17 +734,28 @@ public class ChooseMode : MonoBehaviour
             return;
         }
 
+        // Không cho P1 chọn trùng nhân vật mà P2 đã chọn.
+        // Nếu cả hai bấm cùng một frame, P1 được xử lý trước
+        // vì MoveChoosePlayer1() chạy trước MoveChoosePlayer2().
+        if (isPlayer2Choose && indexP1 == indexP2)
+        {
+            PlayCannotChooseSound();
+            return;
+        }
+
         PlaySalute(player1[indexP1]);
         PlayChooseSound();
 
         isPlayer1Choose = true;
 
-        if (ListButtonChoose != null &&
-            ListButtonChoose.Count > 0 &&
-            ListButtonChoose[0] != null)
-        {
-            ListButtonChoose[0].interactable = false;
-        }
+        // P1 chọn xong bằng bàn phím hoặc tay cầm:
+        // khóa toàn bộ Button Highlight của P1.
+        DisablePlayerHighlightButtons(
+            listButtonHighlightP1
+        );
+
+        // Đồng thời khóa Button Choose của P1.
+        DisableChooseButton(0);
 
         if (stateChooseP1 != null &&
             stateChooseP1.Count > 1)
@@ -630,16 +798,10 @@ public class ChooseMode : MonoBehaviour
             indexP2 = player2.Count - 1;
         }
 
-        if (listTextHightP2 != null &&
-            listTextHightP2.Count > 0 &&
-            listTextHightP2[0] != null)
-        {
-            StartCoroutine(
-                HighlightText(
-                    listTextHightP2[0]
-                )
-            );
-        }
+        FlashDirectionButton(
+            listButtonHighlightP2,
+            0
+        );
 
         UpdatePlayer2();
     }
@@ -662,16 +824,10 @@ public class ChooseMode : MonoBehaviour
             indexP2 = 0;
         }
 
-        if (listTextHightP2 != null &&
-            listTextHightP2.Count > 1 &&
-            listTextHightP2[1] != null)
-        {
-            StartCoroutine(
-                HighlightText(
-                    listTextHightP2[1]
-                )
-            );
-        }
+        FlashDirectionButton(
+            listButtonHighlightP2,
+            1
+        );
 
         UpdatePlayer2();
     }
@@ -685,17 +841,28 @@ public class ChooseMode : MonoBehaviour
             return;
         }
 
+        // Không cho P2 chọn trùng nhân vật mà P1 đã chọn.
+        // Trường hợp cả hai bấm cùng một frame và cùng index:
+        // P1 chọn thành công, P2 sẽ bị từ chối tại đây.
+        if (isPlayer1Choose && indexP2 == indexP1)
+        {
+            PlayCannotChooseSound();
+            return;
+        }
+
         PlaySalute(player2[indexP2]);
         PlayChooseSound();
 
         isPlayer2Choose = true;
 
-        if (ListButtonChoose != null &&
-            ListButtonChoose.Count > 1 &&
-            ListButtonChoose[1] != null)
-        {
-            ListButtonChoose[1].interactable = false;
-        }
+        // P2 chọn xong bằng bàn phím hoặc tay cầm:
+        // khóa toàn bộ Button Highlight của P2.
+        DisablePlayerHighlightButtons(
+            listButtonHighlightP2
+        );
+
+        // Đồng thời khóa Button Choose của P2.
+        DisableChooseButton(1);
 
         if (stateChooseP2 != null &&
             stateChooseP2.Count > 1)
@@ -997,29 +1164,80 @@ public class ChooseMode : MonoBehaviour
     // EFFECTS
     // =========================================================
 
-    private IEnumerator HighlightText(
-        TextMeshProUGUI text)
+    private void FlashDirectionButton(
+        List<Button> buttonList,
+        int buttonIndex)
     {
-        if (text == null)
-            yield break;
-
-        Color defaultColor =
-            text.color;
-
-        if (!ColorUtility.TryParseHtmlString(
-                "#00FFFF",
-                out Color highlightColor))
+        if (buttonList == null ||
+            buttonIndex < 0 ||
+            buttonIndex >= buttonList.Count)
         {
-            highlightColor = Color.cyan;
+            return;
         }
 
-        text.color = highlightColor;
+        Button button = buttonList[buttonIndex];
 
-        yield return new WaitForSeconds(0.1f);
-
-        if (text != null)
+        if (button == null ||
+            !button.IsInteractable())
         {
-            text.color = defaultColor;
+            return;
+        }
+
+        StartCoroutine(
+            FlashButtonRoutine(button)
+        );
+    }
+
+    private IEnumerator FlashButtonRoutine(
+        Button button)
+    {
+        if (button == null)
+            yield break;
+
+        EventSystem eventSystem =
+            EventSystem.current;
+
+        if (eventSystem == null)
+            yield break;
+
+        BaseEventData selectData =
+            new BaseEventData(eventSystem);
+
+        PointerEventData pointerData =
+            new PointerEventData(eventSystem)
+            {
+                button =
+                    PointerEventData.InputButton.Left
+            };
+
+        // Highlight một lần.
+        button.OnSelect(selectData);
+
+        yield return new WaitForSecondsRealtime(
+            buttonHighlightTime
+        );
+
+        if (button == null)
+            yield break;
+
+        // Pressed một lần, chỉ chạy hiệu ứng hình ảnh.
+        // Không gọi OnPointerClick nên không kích hoạt onClick lần nữa.
+        button.OnPointerDown(pointerData);
+
+        yield return new WaitForSecondsRealtime(
+            buttonPressedTime
+        );
+
+        if (button == null)
+            yield break;
+
+        button.OnPointerUp(pointerData);
+
+        yield return null;
+
+        if (button != null)
+        {
+            button.OnDeselect(selectData);
         }
     }
 
@@ -1056,6 +1274,17 @@ public class ChooseMode : MonoBehaviour
             AudioManager.Instance.PlayUI(
                 AudioManager.Instance
                     .doneChooseClickClip
+            );
+        }
+    }
+
+    private void PlayCannotChooseSound()
+    {
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayUI(
+                AudioManager.Instance
+                    .noCoinBuyItemClip
             );
         }
     }

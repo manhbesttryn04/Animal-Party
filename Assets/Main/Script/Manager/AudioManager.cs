@@ -84,6 +84,9 @@ public class AudioManager : MonoBehaviour
     public AudioClip audioReduction;
     [Header("Camera SFX")]
     public AudioClip moveCamera;
+    [Header("Console")]
+    public AudioClip consoleControllerConect;
+    public AudioClip consoleControllerDisConect;
 
     [Header("Winner")]
     public AudioClip winnerClip;
