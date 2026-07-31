@@ -37,6 +37,15 @@ public class RaceMiniGame : MonoBehaviour
     public TMP_Text resultText;
     public GameObject resultPanel;
 
+    [Header("--- ÂM THANH TRẬN ĐẤU ---")]
+    [Tooltip("AudioSource riêng cho nhạc nền (loop), tự Play lúc StartMiniGame, tự Stop lúc StopMiniGame/EndGame")]
+    public AudioSource musicSource;
+    [Tooltip("AudioSource dùng để phát SFX 1 lần (thắng/thua)")]
+    public AudioSource sfxSource;
+    [Tooltip("Nhạc/hiệu ứng khi có người thắng")]
+    public AudioClip winSound;
+    [Range(0f, 1f)] public float musicVolume = 0.5f;
+
     // Internal
     private GameObject p1obj, p2obj;
     private PlayerSubmarineController sub1, sub2;
@@ -93,6 +102,8 @@ public class RaceMiniGame : MonoBehaviour
         if (countdownText) countdownText.text = "";
         if (resultPanel) resultPanel.SetActive(false);
 
+        PlayMusic();
+
         isRunning = true;
         StartCoroutine(GameRoutine());
     }
@@ -118,6 +129,26 @@ public class RaceMiniGame : MonoBehaviour
         Debug.Log($"Cam1 rect: {cam1.rect}, Cam2 rect: {cam2.rect}");
     }
 
+    // ====== ÂM THANH ======
+    void PlayMusic()
+    {
+        if (musicSource == null) return;
+        musicSource.volume = musicVolume;
+        if (!musicSource.isPlaying) musicSource.Play();
+    }
+
+    void StopMusic()
+    {
+        if (musicSource == null) return;
+        musicSource.Stop();
+    }
+
+    void PlaySfx(AudioClip clip)
+    {
+        if (sfxSource == null || clip == null) return;
+        sfxSource.PlayOneShot(clip);
+    }
+
     // ====== DỪNG ======
     public void StopMiniGame()
     {
@@ -132,6 +163,8 @@ public class RaceMiniGame : MonoBehaviour
         if (countdownText != null) countdownText.text = "";
 
         if (miniGameCanvas != null) miniGameCanvas.SetActive(false);
+
+        StopMusic();
     }
 
     // ====== GAME ROUTINE ======
@@ -196,6 +229,9 @@ public class RaceMiniGame : MonoBehaviour
 
         if (resultText != null) resultText.text = $"<color={color}>{winnerName} WINS!</color>";
         if (messageText != null) messageText.text = $"{winnerName} WINS!";
+
+        StopMusic();
+        PlaySfx(winSound);
 
         if (manager != null)
         {

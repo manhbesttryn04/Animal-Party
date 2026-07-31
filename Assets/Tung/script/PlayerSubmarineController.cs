@@ -28,9 +28,16 @@ public class PlayerSubmarineController : MonoBehaviour
     [Tooltip("Giới hạn độ cao tối đa được nổi lên (world Y)")]
     public float maxDepthY = 0f;
 
+    [Header("--- ÂM THANH ---")]
+    [Tooltip("AudioSource dùng để phát 1 lần (bắn ngư lôi, trúng đạn...). Kéo 1 AudioSource rảnh vào đây")]
+    public AudioSource sfxSource;
+    public AudioClip fireSound;
+    public AudioClip hitStunSound;
+
     [Header("--- VA CHẠM / HÚC NHAU ---")]
     [Tooltip("Lực húc tàu kia khi đâm vào")]
     public float pushForce = 6f;
+
 
     [Header("--- ANIMATION ---")]
     [Tooltip("Animator của model tàu ngầm - có sẵn bool isWalking/isRunning từ asset")]
@@ -185,7 +192,15 @@ public class PlayerSubmarineController : MonoBehaviour
         if (!wasStunned)
         {
             UpdateStunVisual();
+            PlaySfx(hitStunSound);
         }
+    }
+
+    // Phát 1 âm thanh qua sfxSource (PlayOneShot để không cắt ngang âm thanh đang phát khác)
+    void PlaySfx(AudioClip clip)
+    {
+        if (sfxSource == null || clip == null) return;
+        sfxSource.PlayOneShot(clip);
     }
 
     // ====== FEEDBACK KHI BỊ STUN (VFX + nhấp nháy màu) ======
@@ -259,9 +274,44 @@ public class PlayerSubmarineController : MonoBehaviour
 
     void FixedUpdate()
     {
+        // BUG FIX: kẹp biên nổi/lặn phải chạy LUÔN LUÔN, không phụ thuộc gameActive/isStunned,
+        // vì lực húc giữa 2 tàu (OnCollisionEnter) có thể đẩy tàu vượt biên bất cứ lúc nào,
+        // kể cả khi đang bị stun hoặc game tạm dừng.
+        ClampDepth();
+
         if (!gameActive) return;
         if (isStunned) return; // đang bị stun - không nhận lực điều khiển, chỉ trôi theo waterDrag
         ApplyPhysics();
+    }
+
+    // Kẹp cứng cả vị trí lẫn vận tốc theo trục Y, chạy độc lập mọi nguồn chuyển động
+    // (thrust, húc nhau, trôi tự do khi stun...), không chỉ riêng lúc ApplyPhysics() chạy.
+    void ClampDepth()
+    {
+        if (subRigidbody == null) return;
+
+        Vector3 pos = subRigidbody.position;
+        Vector3 vel = subRigidbody.linearVelocity;
+        bool changed = false;
+
+        if (pos.y > maxDepthY)
+        {
+            pos.y = maxDepthY;
+            if (vel.y > 0f) vel.y = 0f;
+            changed = true;
+        }
+        else if (pos.y < minDepthY)
+        {
+            pos.y = minDepthY;
+            if (vel.y < 0f) vel.y = 0f;
+            changed = true;
+        }
+
+        if (changed)
+        {
+            subRigidbody.position = pos;
+            subRigidbody.linearVelocity = vel;
+        }
     }
 
     // ====== ĐỌC INPUT ======
@@ -315,6 +365,8 @@ public class PlayerSubmarineController : MonoBehaviour
         TorpedoProjectile projectile = torpedo.GetComponent<TorpedoProjectile>();
         if (projectile != null)
             projectile.Launch(transform.forward, this);
+
+        PlaySfx(fireSound);
     }
 
     // ====== ÁP DỤNG VẬT LÝ ======
@@ -332,6 +384,8 @@ public class PlayerSubmarineController : MonoBehaviour
 
         // Xoay trái / phải quanh trục Y - dùng MoveRotation (không phải transform.Rotate) để không
         // bị giật khi Rigidbody có Interpolation.
+        // FIX CẢM GIÁC LÁI: trước đây turnFactor = Clamp01(speed/2) khiến xe gần như không quẹo
+        // nổi lúc còn chậm (ì). Giờ có minTurnFactor làm sàn, luôn quẹo được 1 mức tối thiểu.
         float speedTurnFactor = Mathf.Clamp01(Mathf.Abs(currentSpeed) / 2f);
         float turnFactor = Mathf.Max(speedTurnFactor, minTurnFactor);
 
@@ -339,7 +393,8 @@ public class PlayerSubmarineController : MonoBehaviour
         if (inputLeft) rawTurnInput -= 1f;
         if (inputRight) rawTurnInput += 1f;
 
-        // Làm mượt input quẹo thay vì nhảy thẳng -1/0/1 mỗi frame, giúp đổi hướng không bị "khựng" đột ngột.
+        // FIX CẢM GIÁC LÁI: làm mượt input quẹo thay vì nhảy thẳng -1/0/1 mỗi frame,
+        // giúp đổi hướng không bị "khựng" đột ngột.
         smoothedTurnInput = Mathf.SmoothDamp(smoothedTurnInput, rawTurnInput, ref turnInputSmoothRef, turnSmoothTime);
 
         if (Mathf.Abs(smoothedTurnInput) > 0.001f)
@@ -371,23 +426,9 @@ public class PlayerSubmarineController : MonoBehaviour
         currentVel.y = smoothedVerticalSpeed;
         subRigidbody.linearVelocity = currentVel;
 
-        // Kẹp cứng vị trí thật sự nếu lỡ vọt qua biên (vật lý tích hợp vị trí trước khi code
-        // kịp chặn vận tốc ở trên, nên vẫn cần chặn cả vị trí ở đây cho chắc).
-        if (subRigidbody.position.y > maxDepthY)
-        {
-            Vector3 clampedPos = subRigidbody.position;
-            clampedPos.y = maxDepthY;
-            subRigidbody.position = clampedPos;
-        }
-        else if (subRigidbody.position.y < minDepthY)
-        {
-            Vector3 clampedPos = subRigidbody.position;
-            clampedPos.y = minDepthY;
-            subRigidbody.position = clampedPos;
-        }
-
-        // Nghiêng mũi tàu lên/xuống theo hướng đang di chuyển theo trục Y - chỉ là hiệu ứng
-        // thị giác (visual only), không ảnh hưởng vật lý thật.
+        // FIX "KHÔNG PHÊ" KHI NỔI/LẶN: nghiêng mũi tàu lên/xuống theo hướng đang di chuyển
+        // theo trục Y, tạo phản hồi hình ảnh rõ ràng thay vì thân tàu trôi phẳng lì vô cảm.
+        // Chỉ là hiệu ứng thị giác (visual only), không ảnh hưởng vật lý thật - an toàn tuyệt đối.
         float targetPitch = 0f;
         if (smoothedVerticalSpeed > 0.1f) targetPitch = -pitchTiltAngle;      // đang nổi -> ngẩng mũi lên
         else if (smoothedVerticalSpeed < -0.1f) targetPitch = pitchTiltAngle; // đang lặn -> cúi mũi xuống
@@ -409,8 +450,7 @@ public class PlayerSubmarineController : MonoBehaviour
         if (otherSub == null) return;
 
         Vector3 pushDir = collision.transform.position - transform.position;
-        pushDir.y = 0f; // FIX: chỉ đẩy ngang, không đẩy theo chiều sâu - tránh bắn tàu vọt khỏi mặt nước
-        pushDir.Normalize();
+        pushDir.Normalize(); // giữ nguyên cả trục Y - va chạm tàu ngầm có thể đẩy lệch cả chiều sâu
 
         float impactRatio = Mathf.Clamp01(Mathf.Abs(currentSpeed) / maxSpeed);
         otherSub.GetComponent<Rigidbody>().AddForce(pushDir * pushForce * impactRatio, ForceMode.VelocityChange);
