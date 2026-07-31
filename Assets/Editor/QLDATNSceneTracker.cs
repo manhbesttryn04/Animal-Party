@@ -26,7 +26,7 @@ namespace QLDATN.ProjectTracker
         private const string DeviceIdPreference = "QLDATN_PROJECT_TRACKER_DEVICE_ID";
         private const double HeartbeatSeconds = 30.0;
         private const double GitRefreshSeconds = 60.0;
-        private const string ClientVersion = "qldatn-unity-3.2.0";
+        private const string ClientVersion = "qldatn-unity-3.2.1";
         private const string PendingUpdatePreference = "QLDATN_PROJECT_TRACKER_PENDING_UPDATE";
         private const int MaximumOfflinePayloads = 50;
 
@@ -467,6 +467,9 @@ namespace QLDATN.ProjectTracker
                             + "): "
                             + serverMessage
                         );
+                        // Server vẫn có thể trả gói cập nhật đã ký kèm HTTP 422.
+                        // Xử lý trước khi loại payload để client cũ có cơ hội tự sửa.
+                        await TryApplyUpdate(responseBody);
                         var transientFailure = request.responseCode == 0
                             || request.responseCode == 408
                             || request.responseCode == 429
@@ -553,16 +556,30 @@ namespace QLDATN.ProjectTracker
             var downloadPath = targetPath + ".download";
             var backupPath = targetPath + ".backup";
             File.WriteAllText(downloadPath, source, new UTF8Encoding(false));
-            File.Copy(targetPath, backupPath, true);
-            EditorPrefs.SetString(PendingUpdatePreference, update.version);
-            _updateCompilationFailed = false;
-            File.Copy(downloadPath, targetPath, true);
-            File.Delete(downloadPath);
-            AssetDatabase.ImportAsset(
-                "Assets/Editor/QLDATNSceneTracker.cs",
-                ImportAssetOptions.ForceUpdate
-            );
-            Debug.Log("[QLDATN Tracker] Đang tự cập nhật lên " + update.version + "...");
+            try
+            {
+                File.Copy(targetPath, backupPath, true);
+                EditorPrefs.SetString(PendingUpdatePreference, update.version);
+                _updateCompilationFailed = false;
+                File.Copy(downloadPath, targetPath, true);
+                File.Delete(downloadPath);
+                AssetDatabase.ImportAsset(
+                    "Assets/Editor/QLDATNSceneTracker.cs",
+                    ImportAssetOptions.ForceUpdate
+                );
+                Debug.Log("[QLDATN Tracker] Đang tự cập nhật lên " + update.version + "...");
+            }
+            catch
+            {
+                EditorPrefs.DeleteKey(PendingUpdatePreference);
+                if (File.Exists(backupPath))
+                {
+                    File.Copy(backupPath, targetPath, true);
+                    File.Delete(backupPath);
+                }
+                if (File.Exists(downloadPath)) File.Delete(downloadPath);
+                throw;
+            }
         }
 
         private static void FinalizePendingUpdate()
