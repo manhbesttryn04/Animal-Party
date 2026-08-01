@@ -2014,6 +2014,10 @@ public class SettingManager : MonoBehaviour
                 UIManager.Instance.canvasNotifi.SetActive(
                     false
                 );
+                UIManager.Instance.canvasMiniGame.SetActive(
+                    false
+                );
+                UIManager.Instance.HideAllUI();
             }
         }
 
