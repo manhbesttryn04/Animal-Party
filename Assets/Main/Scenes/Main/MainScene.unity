@@ -806,7 +806,7 @@ MonoBehaviour:
   canStartNextRound: 0
   canCheckPlayer2: 1
   canCheckMiniGame: 1
-  canRandomIndexMiniGame: 1
+  canRandomIndexMiniGame: 0
 --- !u!4 &265678874
 Transform:
   m_ObjectHideFlags: 0
@@ -889,7 +889,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f5c43531b7774c45ba1db7013ef8a54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  indexMiniGame: 2
+  indexMiniGame: 4
   miniGameList: {fileID: 288627989}
   intrusTextList: {fileID: 288627990}
   videoInstructList: {fileID: 288627991}
@@ -1079,13 +1079,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5715c873590850445b10d2adaafd45d4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  timeMinigame1: 80
+  timeMinigame1: 60
   timeMinigame2: 60
-  timeMinigame3: 120
-  timeMinigame4: 70
-  timeMinigame5: 80
+  timeMinigame3: 60
+  timeMinigame4: 60
+  timeMinigame5: 60
   timeMinigame6: 60
-  timeMinigame7: 122
+  timeMinigame7: 60
   timeMinigame8: 0
 --- !u!114 &288627995
 MonoBehaviour:
@@ -9603,6 +9603,10 @@ PrefabInstance:
       propertyPath: manager
       value: 
       objectReference: {fileID: 288627986}
+    - target: {fileID: 4779576814512428424, guid: 8bf137949f257d34bb43024206c0cfd5, type: 3}
+      propertyPath: startMoveSpeed
+      value: 0.6
+      objectReference: {fileID: 0}
     - target: {fileID: 5713975560798368372, guid: 8bf137949f257d34bb43024206c0cfd5, type: 3}
       propertyPath: m_LocalPosition.x
       value: 20059.496
@@ -9730,6 +9734,10 @@ PrefabInstance:
       propertyPath: manager
       value: 
       objectReference: {fileID: 288627986}
+    - target: {fileID: 5504479634003100092, guid: 4ede0bf0bcac27e4caf9356a6938336d, type: 3}
+      propertyPath: gameDuration
+      value: 58
+      objectReference: {fileID: 0}
     - target: {fileID: 6332265877369057914, guid: 4ede0bf0bcac27e4caf9356a6938336d, type: 3}
       propertyPath: m_LocalScale.x
       value: 2.7899
@@ -9767,6 +9775,10 @@ PrefabInstance:
       propertyPath: manager
       value: 
       objectReference: {fileID: 288627986}
+    - target: {fileID: 3945112802847102104, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
+      propertyPath: gameDuration
+      value: 56
+      objectReference: {fileID: 0}
     - target: {fileID: 8121021932883651162, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

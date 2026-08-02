@@ -480,6 +480,28 @@ public class MiniGameManager : MonoBehaviour
             yield return null;
         }
 
+        // MiniGame 4: khi hết giờ, bắn chết các player chưa về đích
+        // rồi mới cho MiniGameManager chạy tiếp phần kết quả.
+        if (indexMiniGame == 4 &&
+            miniGameList != null &&
+            miniGameList.miniGame4 != null)
+        {
+            ui.timeMiniGameText.text = "00:00";
+
+            miniGameList.miniGame4.BeginTimeoutSequence();
+
+            float maxWaitTime = 15f;
+
+            while (miniGameList.miniGame4.IsFinishingSequence &&
+                   maxWaitTime > 0f)
+            {
+                ui.timeMiniGameText.text = "00:00";
+
+                maxWaitTime -= Time.deltaTime;
+                yield return null;
+            }
+        }
+
         // Chờ MiniGame7 xử lý xong cá mập,
         // thông báo thắng và giọng nói.
         if (indexMiniGame == 7 &&
@@ -564,7 +586,7 @@ public class MiniGameManager : MonoBehaviour
         UIManager.Instance.ActiveOpenSettingButton(true);
         if (cursor != null)
         {
-          
+
             cursor.ShowGameCursor();
         }
         setting.canOpenSettingByController = true;
@@ -824,8 +846,8 @@ public class MiniGameManager : MonoBehaviour
 
     public void SetIndex()
     {
-        // indexMiniGame++;
-        // if (indexMiniGame > 7) indexMiniGame = 1;
+        indexMiniGame++;
+        if (indexMiniGame > 7) indexMiniGame = 1;
     }
 
     #endregion

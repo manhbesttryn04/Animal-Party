@@ -19,8 +19,6 @@ public class MiniGame4 : MonoBehaviour
     [Header("Player Speed")]
     public float startMoveSpeed = 1f;
     public float detectedMoveSpeed = 0.3f;
-    public float speedIncreaseAfterRespawn = 0.2f;
-    public float maxMoveSpeed = 1.0f;
 
     [Header("Detect")]
     public float moveTolerance = 0.05f;
@@ -46,8 +44,11 @@ public class MiniGame4 : MonoBehaviour
     private bool isAttacking;
     private bool hasLaughThisWatch;
 
+    public bool IsFinishingSequence { get; private set; }
+
     private GameObject currentAttackTarget;
     private bool isWaitingAttackEvent;
+    private bool hasSetEndTimer;
 
     private Quaternion backRotation;
     private Quaternion lookRotation;
@@ -61,11 +62,6 @@ public class MiniGame4 : MonoBehaviour
     private Dictionary<GameObject, Vector3> redStartPositions =
         new Dictionary<GameObject, Vector3>();
 
-    private Dictionary<GameObject, float> playerCurrentSpeeds =
-        new Dictionary<GameObject, float>();
-
-    private Transform respawnPoint1;
-    private Transform respawnPoint2;
     private Quaternion startRotation;
 
     private void Start()
@@ -79,23 +75,8 @@ public class MiniGame4 : MonoBehaviour
     {
         if (isRunning) return;
 
-        // Tạo 2 transform lưu vị trí ban đầu để làm điểm hồi sinh
-        if (respawnPoint1 == null) respawnPoint1 = new GameObject("RespawnPoint1_MG4").transform;
-        if (respawnPoint2 == null) respawnPoint2 = new GameObject("RespawnPoint2_MG4").transform;
-
-        if (manager.currentPlayer1 != null)
-        {
-            respawnPoint1.position = manager.currentPlayer1.transform.position;
-            PlayerMiniGame mini1 = manager.currentPlayer1.GetComponent<PlayerMiniGame>();
-            if (mini1 != null) mini1.checkPoint = respawnPoint1;
-        }
-
-        if (manager.currentPlayer2 != null)
-        {
-            respawnPoint2.position = manager.currentPlayer2.transform.position;
-            PlayerMiniGame mini2 = manager.currentPlayer2.GetComponent<PlayerMiniGame>();
-            if (mini2 != null) mini2.checkPoint = respawnPoint2;
-        }
+        hasSetEndTimer = false;
+        IsFinishingSequence = false;
 
         SetUpAllPlayer();
         isRunning = true;
@@ -105,12 +86,13 @@ public class MiniGame4 : MonoBehaviour
     public void StopMiniGame()
     {
         isRunning = false;
+        IsFinishingSequence = false;
 
         StopAllCoroutines();
 
         AudioManager.Instance.StopEnvironment();
         AudioManager.Instance.StopSpecial();
-     
+
 
         // Tính thưởng trước khi Clear
         CheckFinishReward(manager.currentPlayer1);
@@ -124,6 +106,7 @@ public class MiniGame4 : MonoBehaviour
 
         currentAttackTarget = null;
         isWaitingAttackEvent = false;
+        hasSetEndTimer = false;
 
         transform.rotation = startRotation;
 
@@ -192,8 +175,6 @@ public class MiniGame4 : MonoBehaviour
             AudioManager.Instance.StopSpecial();
 
             yield return StartCoroutine(RotateTo(backRotation, rotateSpeed));
-
-            RespawnDeadPlayers();
 
             int randomGreenTime = Random.Range(2, 5);
 
@@ -305,8 +286,17 @@ public class MiniGame4 : MonoBehaviour
         else
             PiraterAttack();
 
-        while (isWaitingAttackEvent)
+        float attackEventWait = 2f;
+
+        while (isWaitingAttackEvent && attackEventWait > 0f)
+        {
+            attackEventWait -= Time.deltaTime;
             yield return null;
+        }
+
+        // Dự phòng nếu animation không có event PiraterAttack.
+        if (isWaitingAttackEvent)
+            PiraterAttack();
 
         currentAttackTarget = null;
     }
@@ -373,6 +363,101 @@ public class MiniGame4 : MonoBehaviour
         KillFakePlayer(target);
     }
 
+    public void BeginTimeoutSequence()
+    {
+        if (IsFinishingSequence)
+            return;
+
+        isRunning = false;
+        isWatching = false;
+        isAttacking = false;
+        isWaitingAttackEvent = false;
+        currentAttackTarget = null;
+
+        // Dừng vòng quay bình thường và các đòn tấn công đang chạy.
+        StopAllCoroutines();
+
+        attackQueue.Clear();
+        detectedPlayers.Clear();
+        redStartPositions.Clear();
+
+        StartCoroutine(TimeoutShootSequence());
+    }
+
+    IEnumerator TimeoutShootSequence()
+    {
+        IsFinishingSequence = true;
+
+        // Khóa ngay những người chưa về đích để họ không chạy thêm sau 00:00.
+        LockUnfinishedPlayer(manager != null ? manager.currentPlayer1 : null);
+        LockUnfinishedPlayer(manager != null ? manager.currentPlayer2 : null);
+
+        AudioManager.Instance.StopSpecial();
+        AudioManager.Instance.StopEnvironment();
+
+        GameObject player1 = manager != null ? manager.currentPlayer1 : null;
+        GameObject player2 = manager != null ? manager.currentPlayer2 : null;
+
+        if (MustBeShotAtTimeout(player1))
+            yield return StartCoroutine(ShootTimeoutPlayer(player1));
+
+        if (MustBeShotAtTimeout(player2))
+            yield return StartCoroutine(ShootTimeoutPlayer(player2));
+
+        // Một khoảng ngắn để animation chết hiện rõ trước khi bảng kết quả mở.
+        yield return new WaitForSeconds(0.5f);
+
+        IsFinishingSequence = false;
+    }
+
+    bool MustBeShotAtTimeout(GameObject player)
+    {
+        if (player == null)
+            return false;
+
+        return !finishedPlayers.Contains(player) &&
+               !deadPlayers.Contains(player);
+    }
+
+    void LockUnfinishedPlayer(GameObject player)
+    {
+        if (!MustBeShotAtTimeout(player))
+            return;
+
+        PlayerMove move = player.GetComponent<PlayerMove>();
+        if (move != null)
+        {
+            move.isJumpAndMove = false;
+            move.isWalk = false;
+        }
+
+        PlayerAnimator playerAnimator = player.GetComponent<PlayerAnimator>();
+        if (playerAnimator != null && playerAnimator.playerAnimator != null)
+            playerAnimator.playerAnimator.SetFloat("Walk", 0f);
+    }
+
+    IEnumerator ShootTimeoutPlayer(GameObject player)
+    {
+        if (!MustBeShotAtTimeout(player))
+            yield break;
+
+        yield return StartCoroutine(AttackPlayerPirate(player));
+
+        // AttackPlayerPirate kết thúc khi animation event bắn đạn được gọi.
+        // Chờ đạn thật sự chạm player và KillFakePlayer hoàn tất.
+        float maxWaitTime = 5f;
+
+        while (MustBeShotAtTimeout(player) && maxWaitTime > 0f)
+        {
+            maxWaitTime -= Time.deltaTime;
+            yield return null;
+        }
+
+        // Dự phòng nếu prefab đạn/animation event gặp lỗi.
+        if (MustBeShotAtTimeout(player))
+            KillFakePlayer(player);
+    }
+
     void KillFakePlayer(GameObject target)
     {
         if (target == null) return;
@@ -381,64 +466,47 @@ public class MiniGame4 : MonoBehaviour
 
         deadPlayers.Add(target);
 
+        // Khóa di chuyển vĩnh viễn trong minigame này
         PlayerMove move = target.GetComponent<PlayerMove>();
         if (move != null)
+        {
             move.isJumpAndMove = false;
+            move.isWalk = false;
+        }
 
-        PlayerVFX vfx = target.GetComponent<PlayerVFX>();
-        if (vfx != null)
-            StartCoroutine(vfx.DissolveOutNoParticleRoutine(0.5f));
-
+        // Chỉ hiện animation chết, không hồi sinh và không dùng VFX
         PlayerAnimator playerAnimator = target.GetComponent<PlayerAnimator>();
         if (playerAnimator != null && playerAnimator.playerAnimator != null)
         {
             playerAnimator.playerAnimator.SetFloat("Walk", 0f);
             playerAnimator.playerAnimator.SetBool("Die", true);
         }
+
+        CheckEndCondition();
     }
 
-    void RespawnDeadPlayers()
+    bool IsPlayerDone(GameObject player)
     {
-        foreach (GameObject player in deadPlayers)
-        {
-            if (player == null) continue;
+        if (player == null) return false;
 
-            PlayerMiniGame mini = player.GetComponent<PlayerMiniGame>();
-            PlayerMove move = player.GetComponent<PlayerMove>();
-            PlayerAnimator playerAnimator = player.GetComponent<PlayerAnimator>();
-            PlayerVFX vfx = player.GetComponent<PlayerVFX>();
-
-            if (mini != null)
-                mini.Respawn();
-
-            if (playerAnimator != null && playerAnimator.playerAnimator != null)
-                playerAnimator.playerAnimator.SetBool("Die", false);
-
-           
-
-            if (vfx != null)
-                StartCoroutine(vfx.DissolveInNoParticleRoutine(0.5f)); // hoặc vfx.PlayBlink();
-
-            if (move != null)
-            {
-                move.isJumpAndMove = true;
-
-                if (!playerCurrentSpeeds.ContainsKey(player))
-                    playerCurrentSpeeds[player] = startMoveSpeed;
-
-                playerCurrentSpeeds[player] = Mathf.Min(
-                    playerCurrentSpeeds[player] + speedIncreaseAfterRespawn,
-                    maxMoveSpeed
-                );
-
-                move.speed = playerCurrentSpeeds[player];
-            }
-        }
-
-        deadPlayers.Clear();
+        return deadPlayers.Contains(player) ||
+               finishedPlayers.Contains(player);
     }
 
-    
+    void CheckEndCondition()
+    {
+        if (hasSetEndTimer || manager == null) return;
+
+        bool player1Done = IsPlayerDone(manager.currentPlayer1);
+        bool player2Done = IsPlayerDone(manager.currentPlayer2);
+
+        // Cả hai đã chết, đã về đích, hoặc một chết và một về đích
+        if (player1Done && player2Done)
+        {
+            hasSetEndTimer = true;
+            manager.timer = 2f;
+        }
+    }
 
     void SaveRedStartPosition(GameObject playerObj)
     {
@@ -491,11 +559,7 @@ public class MiniGame4 : MonoBehaviour
             // Quay player về phía sau
             player.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
 
-            // Rút ngắn thời gian nếu cả 2 đã về đích
-            if (finishedPlayers.Count >= 2 && manager != null)
-            {
-                manager.timer = 2f;
-            }
+            CheckEndCondition();
         }
     }
 
@@ -557,7 +621,7 @@ public class MiniGame4 : MonoBehaviour
             return;
 
         AudioManager.Instance.PlaySpecialOneShot(clipList[clipIndex]);
-       // Debug.Log(clipIndex);
+        // Debug.Log(clipIndex);
 
     }
 
@@ -605,7 +669,6 @@ public class MiniGame4 : MonoBehaviour
             move.speed = startMoveSpeed;
             move.isJumpAndMove = true;
             move.isWalk = true;
-            playerCurrentSpeeds[playerObj] = startMoveSpeed;
         }
 
         if (playerAnimator != null && playerAnimator.playerAnimator != null)
