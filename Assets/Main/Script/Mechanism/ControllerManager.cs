@@ -2,6 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
 
 public class ControllerManager : MonoBehaviour
 {
@@ -12,23 +15,6 @@ public class ControllerManager : MonoBehaviour
         Disconnected,
         ReconnectedSameController,
         ReplacedWithDifferentController
-    }
-
-    private struct ConnectedController
-    {
-        public string name;
-
-        // Joystick index vật lý thật do Unity cấp.
-        // Có thể là 1, 2, 3, 4...
-        public int physicalJoystickIndex;
-
-        public ConnectedController(
-            string controllerName,
-            int joystickIndex)
-        {
-            name = controllerName;
-            physicalJoystickIndex = joystickIndex;
-        }
     }
 
     public static ControllerManager Instance
@@ -45,15 +31,11 @@ public class ControllerManager : MonoBehaviour
     [SerializeField] private bool console1Connected;
     [SerializeField] private bool console2Connected;
 
-    [Header("Physical Joystick Index")]
-    [Tooltip(
-        "Joystick vật lý thật mà Unity đang dùng cho Controller 1."
-    )]
+    [Header("Input System Device ID")]
+    [Tooltip("Device ID của Gamepad đang được gán cho Controller 1.")]
     [SerializeField] private int console1JoystickIndex;
 
-    [Tooltip(
-        "Joystick vật lý thật mà Unity đang dùng cho Controller 2."
-    )]
+    [Tooltip("Device ID của Gamepad đang được gán cho Controller 2.")]
     [SerializeField] private int console2JoystickIndex;
 
     [Header("Controller Names")]
@@ -68,14 +50,23 @@ public class ControllerManager : MonoBehaviour
     private ControllerChangeType console2LastChange;
 
     [Header("Update")]
+    [Tooltip("Kiểm tra dự phòng. Việc cắm/rút chính được nhận bằng InputSystem.onDeviceChange.")]
     [Min(0.05f)]
     [SerializeField] private float checkInterval = 0.25f;
 
-    private float checkTimer;
+    private Gamepad console1Gamepad;
+    private Gamepad console2Gamepad;
 
-    private readonly List<ConnectedController>
-        previousConnectedControllers =
-            new List<ConnectedController>();
+    // Giữ dấu vết thiết bị cũ để ưu tiên trả tay cầm về đúng Console
+    // sau khi rút rồi cắm lại.
+    private int rememberedConsole1DeviceId;
+    private int rememberedConsole2DeviceId;
+    private string rememberedConsole1Fingerprint = "";
+    private string rememberedConsole2Fingerprint = "";
+
+    private float checkTimer;
+    private bool controllerStateDirty = true;
+    private bool hasInitialized;
 
     private Coroutine notificationCoroutine;
     private bool allowControllerSounds;
@@ -94,13 +85,27 @@ public class ControllerManager : MonoBehaviour
         }
 
         Instance = this;
-
         DontDestroyOnLoad(gameObject);
+    }
+
+    private void OnEnable()
+    {
+        InputSystem.onDeviceChange +=
+            HandleInputDeviceChange;
+
+        controllerStateDirty = true;
+    }
+
+    private void OnDisable()
+    {
+        InputSystem.onDeviceChange -=
+            HandleInputDeviceChange;
     }
 
     private IEnumerator Start()
     {
         InitializeControllerState();
+        hasInitialized = true;
 
         float waitTimer = 0f;
         const float maxWaitTime = 2f;
@@ -114,7 +119,6 @@ public class ControllerManager : MonoBehaviour
         }
 
         allowControllerSounds = true;
-
         ShowInitialConnectedControllers();
     }
 
@@ -122,13 +126,45 @@ public class ControllerManager : MonoBehaviour
     {
         checkTimer += Time.unscaledDeltaTime;
 
-        if (checkTimer < checkInterval)
+        bool shouldSafetyCheck =
+            checkTimer >= checkInterval;
+
+        if (!controllerStateDirty &&
+            !shouldSafetyCheck)
+        {
             return;
+        }
 
         checkTimer = 0f;
+        controllerStateDirty = false;
 
-        RefreshControllerState();
+        if (hasInitialized)
+        {
+            RefreshControllerState();
+        }
+
         UpdateConsoleInstructionUI();
+    }
+
+    private void HandleInputDeviceChange(
+        InputDevice device,
+        InputDeviceChange change)
+    {
+        if (!(device is Gamepad))
+            return;
+
+        switch (change)
+        {
+            case InputDeviceChange.Added:
+            case InputDeviceChange.Removed:
+            case InputDeviceChange.Disconnected:
+            case InputDeviceChange.Reconnected:
+            case InputDeviceChange.Enabled:
+            case InputDeviceChange.Disabled:
+            case InputDeviceChange.ConfigurationChanged:
+                controllerStateDirty = true;
+                break;
+        }
     }
 
     // =========================================================
@@ -137,26 +173,28 @@ public class ControllerManager : MonoBehaviour
 
     private void InitializeControllerState()
     {
-        List<ConnectedController> currentControllers =
-            GetConnectedControllers();
+        List<Gamepad> currentGamepads =
+            GetConnectedGamepads();
 
-        // Lúc mở game:
-        // tay đầu tiên là Controller 1,
-        // tay thứ hai là Controller 2.
-        if (currentControllers.Count >= 1)
+        if (currentGamepads.Count >= 1)
         {
-            AssignConsole1(currentControllers[0]);
+            AssignConsole1(
+                currentGamepads[0],
+                ControllerChangeType.None,
+                false
+            );
         }
 
-        if (currentControllers.Count >= 2)
+        if (currentGamepads.Count >= 2)
         {
-            AssignConsole2(currentControllers[1]);
+            AssignConsole2(
+                currentGamepads[1],
+                ControllerChangeType.None,
+                false
+            );
         }
 
-        previousConnectedControllers.Clear();
-        previousConnectedControllers.AddRange(
-            currentControllers
-        );
+        controllerStateDirty = false;
 
         UpdateConsoleInstructionUI();
         UpdateCursor();
@@ -169,22 +207,14 @@ public class ControllerManager : MonoBehaviour
 
     private void RefreshControllerState()
     {
-        List<ConnectedController> currentControllers =
-            GetConnectedControllers();
+        List<Gamepad> currentGamepads =
+            GetConnectedGamepads();
 
-        if (AreControllerListsEqual(
-            previousConnectedControllers,
-            currentControllers))
-        {
+        bool changed =
+            UpdateControllerSlots(currentGamepads);
+
+        if (!changed)
             return;
-        }
-
-        UpdateControllerSlots(currentControllers);
-
-        previousConnectedControllers.Clear();
-        previousConnectedControllers.AddRange(
-            currentControllers
-        );
 
         UpdateConsoleInstructionUI();
         UpdateCursor();
@@ -195,8 +225,8 @@ public class ControllerManager : MonoBehaviour
     // CONTROLLER SLOT LOGIC
     // =========================================================
 
-    private void UpdateControllerSlots(
-        List<ConnectedController> currentControllers)
+    private bool UpdateControllerSlots(
+        List<Gamepad> currentGamepads)
     {
         console1LastChange =
             ControllerChangeType.None;
@@ -204,136 +234,177 @@ public class ControllerManager : MonoBehaviour
         console2LastChange =
             ControllerChangeType.None;
 
-        bool console1WasConnected =
-            console1Connected;
+        bool changed = false;
 
-        bool console2WasConnected =
-            console2Connected;
+        List<Gamepad> unassigned =
+            new List<Gamepad>(currentGamepads);
 
-        string oldConsole1Name =
-            console1Name;
-
-        string oldConsole2Name =
-            console2Name;
-
-        int oldConsole1JoystickIndex =
-            console1JoystickIndex;
-
-        int oldConsole2JoystickIndex =
-            console2JoystickIndex;
-
-        // Danh sách tay cầm chưa được gán.
-        List<ConnectedController> unassigned =
-            new List<ConnectedController>(
-                currentControllers
+        // Giữ thiết bị hiện tại của Console 1 nếu nó vẫn còn.
+        int console1CurrentIndex =
+            FindCurrentGamepad(
+                unassigned,
+                console1Gamepad
             );
 
-        // =====================================================
-        // GIỮ CONTROLLER 1 NẾU NÓ VẪN CÒN
-        // =====================================================
-
-        if (console1WasConnected)
+        if (console1CurrentIndex >= 0)
         {
-            int matchIndex =
-                FindExistingController(
+            Gamepad gamepad =
+                unassigned[console1CurrentIndex];
+
+            AssignConsole1(
+                gamepad,
+                ControllerChangeType.None,
+                false
+            );
+
+            unassigned.RemoveAt(
+                console1CurrentIndex
+            );
+        }
+        else if (console1Connected ||
+                 console1Gamepad != null)
+        {
+            DisconnectConsole1();
+            changed = true;
+        }
+
+        // Giữ thiết bị hiện tại của Console 2 nếu nó vẫn còn.
+        int console2CurrentIndex =
+            FindCurrentGamepad(
+                unassigned,
+                console2Gamepad
+            );
+
+        if (console2CurrentIndex >= 0)
+        {
+            Gamepad gamepad =
+                unassigned[console2CurrentIndex];
+
+            AssignConsole2(
+                gamepad,
+                ControllerChangeType.None,
+                false
+            );
+
+            unassigned.RemoveAt(
+                console2CurrentIndex
+            );
+        }
+        else if (console2Connected ||
+                 console2Gamepad != null)
+        {
+            DisconnectConsole2();
+            changed = true;
+        }
+
+        // Ưu tiên trả thiết bị cũ về Console 1.
+        if (!console1Connected)
+        {
+            int rememberedIndex =
+                FindRememberedGamepad(
                     unassigned,
-                    oldConsole1Name,
-                    oldConsole1JoystickIndex
+                    rememberedConsole1DeviceId,
+                    rememberedConsole1Fingerprint
                 );
 
-            if (matchIndex >= 0)
+            if (rememberedIndex >= 0)
             {
-                ConnectedController controller =
-                    unassigned[matchIndex];
+                Gamepad gamepad =
+                    unassigned[rememberedIndex];
 
-                AssignConsole1(controller);
+                unassigned.RemoveAt(
+                    rememberedIndex
+                );
 
-                unassigned.RemoveAt(matchIndex);
-            }
-            else
-            {
-                DisconnectConsole1();
+                AssignConsole1(
+                    gamepad,
+                    ControllerChangeType
+                        .ReconnectedSameController,
+                    true
+                );
+
+                changed = true;
             }
         }
 
-        // =====================================================
-        // GIỮ CONTROLLER 2 NẾU NÓ VẪN CÒN
-        // =====================================================
-
-        if (console2WasConnected)
+        // Ưu tiên trả thiết bị cũ về Console 2.
+        if (!console2Connected)
         {
-            int matchIndex =
-                FindExistingController(
+            int rememberedIndex =
+                FindRememberedGamepad(
                     unassigned,
-                    oldConsole2Name,
-                    oldConsole2JoystickIndex
+                    rememberedConsole2DeviceId,
+                    rememberedConsole2Fingerprint
                 );
 
-            if (matchIndex >= 0)
+            if (rememberedIndex >= 0)
             {
-                ConnectedController controller =
-                    unassigned[matchIndex];
+                Gamepad gamepad =
+                    unassigned[rememberedIndex];
 
-                AssignConsole2(controller);
+                unassigned.RemoveAt(
+                    rememberedIndex
+                );
 
-                unassigned.RemoveAt(matchIndex);
-            }
-            else
-            {
-                DisconnectConsole2();
+                AssignConsole2(
+                    gamepad,
+                    ControllerChangeType
+                        .ReconnectedSameController,
+                    true
+                );
+
+                changed = true;
             }
         }
 
-        // =====================================================
-        // LẤP CONTROLLER 1 NẾU ĐANG TRỐNG
-        // =====================================================
-
+        // Console 1 còn trống thì lấy tay cầm chưa được gán đầu tiên.
         if (!console1Connected &&
             unassigned.Count > 0)
         {
-            ConnectedController controller =
-                unassigned[0];
-
+            Gamepad gamepad = unassigned[0];
             unassigned.RemoveAt(0);
 
-            AssignConsole1(controller);
+            ControllerChangeType changeType =
+                HasRememberedConsole1()
+                    ? ControllerChangeType
+                        .ReplacedWithDifferentController
+                    : ControllerChangeType
+                        .ConnectedNewController;
 
-            console1LastChange =
-                ControllerChangeType
-                    .ConnectedNewController;
+            AssignConsole1(
+                gamepad,
+                changeType,
+                true
+            );
 
-            ShowConsole1Connected();
-            PlayConnectSound();
+            changed = true;
         }
 
-        // =====================================================
-        // LẤP CONTROLLER 2 NẾU ĐANG TRỐNG
-        // =====================================================
-
+        // Console 2 còn trống thì lấy tay cầm chưa được gán đầu tiên.
         if (!console2Connected &&
             unassigned.Count > 0)
         {
-            ConnectedController controller =
-                unassigned[0];
-
+            Gamepad gamepad = unassigned[0];
             unassigned.RemoveAt(0);
 
-            AssignConsole2(controller);
+            ControllerChangeType changeType =
+                HasRememberedConsole2()
+                    ? ControllerChangeType
+                        .ReplacedWithDifferentController
+                    : ControllerChangeType
+                        .ConnectedNewController;
 
-            console2LastChange =
-                ControllerChangeType
-                    .ConnectedNewController;
+            AssignConsole2(
+                gamepad,
+                changeType,
+                true
+            );
 
-            ShowConsole2Connected();
-            PlayConnectSound();
+            changed = true;
         }
 
-        /*
-         * Nếu vẫn còn phần tử trong unassigned:
-         * đó là tay cầm thứ ba trở lên.
-         *
-         * Game sẽ bỏ qua hoàn toàn.
-         */
+        // Tay cầm thứ ba trở lên vẫn bị bỏ qua.
+        return changed;
     }
 
     // =========================================================
@@ -341,21 +412,59 @@ public class ControllerManager : MonoBehaviour
     // =========================================================
 
     private void AssignConsole1(
-        ConnectedController controller)
+        Gamepad gamepad,
+        ControllerChangeType changeType,
+        bool notify)
     {
+        if (gamepad == null)
+            return;
+
+        console1Gamepad = gamepad;
         console1Connected = true;
-        console1Name = controller.name;
-        console1JoystickIndex =
-            controller.physicalJoystickIndex;
+        console1Name = GetGamepadDisplayName(gamepad);
+        console1JoystickIndex = gamepad.deviceId;
+
+        rememberedConsole1DeviceId =
+            gamepad.deviceId;
+
+        rememberedConsole1Fingerprint =
+            GetGamepadFingerprint(gamepad);
+
+        console1LastChange = changeType;
+
+        if (notify)
+        {
+            ShowConsole1Connected();
+            PlayConnectSound();
+        }
     }
 
     private void AssignConsole2(
-        ConnectedController controller)
+        Gamepad gamepad,
+        ControllerChangeType changeType,
+        bool notify)
     {
+        if (gamepad == null)
+            return;
+
+        console2Gamepad = gamepad;
         console2Connected = true;
-        console2Name = controller.name;
-        console2JoystickIndex =
-            controller.physicalJoystickIndex;
+        console2Name = GetGamepadDisplayName(gamepad);
+        console2JoystickIndex = gamepad.deviceId;
+
+        rememberedConsole2DeviceId =
+            gamepad.deviceId;
+
+        rememberedConsole2Fingerprint =
+            GetGamepadFingerprint(gamepad);
+
+        console2LastChange = changeType;
+
+        if (notify)
+        {
+            ShowConsole2Connected();
+            PlayConnectSound();
+        }
     }
 
     // =========================================================
@@ -364,13 +473,17 @@ public class ControllerManager : MonoBehaviour
 
     private void DisconnectConsole1()
     {
-        if (!console1Connected)
+        if (!console1Connected &&
+            console1Gamepad == null)
+        {
             return;
+        }
 
+        RememberConsole1Gamepad();
+
+        console1Gamepad = null;
         console1Connected = false;
         console1JoystickIndex = 0;
-
-        // Rút tay cầm thì xóa tên đã lưu.
         console1Name = "";
 
         console1LastChange =
@@ -382,13 +495,17 @@ public class ControllerManager : MonoBehaviour
 
     private void DisconnectConsole2()
     {
-        if (!console2Connected)
+        if (!console2Connected &&
+            console2Gamepad == null)
+        {
             return;
+        }
 
+        RememberConsole2Gamepad();
+
+        console2Gamepad = null;
         console2Connected = false;
         console2JoystickIndex = 0;
-
-        // Rút tay cầm thì xóa tên đã lưu.
         console2Name = "";
 
         console2LastChange =
@@ -398,97 +515,191 @@ public class ControllerManager : MonoBehaviour
         PlayDisconnectSound();
     }
 
-    // =========================================================
-    // GET CONNECTED CONTROLLERS
-    // =========================================================
-
-    private List<ConnectedController>
-        GetConnectedControllers()
+    private void RememberConsole1Gamepad()
     {
-        string[] joystickNames =
-            Input.GetJoystickNames();
+        if (console1Gamepad == null)
+            return;
 
-        List<ConnectedController> controllers =
-            new List<ConnectedController>();
+        rememberedConsole1DeviceId =
+            console1Gamepad.deviceId;
 
-        if (joystickNames == null)
-            return controllers;
+        rememberedConsole1Fingerprint =
+            GetGamepadFingerprint(
+                console1Gamepad
+            );
+    }
+
+    private void RememberConsole2Gamepad()
+    {
+        if (console2Gamepad == null)
+            return;
+
+        rememberedConsole2DeviceId =
+            console2Gamepad.deviceId;
+
+        rememberedConsole2Fingerprint =
+            GetGamepadFingerprint(
+                console2Gamepad
+            );
+    }
+
+    private bool HasRememberedConsole1()
+    {
+        return rememberedConsole1DeviceId != 0 ||
+               !string.IsNullOrWhiteSpace(
+                   rememberedConsole1Fingerprint
+               );
+    }
+
+    private bool HasRememberedConsole2()
+    {
+        return rememberedConsole2DeviceId != 0 ||
+               !string.IsNullOrWhiteSpace(
+                   rememberedConsole2Fingerprint
+               );
+    }
+
+    // =========================================================
+    // GAMEPAD LIST / MATCHING
+    // =========================================================
+
+    private List<Gamepad> GetConnectedGamepads()
+    {
+        List<Gamepad> gamepads =
+            new List<Gamepad>();
 
         for (int i = 0;
-             i < joystickNames.Length;
+             i < Gamepad.all.Count;
              i++)
         {
-            string controllerName =
-                joystickNames[i];
+            Gamepad gamepad = Gamepad.all[i];
 
-            if (string.IsNullOrWhiteSpace(
-                controllerName))
+            if (gamepad == null ||
+                !gamepad.enabled)
             {
                 continue;
             }
 
-            int physicalJoystickIndex = i + 1;
-
-            controllers.Add(
-                new ConnectedController(
-                    controllerName.Trim(),
-                    physicalJoystickIndex
-                )
-            );
+            gamepads.Add(gamepad);
         }
 
-        return controllers;
+        return gamepads;
     }
 
-    // =========================================================
-    // FIND EXISTING CONTROLLER
-    // =========================================================
-
-    private int FindExistingController(
-        List<ConnectedController> controllers,
-        string oldName,
-        int oldJoystickIndex)
+    private bool IsGamepadConnected(
+        Gamepad target)
     {
-        if (controllers == null ||
-            controllers.Count == 0)
+        if (target == null)
+            return false;
+
+        for (int i = 0;
+             i < Gamepad.all.Count;
+             i++)
+        {
+            Gamepad current = Gamepad.all[i];
+
+            if (current == null ||
+                !current.enabled)
+            {
+                continue;
+            }
+
+            if (ReferenceEquals(current, target) ||
+                current.deviceId == target.deviceId)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private int FindCurrentGamepad(
+        List<Gamepad> gamepads,
+        Gamepad currentGamepad)
+    {
+        if (gamepads == null ||
+            currentGamepad == null)
         {
             return -1;
         }
 
-        /*
-         * Ưu tiên joystick index vật lý cũ.
-         *
-         * Việc này giúp Controller 2 không bị tự chuyển
-         * thành Controller 1 khi Controller 1 bị rút.
-         */
         for (int i = 0;
-             i < controllers.Count;
+             i < gamepads.Count;
              i++)
         {
-            if (controllers[i]
-                    .physicalJoystickIndex ==
-                oldJoystickIndex)
+            Gamepad candidate = gamepads[i];
+
+            if (candidate == null)
+                continue;
+
+            if (ReferenceEquals(
+                    candidate,
+                    currentGamepad) ||
+                candidate.deviceId ==
+                    currentGamepad.deviceId)
             {
                 return i;
             }
         }
 
-        /*
-         * Nếu Unity đổi joystick index thì thử tìm bằng tên.
-         *
-         * Chỉ sử dụng tên nếu tên đó xuất hiện đúng một lần,
-         * tránh hai tay cầm cùng tên bị nhận nhầm.
-         */
+        return -1;
+    }
+
+    private int FindRememberedGamepad(
+        List<Gamepad> gamepads,
+        int rememberedDeviceId,
+        string rememberedFingerprint)
+    {
+        if (gamepads == null ||
+            gamepads.Count == 0)
+        {
+            return -1;
+        }
+
+        // Input System thường giữ nguyên deviceId khi Reconnected.
+        if (rememberedDeviceId != 0)
+        {
+            for (int i = 0;
+                 i < gamepads.Count;
+                 i++)
+            {
+                if (gamepads[i] != null &&
+                    gamepads[i].deviceId ==
+                        rememberedDeviceId)
+                {
+                    return i;
+                }
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(
+            rememberedFingerprint))
+        {
+            return -1;
+        }
+
+        // Nếu deviceId thay đổi, chỉ ghép bằng fingerprint khi
+        // trong danh sách chưa gán có đúng một thiết bị phù hợp.
         int foundIndex = -1;
         int matchCount = 0;
 
         for (int i = 0;
-             i < controllers.Count;
+             i < gamepads.Count;
              i++)
         {
-            if (!ControllerNamesEqual(
-                controllers[i].name,
-                oldName))
+            Gamepad gamepad = gamepads[i];
+
+            if (gamepad == null)
+                continue;
+
+            string fingerprint =
+                GetGamepadFingerprint(gamepad);
+
+            if (!string.Equals(
+                fingerprint,
+                rememberedFingerprint,
+                StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -497,113 +708,96 @@ public class ControllerManager : MonoBehaviour
             matchCount++;
         }
 
-        if (matchCount == 1)
-            return foundIndex;
-
-        return -1;
+        return matchCount == 1
+            ? foundIndex
+            : -1;
     }
 
-    private bool ControllerNamesEqual(
-        string firstName,
-        string secondName)
+    private string GetGamepadDisplayName(
+        Gamepad gamepad)
     {
-        if (string.IsNullOrWhiteSpace(firstName) ||
-            string.IsNullOrWhiteSpace(secondName))
+        if (gamepad == null)
+            return "";
+
+        if (!string.IsNullOrWhiteSpace(
+            gamepad.displayName))
         {
-            return false;
+            return gamepad.displayName.Trim();
         }
 
-        return string.Equals(
-            firstName,
-            secondName,
-            StringComparison.OrdinalIgnoreCase
-        );
+        if (!string.IsNullOrWhiteSpace(
+            gamepad.description.product))
+        {
+            return gamepad.description
+                .product.Trim();
+        }
+
+        return gamepad.name;
     }
 
-    private bool AreControllerListsEqual(
-        List<ConnectedController> first,
-        List<ConnectedController> second)
+    private string GetGamepadFingerprint(
+        Gamepad gamepad)
     {
-        if (first == null ||
-            second == null)
-        {
-            return false;
-        }
+        if (gamepad == null)
+            return "";
 
-        if (first.Count != second.Count)
-            return false;
+        InputDeviceDescription description =
+            gamepad.description;
 
-        for (int i = 0;
-             i < first.Count;
-             i++)
-        {
-            bool sameName =
-                ControllerNamesEqual(
-                    first[i].name,
-                    second[i].name
-                );
-
-            bool sameJoystickIndex =
-                first[i].physicalJoystickIndex ==
-                second[i].physicalJoystickIndex;
-
-            if (!sameName ||
-                !sameJoystickIndex)
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return string.Join(
+            "|",
+            description.interfaceName ?? "",
+            description.manufacturer ?? "",
+            description.product ?? "",
+            description.serial ?? "",
+            gamepad.layout ?? ""
+        ).Trim().ToLowerInvariant();
     }
 
     // =========================================================
     // AXIS INPUT
     // =========================================================
 
+    // Giữ nguyên chữ ký hàm cũ để MainMenu và SettingManager
+    // không cần sửa. Tên Axis cũ chỉ dùng để xác định trục X/Y.
     public float GetConsoleAxisRaw(
         int consoleNumber,
         string joystick1Axis,
         string joystick2Axis)
     {
-        int physicalJoystickIndex =
-            GetConsoleJoystickIndex(
-                consoleNumber
-            );
+        string selectedAxis =
+            consoleNumber == 2
+                ? joystick2Axis
+                : joystick1Axis;
 
-        if (physicalJoystickIndex == 1)
+        if (string.IsNullOrWhiteSpace(
+            selectedAxis))
         {
-            return Input.GetAxisRaw(
-                joystick1Axis
-            );
+            selectedAxis =
+                joystick1Axis ??
+                joystick2Axis ??
+                "";
         }
 
-        if (physicalJoystickIndex == 2)
-        {
-            return Input.GetAxisRaw(
-                joystick2Axis
-            );
-        }
+        bool isVertical =
+            selectedAxis.IndexOf(
+                "Vertical",
+                StringComparison.OrdinalIgnoreCase
+            ) >= 0;
 
-        /*
-         * Legacy Input Manager hiện tại chỉ có axis
-         * dành cho Joystick 1 và Joystick 2.
-         *
-         * Nếu Unity cấp index 3 trở lên thì phải tạo thêm
-         * axis riêng hoặc chuyển sang Input System.
-         */
-        return 0f;
+        return isVertical
+            ? GetConsoleVerticalRaw(consoleNumber)
+            : GetConsoleHorizontalRaw(consoleNumber);
     }
 
+    // Giữ overload cũ để toàn bộ script hiện tại tiếp tục compile.
     public float GetConsoleHorizontalRaw(
         int consoleNumber,
         string horizontalJoystick1,
         string horizontalJoystick2)
     {
-        return GetConsoleAxisRaw(
-            consoleNumber,
-            horizontalJoystick1,
-            horizontalJoystick2
+        return GetConsoleHorizontalRaw(
+            consoleNumber
         );
     }
 
@@ -612,10 +806,58 @@ public class ControllerManager : MonoBehaviour
         string verticalJoystick1,
         string verticalJoystick2)
     {
-        return GetConsoleAxisRaw(
-            consoleNumber,
-            verticalJoystick1,
-            verticalJoystick2
+        return GetConsoleVerticalRaw(
+            consoleNumber
+        );
+    }
+
+    // Overload mới, dùng khi dọn code Legacy về sau.
+    public float GetConsoleHorizontalRaw(
+        int consoleNumber)
+    {
+        return GetConsoleMoveInput(
+            consoleNumber
+        ).x;
+    }
+
+    public float GetConsoleVerticalRaw(
+        int consoleNumber)
+    {
+        return GetConsoleMoveInput(
+            consoleNumber
+        ).y;
+    }
+
+    private Vector2 GetConsoleMoveInput(
+        int consoleNumber)
+    {
+        Gamepad gamepad =
+            GetConsoleGamepad(consoleNumber);
+
+        if (gamepad == null)
+            return Vector2.zero;
+
+        Vector2 stick =
+            gamepad.leftStick.ReadValue();
+
+        Vector2 dpad =
+            gamepad.dpad.ReadValue();
+
+        float horizontal =
+            Mathf.Abs(dpad.x) >
+            Mathf.Abs(stick.x)
+                ? dpad.x
+                : stick.x;
+
+        float vertical =
+            Mathf.Abs(dpad.y) >
+            Mathf.Abs(stick.y)
+                ? dpad.y
+                : stick.y;
+
+        return new Vector2(
+            horizontal,
+            vertical
         );
     }
 
@@ -627,91 +869,124 @@ public class ControllerManager : MonoBehaviour
         int consoleNumber,
         int buttonIndex)
     {
-        KeyCode keyCode =
-            GetConsoleButtonKeyCode(
-                consoleNumber,
+        ButtonControl button =
+            GetGamepadButton(
+                GetConsoleGamepad(consoleNumber),
                 buttonIndex
             );
 
-        if (keyCode == KeyCode.None)
-            return false;
-
-        return Input.GetKeyDown(keyCode);
+        return button != null &&
+               button.wasPressedThisFrame;
     }
 
     public bool GetConsoleButton(
         int consoleNumber,
         int buttonIndex)
     {
-        KeyCode keyCode =
-            GetConsoleButtonKeyCode(
-                consoleNumber,
+        ButtonControl button =
+            GetGamepadButton(
+                GetConsoleGamepad(consoleNumber),
                 buttonIndex
             );
 
-        if (keyCode == KeyCode.None)
-            return false;
-
-        return Input.GetKey(keyCode);
+        return button != null &&
+               button.isPressed;
     }
 
     public bool GetConsoleButtonUp(
         int consoleNumber,
         int buttonIndex)
     {
-        KeyCode keyCode =
-            GetConsoleButtonKeyCode(
-                consoleNumber,
+        ButtonControl button =
+            GetGamepadButton(
+                GetConsoleGamepad(consoleNumber),
                 buttonIndex
             );
 
-        if (keyCode == KeyCode.None)
-            return false;
-
-        return Input.GetKeyUp(keyCode);
+        return button != null &&
+               button.wasReleasedThisFrame;
     }
 
-    private KeyCode GetConsoleButtonKeyCode(
-        int consoleNumber,
+    private ButtonControl GetGamepadButton(
+        Gamepad gamepad,
         int buttonIndex)
     {
-        int physicalJoystickIndex =
-            GetConsoleJoystickIndex(
-                consoleNumber
-            );
+        if (gamepad == null)
+            return null;
 
-        return GetJoystickButtonKeyCode(
-            physicalJoystickIndex,
-            buttonIndex
-        );
+        switch (buttonIndex)
+        {
+            // Giữ quy ước Button cũ của project.
+            case 0:
+                return gamepad.buttonSouth;      // A / Cross
+
+            case 1:
+                return gamepad.buttonEast;       // B / Circle
+
+            case 2:
+                return gamepad.buttonWest;       // X / Square
+
+            case 3:
+                return gamepad.buttonNorth;      // Y / Triangle
+
+            case 4:
+                return gamepad.leftShoulder;
+
+            case 5:
+                return gamepad.rightShoulder;
+
+            case 6:
+                return gamepad.selectButton;
+
+            case 7:
+                return gamepad.startButton;
+
+            case 8:
+                return gamepad.leftStickButton;
+
+            case 9:
+                return gamepad.rightStickButton;
+
+            case 10:
+                return gamepad.leftTrigger;
+
+            case 11:
+                return gamepad.rightTrigger;
+
+            case 12:
+                return gamepad.dpad.up;
+
+            case 13:
+                return gamepad.dpad.down;
+
+            case 14:
+                return gamepad.dpad.left;
+
+            case 15:
+                return gamepad.dpad.right;
+
+            default:
+                return null;
+        }
     }
 
-    private KeyCode GetJoystickButtonKeyCode(
-        int joystickIndex,
-        int buttonIndex)
+    private Gamepad GetConsoleGamepad(
+        int consoleNumber)
     {
-        if (joystickIndex < 1 ||
-            joystickIndex > 8 ||
-            buttonIndex < 0 ||
-            buttonIndex > 19)
+        Gamepad gamepad = null;
+
+        if (consoleNumber == 1)
         {
-            return KeyCode.None;
+            gamepad = console1Gamepad;
+        }
+        else if (consoleNumber == 2)
+        {
+            gamepad = console2Gamepad;
         }
 
-        string keyName =
-            "Joystick" +
-            joystickIndex +
-            "Button" +
-            buttonIndex;
-
-        if (Enum.TryParse(
-            keyName,
-            out KeyCode keyCode))
-        {
-            return keyCode;
-        }
-
-        return KeyCode.None;
+        return IsGamepadConnected(gamepad)
+            ? gamepad
+            : null;
     }
 
     // =========================================================
@@ -731,12 +1006,12 @@ public class ControllerManager : MonoBehaviour
             return;
 
         bool hasAnyController =
-            console1Connected ||
-            console2Connected;
+            IsConsole1Connected() ||
+            IsConsole2Connected();
 
         bool hasBothControllers =
-            console1Connected &&
-            console2Connected;
+            IsConsole1Connected() &&
+            IsConsole2Connected();
 
         if (ui.instructConsolePanel != null)
         {
@@ -771,13 +1046,13 @@ public class ControllerManager : MonoBehaviour
     {
         bool showedController = false;
 
-        if (console1Connected)
+        if (IsConsole1Connected())
         {
             ShowConsole1Connected();
             showedController = true;
         }
 
-        if (console2Connected)
+        if (IsConsole2Connected())
         {
             ShowConsole2Connected();
             showedController = true;
@@ -929,20 +1204,20 @@ public class ControllerManager : MonoBehaviour
     {
         Debug.Log(
             "Controller 1: " +
-            (console1Connected
+            (IsConsole1Connected()
                 ? "Connected | " +
                   console1Name +
-                  " | Physical Joystick " +
+                  " | Input System Device ID " +
                   console1JoystickIndex
                 : "Disconnected")
         );
 
         Debug.Log(
             "Controller 2: " +
-            (console2Connected
+            (IsConsole2Connected()
                 ? "Connected | " +
                   console2Name +
-                  " | Physical Joystick " +
+                  " | Input System Device ID " +
                   console2JoystickIndex
                 : "Disconnected")
         );
@@ -954,40 +1229,46 @@ public class ControllerManager : MonoBehaviour
 
     public bool IsConsole1Connected()
     {
-        return console1Connected;
+        return console1Connected &&
+               IsGamepadConnected(
+                   console1Gamepad
+               );
     }
 
     public bool IsConsole2Connected()
     {
-        return console2Connected;
+        return console2Connected &&
+               IsGamepadConnected(
+                   console2Gamepad
+               );
     }
 
     public bool IsConsoleConnected(
         int consoleNumber)
     {
         if (consoleNumber == 1)
-            return console1Connected;
+            return IsConsole1Connected();
 
         if (consoleNumber == 2)
-            return console2Connected;
+            return IsConsole2Connected();
 
         return false;
     }
 
     public bool HasAnyController()
     {
-        return console1Connected ||
-               console2Connected;
+        return IsConsole1Connected() ||
+               IsConsole2Connected();
     }
 
     public int GetControllerCount()
     {
         int count = 0;
 
-        if (console1Connected)
+        if (IsConsole1Connected())
             count++;
 
-        if (console2Connected)
+        if (IsConsole2Connected())
             count++;
 
         return count;
@@ -995,17 +1276,24 @@ public class ControllerManager : MonoBehaviour
 
     public string GetConsole1Name()
     {
-        return console1Name;
+        return IsConsole1Connected()
+            ? console1Name
+            : "";
     }
 
     public string GetConsole2Name()
     {
-        return console2Name;
+        return IsConsole2Connected()
+            ? console2Name
+            : "";
     }
 
+    // Tên hàm được giữ nguyên để code cũ không lỗi.
+    // Giá trị trả về bây giờ là Input System deviceId,
+    // không phải Legacy Joystick 1/2/3...
     public int GetConsole1JoystickIndex()
     {
-        if (!console1Connected)
+        if (!IsConsole1Connected())
             return 0;
 
         return console1JoystickIndex;
@@ -1013,7 +1301,7 @@ public class ControllerManager : MonoBehaviour
 
     public int GetConsole2JoystickIndex()
     {
-        if (!console2Connected)
+        if (!IsConsole2Connected())
             return 0;
 
         return console2JoystickIndex;
