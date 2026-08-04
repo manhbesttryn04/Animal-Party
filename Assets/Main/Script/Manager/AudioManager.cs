@@ -329,6 +329,9 @@ public class AudioManager : MonoBehaviour
     }
     public void SetupMainGameAudio()
     {
+        // Tránh coroutine fade của cutscene/scene trước tiếp tục chạy sang scene mới.
+        CancelFadeOutAllAudio();
+
         if (mainGameAudioSetup != null)
         {
             // Lưu âm lượng gốc
@@ -353,6 +356,9 @@ public class AudioManager : MonoBehaviour
 
     public void SetupAudioByMiniGame(int indexMiniGame)
     {
+        // Tránh coroutine fade của scene trước tiếp tục giảm âm lượng minigame mới.
+        CancelFadeOutAllAudio();
+
         int index = indexMiniGame - 1;
 
         if (index < 0 || index >= audioSetupList.Count)
@@ -504,10 +510,22 @@ public class AudioManager : MonoBehaviour
     /// </summary>
     public void FadeOutAllAudio(float fadeTime)
     {
-        if (fadeAllAudioCoroutine != null)
-            StopCoroutine(fadeAllAudioCoroutine);
+        CancelFadeOutAllAudio();
 
         fadeAllAudioCoroutine = StartCoroutine(FadeOutAllAudioRoutine(fadeTime));
+    }
+
+    /// <summary>
+    /// Dừng riêng coroutine fade âm thanh đang chạy.
+    /// Cần gọi khi skip hoặc khi bắt đầu scene mới vì AudioManager là DontDestroyOnLoad.
+    /// </summary>
+    public void CancelFadeOutAllAudio()
+    {
+        if (fadeAllAudioCoroutine == null)
+            return;
+
+        StopCoroutine(fadeAllAudioCoroutine);
+        fadeAllAudioCoroutine = null;
     }
 
     private IEnumerator FadeOutAllAudioRoutine(float fadeTime)
@@ -542,6 +560,8 @@ public class AudioManager : MonoBehaviour
     }
     public void StopAllAudio()
     {
+        CancelFadeOutAllAudio();
+
         for (int i = 0; i < audioSources.Count; i++)
         {
             audioSources[i].volume = 0;
@@ -556,6 +576,8 @@ public class AudioManager : MonoBehaviour
     }
     public void PauseAudio()
     {
+        CancelFadeOutAllAudio();
+
         StopMusic();
         StopEnvironment();
         StopSpecial();
@@ -595,6 +617,9 @@ public class AudioManager : MonoBehaviour
 
     public void ZeroAllAudio()
     {
+        // Skip cutscene gọi hàm này, vì vậy phải dừng fade cũ trước.
+        CancelFadeOutAllAudio();
+
         musicSource.volume = 0;
         sfxSource.volume = 0;
         environmentSource.volume = 0;
