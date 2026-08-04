@@ -40,7 +40,7 @@ public class PlayerTrapState : MonoBehaviour
                 }
                 yield return new WaitForSeconds(1.5f);
 
-                yield return StartCoroutine(a.BoomHitEffect(3));
+                yield return StartCoroutine(a.BoomHitEffect(2));
 
                 yield break;
             }

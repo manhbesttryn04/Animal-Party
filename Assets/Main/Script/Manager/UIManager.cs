@@ -140,6 +140,7 @@ public class UIManager : MonoBehaviour
     [Header("Update Settings")]
     public float updateUITime = 0.25f;
     private float updateTimer;
+    public List<GameObject> allUI;
 
     private void Awake()
     {
@@ -670,5 +671,16 @@ public class UIManager : MonoBehaviour
         ui.SetActive(true);
         yield return new WaitForSeconds(1.5f);
         ui.SetActive(false);
+    }
+    public void HideAllUI()
+    {
+        for (int i = 0;i< allUI.Count; i++)
+        {
+            if(allUI[i] != null && allUI[i].activeSelf)
+            {
+                allUI[i].SetActive(false);
+            }
+            
+        }
     }
 }

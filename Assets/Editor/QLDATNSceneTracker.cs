@@ -26,12 +26,22 @@ namespace QLDATN.ProjectTracker
         private const string DeviceIdPreference = "QLDATN_PROJECT_TRACKER_DEVICE_ID";
         private const double HeartbeatSeconds = 30.0;
         private const double GitRefreshSeconds = 60.0;
-        private const string ClientVersion = "qldatn-unity-3.2.1";
+        private const double RecentSourceActivitySeconds = 90.0;
+        private const string ClientVersion = "qldatn-unity-3.3.1";
         private const string PendingUpdatePreference = "QLDATN_PROJECT_TRACKER_PENDING_UPDATE";
         private const int MaximumOfflinePayloads = 50;
+        private static readonly double[] RetryDelaysSeconds = { 2.0, 5.0, 15.0 };
 
-        private static readonly string SessionId = Guid.NewGuid().ToString("N");
+        private static readonly string SessionIdPath = Path.Combine(
+            "Library",
+            "QLDATNTracker",
+            "session-id.txt"
+        );
+        private static readonly string SessionId = LoadOrCreateSessionId();
         private static readonly Queue<StatusPayload> PendingPayloads = new Queue<StatusPayload>();
+        private static StatusPayload _latestHeartbeat;
+        private static int _retryAttempt;
+        private static double _nextRetryAt;
         private static readonly string OfflineQueuePath = Path.Combine(
             "Library",
             "QLDATNTracker",
@@ -49,6 +59,7 @@ namespace QLDATN.ProjectTracker
         private static double _assetFlushAt;
         private static double _lastHeartbeat;
         private static double _lastGitRefresh = -GitRefreshSeconds;
+        private static double _lastSourceActivity = -RecentSourceActivitySeconds;
         private static long _lastSequence;
         private static bool _updateCompilationFailed;
 
@@ -140,8 +151,10 @@ namespace QLDATN.ProjectTracker
             {
                 QueueSend("PLAYING", "PLAY_MODE_ENTERED");
             }
-            else if (state == PlayModeStateChange.ExitingPlayMode)
+            else if (state == PlayModeStateChange.EnteredEditMode)
             {
+                // Đợi Unity trở lại Edit Mode hoàn toàn để heartbeat thoát Play
+                // không tiếp tục mang trạng thái PLAYING thêm một chu kỳ.
                 QueueSend(CurrentStatus(), "PLAY_MODE_EXITED");
             }
         }
@@ -244,9 +257,9 @@ namespace QLDATN.ProjectTracker
         {
             if (_isBuilding) return "BUILDING";
             if (EditorApplication.isCompiling) return "COMPILING";
-            if (!IsEditorFocused()) return "BACKGROUND";
             if (EditorApplication.isPlayingOrWillChangePlaymode) return "PLAYING";
-            if (_isDirty) return "EDITING";
+            if (_isDirty || HasRecentSourceActivity()) return "EDITING";
+            if (!IsEditorFocused()) return "BACKGROUND";
             if (_uncommittedFiles > 0) return "UNCOMMITTED";
             return string.IsNullOrEmpty(_scene) ? "SAFE" : "VIEWING";
         }
@@ -255,9 +268,10 @@ namespace QLDATN.ProjectTracker
         {
             if (_isBuilding) return "Đang build";
             if (EditorApplication.isCompiling) return "Đang biên dịch";
-            if (!IsEditorFocused()) return "Unity Editor chạy nền";
             if (EditorApplication.isPlayingOrWillChangePlaymode) return "Đang chạy Play Mode";
             if (_isDirty) return "Đang chỉnh sửa scene";
+            if (HasRecentSourceActivity()) return "Source/asset vừa được thay đổi";
+            if (!IsEditorFocused()) return "Unity Editor chạy nền";
             return string.IsNullOrEmpty(_scene) ? "Unity Editor" : "Đang xem scene";
         }
 
@@ -265,10 +279,17 @@ namespace QLDATN.ProjectTracker
         {
             if (_isBuilding) return "BUILD";
             if (EditorApplication.isCompiling) return "COMPILE";
-            if (!IsEditorFocused()) return "BACKGROUND";
             if (EditorApplication.isPlayingOrWillChangePlaymode) return "PLAY";
             if (EditorApplication.isPaused) return "PAUSED";
+            if (_isDirty || HasRecentSourceActivity()) return "EDIT";
+            if (!IsEditorFocused()) return "BACKGROUND";
             return "EDIT";
+        }
+
+        private static bool HasRecentSourceActivity()
+        {
+            return EditorApplication.timeSinceStartup - _lastSourceActivity
+                <= RecentSourceActivitySeconds;
         }
 
         private static bool IsEditorFocused()
@@ -344,8 +365,17 @@ namespace QLDATN.ProjectTracker
             );
             lock (PendingPayloads)
             {
-                while (PendingPayloads.Count >= MaximumOfflinePayloads) PendingPayloads.Dequeue();
-                PendingPayloads.Enqueue(payload);
+                if (string.IsNullOrEmpty(eventType))
+                {
+                    // Keep only the newest periodic state so stale heartbeats
+                    // cannot delay the next live heartbeat after reconnect.
+                    _latestHeartbeat = payload;
+                }
+                else
+                {
+                    while (PendingPayloads.Count >= MaximumOfflinePayloads) PendingPayloads.Dequeue();
+                    PendingPayloads.Enqueue(payload);
+                }
             }
             PersistPendingPayloads();
             _ = FlushQueueAsync();
@@ -399,11 +429,15 @@ namespace QLDATN.ProjectTracker
             }
         }
 
-        private static void RemoveSentPayload(StatusPayload expected)
+        private static void RemoveSentPayload(StatusPayload expected, bool heartbeat)
         {
             lock (PendingPayloads)
             {
-                if (PendingPayloads.Count > 0 && ReferenceEquals(PendingPayloads.Peek(), expected))
+                if (heartbeat)
+                {
+                    if (ReferenceEquals(_latestHeartbeat, expected)) _latestHeartbeat = null;
+                }
+                else if (PendingPayloads.Count > 0 && ReferenceEquals(PendingPayloads.Peek(), expected))
                 {
                     PendingPayloads.Dequeue();
                 }
@@ -414,6 +448,8 @@ namespace QLDATN.ProjectTracker
         private static async Task FlushQueueAsync()
         {
             if (_isSending) return;
+            var now = EditorApplication.timeSinceStartup;
+            if (now < _nextRetryAt) return;
             _isSending = true;
             try
             {
@@ -421,11 +457,15 @@ namespace QLDATN.ProjectTracker
                 while (sentThisPass < 5)
                 {
                     StatusPayload payload;
+                    bool heartbeat;
                     lock (PendingPayloads)
                     {
-                        if (PendingPayloads.Count == 0) break;
-                        payload = PendingPayloads.Peek();
+                        heartbeat = _latestHeartbeat != null;
+                        payload = heartbeat
+                            ? _latestHeartbeat
+                            : PendingPayloads.Count > 0 ? PendingPayloads.Peek() : null;
                     }
+                    if (payload == null) break;
                     var json = JsonUtility.ToJson(payload);
                     var body = Encoding.UTF8.GetBytes(json);
                     var timestamp = UnixTimeMilliseconds().ToString();
@@ -439,6 +479,9 @@ namespace QLDATN.ProjectTracker
                         EditorPrefs.GetString(TrackerUrlPreference),
                         "POST"
                     );
+                    // Prevent one stalled network request from blocking every
+                    // later heartbeat while Unity remains open.
+                    request.timeout = 15;
                     request.uploadHandler = new UploadHandlerRaw(body);
                     request.downloadHandler = new DownloadHandlerBuffer();
                     request.SetRequestHeader("Content-Type", "application/json");
@@ -476,15 +519,22 @@ namespace QLDATN.ProjectTracker
                             || request.responseCode >= 500;
                         if (transientFailure)
                         {
+                            var delayIndex = Math.Min(_retryAttempt, RetryDelaysSeconds.Length - 1);
+                            _nextRetryAt = EditorApplication.timeSinceStartup + RetryDelaysSeconds[delayIndex];
+                            _retryAttempt += 1;
                             PersistPendingPayloads();
                             break;
                         }
-                        RemoveSentPayload(payload);
+                        RemoveSentPayload(payload, heartbeat);
+                        _retryAttempt = 0;
+                        _nextRetryAt = 0;
                         sentThisPass += 1;
                     }
                     else
                     {
-                        RemoveSentPayload(payload);
+                        RemoveSentPayload(payload, heartbeat);
+                        _retryAttempt = 0;
+                        _nextRetryAt = 0;
                         sentThisPass += 1;
                         await TryApplyUpdate(request.downloadHandler?.text);
                     }
@@ -631,6 +681,7 @@ namespace QLDATN.ProjectTracker
         public static void ReportAssetChanges(int count)
         {
             if (count <= 0) return;
+            _lastSourceActivity = EditorApplication.timeSinceStartup;
             _pendingAssetChanges += count;
             _assetFlushAt = EditorApplication.timeSinceStartup + 2.0;
         }
@@ -684,6 +735,40 @@ namespace QLDATN.ProjectTracker
             catch
             {
                 // Server tự chuyển offline nếu Unity đóng trước khi gửi xong.
+            }
+            DeleteSessionId();
+        }
+
+        private static string LoadOrCreateSessionId()
+        {
+            try
+            {
+                if (File.Exists(SessionIdPath))
+                {
+                    var stored = File.ReadAllText(SessionIdPath).Trim();
+                    if (stored.Length == 32) return stored;
+                }
+                var directory = Path.GetDirectoryName(SessionIdPath);
+                if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
+                var created = Guid.NewGuid().ToString("N");
+                File.WriteAllText(SessionIdPath, created, new UTF8Encoding(false));
+                return created;
+            }
+            catch
+            {
+                return Guid.NewGuid().ToString("N");
+            }
+        }
+
+        private static void DeleteSessionId()
+        {
+            try
+            {
+                if (File.Exists(SessionIdPath)) File.Delete(SessionIdPath);
+            }
+            catch
+            {
+                // Session cũ vẫn an toàn vì server không cộng gap quá timeout.
             }
         }
 

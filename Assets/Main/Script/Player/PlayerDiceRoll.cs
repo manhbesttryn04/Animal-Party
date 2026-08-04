@@ -5,59 +5,148 @@ using UnityEngine;
 public class PlayerDiceRoll : MonoBehaviour
 {
     public PlayerManager manager;
+
+    // Thứ tự các phần tử phải tương ứng với mặt 1 → 6
     public List<GameObject> dices = new List<GameObject>();
 
     public GameObject diceRandom;
 
     public int currentDiceNumber;
 
+    private Coroutine hideDiceCoroutine;
+
     private void Start()
     {
         manager = GetComponent<PlayerManager>();
     }
-    public void SetDiceRandom(int i) { if (i == 0) { diceRandom.SetActive(false); } else diceRandom.SetActive(true); }
-   
+
+    public void SetDiceRandom(int i)
+    {
+        if (diceRandom == null)
+            return;
+
+        diceRandom.SetActive(i != 0);
+    }
 
     public void RandomDice()
     {
-       
-        int ran = Random.Range(0, 6);
+        /*
+         * Xác suất:
+         * Mặt 1: 1%
+         * Mặt 2: 5%
+         * Mặt 3: 10%
+         * Mặt 4: 28%
+         * Mặt 5: 28%
+         * Mặt 6: 28%
+         *
+         * Tổng: 100%
+         */
+        int[] diceWeights = { 1, 1, 10, 29, 29, 30 };
 
-        // Tắt hết
-        for (int i = 0; i < dices.Count; i++)
+        currentDiceNumber = GetWeightedDiceNumber(diceWeights);
+
+        // Tắt toàn bộ mặt xúc xắc
+        HideAllDices();
+
+        // List bắt đầu từ vị trí 0 nên phải trừ 1
+        int diceIndex = currentDiceNumber - 1;
+
+        if (diceIndex >= 0 && diceIndex < dices.Count)
         {
-            dices[i].SetActive(false);
+            dices[diceIndex].SetActive(true);
         }
-
-        // Hiện mặt xúc xắc random
-        dices[ran].SetActive(true);
-
-        currentDiceNumber = ran + 1;
+        else
+        {
+            Debug.LogWarning(
+                "Dices chưa đủ 6 phần tử hoặc sắp xếp không đúng."
+            );
+        }
 
         Debug.Log("Dice Number: " + currentDiceNumber);
 
-        // Sau 3 giây tắt hết
-        StartCoroutine(HideDiceAfterTime(ran));
+        // Ngăn nhiều Coroutine chạy cùng lúc
+        if (hideDiceCoroutine != null)
+        {
+            StopCoroutine(hideDiceCoroutine);
+        }
+
+        hideDiceCoroutine = StartCoroutine(HideDiceAfterTime());
     }
 
-    IEnumerator HideDiceAfterTime(int a)
+    private int GetWeightedDiceNumber(int[] weights)
     {
-        yield return new WaitForSeconds(3f);
-        manager.playerCamera.isFollow = false;
-        manager.playerCamera.isFllow2 = true;
+        int totalWeight = 0;
 
+        for (int i = 0; i < weights.Length; i++)
+        {
+            totalWeight += weights[i];
+        }
+
+        // Random từ 0 đến 99
+        int randomValue = Random.Range(0, totalWeight);
+
+        int accumulatedWeight = 0;
+
+        for (int i = 0; i < weights.Length; i++)
+        {
+            accumulatedWeight += weights[i];
+
+            if (randomValue < accumulatedWeight)
+            {
+                // i = 0 tương ứng mặt 1
+                return i + 1;
+            }
+        }
+
+        return 6;
+    }
+
+    private IEnumerator HideDiceAfterTime()
+    {
+        // Hiện mặt xúc xắc trong 3 giây
+        yield return new WaitForSeconds(3f);
+
+        if (manager != null && manager.playerCamera != null)
+        {
+            manager.playerCamera.isFollow = false;
+            manager.playerCamera.isFllow2 = true;
+        }
+
+        HideAllDices();
+
+        yield return new WaitForSeconds(1f);
+
+        if (manager != null && manager.playerMoveAI != null)
+        {
+            manager.playerMoveAI.isMoving = true;
+
+            // Di chuyển đúng số bước từ 1 đến 6
+            StartCoroutine(
+                manager.playerMoveAI.AIToPoint(currentDiceNumber -1)
+            );
+        }
+
+        hideDiceCoroutine = null;
+    }
+
+    private void HideAllDices()
+    {
         for (int i = 0; i < dices.Count; i++)
         {
-            dices[i].SetActive(false);
+            if (dices[i] != null)
+            {
+                dices[i].SetActive(false);
+            }
         }
-        yield return new WaitForSeconds(1f);
-        manager.playerMoveAI.isMoving = true;
-     StartCoroutine(manager.playerMoveAI.AIToPoint(a));
-      
-
     }
+
     public void PlayerAudioDice()
     {
-        AudioManager.Instance.PlaySFX(AudioManager.Instance.diceRollClip);
+        if (AudioManager.Instance == null)
+            return;
+
+        AudioManager.Instance.PlaySFX(
+            AudioManager.Instance.diceRollClip
+        );
     }
 }

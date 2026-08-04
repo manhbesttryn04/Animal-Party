@@ -414,12 +414,17 @@ public class VolumeManager : MonoBehaviour
 
         bloom.active = state;
 
-        if (state)
+        
+    }
+    public void ResetBloom()
+    {
+        if (bloom == null)
         {
-            bloom.intensity.overrideState = true;
-            bloom.intensity.value =
-                defaultBloomIntensity;
+            return;
         }
+        bloom.intensity.overrideState = true;
+        bloom.intensity.value =
+            defaultBloomIntensity;
     }
 
     public void SetBloomIntensity(float intensity)

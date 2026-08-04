@@ -181,6 +181,7 @@ public class MainMenuController : MonoBehaviour
         {
             volume.ResetVignette();
             volume.ResetDepthBlur();
+            volume.ResetBloom();
         }
     }
 
@@ -812,7 +813,7 @@ public class MainMenuController : MonoBehaviour
 
         // Tránh analog đang giữ làm menu nhảy ngay sau khi đóng.
         canMoveVertical = false;
-
+        
         if (activeMenuController != 0)
         {
             StartCoroutine(
