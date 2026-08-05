@@ -21,7 +21,12 @@ public class MiniGame2 : MonoBehaviour
     public TextMeshProUGUI timerText;
     public TextMeshProUGUI roundText;
     public int[] hhh;
-   
+
+    [Header("Cấu hình Nhấp Nháy Cảnh Báo (Blink Warning)")]
+    [Tooltip("Thời gian nhấp nháy báo động trước khi ô sập xuống")]
+    public float warningDuration = 1.2f;
+    [Tooltip("Tốc độ chớp tắt của hiệu ứng cảnh báo")]
+    public float blinkInterval = 0.1f;
 
     [Header("Start Delay")]
     public float startDelay = 3f;
@@ -36,7 +41,7 @@ public class MiniGame2 : MonoBehaviour
 
     private Color targetColor;
     private int currentRound = 1;
-  
+
     private void Awake()
     {
         InitializeColorPools();
@@ -55,7 +60,6 @@ public class MiniGame2 : MonoBehaviour
 
         if (allPads.Count == 0)
         {
-           // Debug.LogError("Bạn chưa kéo các ô vào danh sách allPads!");
             return;
         }
 
@@ -88,24 +92,21 @@ public class MiniGame2 : MonoBehaviour
 
     void InitializeColorPools()
     {
-        // CẤP ĐỘ DỄ: Còn 4 màu (Đã xóa Magenta và Cyan)
         easyColors.Add(Color.red);
         easyColors.Add(Color.blue);
         easyColors.Add(Color.yellow);
         easyColors.Add(Color.green);
 
-        // CẤP ĐỘ TRUNG BÌNH: Lấy 4 màu trên cộng thêm 3 màu mới (Đã xóa 2 màu cuối là Xanh dương nhạt và Hồng nhạt)
         mediumColors.AddRange(easyColors);
-        mediumColors.Add(new Color(1f, 0.5f, 0f));     // Màu Cam
-        mediumColors.Add(new Color(0.5f, 0f, 0.5f));   // Màu Tím
-        mediumColors.Add(new Color(0f, 0.5f, 0f));     // Màu Xanh lá đậm
+        mediumColors.Add(new Color(1f, 0.5f, 0f));     // Cam
+        mediumColors.Add(new Color(0.5f, 0f, 0.5f));   // Tím
+        mediumColors.Add(new Color(0f, 0.5f, 0f));     // Xanh lá đậm
 
-        // CẤP ĐỘ KHÓ: Lấy tất cả màu trung bình cộng thêm 4 màu mới (Đã xóa 2 màu cuối là Xám và Xám nhạt)
         hardColors.AddRange(mediumColors);
-        hardColors.Add(new Color(0.75f, 1f, 0f));      // Màu Chanh Tây (Lime)
-        hardColors.Add(new Color(0f, 1f, 0.5f));       // Màu Xanh bạc hà (Mint)
-        hardColors.Add(new Color(1f, 0.3f, 0.5f));     // Màu Hồng hạc (Flamingo)
-        hardColors.Add(new Color(0.5f, 0.25f, 0f));    // Màu Nâu đất
+        hardColors.Add(new Color(0.75f, 1f, 0f));      // Lime
+        hardColors.Add(new Color(0f, 1f, 0.5f));       // Mint
+        hardColors.Add(new Color(1f, 0.3f, 0.5f));     // Flamingo
+        hardColors.Add(new Color(0.5f, 0.25f, 0f));    // Nâu
     }
 
     IEnumerator ColorGameLoop()
@@ -125,7 +126,6 @@ public class MiniGame2 : MonoBehaviour
             int safePadsCount = 8;
             float maxTimeForChoice = 5f;
 
-            // Đã giữ nguyên logic chỉnh sửa lượt chơi của bạn
             if (currentRound >= 1 && currentRound <= 2)
             {
                 activeColorPool = easyColors;
@@ -145,35 +145,20 @@ public class MiniGame2 : MonoBehaviour
                 maxTimeForChoice = 3f;
             }
 
-            targetColor =
-                activeColorPool[
-                    Random.Range(
-                        0,
-                        activeColorPool.Count
-                    )
-                ];
+            targetColor = activeColorPool[Random.Range(0, activeColorPool.Count)];
 
             if (targetColorImage != null)
             {
                 targetColorImage.color = targetColor;
             }
 
-            List<ColorPad> shuffledPads =
-                new List<ColorPad>(allPads);
+            List<ColorPad> shuffledPads = new List<ColorPad>(allPads);
 
             for (int i = 0; i < shuffledPads.Count; i++)
             {
                 ColorPad temp = shuffledPads[i];
-
-                int randomIndex =
-                    Random.Range(
-                        i,
-                        shuffledPads.Count
-                    );
-
-                shuffledPads[i] =
-                    shuffledPads[randomIndex];
-
+                int randomIndex = Random.Range(i, shuffledPads.Count);
+                shuffledPads[i] = shuffledPads[randomIndex];
                 shuffledPads[randomIndex] = temp;
             }
 
@@ -181,32 +166,19 @@ public class MiniGame2 : MonoBehaviour
             {
                 if (i < safePadsCount)
                 {
-                    shuffledPads[i].SetPadColor(
-                        targetColor
-                    );
-
+                    shuffledPads[i].SetPadColor(targetColor);
                     shuffledPads[i].isSafe = true;
                 }
                 else
                 {
                     Color randomColor;
-
                     do
                     {
-                        randomColor =
-                            activeColorPool[
-                                Random.Range(
-                                    0,
-                                    activeColorPool.Count
-                                )
-                            ];
+                        randomColor = activeColorPool[Random.Range(0, activeColorPool.Count)];
                     }
                     while (randomColor == targetColor);
 
-                    shuffledPads[i].SetPadColor(
-                        randomColor
-                    );
-
+                    shuffledPads[i].SetPadColor(randomColor);
                     shuffledPads[i].isSafe = false;
                 }
             }
@@ -217,13 +189,10 @@ public class MiniGame2 : MonoBehaviour
             {
                 if (timerText != null)
                 {
-                    timerText.text =
-                        Mathf.CeilToInt(timeLeft)
-                        .ToString();
+                    timerText.text = Mathf.CeilToInt(timeLeft).ToString();
                 }
 
                 yield return new WaitForSeconds(1f);
-
                 timeLeft -= 1f;
             }
 
@@ -235,16 +204,7 @@ public class MiniGame2 : MonoBehaviour
                 timerText.text = "??";
             }
 
-            // âm thanh sập
-            AudioManager.Instance.PlaySFX(AudioManager.Instance.brickFallClip);
-            if (cameraShake != null)
-            {
-                cameraShake.Shake(shakeDuration, shakeStrength);
-            }
-
-            yield return new WaitForSeconds(0.5f);
-
-            // ---- ĐÃ SỬA: QUÉT ĐẾM PLAYER THEO ĐỘ RỘNG HỘP TỐI ƯU HƠN ----
+            // ---- ĐÃ BỔ SUNG: XÁC ĐỊNH CÁC Ô SẼ SẬP (BAO GỒM CẢ Ô CÓ >= 2 PLAYER) ----
             foreach (ColorPad pad in allPads)
             {
                 if (pad != null && pad.isSafe)
@@ -253,13 +213,24 @@ public class MiniGame2 : MonoBehaviour
 
                     if (playerCountOnThisPad >= 2)
                     {
-                        pad.isSafe = false;
-                       // Debug.Log($"<Color=Red>Ô {pad.gameObject.name} bị sập vì có {playerCountOnThisPad} Player cùng đứng!</Color>");
+                        pad.isSafe = false; // Đánh dấu là không an toàn nữa
                     }
                 }
             }
 
-            // Làm sập các ô sai
+            // ---- BỔ SUNG: BẬT HIỆU ỨNG NHẤP NHÁY CẢNH BÁO TRƯỚC KHI RƠI ----
+            yield return StartCoroutine(BlinkUnsafePadsRoutine());
+
+            // Âm thanh sập & Camera Shake
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.brickFallClip);
+            if (cameraShake != null)
+            {
+                cameraShake.Shake(shakeDuration, shakeStrength);
+            }
+
+            yield return new WaitForSeconds(0.2f);
+
+            // Thực hiện cho sập các ô đã được đánh dấu unsafe
             foreach (ColorPad pad in allPads)
             {
                 pad.CheckSurvival();
@@ -284,8 +255,7 @@ public class MiniGame2 : MonoBehaviour
             )
             {
                 PlayerVFX vfx = manager.currentPlayer1.GetComponent<PlayerVFX>();
-                PlayerMiniGame player1 =
-                    manager.currentPlayer1.GetComponent<PlayerMiniGame>();
+                PlayerMiniGame player1 = manager.currentPlayer1.GetComponent<PlayerMiniGame>();
                 if (vfx != null)
                 {
                     StartCoroutine(vfx.DissolveInNoParticleRoutine(0.5f));
@@ -302,10 +272,10 @@ public class MiniGame2 : MonoBehaviour
                 manager.currentPlayer2.transform.position.y <= -10f
             )
             {
-                PlayerMiniGame player2 =
-                    manager.currentPlayer2.GetComponent<PlayerMiniGame>();
+                PlayerMiniGame player2 = manager.currentPlayer2.GetComponent<PlayerMiniGame>();
                 PlayerVFX vfx = manager.currentPlayer2.GetComponent<PlayerVFX>();
-                if (vfx != null) {
+                if (vfx != null)
+                {
                     StartCoroutine(vfx.DissolveInNoParticleRoutine(0.5f));
                 }
                 if (player2 != null)
@@ -320,17 +290,63 @@ public class MiniGame2 : MonoBehaviour
             // Sang vòng tiếp theo
             currentRound++;
         }
-
     }
 
-    // ---- ĐÃ CẬP NHẬT: HÀM QUÉT ĐẾM KHÔNG BỊ SÓT VÀ KHÔNG KÉN TAG ----
+    // ---- MỚI: COROUTINE XỬ LÝ NHẤP NHÁY CÁC Ô KHÔNG AN TOÀN ----
+    IEnumerator BlinkUnsafePadsRoutine()
+    {
+        float elapsed = 0f;
+        bool toggle = false;
+
+        // Lưu lại màu gốc của các ô không an toàn để chớp tắt linh hoạt
+        Dictionary<ColorPad, Color> originalColors = new Dictionary<ColorPad, Color>();
+        foreach (ColorPad pad in allPads)
+        {
+            if (pad != null && !pad.isSafe)
+            {
+                Renderer r = pad.GetComponent<Renderer>();
+                if (r != null)
+                {
+                    originalColors[pad] = r.material.color;
+                }
+            }
+        }
+
+        while (elapsed < warningDuration)
+        {
+            toggle = !toggle;
+
+            foreach (var kvp in originalColors)
+            {
+                ColorPad pad = kvp.Key;
+                Color originalColor = kvp.Value;
+
+                if (pad != null)
+                {
+                    // Chớp tắt giữa màu gốc và màu Cảnh báo (Màu Đỏ nhạt / Tối màu)
+                    Color warningColor = toggle ? Color.red : (originalColor * 0.3f);
+                    pad.SetPadColor(warningColor);
+                }
+            }
+
+            yield return new WaitForSeconds(blinkInterval);
+            elapsed += blinkInterval;
+        }
+
+        // Trả lại màu gốc một khoảnh khắc trước khi chính thức sập
+        foreach (var kvp in originalColors)
+        {
+            if (kvp.Key != null)
+            {
+                kvp.Key.SetPadColor(kvp.Value);
+            }
+        }
+    }
+
     private int CountPlayersOnPad(GameObject padObj)
     {
-        Vector3 center =
-            padObj.transform.position + Vector3.up * 1f;
-
-        Vector3 halfExtents =
-            new Vector3(0.49f, 1f, 0.49f);
+        Vector3 center = padObj.transform.position + Vector3.up * 1f;
+        Vector3 halfExtents = new Vector3(0.49f, 1f, 0.49f);
 
         Collider[] hitColliders = Physics.OverlapBox(
             center,
@@ -340,16 +356,14 @@ public class MiniGame2 : MonoBehaviour
             QueryTriggerInteraction.Collide
         );
 
-        HashSet<PlayerManager> players =
-            new HashSet<PlayerManager>();
+        HashSet<PlayerManager> players = new HashSet<PlayerManager>();
 
         foreach (Collider col in hitColliders)
         {
             if (col == null)
                 continue;
 
-            PlayerManager player =
-                col.GetComponentInParent<PlayerManager>();
+            PlayerManager player = col.GetComponentInParent<PlayerManager>();
 
             if (player != null)
             {
@@ -359,11 +373,11 @@ public class MiniGame2 : MonoBehaviour
 
         return players.Count;
     }
+
     public void SetUpAllPlayer()
     {
         PlayerManager p1 = manager.currentPlayer1.GetComponent<PlayerManager>();
         PlayerManager p2 = manager.currentPlayer2.GetComponent<PlayerManager>();
-
 
         p1.playerAttack.hasAttack = true;
         p2.playerAttack.hasAttack = true;
