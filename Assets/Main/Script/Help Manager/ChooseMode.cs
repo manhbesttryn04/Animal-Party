@@ -351,9 +351,7 @@ public class ChooseMode : MonoBehaviour
     private void ResetButtonToNormal(Button button)
     {
         if (button == null)
-        {
             return;
-        }
 
         EventSystem eventSystem = EventSystem.current;
 
@@ -368,7 +366,6 @@ public class ChooseMode : MonoBehaviour
             BaseEventData baseEventData =
                 new BaseEventData(eventSystem);
 
-            // Xóa các trạng thái còn giữ lại.
             button.OnPointerUp(pointerData);
             button.OnPointerExit(pointerData);
             button.OnDeselect(baseEventData);
@@ -383,17 +380,23 @@ public class ChooseMode : MonoBehaviour
         Image image = GetButtonImage(button);
 
         if (image == null)
-        {
             return;
-        }
 
         ColorBlock colors = button.colors;
 
-        // Trở lại Normal Color.
-        image.color = colors.normalColor;
-
-        // null = trở lại Sprite gốc trong component Image.
+        // Trả sprite về Source Image ban đầu.
         image.overrideSprite = null;
+
+        // Image Color vẫn giữ trắng.
+        image.color = Color.white;
+
+        // Chỉ đổi màu hiển thị của Button sang Normal Color vàng.
+        image.CrossFadeColor(
+            colors.normalColor * colors.colorMultiplier,
+            0f,
+            true,
+            true
+        );
 
         image.SetAllDirty();
     }
