@@ -10,22 +10,22 @@ public class MiniGame9Cube : MonoBehaviour
 
     [Header("Cấu hình Tốc Độ & Góc Nghiêng Ngẫu Nhiên")]
     [Tooltip("Tốc độ nghiêng tối thiểu")]
-    public float minTiltSpeed = 20f;
+    public float minTiltSpeed = 30f;
 
     [Tooltip("Tốc độ nghiêng tối đa")]
-    public float maxTiltSpeed = 40f;
+    public float maxTiltSpeed = 60f;
 
     [Tooltip("Góc nghiêng tối thiểu (Độ)")]
-    public float minTiltAngle = 15f;
+    public float minTiltAngle = 45f;
 
     [Tooltip("Góc nghiêng tối đa (Độ)")]
-    public float maxTiltAngle = 65f;
+    public float maxTiltAngle = 180f;
 
     [Tooltip("Thời gian tối thiểu giữa các lần đổi hướng nghiêng (giây)")]
     public float minInterval = 1.5f;
 
     [Tooltip("Thời gian tối đa giữa các lần đổi hướng nghiêng (giây)")]
-    public float maxInterval = 4f;
+    public float maxInterval = 5f;
 
     [Header("Cấu hình Rung Lắc (Phụ thuộc góc nghiêng)")]
     [Tooltip("Bật/tắt hiệu ứng rung giật khi chuyển góc")]
