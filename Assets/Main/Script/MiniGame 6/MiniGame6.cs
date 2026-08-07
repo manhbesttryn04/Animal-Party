@@ -36,6 +36,9 @@ public class MiniGame6 : MonoBehaviour
     public GameObject bombPrefab;
     public float bombFlyDuration = 0.25f;
 
+    [Header("--- TRAP MANAGER ---")]
+    public TrapManager trapManager;
+
     [Header("--- UI ---")]
     public GameObject miniGameCanvas;
     public TMP_Text timerText;
@@ -120,6 +123,9 @@ public class MiniGame6 : MonoBehaviour
 
         isRunning = true;
 
+        // Bật bẫy cho trận này
+        trapManager?.ActivateTraps();
+
         StartCoroutine(GameRoutine());
     }
 
@@ -130,10 +136,13 @@ public class MiniGame6 : MonoBehaviour
         roundActive = false;
 
         StopAllCoroutines();
-   
+
         // Tắt BombCarrier
         carrier1?.SetGameActive(false);
         carrier2?.SetGameActive(false);
+
+        // Tắt hết bẫy
+        trapManager?.DeactivateTraps();
 
         if (flyCoroutine != null) StopCoroutine(flyCoroutine);
         if (bombInstance != null) Destroy(bombInstance);
@@ -218,12 +227,12 @@ public class MiniGame6 : MonoBehaviour
             StartCoroutine(ExplodeBomb());
         }
 
-        // Tăng tốc độ player khi gần hết giờ
+        // Tăng tốc độ player cầm bom khi gần hết giờ
         if (timeLeft <= speedBoostTime)
         {
             float t = 1f - (timeLeft / speedBoostTime); // 0 → 1
-            float newSpeed = Mathf.Lerp(playerMoveSpeed, maxMoveSpeed, t);
-            SetPlayerSpeed(newSpeed);
+            float boostedSpeed = Mathf.Lerp(playerMoveSpeed, maxMoveSpeed, t);
+            SetBombHolderSpeed(boostedSpeed);
         }
     }
 
@@ -250,6 +259,18 @@ public class MiniGame6 : MonoBehaviour
         AssignBomb(to);
     }
 
+    // ====== TRUYỀN BOM CƯỠNG ÉP (dùng cho ForceTransferTrap) ======
+    public void ForceTransferBomb(BombCarrier from)
+    {
+        if (!roundActive || !isRunning) return;
+        if (from != currentBombHolder) return;
+
+        BombCarrier target = (from == carrier1) ? carrier2 : carrier1;
+        if (target == null || target.IsEliminated()) return;
+
+        AssignBomb(target);
+    }
+
     void AssignBomb(BombCarrier holder)
     {
         currentBombHolder?.SetHoldingBomb(false);
@@ -263,6 +284,20 @@ public class MiniGame6 : MonoBehaviour
             bombInstance.SetActive(true);
             if (flyCoroutine != null) StopCoroutine(flyCoroutine);
             flyCoroutine = StartCoroutine(FlyBombTo(holder.bombAnchor));
+        }
+
+        // Ngay khi đổi người cầm bom, cập nhật lại tốc độ ngay lập tức
+        // (không đợi tới frame Update kế tiếp), tránh trường hợp người vừa
+        // nhận/mất bom giữ sai tốc độ trong 1 frame.
+        if (roundActive && timeLeft <= speedBoostTime)
+        {
+            float t = 1f - (timeLeft / speedBoostTime);
+            float boostedSpeed = Mathf.Lerp(playerMoveSpeed, maxMoveSpeed, t);
+            SetBombHolderSpeed(boostedSpeed);
+        }
+        else
+        {
+            SetPlayerSpeed(playerMoveSpeed);
         }
     }
 
@@ -359,6 +394,9 @@ public class MiniGame6 : MonoBehaviour
 
         AudioManager.Instance.StopMusic();
 
+        // Tắt bẫy khi game kết thúc
+        trapManager?.DeactivateTraps();
+
         if (resultPanel != null)
             resultPanel.SetActive(true);
 
@@ -443,10 +481,10 @@ public class MiniGame6 : MonoBehaviour
 
             move.isJumpAndMove = false;
             pani.playerAnimator.SetFloat("Run", 0f);
-        } 
+        }
 
-            // Dùng Rigidbody nếu có
-            Rigidbody rb = playerObj.GetComponent<Rigidbody>();
+        // Dùng Rigidbody nếu có
+        Rigidbody rb = playerObj.GetComponent<Rigidbody>();
         CharacterController cc = playerObj.GetComponent<CharacterController>();
 
         // Hướng văng lên trời + xoay tròn nhẹ
@@ -519,18 +557,33 @@ public class MiniGame6 : MonoBehaviour
         mainCamera.transform.position = originalPos;
     }
 
-    // ====== SET TỐC ĐỘ PLAYER ======
+    // ====== SET TỐC ĐỘ PLAYER (đồng loạt cả 2, dùng lúc bắt đầu round / nổ bom) ======
     void SetPlayerSpeed(float speed)
     {
         SetSpeedForPlayer(carrier1?.gameObject, speed);
         SetSpeedForPlayer(carrier2?.gameObject, speed);
     }
 
+    // ====== SET TỐC ĐỘ CHỈ CHO NGƯỜI ĐANG CẦM BOM, NGƯỜI CÒN LẠI VỀ TỐC ĐỘ GỐC ======
+    void SetBombHolderSpeed(float boostedSpeed)
+    {
+        if (carrier1 != null)
+            SetSpeedForPlayer(carrier1.gameObject, carrier1 == currentBombHolder ? boostedSpeed : playerMoveSpeed);
+
+        if (carrier2 != null)
+            SetSpeedForPlayer(carrier2.gameObject, carrier2 == currentBombHolder ? boostedSpeed : playerMoveSpeed);
+    }
+
     void SetSpeedForPlayer(GameObject playerObj, float speed)
     {
         if (playerObj == null) return;
+
+        BombCarrier carrier = playerObj.GetComponent<BombCarrier>();
         PlayerMove move = playerObj.GetComponent<PlayerMove>();
-        if (move != null && !carrier1.IsEliminated() && !carrier2.IsEliminated())
+
+        // Không ghi đè tốc độ nếu player đang bị đóng băng (FreezeTrap)
+        if (move != null && carrier != null && !carrier.IsFrozen()
+            && !carrier1.IsEliminated() && !carrier2.IsEliminated())
             move.speed = speed;
     }
 
@@ -553,5 +606,5 @@ public class MiniGame6 : MonoBehaviour
         if (anim != null && anim.playerAnimator != null)
             anim.playerAnimator.SetBool("Die", false);
     }
- 
+
 }

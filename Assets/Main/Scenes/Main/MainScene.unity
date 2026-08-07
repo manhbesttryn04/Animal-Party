@@ -769,6 +769,78 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 4882555669013699207, guid: 878c9fea63542154a857a4962dfc245f, type: 3}
   m_PrefabInstance: {fileID: 560313926}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &264609363
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 264609364}
+  - component: {fileID: 264609366}
+  - component: {fileID: 264609365}
+  m_Layer: 0
+  m_Name: Trap_Freeze_01 (5)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &264609364
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 264609363}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1311.38, y: -798.35, z: 53.48}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3733480203121461849}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &264609365
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 264609363}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &264609366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 264609363}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5f9281b5f14db64283a42252a5e5ca8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FreezeTrap
+  cooldown: 4
+  freezeDuration: 2
+  freezeHitVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
+  freezeLoopVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
+  vfxOffset: {x: 0, y: 1, z: 0}
+  vfxScale: {x: 1, y: 1, z: 1}
 --- !u!1 &265678872
 GameObject:
   m_ObjectHideFlags: 0
@@ -889,7 +961,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f5c43531b7774c45ba1db7013ef8a54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  indexMiniGame: 4
+  indexMiniGame: 6
   miniGameList: {fileID: 288627989}
   intrusTextList: {fileID: 288627990}
   videoInstructList: {fileID: 288627991}
@@ -2380,6 +2452,78 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 8149235726067356008, guid: 8c1a2e4f67c39234b8ca76303e14e560, type: 3}
   m_PrefabInstance: {fileID: 7058007581154629732}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &753655723
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 753655724}
+  - component: {fileID: 753655726}
+  - component: {fileID: 753655725}
+  m_Layer: 0
+  m_Name: Trap_Freeze_01 (3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &753655724
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 753655723}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1317.98, y: -798.35, z: 55.79}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3733480203121461849}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &753655725
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 753655723}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &753655726
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 753655723}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5f9281b5f14db64283a42252a5e5ca8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FreezeTrap
+  cooldown: 4
+  freezeDuration: 2
+  freezeHitVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
+  freezeLoopVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
+  vfxOffset: {x: 0, y: 1, z: 0}
+  vfxScale: {x: 1, y: 1, z: 1}
 --- !u!1 &754339472
 GameObject:
   m_ObjectHideFlags: 0
@@ -2782,6 +2926,78 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &821306946
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 821306947}
+  - component: {fileID: 821306948}
+  - component: {fileID: 821306949}
+  m_Layer: 0
+  m_Name: Trap_Freeze_01
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &821306947
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 821306946}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1323.77, y: -798.35, z: 52.700195}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3733480203121461849}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &821306948
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 821306946}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5f9281b5f14db64283a42252a5e5ca8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FreezeTrap
+  cooldown: 4
+  freezeDuration: 2
+  freezeHitVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
+  freezeLoopVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
+  vfxOffset: {x: 0, y: 1, z: 0}
+  vfxScale: {x: 1, y: 1, z: 1}
+--- !u!65 &821306949
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 821306946}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1001 &822291356
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3695,6 +3911,78 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2da12891d00a9464e8dedb864bf2bc8a, type: 3}
+--- !u!1 &1061870933
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1061870934}
+  - component: {fileID: 1061870936}
+  - component: {fileID: 1061870935}
+  m_Layer: 0
+  m_Name: Trap_Freeze_01 (4)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1061870934
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1061870933}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1314.4, y: -798.35, z: 54.59}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3733480203121461849}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &1061870935
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1061870933}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1061870936
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1061870933}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5f9281b5f14db64283a42252a5e5ca8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FreezeTrap
+  cooldown: 4
+  freezeDuration: 2
+  freezeHitVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
+  freezeLoopVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
+  vfxOffset: {x: 0, y: 1, z: 0}
+  vfxScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1065188560
 GameObject:
   m_ObjectHideFlags: 0
@@ -4817,6 +5105,78 @@ PrefabInstance:
       addedObject: {fileID: 188910085}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 878c9fea63542154a857a4962dfc245f, type: 3}
+--- !u!1 &1299833487
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1299833488}
+  - component: {fileID: 1299833490}
+  - component: {fileID: 1299833489}
+  m_Layer: 0
+  m_Name: Trap_Freeze_01 (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1299833488
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299833487}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1326.94, y: -798.35, z: 50}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3733480203121461849}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &1299833489
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299833487}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1299833490
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299833487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5f9281b5f14db64283a42252a5e5ca8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FreezeTrap
+  cooldown: 4
+  freezeDuration: 2
+  freezeHitVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
+  freezeLoopVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
+  vfxOffset: {x: 0, y: 1, z: 0}
+  vfxScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1324390462 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6208376203378758326, guid: 3a35bb4fdc8f3e64c8e902780ea050e1, type: 3}
@@ -6300,6 +6660,52 @@ PrefabInstance:
       addedObject: {fileID: 1026024174}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 878c9fea63542154a857a4962dfc245f, type: 3}
+--- !u!1 &1669111222
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1669111223}
+  - component: {fileID: 1669111224}
+  m_Layer: 0
+  m_Name: TrapManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1669111223
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1669111222}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -1321.2, y: -798.979, z: 52.700195}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3733480203121461849}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1669111224
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1669111222}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9666dd41b7a61a43879a7c344e54430, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TrapManager
+  useRandomSubset: 0
+  activeTrapCount: 6
 --- !u!1 &1685498782 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4882555669013699207, guid: 878c9fea63542154a857a4962dfc245f, type: 3}
@@ -6975,6 +7381,78 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5226851983281995837, guid: 878c9fea63542154a857a4962dfc245f, type: 3}
   m_PrefabInstance: {fileID: 2112902044}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1852694039
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1852694040}
+  - component: {fileID: 1852694042}
+  - component: {fileID: 1852694041}
+  m_Layer: 0
+  m_Name: Trap_Freeze_01 (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1852694040
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1852694039}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1317.98, y: -798.35, z: 51.37}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3733480203121461849}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &1852694041
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1852694039}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1852694042
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1852694039}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5f9281b5f14db64283a42252a5e5ca8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FreezeTrap
+  cooldown: 4
+  freezeDuration: 2
+  freezeHitVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
+  freezeLoopVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
+  vfxOffset: {x: 0, y: 1, z: 0}
+  vfxScale: {x: 1, y: 1, z: 1}
 --- !u!1001 &1854061626
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9294,10 +9772,34 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2133488384}
     m_Modifications:
+    - target: {fileID: 1294874476024181341, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1528016214656470510, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192618580838464978, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 3099436664336108967, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
       propertyPath: manager
       value: 
       objectReference: {fileID: 288627986}
+    - target: {fileID: 3099436664336108967, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
+      propertyPath: trapManager
+      value: 
+      objectReference: {fileID: 1669111224}
+    - target: {fileID: 3251876126487333584, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -31.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 3251876126487333584, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 50.53
+      objectReference: {fileID: 0}
     - target: {fileID: 6528590069517010650, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1747.4785
@@ -9338,13 +9840,42 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7236822928590757617, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -32.18
+      objectReference: {fileID: 0}
     - target: {fileID: 7854578304033816293, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
       propertyPath: m_Name
       value: MiniGame 6
       objectReference: {fileID: 0}
+    - target: {fileID: 8130017228592059288, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 2
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 6528590069517010650, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 821306947}
+    - targetCorrespondingSourceObject: {fileID: 6528590069517010650, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1299833488}
+    - targetCorrespondingSourceObject: {fileID: 6528590069517010650, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1852694040}
+    - targetCorrespondingSourceObject: {fileID: 6528590069517010650, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 753655724}
+    - targetCorrespondingSourceObject: {fileID: 6528590069517010650, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1061870934}
+    - targetCorrespondingSourceObject: {fileID: 6528590069517010650, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 264609364}
+    - targetCorrespondingSourceObject: {fileID: 6528590069517010650, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1669111223}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
 --- !u!1001 &3145067721181402235
