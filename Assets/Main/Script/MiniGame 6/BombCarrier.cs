@@ -1,10 +1,11 @@
 using UnityEngine;
+using System.Collections;
 
 [RequireComponent(typeof(PlayerType))]
 public class BombCarrier : MonoBehaviour
 {
     [Header("Tham chiếu")]
-    public Transform bombAnchor; // Điểm rỗng trên đầu nhân vật
+    public Transform bombAnchor;
 
     private PlayerType playerType;
     private PlayerMove playerMove;
@@ -12,37 +13,87 @@ public class BombCarrier : MonoBehaviour
     private bool isGameActive = false;
     private bool isHoldingBomb = false;
     private bool isEliminated = false;
+    private bool canMove = false;
     private float cooldownTimer = 0f;
+
+    // --- FREEZE ---
+    private bool isFrozen = false;
+    private float defaultSpeed = 0f;
+    private Coroutine freezeCoroutine;
+
+    // --- MAGNET ---
+    private Coroutine magnetCoroutine;
 
     void Awake()
     {
         playerType = GetComponent<PlayerType>();
         playerMove = GetComponent<PlayerMove>();
+
+        if (playerMove != null)
+        {
+            defaultSpeed = playerMove.speed;
+        }
     }
 
     void Update()
     {
         if (!isGameActive) return;
+
         if (cooldownTimer > 0f)
             cooldownTimer -= Time.deltaTime;
+
+        UpdatePlayerMovementState();
     }
 
-    // Gọi từ BombGameManager.StartMiniGame() / StopMiniGame()
+    private void UpdatePlayerMovementState()
+    {
+        if (playerMove == null) return;
+
+        if (isEliminated || !canMove || isFrozen)
+        {
+            playerMove.isMove = false;
+            playerMove.isJump = false;
+        }
+        else
+        {
+            playerMove.isMove = true;
+            playerMove.isJump = true;
+        }
+    }
+
+    public void SetCanMove(bool enable)
+    {
+        canMove = enable;
+        UpdatePlayerMovementState();
+    }
+
+    public bool CanMove() => canMove;
+
     public void SetGameActive(bool active)
     {
         isGameActive = active;
         isHoldingBomb = false;
         isEliminated = false;
+        canMove = false;
+
+        if (isFrozen)
+        {
+            if (freezeCoroutine != null) StopCoroutine(freezeCoroutine);
+            SetFrozen(false);
+        }
+
+        if (magnetCoroutine != null) StopCoroutine(magnetCoroutine);
+
         cooldownTimer = 0f;
     }
 
     public bool IsGameActive() => isGameActive;
 
-    // Va chạm - detect qua Tag "Player 1" / "Player 2"
     void OnTriggerEnter(Collider other)
     {
         if (!isGameActive) return;
         if (isEliminated || !isHoldingBomb) return;
+        if (isFrozen) return;
         if (IsOnCooldown()) return;
 
         if (!other.CompareTag("Player 1") && !other.CompareTag("Player 2")) return;
@@ -71,13 +122,159 @@ public class BombCarrier : MonoBehaviour
     public void SetEliminated(bool eliminated)
     {
         isEliminated = eliminated;
+        UpdatePlayerMovementState();
 
-        if (playerMove != null)
+        if (eliminated && isFrozen)
         {
-            playerMove.isMove = !eliminated;
-            playerMove.isJump = !eliminated;
+            if (freezeCoroutine != null) StopCoroutine(freezeCoroutine);
+            SetFrozen(false);
         }
     }
 
     public bool IsEliminated() => isEliminated;
+
+    // ====== FREEZE TRAP SYSTEM ======
+    public void ApplyFreeze(float duration, GameObject hitVfxPrefab, GameObject loopVfxPrefab, Vector3 vfxOffset, Vector3 vfxScale)
+    {
+        if (isEliminated) return;
+
+        // PHÁT ÂM THANH BẪY BĂNG TỪ AUDIOMANAGER
+        if (AudioManager.Instance != null)
+        {
+            AudioClip clip = AudioManager.Instance.freezeTrapClip != null ? AudioManager.Instance.freezeTrapClip : AudioManager.Instance.iceMagicClip;
+            AudioManager.Instance.PlaySFX(clip);
+        }
+
+        if (freezeCoroutine != null)
+        {
+            StopCoroutine(freezeCoroutine);
+        }
+
+        if (vfxScale == Vector3.zero) vfxScale = Vector3.one;
+
+        freezeCoroutine = StartCoroutine(FreezeRoutine(duration, hitVfxPrefab, loopVfxPrefab, vfxOffset, vfxScale));
+    }
+
+    private IEnumerator FreezeRoutine(float duration, GameObject hitVfxPrefab, GameObject loopVfxPrefab, Vector3 vfxOffset, Vector3 vfxScale)
+    {
+        SetFrozen(true);
+
+        if (hitVfxPrefab != null)
+        {
+            GameObject hitVFX = Instantiate(hitVfxPrefab, transform.position + vfxOffset, Quaternion.identity, transform);
+            hitVFX.transform.localScale = vfxScale;
+            Destroy(hitVFX, 2f);
+        }
+
+        GameObject loopVFX = null;
+        if (loopVfxPrefab != null)
+        {
+            loopVFX = Instantiate(loopVfxPrefab, transform.position + vfxOffset, Quaternion.identity, transform);
+            loopVFX.transform.localScale = vfxScale;
+        }
+
+        yield return new WaitForSeconds(duration);
+
+        if (loopVFX != null)
+        {
+            Destroy(loopVFX);
+        }
+
+        SetFrozen(false);
+        freezeCoroutine = null;
+    }
+
+    public void SetFrozen(bool frozen)
+    {
+        if (isEliminated) return;
+
+        isFrozen = frozen;
+        if (playerMove == null) return;
+
+        if (frozen)
+        {
+            playerMove.speed = 0f;
+        }
+        else
+        {
+            playerMove.speed = defaultSpeed;
+        }
+
+        UpdatePlayerMovementState();
+    }
+
+    public bool IsFrozen() => isFrozen;
+
+    // ====== MAGNET TRAP SYSTEM ======
+    public void ApplyPulledByPlayer(Transform pullerTransform, float force, float duration, GameObject vfxPrefab, Vector3 vfxOffset, Vector3 vfxScale)
+    {
+        if (isEliminated) return;
+
+        // PHÁT ÂM THANH BẪY NAM CHÂM TỪ AUDIOMANAGER
+        if (AudioManager.Instance != null)
+        {
+            AudioClip clip = AudioManager.Instance.magnetTrapClip != null ? AudioManager.Instance.magnetTrapClip : AudioManager.Instance.laserMoveClip;
+            AudioManager.Instance.PlaySFX(clip);
+        }
+
+        if (magnetCoroutine != null)
+        {
+            StopCoroutine(magnetCoroutine);
+        }
+
+        if (vfxScale == Vector3.zero) vfxScale = Vector3.one;
+
+        magnetCoroutine = StartCoroutine(PulledRoutine(pullerTransform, force, duration, vfxPrefab, vfxOffset, vfxScale));
+    }
+
+    private IEnumerator PulledRoutine(Transform pullerTransform, float force, float duration, GameObject vfxPrefab, Vector3 vfxOffset, Vector3 vfxScale)
+    {
+        GameObject spawnedVFX = null;
+        if (vfxPrefab != null && pullerTransform != null)
+        {
+            spawnedVFX = Instantiate(vfxPrefab, pullerTransform.position + vfxOffset, Quaternion.identity, pullerTransform);
+            spawnedVFX.transform.localScale = vfxScale;
+        }
+
+        CharacterController cc = GetComponent<CharacterController>();
+        Rigidbody rb = GetComponent<Rigidbody>();
+
+        float timer = 0f;
+
+        while (timer < duration)
+        {
+            if (isEliminated || pullerTransform == null) break;
+
+            Vector3 directionToPuller = (pullerTransform.position - transform.position);
+            directionToPuller.y = 0;
+
+            if (directionToPuller.magnitude > 1.0f)
+            {
+                Vector3 pullVelocity = directionToPuller.normalized * force;
+
+                if (cc != null && cc.enabled)
+                {
+                    cc.Move(pullVelocity * Time.deltaTime);
+                }
+                else if (rb != null && !rb.isKinematic)
+                {
+                    rb.AddForce(pullVelocity, ForceMode.Acceleration);
+                }
+                else
+                {
+                    transform.position += pullVelocity * Time.deltaTime;
+                }
+            }
+
+            timer += Time.deltaTime;
+            yield return null;
+        }
+
+        if (spawnedVFX != null)
+        {
+            Destroy(spawnedVFX);
+        }
+
+        magnetCoroutine = null;
+    }
 }

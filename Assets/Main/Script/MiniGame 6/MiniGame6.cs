@@ -36,6 +36,9 @@ public class MiniGame6 : MonoBehaviour
     public GameObject bombPrefab;
     public float bombFlyDuration = 0.25f;
 
+    [Header("--- TRAP MANAGER ---")]
+    public TrapManager trapManager;
+
     [Header("--- UI ---")]
     public GameObject miniGameCanvas;
     public TMP_Text timerText;
@@ -45,7 +48,6 @@ public class MiniGame6 : MonoBehaviour
     public TMP_Text p2NameText;
     public TMP_Text resultText;
     public GameObject resultPanel;
-
 
     [Header("--- VFX ---")]
     public GameObject explosionVFX;
@@ -94,6 +96,9 @@ public class MiniGame6 : MonoBehaviour
         carrier1.SetGameActive(true);
         carrier2.SetGameActive(true);
 
+        // KHÓA DI CHUYỂN NGAY KHI VÀO GAME
+        SetPlayerMovement(false);
+
         activePlayers.Clear();
         activePlayers.Add(carrier1);
         activePlayers.Add(carrier2);
@@ -130,26 +135,23 @@ public class MiniGame6 : MonoBehaviour
         roundActive = false;
 
         StopAllCoroutines();
-   
-        // Tắt BombCarrier
+
+        // Khoá di chuyển & Tắt BombCarrier
+        SetPlayerMovement(false);
         carrier1?.SetGameActive(false);
         carrier2?.SetGameActive(false);
+
+        // Tắt hết bẫy
+        trapManager?.DeactivateTraps();
 
         if (flyCoroutine != null) StopCoroutine(flyCoroutine);
         if (bombInstance != null) Destroy(bombInstance);
 
-
         activePlayers.Clear();
-        if (timerText != null)
-            timerText.text = "";
+        if (timerText != null) timerText.text = "";
+        if (messageText != null) messageText.text = "";
+        if (countdownText != null) countdownText.text = "";
 
-        if (messageText != null)
-            messageText.text = "";
-
-        if (countdownText != null)
-            countdownText.text = "";
-
-        // Tắt toàn bộ Canvas của minigame
         if (miniGameCanvas != null)
         {
             miniGameCanvas.SetActive(false);
@@ -159,7 +161,10 @@ public class MiniGame6 : MonoBehaviour
     // ====== GAME ROUTINE ======
     IEnumerator GameRoutine()
     {
-        // Đếm ngược 3,2,1 GO
+        // 1. Khóa chuyển động trước khi đếm
+        SetPlayerMovement(false);
+
+        // 2. Đếm ngược 3, 2, 1
         for (int i = (int)firstWaitTime; i > 0; i--)
         {
             if (countdownText) countdownText.text = i.ToString();
@@ -167,10 +172,22 @@ public class MiniGame6 : MonoBehaviour
         }
 
         if (countdownText) countdownText.text = "GO!";
+
+        // 3. HẾT ĐẾM NGƯỢC -> MỞ KHÓA DI CHUYỂN & BẬT BẪY!
+        SetPlayerMovement(true);
+        trapManager?.ActivateTraps();
+
         yield return new WaitForSeconds(0.5f);
         if (countdownText) countdownText.text = "";
 
         StartNewRound();
+    }
+
+    // ====== BẬT / TẮT CHUYỂN ĐỘNG CHO PLAYER ======
+    private void SetPlayerMovement(bool canMove)
+    {
+        carrier1?.SetCanMove(canMove);
+        carrier2?.SetCanMove(canMove);
     }
 
     void StartNewRound()
@@ -209,7 +226,7 @@ public class MiniGame6 : MonoBehaviour
         if (timeLeft <= 5f && !hasPlayedTick)
         {
             hasPlayedTick = true;
-            AudioManager.Instance.PlaySpecial(AudioManager.Instance.bombTickingClip);
+            AudioManager.Instance?.PlaySpecial(AudioManager.Instance.bombTickingClip);
         }
 
         if (timeLeft <= 0f)
@@ -218,12 +235,12 @@ public class MiniGame6 : MonoBehaviour
             StartCoroutine(ExplodeBomb());
         }
 
-        // Tăng tốc độ player khi gần hết giờ
+        // Tăng tốc độ player cầm bom khi gần hết giờ
         if (timeLeft <= speedBoostTime)
         {
             float t = 1f - (timeLeft / speedBoostTime); // 0 → 1
-            float newSpeed = Mathf.Lerp(playerMoveSpeed, maxMoveSpeed, t);
-            SetPlayerSpeed(newSpeed);
+            float boostedSpeed = Mathf.Lerp(playerMoveSpeed, maxMoveSpeed, t);
+            SetBombHolderSpeed(boostedSpeed);
         }
     }
 
@@ -250,6 +267,18 @@ public class MiniGame6 : MonoBehaviour
         AssignBomb(to);
     }
 
+    // ====== TRUYỀN BOM CƯỠNG ÉP ======
+    public void ForceTransferBomb(BombCarrier from)
+    {
+        if (!roundActive || !isRunning) return;
+        if (from != currentBombHolder) return;
+
+        BombCarrier target = (from == carrier1) ? carrier2 : carrier1;
+        if (target == null || target.IsEliminated()) return;
+
+        AssignBomb(target);
+    }
+
     void AssignBomb(BombCarrier holder)
     {
         currentBombHolder?.SetHoldingBomb(false);
@@ -263,6 +292,17 @@ public class MiniGame6 : MonoBehaviour
             bombInstance.SetActive(true);
             if (flyCoroutine != null) StopCoroutine(flyCoroutine);
             flyCoroutine = StartCoroutine(FlyBombTo(holder.bombAnchor));
+        }
+
+        if (roundActive && timeLeft <= speedBoostTime)
+        {
+            float t = 1f - (timeLeft / speedBoostTime);
+            float boostedSpeed = Mathf.Lerp(playerMoveSpeed, maxMoveSpeed, t);
+            SetBombHolderSpeed(boostedSpeed);
+        }
+        else
+        {
+            SetPlayerSpeed(playerMoveSpeed);
         }
     }
 
@@ -298,36 +338,28 @@ public class MiniGame6 : MonoBehaviour
     {
         if (flyCoroutine != null) StopCoroutine(flyCoroutine);
 
-        // Dừng nhạc nền
-        AudioManager.Instance.StopMusic();
+        AudioManager.Instance?.StopMusic();
 
-        // Reset tốc độ player
         SetPlayerSpeed(playerMoveSpeed);
 
-        // VFX + SFX nổ
         if (explosionVFX != null && currentBombHolder != null)
             Instantiate(explosionVFX, currentBombHolder.transform.position, Quaternion.identity);
 
-        AudioManager.Instance.PlaySFX(AudioManager.Instance.explosionBombClip);
+        AudioManager.Instance?.PlaySFX(AudioManager.Instance.explosionBombClip);
 
         if (bombInstance != null) bombInstance.SetActive(false);
 
-        // Rung màn hình
         if (mainCamera != null)
             StartCoroutine(ShakeCamera());
 
-        // Văng player ra khỏi màn hình
         if (currentBombHolder != null)
             StartCoroutine(LaunchPlayer(currentBombHolder.gameObject));
 
-        // Thông báo thua
         string loserName = currentBombHolder == carrier1 ? "PLAYER 1" : "PLAYER 2";
         if (messageText) messageText.text = $"{loserName} has been eliminated!";
 
-        // Animation chết
         PlayDeadAnimation(currentBombHolder.gameObject);
 
-        // Loại player
         EliminatePlayer(currentBombHolder);
 
         yield return new WaitForSeconds(2f);
@@ -357,12 +389,13 @@ public class MiniGame6 : MonoBehaviour
         roundActive = false;
         isRunning = false;
 
-        AudioManager.Instance.StopMusic();
+        AudioManager.Instance?.StopMusic();
+
+        trapManager?.DeactivateTraps();
 
         if (resultPanel != null)
             resultPanel.SetActive(true);
 
-        // Game chỉ kết thúc khi còn đúng 1 người
         if (activePlayers.Count != 1)
         {
             Debug.LogError("[MiniGame6] Không xác định được người thắng!");
@@ -379,7 +412,7 @@ public class MiniGame6 : MonoBehaviour
 
         if (messageText != null)
             messageText.text = $"{winnerName} WINS!";
-        // Phát giọng thông báo người thắng
+
         if (AudioManager.Instance != null)
         {
             if (isPlayer1Win)
@@ -392,67 +425,46 @@ public class MiniGame6 : MonoBehaviour
             }
         }
 
-        // 1 = thắng, 0 = thua
         if (manager != null)
         {
-            CheckFinishReward(
-                manager.currentPlayer1,
-                isPlayer1Win ? 1 : 0
-            );
-
-            CheckFinishReward(
-                manager.currentPlayer2,
-                isPlayer1Win ? 0 : 1
-            );
+            CheckFinishReward(manager.currentPlayer1, isPlayer1Win ? 1 : 0);
+            CheckFinishReward(manager.currentPlayer2, isPlayer1Win ? 0 : 1);
         }
     }
 
     void CheckFinishReward(GameObject playerObj, int checkWin)
     {
-        if (playerObj == null)
-            return;
+        if (playerObj == null) return;
 
         PlayerMiniGame mini = playerObj.GetComponent<PlayerMiniGame>();
+        if (mini == null) return;
 
-        if (mini == null)
-            return;
-
-        // checkWin = 1: người thắng
-        // checkWin = 0: người thua
         mini.UpCoin(checkWin, 100);
     }
 
     [Header("--- LAUNCH ON EXPLODE ---")]
-    [Tooltip("Lực văng lên trời")]
     public float launchForce = 8f;
-    [Tooltip("Lực văng lên trên (cao)")]
     public float launchUpForce = 30f;
-    [Tooltip("Thời gian trước khi ẩn player")]
     public float launchHideTime = 2f;
 
-    // ====== LAUNCH PLAYER KHI NỔ ======
     IEnumerator LaunchPlayer(GameObject playerObj)
     {
         if (playerObj == null) yield break;
 
-        // Tắt PlayerMove để không bị override
         PlayerMove move = playerObj.GetComponent<PlayerMove>();
         PlayerAnimator pani = playerObj.GetComponent<PlayerAnimator>();
         if (move != null && pani != null)
         {
-
             move.isJumpAndMove = false;
             pani.playerAnimator.SetFloat("Run", 0f);
-        } 
+        }
 
-            // Dùng Rigidbody nếu có
-            Rigidbody rb = playerObj.GetComponent<Rigidbody>();
+        Rigidbody rb = playerObj.GetComponent<Rigidbody>();
         CharacterController cc = playerObj.GetComponent<CharacterController>();
 
-        // Hướng văng lên trời + xoay tròn nhẹ
         Vector3 randomDir = new Vector3(
-            Random.Range(-0.3f, 0.3f),  // ngang ít thôi
-            1f,                          // lên trời là chính
+            Random.Range(-0.3f, 0.3f),
+            1f,
             Random.Range(-0.3f, 0.3f)
         ).normalized;
 
@@ -460,18 +472,15 @@ public class MiniGame6 : MonoBehaviour
 
         if (rb != null)
         {
-            // Dùng Rigidbody
             rb.isKinematic = false;
             rb.AddForce(launchVelocity, ForceMode.Impulse);
         }
         else if (cc != null)
         {
-            // Dùng CharacterController — move thủ công
             StartCoroutine(LaunchCharacterController(playerObj, cc, launchVelocity));
             yield break;
         }
 
-        // Chờ rồi ẩn player
         yield return new WaitForSeconds(launchHideTime);
         playerObj.SetActive(false);
     }
@@ -515,22 +524,33 @@ public class MiniGame6 : MonoBehaviour
             yield return null;
         }
 
-        // Reset về đúng vị trí ban đầu
         mainCamera.transform.position = originalPos;
     }
 
-    // ====== SET TỐC ĐỘ PLAYER ======
     void SetPlayerSpeed(float speed)
     {
         SetSpeedForPlayer(carrier1?.gameObject, speed);
         SetSpeedForPlayer(carrier2?.gameObject, speed);
     }
 
+    void SetBombHolderSpeed(float boostedSpeed)
+    {
+        if (carrier1 != null)
+            SetSpeedForPlayer(carrier1.gameObject, carrier1 == currentBombHolder ? boostedSpeed : playerMoveSpeed);
+
+        if (carrier2 != null)
+            SetSpeedForPlayer(carrier2.gameObject, carrier2 == currentBombHolder ? boostedSpeed : playerMoveSpeed);
+    }
+
     void SetSpeedForPlayer(GameObject playerObj, float speed)
     {
         if (playerObj == null) return;
+
+        BombCarrier carrier = playerObj.GetComponent<BombCarrier>();
         PlayerMove move = playerObj.GetComponent<PlayerMove>();
-        if (move != null && !carrier1.IsEliminated() && !carrier2.IsEliminated())
+
+        if (move != null && carrier != null && !carrier.IsFrozen()
+            && !carrier1.IsEliminated() && !carrier2.IsEliminated())
             move.speed = speed;
     }
 
@@ -545,13 +565,17 @@ public class MiniGame6 : MonoBehaviour
         {
             move.speed = playerMoveSpeed;
             move.isJumpAndMove = true;
-            move.isMove = true;
-            //move.isWalk = true;
             move.gravity = -18f;
         }
 
         if (anim != null && anim.playerAnimator != null)
             anim.playerAnimator.SetBool("Die", false);
     }
- 
+
+    public BombCarrier GetOtherPlayer(BombCarrier currentPlayer)
+    {
+        if (carrier1 == currentPlayer) return carrier2;
+        if (carrier2 == currentPlayer) return carrier1;
+        return null;
+    }
 }
