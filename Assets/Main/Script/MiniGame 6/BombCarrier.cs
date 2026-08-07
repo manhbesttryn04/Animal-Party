@@ -13,12 +13,16 @@ public class BombCarrier : MonoBehaviour
     private bool isGameActive = false;
     private bool isHoldingBomb = false;
     private bool isEliminated = false;
+    private bool canMove = false; // Mặc định chưa đếm ngược xong -> ĐÉO CHO DI CHUYỂN
     private float cooldownTimer = 0f;
 
     // --- FREEZE ---
     private bool isFrozen = false;
     private float defaultSpeed = 0f; // Lưu tốc độ gốc cố định
     private Coroutine freezeCoroutine;
+
+    // --- MAGNET ---
+    private Coroutine magnetCoroutine;
 
     void Awake()
     {
@@ -35,9 +39,40 @@ public class BombCarrier : MonoBehaviour
     void Update()
     {
         if (!isGameActive) return;
+
         if (cooldownTimer > 0f)
             cooldownTimer -= Time.deltaTime;
+
+        // Cập nhật liên tục trạng thái di chuyển cho PlayerMove
+        UpdatePlayerMovementState();
     }
+
+    // Quyết định Player có được di chuyển/nhảy hay không
+    private void UpdatePlayerMovementState()
+    {
+        if (playerMove == null) return;
+
+        // Nếu đã bị loại, chưa cho phép di chuyển (đếm ngược), hoặc đang bị Freeze
+        if (isEliminated || !canMove || isFrozen)
+        {
+            playerMove.isMove = false;
+            playerMove.isJump = false;
+        }
+        else
+        {
+            playerMove.isMove = true;
+            playerMove.isJump = true;
+        }
+    }
+
+    // Gọi từ MiniGame6.cs để bật/tắt quyền di chuyển (Dùng lúc đếm ngược 3, 2, 1)
+    public void SetCanMove(bool enable)
+    {
+        canMove = enable;
+        UpdatePlayerMovementState();
+    }
+
+    public bool CanMove() => canMove;
 
     // Gọi từ BombGameManager.StartMiniGame() / StopMiniGame()
     public void SetGameActive(bool active)
@@ -45,6 +80,7 @@ public class BombCarrier : MonoBehaviour
         isGameActive = active;
         isHoldingBomb = false;
         isEliminated = false;
+        canMove = false; // Mặc định khóa di chuyển khi mới kích hoạt game
 
         // Reset trạng thái đóng băng nếu ngắt game giữa chừng
         if (isFrozen)
@@ -52,6 +88,8 @@ public class BombCarrier : MonoBehaviour
             if (freezeCoroutine != null) StopCoroutine(freezeCoroutine);
             SetFrozen(false);
         }
+
+        if (magnetCoroutine != null) StopCoroutine(magnetCoroutine);
 
         cooldownTimer = 0f;
     }
@@ -92,12 +130,7 @@ public class BombCarrier : MonoBehaviour
     public void SetEliminated(bool eliminated)
     {
         isEliminated = eliminated;
-
-        if (playerMove != null)
-        {
-            playerMove.isMove = !eliminated;
-            playerMove.isJump = !eliminated;
-        }
+        UpdatePlayerMovementState();
 
         if (eliminated && isFrozen)
         {
@@ -109,38 +142,45 @@ public class BombCarrier : MonoBehaviour
     public bool IsEliminated() => isEliminated;
 
     // ====== FREEZE TRAP SYSTEM ======
-
-    // Bẫy sẽ gọi hàm này thay vì tự chạy Coroutine
-    public void ApplyFreeze(float duration, GameObject vfxPrefab = null, Vector3 vfxOffset = default)
+    public void ApplyFreeze(float duration, GameObject hitVfxPrefab, GameObject loopVfxPrefab, Vector3 vfxOffset, Vector3 vfxScale)
     {
         if (isEliminated) return;
 
-        // Nếu đang đóng băng mà ăn tiếp bẫy thì reset lại đếm ngược
         if (freezeCoroutine != null)
         {
             StopCoroutine(freezeCoroutine);
         }
 
-        freezeCoroutine = StartCoroutine(FreezeRoutine(duration, vfxPrefab, vfxOffset));
+        if (vfxScale == Vector3.zero) vfxScale = Vector3.one;
+
+        freezeCoroutine = StartCoroutine(FreezeRoutine(duration, hitVfxPrefab, loopVfxPrefab, vfxOffset, vfxScale));
     }
 
-    private IEnumerator FreezeRoutine(float duration, GameObject vfxPrefab, Vector3 vfxOffset)
+    private IEnumerator FreezeRoutine(float duration, GameObject hitVfxPrefab, GameObject loopVfxPrefab, Vector3 vfxOffset, Vector3 vfxScale)
     {
         SetFrozen(true);
 
-        // Spawn VFX làm con của Player
-        GameObject spawnedVFX = null;
-        if (vfxPrefab != null)
+        // 1. Spawn VFX Va chạm
+        if (hitVfxPrefab != null)
         {
-            spawnedVFX = Instantiate(vfxPrefab, transform.position + vfxOffset, Quaternion.identity, transform);
+            GameObject hitVFX = Instantiate(hitVfxPrefab, transform.position + vfxOffset, Quaternion.identity, transform);
+            hitVFX.transform.localScale = vfxScale;
+            Destroy(hitVFX, 2f);
+        }
+
+        // 2. Spawn VFX Duy trì
+        GameObject loopVFX = null;
+        if (loopVfxPrefab != null)
+        {
+            loopVFX = Instantiate(loopVfxPrefab, transform.position + vfxOffset, Quaternion.identity, transform);
+            loopVFX.transform.localScale = vfxScale;
         }
 
         yield return new WaitForSeconds(duration);
 
-        // Hết đóng băng -> Xóa VFX & trả lại di chuyển
-        if (spawnedVFX != null)
+        if (loopVFX != null)
         {
-            Destroy(spawnedVFX);
+            Destroy(loopVFX);
         }
 
         SetFrozen(false);
@@ -156,71 +196,20 @@ public class BombCarrier : MonoBehaviour
 
         if (frozen)
         {
-            playerMove.isMove = false;
-            playerMove.isJump = false;
             playerMove.speed = 0f;
         }
         else
         {
-            playerMove.isMove = true;
-            playerMove.isJump = true;
-            playerMove.speed = defaultSpeed; // Trả về tốc độ ban đầu
+            playerMove.speed = defaultSpeed;
         }
+
+        UpdatePlayerMovementState();
     }
 
     public bool IsFrozen() => isFrozen;
-    // ====== FREEZE TRAP SYSTEM ======
-    public void ApplyFreeze(float duration, GameObject hitVfxPrefab, GameObject loopVfxPrefab, Vector3 vfxOffset, Vector3 vfxScale)
-    {
-        if (isEliminated) return;
 
-        // Nếu đang bị đóng băng mà dẫm tiếp thì reset đếm ngược
-        if (freezeCoroutine != null)
-        {
-            StopCoroutine(freezeCoroutine);
-        }
-
-        if (vfxScale == Vector3.zero) vfxScale = Vector3.one;
-
-        freezeCoroutine = StartCoroutine(FreezeRoutine(duration, hitVfxPrefab, loopVfxPrefab, vfxOffset, vfxScale));
-    }
-
-    private IEnumerator FreezeRoutine(float duration, GameObject hitVfxPrefab, GameObject loopVfxPrefab, Vector3 vfxOffset, Vector3 vfxScale)
-    {
-        SetFrozen(true);
-
-        // 1. Spawn VFX Va chạm (Nổ 1 phát rồi tự hủy sau 2s)
-        if (hitVfxPrefab != null)
-        {
-            GameObject hitVFX = Instantiate(hitVfxPrefab, transform.position + vfxOffset, Quaternion.identity, transform);
-            hitVFX.transform.localScale = vfxScale;
-            Destroy(hitVFX, 2f); // Tự hủy VFX hit
-        }
-
-        // 2. Spawn VFX Duy trì (Bám theo người, hết đóng băng mới Destroy)
-        GameObject loopVFX = null;
-        if (loopVfxPrefab != null)
-        {
-            loopVFX = Instantiate(loopVfxPrefab, transform.position + vfxOffset, Quaternion.identity, transform);
-            loopVFX.transform.localScale = vfxScale;
-        }
-
-        // Chờ hết thời gian đóng băng
-        yield return new WaitForSeconds(duration);
-
-        // 3. Hết đóng băng -> Xóa VFX duy trì & thả Player ra
-        if (loopVFX != null)
-        {
-            Destroy(loopVFX);
-        }
-
-        SetFrozen(false);
-        freezeCoroutine = null;
-    }
-    // ====== MAGNET TRAP SYSTEM ======
-    private Coroutine magnetCoroutine;
-
-    public void ApplyMagnet(Vector3 trapPosition, float force, float duration, GameObject vfxPrefab, Vector3 vfxOffset, Vector3 vfxScale)
+    // ====== MAGNET TRAP SYSTEM (HÚT VỀ PHÍA PLAYER KHÁC) ======
+    public void ApplyPulledByPlayer(Transform pullerTransform, float force, float duration, GameObject vfxPrefab, Vector3 vfxOffset, Vector3 vfxScale)
     {
         if (isEliminated) return;
 
@@ -231,16 +220,15 @@ public class BombCarrier : MonoBehaviour
 
         if (vfxScale == Vector3.zero) vfxScale = Vector3.one;
 
-        magnetCoroutine = StartCoroutine(MagnetRoutine(trapPosition, force, duration, vfxPrefab, vfxOffset, vfxScale));
+        magnetCoroutine = StartCoroutine(PulledRoutine(pullerTransform, force, duration, vfxPrefab, vfxOffset, vfxScale));
     }
 
-    private IEnumerator MagnetRoutine(Vector3 trapPosition, float force, float duration, GameObject vfxPrefab, Vector3 vfxOffset, Vector3 vfxScale)
+    private IEnumerator PulledRoutine(Transform pullerTransform, float force, float duration, GameObject vfxPrefab, Vector3 vfxOffset, Vector3 vfxScale)
     {
-        // Spawn VFX xoáy/nam châm tại vị trí bẫy
         GameObject spawnedVFX = null;
-        if (vfxPrefab != null)
+        if (vfxPrefab != null && pullerTransform != null)
         {
-            spawnedVFX = Instantiate(vfxPrefab, trapPosition + vfxOffset, Quaternion.identity);
+            spawnedVFX = Instantiate(vfxPrefab, pullerTransform.position + vfxOffset, Quaternion.identity, pullerTransform);
             spawnedVFX.transform.localScale = vfxScale;
         }
 
@@ -251,28 +239,23 @@ public class BombCarrier : MonoBehaviour
 
         while (timer < duration)
         {
-            if (isEliminated) break;
+            if (isEliminated || pullerTransform == null) break;
 
-            // Tính hướng từ Player về tâm Bẫy
-            Vector3 directionToTrap = (trapPosition - transform.position);
-            directionToTrap.y = 0; // Chỉ hút theo mặt phẳng ngang, không hút chìm xuống đất
+            Vector3 directionToPuller = (pullerTransform.position - transform.position);
+            directionToPuller.y = 0;
 
-            // Nếu còn ở xa tâm bẫy thì tiếp tục hút
-            if (directionToTrap.magnitude > 0.2f)
+            if (directionToPuller.magnitude > 1.0f)
             {
-                Vector3 pullVelocity = directionToTrap.normalized * force;
+                Vector3 pullVelocity = directionToPuller.normalized * force;
 
-                // Nếu xài CharacterController
                 if (cc != null && cc.enabled)
                 {
                     cc.Move(pullVelocity * Time.deltaTime);
                 }
-                // Nếu xài Rigidbody
                 else if (rb != null && !rb.isKinematic)
                 {
                     rb.AddForce(pullVelocity, ForceMode.Acceleration);
                 }
-                // Nếu dời Transform thủ công
                 else
                 {
                     transform.position += pullVelocity * Time.deltaTime;
@@ -280,10 +263,9 @@ public class BombCarrier : MonoBehaviour
             }
 
             timer += Time.deltaTime;
-            yield return null; // Chờ frame tiếp theo
+            yield return null;
         }
 
-        // Hết thời gian hút -> Xóa VFX
         if (spawnedVFX != null)
         {
             Destroy(spawnedVFX);

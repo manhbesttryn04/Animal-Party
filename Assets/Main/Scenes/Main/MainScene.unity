@@ -796,7 +796,7 @@ Transform:
   m_GameObject: {fileID: 264609363}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1311.38, y: -798.35, z: 53.48}
+  m_LocalPosition: {x: -1311.38, y: -798.35, z: 49.66}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -821,7 +821,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
+  m_Size: {x: 0.75, y: 0.75, z: 0.75}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &264609366
 MonoBehaviour:
@@ -835,10 +835,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5f9281b5f14db64283a42252a5e5ca8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FreezeTrap
-  cooldown: 4
+  cooldown: 10
   freezeDuration: 2
-  freezeHitVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
-  freezeLoopVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
+  freezeHitVFX: {fileID: 5965397633161791624, guid: c903d262f90b684499060a835805d55c, type: 3}
+  freezeLoopVFX: {fileID: 5965397633161791624, guid: c903d262f90b684499060a835805d55c, type: 3}
   vfxOffset: {x: 0, y: 1, z: 0}
   vfxScale: {x: 1, y: 1, z: 1}
 --- !u!1 &265678872
@@ -2479,7 +2479,7 @@ Transform:
   m_GameObject: {fileID: 753655723}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1317.98, y: -798.35, z: 55.79}
+  m_LocalPosition: {x: -1316.63, y: -798.35, z: 55.97}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2504,7 +2504,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
+  m_Size: {x: 0.75, y: 0.75, z: 0.75}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &753655726
 MonoBehaviour:
@@ -2518,10 +2518,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5f9281b5f14db64283a42252a5e5ca8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FreezeTrap
-  cooldown: 4
+  cooldown: 10
   freezeDuration: 2
-  freezeHitVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
-  freezeLoopVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
+  freezeHitVFX: {fileID: 5965397633161791624, guid: c903d262f90b684499060a835805d55c, type: 3}
+  freezeLoopVFX: {fileID: 5965397633161791624, guid: c903d262f90b684499060a835805d55c, type: 3}
   vfxOffset: {x: 0, y: 1, z: 0}
   vfxScale: {x: 1, y: 1, z: 1}
 --- !u!1 &754339472
@@ -2935,10 +2935,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 821306947}
-  - component: {fileID: 821306948}
   - component: {fileID: 821306949}
+  - component: {fileID: 821306950}
   m_Layer: 0
-  m_Name: Trap_Freeze_01
+  m_Name: MagnetTrap
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2953,30 +2953,12 @@ Transform:
   m_GameObject: {fileID: 821306946}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1323.77, y: -798.35, z: 52.700195}
+  m_LocalPosition: {x: -1325.53, y: -798.35, z: 52.700195}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3733480203121461849}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &821306948
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 821306946}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b5f9281b5f14db64283a42252a5e5ca8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FreezeTrap
-  cooldown: 4
-  freezeDuration: 2
-  freezeHitVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
-  freezeLoopVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
-  vfxOffset: {x: 0, y: 1, z: 0}
-  vfxScale: {x: 1, y: 1, z: 1}
 --- !u!65 &821306949
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2996,8 +2978,26 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
+  m_Size: {x: 0.75, y: 0.75, z: 0.75}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &821306950
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 821306946}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03b8e584f3fe55341a3dbdee7b0284e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MagnetTrap
+  cooldown: 10
+  pullForce: 15
+  magnetDuration: 2.5
+  magnetVFX: {fileID: 7053385775836331393, guid: 354b6251e950209409c75ab984acf000, type: 3}
+  vfxOffset: {x: 0, y: 0.1, z: 0}
+  vfxScale: {x: 1, y: 1, z: 1}
 --- !u!1001 &822291356
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3938,7 +3938,7 @@ Transform:
   m_GameObject: {fileID: 1061870933}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1314.4, y: -798.35, z: 54.59}
+  m_LocalPosition: {x: -1312.36, y: -798.35, z: 54.02}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3963,7 +3963,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
+  m_Size: {x: 0.75, y: 0.75, z: 0.75}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &1061870936
 MonoBehaviour:
@@ -3977,10 +3977,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5f9281b5f14db64283a42252a5e5ca8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FreezeTrap
-  cooldown: 4
+  cooldown: 10
   freezeDuration: 2
-  freezeHitVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
-  freezeLoopVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
+  freezeHitVFX: {fileID: 5965397633161791624, guid: c903d262f90b684499060a835805d55c, type: 3}
+  freezeLoopVFX: {fileID: 5965397633161791624, guid: c903d262f90b684499060a835805d55c, type: 3}
   vfxOffset: {x: 0, y: 1, z: 0}
   vfxScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1065188560
@@ -5114,10 +5114,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1299833488}
-  - component: {fileID: 1299833490}
   - component: {fileID: 1299833489}
+  - component: {fileID: 1299833490}
   m_Layer: 0
-  m_Name: Trap_Freeze_01 (1)
+  m_Name: MagnetTrap2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5132,7 +5132,7 @@ Transform:
   m_GameObject: {fileID: 1299833487}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1326.94, y: -798.35, z: 50}
+  m_LocalPosition: {x: -1330.91, y: -798.35, z: 50}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5157,7 +5157,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
+  m_Size: {x: 0.75, y: 0.75, z: 0.75}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &1299833490
 MonoBehaviour:
@@ -5168,14 +5168,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 1299833487}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b5f9281b5f14db64283a42252a5e5ca8, type: 3}
+  m_Script: {fileID: 11500000, guid: 03b8e584f3fe55341a3dbdee7b0284e8, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FreezeTrap
-  cooldown: 4
-  freezeDuration: 2
-  freezeHitVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
-  freezeLoopVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
-  vfxOffset: {x: 0, y: 1, z: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::MagnetTrap
+  cooldown: 10
+  pullForce: 15
+  magnetDuration: 2.5
+  magnetVFX: {fileID: 7053385775836331393, guid: 354b6251e950209409c75ab984acf000, type: 3}
+  vfxOffset: {x: 0, y: 0.1, z: 0}
   vfxScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1324390462 stripped
 GameObject:
@@ -7390,10 +7390,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1852694040}
-  - component: {fileID: 1852694042}
   - component: {fileID: 1852694041}
+  - component: {fileID: 1852694042}
   m_Layer: 0
-  m_Name: Trap_Freeze_01 (2)
+  m_Name: MagnetTrap3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7408,7 +7408,7 @@ Transform:
   m_GameObject: {fileID: 1852694039}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1317.98, y: -798.35, z: 51.37}
+  m_LocalPosition: {x: -1317.98, y: -798.35, z: 49.86}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7433,7 +7433,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
+  m_Size: {x: 0.75, y: 0.75, z: 0.75}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &1852694042
 MonoBehaviour:
@@ -7444,14 +7444,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 1852694039}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b5f9281b5f14db64283a42252a5e5ca8, type: 3}
+  m_Script: {fileID: 11500000, guid: 03b8e584f3fe55341a3dbdee7b0284e8, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FreezeTrap
-  cooldown: 4
-  freezeDuration: 2
-  freezeHitVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
-  freezeLoopVFX: {fileID: 1406821062703903394, guid: d5a86961c45d65c479603989a2989aba, type: 3}
-  vfxOffset: {x: 0, y: 1, z: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::MagnetTrap
+  cooldown: 10
+  pullForce: 15
+  magnetDuration: 2.5
+  magnetVFX: {fileID: 7053385775836331393, guid: 354b6251e950209409c75ab984acf000, type: 3}
+  vfxOffset: {x: 0, y: 0.1, z: 0}
   vfxScale: {x: 1, y: 1, z: 1}
 --- !u!1001 &1854061626
 PrefabInstance:
