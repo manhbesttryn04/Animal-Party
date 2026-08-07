@@ -94,6 +94,7 @@ public class ChooseMode : MonoBehaviour
     {
         UpdatePlayer1();
         UpdatePlayer2();
+        CheckStartButton();
 
         CursorManager cursor =
             CursorManager.Instance;
@@ -138,6 +139,7 @@ public class ChooseMode : MonoBehaviour
             SettingManager.Instance.IsSettingBlockingInput;
 
         UpdateChooseButtonsSettingLock(settingOpen);
+        UpdateStartButtonBySetting(settingOpen);
 
         // Setting đang mở thì khóa ChooseMode.
         if (settingOpen)
@@ -962,6 +964,57 @@ public class ChooseMode : MonoBehaviour
     // START BUTTON
     // =========================================================
 
+    private void UpdateStartButtonBySetting(bool settingOpen)
+    {
+        if (buttonStart == null)
+        {
+            return;
+        }
+
+        Button btn = buttonStart.GetComponent<Button>();
+
+        // Đã bấm START:
+        // luôn hiện, khóa tương tác và giữ Disabled Color.
+        if (isStartingGame)
+        {
+            buttonStart.SetActive(true);
+
+            if (btn != null)
+            {
+                btn.interactable = false;
+                SetButtonDisabledVisual(btn);
+            }
+
+            return;
+        }
+
+        // Chưa bấm START mà Setting đang mở:
+        // ẩn nút START hoàn toàn.
+        if (settingOpen)
+        {
+            buttonStart.SetActive(false);
+            return;
+        }
+
+        // Setting đã đóng:
+        // chỉ hiện START khi cả hai Player đã chọn xong.
+        bool bothSelected =
+            isPlayer1Choose &&
+            isPlayer2Choose;
+
+        buttonStart.SetActive(bothSelected);
+
+        if (btn != null)
+        {
+            btn.interactable = bothSelected;
+
+            if (bothSelected)
+            {
+                ResetButtonToNormal(btn);
+            }
+        }
+    }
+
     private void CheckStartButton()
     {
         bool bothSelected =
@@ -1097,6 +1150,7 @@ public class ChooseMode : MonoBehaviour
             if (btn != null)
             {
                 btn.interactable = false;
+                SetButtonDisabledVisual(btn);
             }
 
             if (text != null)
