@@ -5,7 +5,7 @@ using System.Collections;
 public class BombCarrier : MonoBehaviour
 {
     [Header("Tham chiếu")]
-    public Transform bombAnchor; // Điểm rỗng trên đầu nhân vật
+    public Transform bombAnchor;
 
     private PlayerType playerType;
     private PlayerMove playerMove;
@@ -13,12 +13,12 @@ public class BombCarrier : MonoBehaviour
     private bool isGameActive = false;
     private bool isHoldingBomb = false;
     private bool isEliminated = false;
-    private bool canMove = false; // Mặc định chưa đếm ngược xong -> ĐÉO CHO DI CHUYỂN
+    private bool canMove = false;
     private float cooldownTimer = 0f;
 
     // --- FREEZE ---
     private bool isFrozen = false;
-    private float defaultSpeed = 0f; // Lưu tốc độ gốc cố định
+    private float defaultSpeed = 0f;
     private Coroutine freezeCoroutine;
 
     // --- MAGNET ---
@@ -29,7 +29,6 @@ public class BombCarrier : MonoBehaviour
         playerType = GetComponent<PlayerType>();
         playerMove = GetComponent<PlayerMove>();
 
-        // Lưu tốc độ gốc ngay từ đầu game để tránh lỗi trùng speed = 0
         if (playerMove != null)
         {
             defaultSpeed = playerMove.speed;
@@ -43,16 +42,13 @@ public class BombCarrier : MonoBehaviour
         if (cooldownTimer > 0f)
             cooldownTimer -= Time.deltaTime;
 
-        // Cập nhật liên tục trạng thái di chuyển cho PlayerMove
         UpdatePlayerMovementState();
     }
 
-    // Quyết định Player có được di chuyển/nhảy hay không
     private void UpdatePlayerMovementState()
     {
         if (playerMove == null) return;
 
-        // Nếu đã bị loại, chưa cho phép di chuyển (đếm ngược), hoặc đang bị Freeze
         if (isEliminated || !canMove || isFrozen)
         {
             playerMove.isMove = false;
@@ -65,7 +61,6 @@ public class BombCarrier : MonoBehaviour
         }
     }
 
-    // Gọi từ MiniGame6.cs để bật/tắt quyền di chuyển (Dùng lúc đếm ngược 3, 2, 1)
     public void SetCanMove(bool enable)
     {
         canMove = enable;
@@ -74,15 +69,13 @@ public class BombCarrier : MonoBehaviour
 
     public bool CanMove() => canMove;
 
-    // Gọi từ BombGameManager.StartMiniGame() / StopMiniGame()
     public void SetGameActive(bool active)
     {
         isGameActive = active;
         isHoldingBomb = false;
         isEliminated = false;
-        canMove = false; // Mặc định khóa di chuyển khi mới kích hoạt game
+        canMove = false;
 
-        // Reset trạng thái đóng băng nếu ngắt game giữa chừng
         if (isFrozen)
         {
             if (freezeCoroutine != null) StopCoroutine(freezeCoroutine);
@@ -96,12 +89,11 @@ public class BombCarrier : MonoBehaviour
 
     public bool IsGameActive() => isGameActive;
 
-    // Va chạm - detect qua Tag "Player 1" / "Player 2"
     void OnTriggerEnter(Collider other)
     {
         if (!isGameActive) return;
         if (isEliminated || !isHoldingBomb) return;
-        if (isFrozen) return; // đang bị đóng băng thì không truyền được bom
+        if (isFrozen) return;
         if (IsOnCooldown()) return;
 
         if (!other.CompareTag("Player 1") && !other.CompareTag("Player 2")) return;
@@ -146,6 +138,13 @@ public class BombCarrier : MonoBehaviour
     {
         if (isEliminated) return;
 
+        // PHÁT ÂM THANH BẪY BĂNG TỪ AUDIOMANAGER
+        if (AudioManager.Instance != null)
+        {
+            AudioClip clip = AudioManager.Instance.freezeTrapClip != null ? AudioManager.Instance.freezeTrapClip : AudioManager.Instance.iceMagicClip;
+            AudioManager.Instance.PlaySFX(clip);
+        }
+
         if (freezeCoroutine != null)
         {
             StopCoroutine(freezeCoroutine);
@@ -160,7 +159,6 @@ public class BombCarrier : MonoBehaviour
     {
         SetFrozen(true);
 
-        // 1. Spawn VFX Va chạm
         if (hitVfxPrefab != null)
         {
             GameObject hitVFX = Instantiate(hitVfxPrefab, transform.position + vfxOffset, Quaternion.identity, transform);
@@ -168,7 +166,6 @@ public class BombCarrier : MonoBehaviour
             Destroy(hitVFX, 2f);
         }
 
-        // 2. Spawn VFX Duy trì
         GameObject loopVFX = null;
         if (loopVfxPrefab != null)
         {
@@ -208,10 +205,17 @@ public class BombCarrier : MonoBehaviour
 
     public bool IsFrozen() => isFrozen;
 
-    // ====== MAGNET TRAP SYSTEM (HÚT VỀ PHÍA PLAYER KHÁC) ======
+    // ====== MAGNET TRAP SYSTEM ======
     public void ApplyPulledByPlayer(Transform pullerTransform, float force, float duration, GameObject vfxPrefab, Vector3 vfxOffset, Vector3 vfxScale)
     {
         if (isEliminated) return;
+
+        // PHÁT ÂM THANH BẪY NAM CHÂM TỪ AUDIOMANAGER
+        if (AudioManager.Instance != null)
+        {
+            AudioClip clip = AudioManager.Instance.magnetTrapClip != null ? AudioManager.Instance.magnetTrapClip : AudioManager.Instance.laserMoveClip;
+            AudioManager.Instance.PlaySFX(clip);
+        }
 
         if (magnetCoroutine != null)
         {

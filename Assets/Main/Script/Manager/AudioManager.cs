@@ -138,6 +138,8 @@ public class AudioManager : MonoBehaviour
     [Header("Minigame 6")]
     public AudioClip bombTickingClip;
     public AudioClip explosionBombClip;
+    public AudioClip freezeTrapClip; // Biến âm thanh bẫy băng
+    public AudioClip magnetTrapClip; // Biến âm thanh bẫy nam châm
 
 
     private Coroutine fadeAllAudioCoroutine;
@@ -526,7 +528,7 @@ public class AudioManager : MonoBehaviour
             float t = time / fadeTime;
 
             musicSource.volume = Mathf.Lerp(musicStart, 0f, t);
-            sfxSource.volume = Mathf.Lerp(sfxStart, 0f, t);
+            musicSource.volume = Mathf.Lerp(sfxStart, 0f, t);
             environmentSource.volume = Mathf.Lerp(environmentStart, 0f, t);
             specialSource.volume = Mathf.Lerp(specialStart, 0f, t);
 
@@ -561,11 +563,6 @@ public class AudioManager : MonoBehaviour
         StopSpecial();
         StopSFXNoOneShot();
     }
-    //==================================================
-    // PAUSE RIÊNG ÂM THANH GAMEPLAY
-    // Chỉ ảnh hưởng: SFX, Environment và Special.
-    // Không ảnh hưởng: Music và UI.
-    //==================================================
 
     public void PauseGameplayAudio()
     {
