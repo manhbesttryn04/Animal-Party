@@ -546,7 +546,7 @@ public class AudioManager : MonoBehaviour
             float t = time / fadeTime;
 
             musicSource.volume = Mathf.Lerp(musicStart, 0f, t);
-            musicSource.volume = Mathf.Lerp(sfxStart, 0f, t);
+            sfxSource.volume = Mathf.Lerp(sfxStart, 0f, t);
             environmentSource.volume = Mathf.Lerp(environmentStart, 0f, t);
             specialSource.volume = Mathf.Lerp(specialStart, 0f, t);
 

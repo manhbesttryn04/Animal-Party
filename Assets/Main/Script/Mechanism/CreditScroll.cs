@@ -27,9 +27,6 @@ public class CreditScroll : MonoBehaviour
     [Tooltip("Thời gian màn hình chuyển dần sang đen")]
     public float outroFadeTime = 4f;
 
-    [Header("Credit Music")]
-    public AudioClip creditMusicClip;
-
     [Header("Fade All Audio")]
     [Tooltip("Thời gian giảm toàn bộ âm thanh về 0")]
     public float endAudioFadeTime = 4f;
@@ -186,14 +183,6 @@ public class CreditScroll : MonoBehaviour
             return;
         }
 
-        if (creditMusicClip == null)
-        {
-            Debug.LogWarning(
-                "CreditScroll: Chưa gán Credit Music Clip."
-            );
-
-            return;
-        }
 
         audio.PlayMusic(audio.musicMiniGame7);
     }

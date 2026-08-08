@@ -266,8 +266,8 @@ public class CutSceneEndGame : MonoBehaviour
             audio.ZeroAllAudio();
             audio.PauseAudio();
 
-            if (audio.UISource != null)
-                audio.UISource.Stop();
+            if (audio.specialSource != null)
+                audio.specialSource.Stop();
         }
         var setting = SettingManager.Instance;
         if (setting != null)
@@ -655,14 +655,14 @@ public class CutSceneEndGame : MonoBehaviour
         }
 
         AudioManager audioManager = AudioManager.Instance;
-        if (audioManager != null && audioManager.UISource != null)
+        if (audioManager != null && audioManager.specialSource != null)
         {
             yield return new WaitWhile(
                 () =>
                     !isSkipped &&
                     AudioManager.Instance != null &&
-                    AudioManager.Instance.UISource != null &&
-                    AudioManager.Instance.UISource.isPlaying
+                    AudioManager.Instance.specialSource != null &&
+                    AudioManager.Instance.specialSource.isPlaying
             );
         }
     }
@@ -733,15 +733,15 @@ public class CutSceneEndGame : MonoBehaviour
         if (narratorVoices[index] == null)
             return;
 
-        AudioManager.Instance.PlayUI(narratorVoices[index]);
+        AudioManager.Instance.PlaySpecial(narratorVoices[index]);
     }
 
     private void StopNarratorVoice()
     {
         AudioManager audio = AudioManager.Instance;
 
-        if (audio != null && audio.UISource != null)
-            audio.UISource.Stop();
+        if (audio != null && audio.specialSource != null)
+            audio.specialSource.Stop();
     }
 
     //==================================================
