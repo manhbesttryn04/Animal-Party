@@ -615,7 +615,7 @@ public class UIManager : MonoBehaviour
             }
 
             // Sau đúng 0.5 giây thì tắt panel.
-            yield return new WaitForSecondsRealtime(0.5f);
+            yield return new WaitForSecondsRealtime(0.7f);
 
             settingPanel.SetActive(false);
         }

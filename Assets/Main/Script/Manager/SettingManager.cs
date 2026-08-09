@@ -129,6 +129,15 @@ public class SettingManager : MonoBehaviour
     private bool waitControllerSettingButtonRelease;
     private Coroutine closeSettingCoroutine;
     private Coroutine displayApplyCoroutine;
+
+    [Header("Setting Input Lock")]
+    [Tooltip("Sau khi mở/đóng Setting phải chờ thời gian này mới được nhận lệnh tiếp theo.")]
+    [Min(0f)]
+    [SerializeField] private float settingInputCooldown = 1f;
+
+    // Dùng unscaledTime vì khi Setting mở game có thể đang Time.timeScale = 0.
+    private float nextSettingInputTime;
+
     [Header("Pause Game")]
     [SerializeField] private bool pauseGameWhenSettingOpen = true;
     public bool IsSettingBlockingInput
@@ -1699,14 +1708,47 @@ public class SettingManager : MonoBehaviour
     // SETTING PANEL
     // ==================================================
 
+    /// <summary>
+    /// Kiểm tra xem Setting có được phép nhận thêm lệnh mở/đóng hay không.
+    /// Có 2 lớp khóa:
+    /// 1. UI đang chạy animation Open / Close.
+    /// 2. Chưa đủ thời gian cooldown sau lần nhấn hợp lệ trước đó.
+    /// </summary>
+    private bool CanUseSettingInput()
+    {
+        if (IsSettingPanelTransitioning())
+        {
+            return false;
+        }
+
+        if (Time.unscaledTime < nextSettingInputTime)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Khóa lệnh mở/đóng Setting trong settingInputCooldown giây.
+    /// Dùng unscaledTime nên vẫn hoạt động khi game Pause.
+    /// </summary>
+    private void LockSettingInput()
+    {
+        nextSettingInputTime =
+            Time.unscaledTime + Mathf.Max(0f, settingInputCooldown);
+    }
+
     private void OpenControllerSetting()
     {
-        if (IsSettingPanelTransitioning() ||
+        if (!CanUseSettingInput() ||
             IsAnySettingPanelOpen())
         {
             return;
         }
 
+        // Chỉ khóa và phát âm thanh khi lệnh mở thực sự hợp lệ.
+        LockSettingInput();
         PlaySettingClickSound();
 
         isSettingOpen = true;
@@ -1724,25 +1766,41 @@ public class SettingManager : MonoBehaviour
 
     private void CloseControllerSetting()
     {
-        if (IsSettingPanelTransitioning())
+        if (!CanUseSettingInput() ||
+            !IsAnySettingPanelOpen() ||
+            closeSettingCoroutine != null)
         {
             return;
         }
 
+        // Sau khi mở Setting, phải chờ đủ cooldown mới được đóng.
+        LockSettingInput();
         PlaySettingClickSound();
         CloseSettingPanel();
     }
 
     public void ToggleSetting()
     {
-        if (IsSettingPanelTransitioning())
+        // Main Menu gọi hàm này.
+        // Nếu player spam nút khi chưa đủ 1 giây hoặc animation đang chạy,
+        // lệnh bị bỏ qua và KHÔNG phát tiếng click.
+        if (!CanUseSettingInput())
         {
             return;
         }
 
+        bool isOpen = IsAnySettingPanelOpen();
+
+        // Bảo vệ thêm trường hợp coroutine đóng đang chạy.
+        if (isOpen && closeSettingCoroutine != null)
+        {
+            return;
+        }
+
+        LockSettingInput();
         PlaySettingClickSound();
 
-        if (IsAnySettingPanelOpen())
+        if (isOpen)
         {
             CloseSettingPanel();
         }
@@ -1754,14 +1812,22 @@ public class SettingManager : MonoBehaviour
 
     public void ToggleSettingByEsc()
     {
-        if (IsSettingPanelTransitioning())
+        if (!CanUseSettingInput())
         {
             return;
         }
 
+        bool isOpen = IsAnySettingPanelOpen();
+
+        if (isOpen && closeSettingCoroutine != null)
+        {
+            return;
+        }
+
+        LockSettingInput();
         PlaySettingClickSound();
 
-        if (IsAnySettingPanelOpen())
+        if (isOpen)
         {
             CloseSettingPanel();
         }
@@ -1866,6 +1932,16 @@ public class SettingManager : MonoBehaviour
 
     public void ResetEscSetting()
     {
+        // Nếu đây là nút đóng Setting trên UI thì cũng phải tuân theo
+        // khóa 1 giây để không thể mở rồi đóng ngay trước lúc game Pause.
+        if (!CanUseSettingInput() ||
+            !IsAnySettingPanelOpen() ||
+            closeSettingCoroutine != null)
+        {
+            return;
+        }
+
+        LockSettingInput();
         CloseSettingPanel();
     }
 
@@ -1880,6 +1956,10 @@ public class SettingManager : MonoBehaviour
         isSettingOpen = false;
         isEscSettingOpen = false;
         countClick = 0;
+
+        // ResetSetting là force reset khi đổi scene / khởi tạo,
+        // vì vậy xóa luôn thời gian khóa.
+        nextSettingInputTime = 0f;
 
         waitControllerSettingButtonRelease = false;
 

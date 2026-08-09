@@ -19,8 +19,37 @@ public class MainMenuController : MonoBehaviour
     public Button exitButton;
 
     [Header("Menu Intro Lock")]
-    [Tooltip("Thời gian chờ animation của thằng cha chạy xong trước khi cho bấm 3 nút.")]
+    [Tooltip(
+        "Nếu có Menu Intro Animator thì biến này chỉ dùng làm thời gian dự phòng. " +
+        "Nếu không gắn Animator, Main Menu sẽ khóa input đúng thời gian này."
+    )]
     [SerializeField] private float menuInputDelay = 1f;
+
+    [Header("Menu Intro Animation Lock")]
+    [Tooltip(
+        "Animator đang chạy animation xuất hiện của cụm Start / Setting / Exit. " +
+        "Nếu gắn Animator, nút chỉ được bấm sau khi animation hiện tại chạy xong."
+    )]
+    [SerializeField] private Animator menuIntroAnimator;
+
+    [Tooltip("Layer Animator chứa animation intro của menu.")]
+    [Min(0)]
+    [SerializeField] private int menuIntroAnimatorLayer = 0;
+
+    [Header("Setting Button Selected Visual")]
+    [Tooltip(
+        "Khi click nút Setting bằng chuột, giữ trạng thái Selected trong thời gian này. " +
+        "Sau đó bắt buộc bỏ Selected để trở về Highlighted hoặc Normal."
+    )]
+    [Min(0f)]
+    [SerializeField] private float settingButtonSelectedTime = 1f;
+
+    [Tooltip(
+        "Player phải ngừng click ít nhất thời gian này thì lần click sau mới được phép " +
+        "hiện Selected lại. Spam liên tục sẽ không làm Selected bị dính."
+    )]
+    [Min(0f)]
+    [SerializeField] private float settingButtonVisualRearmDelay = 1f;
 
     [Header("Controller Axis")]
     [Tooltip("Axis dọc của Joystick 1 trong Legacy Input Manager.")]
@@ -45,7 +74,7 @@ public class MainMenuController : MonoBehaviour
     private bool isLoading;
     private bool canUseMainMenu;
 
-    // Lưu trạng thái interactable ban đầu để sau 1 giây trả lại đúng như cũ.
+    // Lưu trạng thái interactable ban đầu để sau intro trả lại đúng như cũ.
     private bool startButtonInteractableOnOpen;
     private bool settingButtonInteractableOnOpen;
     private bool exitButtonInteractableOnOpen;
@@ -68,6 +97,14 @@ public class MainMenuController : MonoBehaviour
     // 2 = Console 2
     private int activeMenuController;
 
+    // Visual Selected của nút Setting bằng chuột.
+    private Coroutine settingButtonSelectedCoroutine;
+    private float lastSettingButtonPressTime = -999f;
+
+    // Sau khi Selected 1 giây kết thúc, nếu player vẫn spam click
+    // và Unity tự select lại Button thì LateUpdate sẽ xóa ngay.
+    private bool forceClearSettingButtonSelection;
+
     // =========================================================
     // UNITY
     // =========================================================
@@ -76,8 +113,8 @@ public class MainMenuController : MonoBehaviour
     {
         SetupButtons();
 
-        // Khóa Start / Settings / Exit ngay từ frame đầu
-        // để animation của GameObject cha chạy xong.
+        // Khóa Start / Settings / Exit ngay từ frame đầu.
+        // Chỉ mở khóa khi animation intro thật sự chạy xong.
         LockMenuButtonsForIntro();
 
         SetupCursor();
@@ -138,6 +175,40 @@ public class MainMenuController : MonoBehaviour
         HandleSubmitInput();
     }
 
+    private void LateUpdate()
+    {
+        // Logic này chỉ dành cho chuột.
+        // Khi có tay cầm, Selected là focus điều khiển menu nên không được clear.
+        if (activeMenuController != 0)
+            return;
+
+        if (!forceClearSettingButtonSelection)
+            return;
+
+        // Nếu player đã ngừng spam đủ lâu thì cho phép
+        // lần click sau hiển thị Selected lại.
+        if (Time.unscaledTime - lastSettingButtonPressTime >=
+            Mathf.Max(0f, settingButtonVisualRearmDelay))
+        {
+            forceClearSettingButtonSelection = false;
+            return;
+        }
+
+        if (settingButton == null ||
+            EventSystem.current == null)
+        {
+            return;
+        }
+
+        // Nếu Unity tự Select lại nút do player vẫn spam click,
+        // xóa ngay trong LateUpdate.
+        if (EventSystem.current.currentSelectedGameObject ==
+            settingButton.gameObject)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+        }
+    }
+
     // =========================================================
     // SETUP
     // =========================================================
@@ -188,9 +259,22 @@ public class MainMenuController : MonoBehaviour
 
     private IEnumerator UnlockMenuAfterIntro()
     {
-        if (menuInputDelay > 0f)
+        // =====================================================
+        // LOGIC 1:
+        // Nếu có Animator -> chờ ANIMATION THẬT SỰ chạy xong.
+        // Nếu không có Animator -> dùng menuInputDelay dự phòng.
+        // =====================================================
+
+        if (menuIntroAnimator != null &&
+            menuIntroAnimator.gameObject.activeInHierarchy &&
+            menuIntroAnimator.enabled)
         {
-            // Realtime để vẫn đúng 1 giây kể cả Time.timeScale thay đổi.
+            yield return StartCoroutine(
+                WaitForMenuIntroAnimation()
+            );
+        }
+        else if (menuInputDelay > 0f)
+        {
             yield return new WaitForSecondsRealtime(
                 menuInputDelay
             );
@@ -217,6 +301,7 @@ public class MainMenuController : MonoBehaviour
                 exitButtonInteractableOnOpen;
         }
 
+        // Chỉ đến đây mới cho phép Main Menu nhận input.
         canUseMainMenu = true;
 
         // Nếu analog đang bị giữ từ lúc animation chạy,
@@ -231,6 +316,58 @@ public class MainMenuController : MonoBehaviour
             StartCoroutine(
                 FocusButtonDelay(startButton)
             );
+        }
+    }
+
+    private IEnumerator WaitForMenuIntroAnimation()
+    {
+        // Cho Animator ít nhất 1 frame để vào state intro.
+        yield return null;
+
+        if (menuIntroAnimator == null)
+            yield break;
+
+        int layer = menuIntroAnimatorLayer;
+
+        if (layer < 0 ||
+            layer >= menuIntroAnimator.layerCount)
+        {
+            layer = 0;
+        }
+
+        AnimatorStateInfo firstState =
+            menuIntroAnimator.GetCurrentAnimatorStateInfo(layer);
+
+        int introStateHash = firstState.fullPathHash;
+
+        while (menuIntroAnimator != null &&
+               menuIntroAnimator.enabled &&
+               menuIntroAnimator.gameObject.activeInHierarchy)
+        {
+            AnimatorStateInfo currentState =
+                menuIntroAnimator.GetCurrentAnimatorStateInfo(layer);
+
+            bool isTransitioning =
+                menuIntroAnimator.IsInTransition(layer);
+
+            // Trường hợp animation intro ở nguyên state:
+            // normalizedTime >= 1 nghĩa là đã chạy hết 100%.
+            if (currentState.fullPathHash == introStateHash &&
+                currentState.normalizedTime >= 1f &&
+                !isTransitioning)
+            {
+                break;
+            }
+
+            // Trường hợp intro chạy xong rồi Animator tự chuyển sang Idle:
+            // Khi đã chuyển hẳn sang state khác thì intro cũng đã kết thúc.
+            if (currentState.fullPathHash != introStateHash &&
+                !isTransitioning)
+            {
+                break;
+            }
+
+            yield return null;
         }
     }
 
@@ -388,6 +525,10 @@ public class MainMenuController : MonoBehaviour
             return;
         }
 
+        // Không focus trong lúc intro chưa chạy xong.
+        if (!canUseMainMenu)
+            return;
+
         // Khi vừa cắm tay cầm hoặc Unity đổi joystick slot,
         // focus lại nút Start.
         StartCoroutine(
@@ -527,6 +668,106 @@ public class MainMenuController : MonoBehaviour
 
         return setting.isSettingOpen ||
                setting.isEscSettingOpen;
+    }
+
+    // =========================================================
+    // SETTING BUTTON SELECTED VISUAL
+    // =========================================================
+
+    private void RegisterSettingButtonPressVisual()
+    {
+        // Chỉ áp dụng cho chuột.
+        // Khi dùng tay cầm, Selected là focus nên không đụng vào.
+        if (activeMenuController != 0)
+            return;
+
+        if (settingButton == null ||
+            EventSystem.current == null ||
+            !settingButton.gameObject.activeInHierarchy)
+        {
+            return;
+        }
+
+        float now = Time.unscaledTime;
+
+        float rearmDelay = Mathf.Max(
+            0f,
+            settingButtonVisualRearmDelay
+        );
+
+        bool enoughTimeSinceLastPress =
+            now - lastSettingButtonPressTime >= rearmDelay;
+
+        // Luôn ghi nhận lần click mới nhất.
+        // Spam liên tục sẽ liên tục đẩy mốc này lên.
+        lastSettingButtonPressTime = now;
+
+        // Nếu Selected 1 giây đang chạy thì không restart timer.
+        if (settingButtonSelectedCoroutine != null)
+        {
+            return;
+        }
+
+        // Nếu chưa ngừng spam đủ lâu:
+        // không cho Selected xuất hiện lại.
+        if (!enoughTimeSinceLastPress)
+        {
+            forceClearSettingButtonSelection = true;
+
+            if (EventSystem.current.currentSelectedGameObject ==
+                settingButton.gameObject)
+            {
+                EventSystem.current.SetSelectedGameObject(null);
+            }
+
+            return;
+        }
+
+        forceClearSettingButtonSelection = false;
+
+        settingButtonSelectedCoroutine =
+            StartCoroutine(
+                SettingButtonSelectedVisualRoutine()
+            );
+    }
+
+    private IEnumerator SettingButtonSelectedVisualRoutine()
+    {
+        if (settingButton == null ||
+            EventSystem.current == null)
+        {
+            settingButtonSelectedCoroutine = null;
+            yield break;
+        }
+
+        // Ép Setting Button sang trạng thái Selected.
+        EventSystem.current.SetSelectedGameObject(null);
+        EventSystem.current.SetSelectedGameObject(
+            settingButton.gameObject
+        );
+
+        // Dùng realtime vì lúc Setting mở game có thể Pause.
+        yield return new WaitForSecondsRealtime(
+            Mathf.Max(0f, settingButtonSelectedTime)
+        );
+
+        // Sau đúng thời gian trên bắt buộc bỏ Selected.
+        // Unity tự quyết định trạng thái tiếp theo:
+        // - Chuột còn hover -> Highlighted
+        // - Chuột đã rời -> Normal
+        if (EventSystem.current != null &&
+            settingButton != null &&
+            EventSystem.current.currentSelectedGameObject ==
+                settingButton.gameObject)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+        }
+
+        settingButtonSelectedCoroutine = null;
+
+        // Nếu player vẫn spam thì LateUpdate tiếp tục xóa Selected
+        // cho tới khi player ngừng click đủ rearm delay.
+        forceClearSettingButtonSelection = true;
     }
 
     // =========================================================
@@ -686,6 +927,9 @@ public class MainMenuController : MonoBehaviour
         if (activeMenuController == 0)
             yield break;
 
+        if (!canUseMainMenu)
+            yield break;
+
         FocusButton(targetButton);
     }
 
@@ -727,6 +971,9 @@ public class MainMenuController : MonoBehaviour
     private void FocusCurrentButton()
     {
         if (activeMenuController == 0)
+            return;
+
+        if (!canUseMainMenu)
             return;
 
         if (menuButtons == null ||
@@ -798,8 +1045,7 @@ public class MainMenuController : MonoBehaviour
 
     public void OnStartClicked()
     {
-        // Bảo vệ thêm: dù onClick bị gọi từ nơi khác,
-        // 1 giây đầu vẫn không thực hiện chức năng.
+        // Animation intro chưa xong -> tuyệt đối không nhận.
         if (!canUseMainMenu || isLoading)
             return;
 
@@ -875,39 +1121,47 @@ public class MainMenuController : MonoBehaviour
 
     public void OnSettingsClicked()
     {
-        // Bảo vệ thêm: dù onClick bị gọi từ nơi khác,
-        // 1 giây đầu vẫn không thực hiện chức năng.
+        // Animation intro chưa xong -> tuyệt đối không nhận.
         if (!canUseMainMenu || isLoading)
             return;
 
-        AudioManager audio =
-            AudioManager.Instance;
-
-        if (audio != null)
-        {
-            audio.PlayUI(
-                audio.clickButton
-            );
-        }
+        // LOGIC 2:
+        // Selected chỉ giữ 1 giây.
+        // Spam liên tục không làm Selected bị dính.
+        RegisterSettingButtonPressVisual();
 
         SettingManager setting =
             SettingManager.Instance;
 
-        if (setting != null)
-        {
-            setting.ToggleSetting();
-        }
+        if (setting == null)
+            return;
+
+        // Không phát click ở MainMenuController.
+        // SettingManager tự chống spam Open/Close bằng cooldown
+        // và chỉ phát tiếng khi lệnh thực sự hợp lệ.
+        setting.ToggleSetting();
     }
 
     public void OnCloseSettingsClicked()
     {
+        if (!canUseMainMenu || isLoading)
+            return;
+
+        // Khi đóng cũng áp dụng visual Selected 1 giây
+        // cho nút Setting của Main Menu.
+        RegisterSettingButtonPressVisual();
+
         SettingManager setting =
             SettingManager.Instance;
 
-        if (setting != null)
-        {
-            setting.ResetSetting();
-        }
+        if (setting == null)
+            return;
+
+        // Đóng bình thường phải đi qua ToggleSetting để:
+        // - dùng cooldown 1 giây
+        // - không spam âm thanh
+        // - không thể vừa đóng xong đã mở lại ngay
+        setting.ToggleSetting();
 
         // Tránh analog đang giữ làm menu nhảy ngay sau khi đóng.
         canMoveVertical = false;
@@ -926,8 +1180,7 @@ public class MainMenuController : MonoBehaviour
 
     public void OnExitClicked()
     {
-        // Bảo vệ thêm: dù onClick bị gọi từ nơi khác,
-        // 1 giây đầu vẫn không thực hiện chức năng.
+        // Animation intro chưa xong -> tuyệt đối không nhận.
         if (!canUseMainMenu || isLoading)
             return;
 
