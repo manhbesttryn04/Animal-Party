@@ -36,6 +36,11 @@ public class CutSceneShip : MonoBehaviour
     [Range(0, 19)]
     [SerializeField] private int controllerSkipButtonIndex = 1;
 
+    [Header("--- SKIP DELAY ---")]
+    [Tooltip("Số giây từ lúc cutscene bắt đầu trước khi cho phép skip.")]
+    [Min(0f)]
+    [SerializeField] private float skipEnableDelay = 2f;
+
     [Header("--- GRADIENT PRESET ---")]
     [Tooltip("NormalGradient: trái #5C2E00, phải #1A0A00")]
     public TMP_ColorGradient normalGradient;
@@ -60,6 +65,7 @@ public class CutSceneShip : MonoBehaviour
     public float betweenLineFade = 0.2f;
 
     private bool isSkipped;
+    private bool canSkip;
 
     // Sau khi đóng Setting, phải nhả Space/Enter/B/Circle
     // rồi mới cho phép skip cutscene.
@@ -76,6 +82,8 @@ public class CutSceneShip : MonoBehaviour
 
     private void Start()
     {
+        canSkip = false;
+
         // Cutscene không cho hiện chuột.
         if (CursorManager.Instance != null)
         {
@@ -98,6 +106,7 @@ public class CutSceneShip : MonoBehaviour
             skipHintObject.SetActive(false);
 
         StartCoroutine(CutScene());
+        StartCoroutine(EnableSkipAfterDelay());
         StartCoroutine(ShowSkipHint());
 
         AudioManager audio = AudioManager.Instance;
@@ -121,6 +130,10 @@ public class CutSceneShip : MonoBehaviour
     private void Update()
     {
         if (isSkipped)
+            return;
+
+        // 2 giây đầu cutscene chưa cho phép skip.
+        if (!canSkip)
             return;
 
         bool settingOpen =
@@ -162,6 +175,17 @@ public class CutSceneShip : MonoBehaviour
         {
             SkipCutscene();
         }
+    }
+
+    private IEnumerator EnableSkipAfterDelay()
+    {
+        // Dùng thời gian thực để Setting/timeScale không làm sai mốc 2 giây.
+        yield return new WaitForSecondsRealtime(skipEnableDelay);
+
+        if (isSkipped)
+            yield break;
+
+        canSkip = true;
     }
 
     private bool IsControllerSkipDown()
@@ -217,7 +241,7 @@ public class CutSceneShip : MonoBehaviour
 
     private void SkipCutscene()
     {
-        if (isSkipped)
+        if (isSkipped || !canSkip)
             return;
 
         isSkipped = true;
@@ -254,7 +278,7 @@ public class CutSceneShip : MonoBehaviour
 
     private IEnumerator ShowSkipHint()
     {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSecondsRealtime(skipEnableDelay);
 
         if (isSkipped)
             yield break;

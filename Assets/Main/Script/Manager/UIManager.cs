@@ -261,7 +261,7 @@ public class UIManager : MonoBehaviour
             // Nếu đã có Coin Power thì tắt panel đen
             blackPanel.gameObject.SetActive(i >= p2.countCoinPower);
             var hightlightCoinPower = coinRoot2.GetChild(i).GetComponent<UIImagePowerCoinColorEffect>();
-             if (i >= p2.countCoinPower)
+            if (i >= p2.countCoinPower)
             {
                 hightlightCoinPower.enabled = false;
                 highlightYellowCoinPowerP2.GetChild(i).gameObject.SetActive(false);

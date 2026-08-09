@@ -47,6 +47,10 @@ public class CutSceneEndGame : MonoBehaviour
     [Range(0, 19)]
     [SerializeField] private int controllerSkipButtonIndex = 1;
 
+    [Header("--- SKIP DELAY ---")]
+    [Tooltip("Thời gian từ lúc cutscene bắt đầu đến khi được phép skip.")]
+    [SerializeField] private float skipEnableDelay = 2f;
+
     [Header("--- GRADIENT PRESET ---")]
     public TMP_ColorGradient normalGradient;
     public TMP_ColorGradient finalGradient;
@@ -73,6 +77,7 @@ public class CutSceneEndGame : MonoBehaviour
     public float endAudioFadeTime = 4.18f;
 
     private bool isSkipped;
+    private bool canSkip;
 
     // Sau khi đóng Setting, phải nhả Space/Enter/B/Circle
     // rồi mới cho phép skip cutscene.
@@ -103,6 +108,8 @@ public class CutSceneEndGame : MonoBehaviour
 
     private void Start()
     {
+        canSkip = false;
+
         if (subtitlePanel != null)
             subtitlePanel.SetActive(false);
 
@@ -137,12 +144,16 @@ public class CutSceneEndGame : MonoBehaviour
 
 
         PlayCutScene();
-        StartCoroutine(ShowSkipHint());
+        StartCoroutine(EnableSkipAfterDelay());
     }
 
     private void Update()
     {
         if (isSkipped)
+            return;
+
+        // 2 giây đầu cutscene: khóa toàn bộ input skip.
+        if (!canSkip)
             return;
 
         bool settingOpen =
@@ -239,7 +250,8 @@ public class CutSceneEndGame : MonoBehaviour
 
     private void SkipCutscene()
     {
-        if (isSkipped)
+        // Khóa cả trường hợp SkipCutscene() được gọi từ nơi khác/UI.
+        if (!canSkip || isSkipped)
             return;
 
         isSkipped = true;
@@ -286,11 +298,26 @@ public class CutSceneEndGame : MonoBehaviour
         SceneManager.LoadScene(6);
     }
 
-    private IEnumerator ShowSkipHint()
+    private IEnumerator EnableSkipAfterDelay()
     {
-        yield return null;
+        // Dùng realtime để thời gian khóa skip không bị ảnh hưởng bởi Time.timeScale.
+        if (skipEnableDelay > 0f)
+        {
+            yield return new WaitForSecondsRealtime(skipEnableDelay);
+        }
 
         if (isSkipped)
+            yield break;
+
+        canSkip = true;
+
+        // Chỉ sau khi đã được phép skip mới hiện hướng dẫn.
+        yield return StartCoroutine(ShowSkipHint());
+    }
+
+    private IEnumerator ShowSkipHint()
+    {
+        if (isSkipped || !canSkip)
             yield break;
 
         if (skipHintObject != null)
@@ -309,7 +336,7 @@ public class CutSceneEndGame : MonoBehaviour
             if (isSkipped)
                 yield break;
 
-            time += Time.deltaTime;
+            time += Time.unscaledDeltaTime;
             skipHintText.alpha = Mathf.Lerp(0f, 1f, time / duration);
             yield return null;
         }

@@ -1,5 +1,4 @@
-﻿
-using System.Collections;
+﻿using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -42,6 +41,13 @@ public class CreditScroll : MonoBehaviour
     [Header("Skip")]
     public KeyCode skipKey = KeyCode.Space;
 
+    [Tooltip("Button 1 thường là B trên Xbox hoặc Circle trên PlayStation.")]
+    [Range(0, 19)]
+    [SerializeField] private int controllerSkipButtonIndex = 1;
+
+    [Tooltip("Thời gian từ lúc Credit bắt đầu đến khi được phép skip.")]
+    [SerializeField] private float skipEnableDelay = 2f;
+
     [Header("Load Scene")]
     public string loadSceneName = "MainMenu";
 
@@ -49,6 +55,7 @@ public class CreditScroll : MonoBehaviour
 
     private bool canScroll;
     private bool isEnding;
+    private bool canSkip;
 
     private Coroutine introCoroutine;
     private Coroutine endCoroutine;
@@ -58,14 +65,15 @@ public class CreditScroll : MonoBehaviour
         creditTimer = 0f;
         canScroll = false;
         isEnding = false;
+        canSkip = false;
 
         var volume = VolumeManager.Instance;
-        if(volume != null)
+        if (volume != null)
         {
-           volume.ResetVignette();
+            volume.ResetVignette();
         }
         var audio = AudioManager.Instance;
-        if(audio != null)
+        if (audio != null)
         {
             audio.SetupMainGameAudio();
         }
@@ -77,13 +85,35 @@ public class CreditScroll : MonoBehaviour
         PlayCreditMusic();
 
         introCoroutine = StartCoroutine(IntroRoutine());
+        StartCoroutine(EnableSkipAfterDelay());
+    }
+
+    private IEnumerator EnableSkipAfterDelay()
+    {
+        // Dùng realtime để không bị ảnh hưởng bởi Time.timeScale.
+        if (skipEnableDelay > 0f)
+        {
+            yield return new WaitForSecondsRealtime(skipEnableDelay);
+        }
+
+        if (!isEnding)
+        {
+            canSkip = true;
+        }
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(skipKey))
+        if (canSkip)
         {
-            SkipCredit();
+            bool keyboardSkipDown =
+                Input.GetKeyDown(skipKey);
+
+            if (keyboardSkipDown ||
+                IsControllerSkipDown())
+            {
+                SkipCredit();
+            }
         }
 
         if (!canScroll || isEnding)
@@ -243,12 +273,42 @@ public class CreditScroll : MonoBehaviour
     }
 
     //==================================================
+    // CONTROLLER SKIP
+    //==================================================
+
+    private bool IsControllerSkipDown()
+    {
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        if (controller == null)
+            return false;
+
+        bool console1Skip =
+            controller.IsConsole1Connected() &&
+            controller.GetConsoleButtonDown(
+                1,
+                controllerSkipButtonIndex
+            );
+
+        bool console2Skip =
+            controller.IsConsole2Connected() &&
+            controller.GetConsoleButtonDown(
+                2,
+                controllerSkipButtonIndex
+            );
+
+        return console1Skip || console2Skip;
+    }
+
+    //==================================================
     // SKIP
     //==================================================
 
     public void SkipCredit()
     {
-        if (isEnding)
+        // Khóa cả trường hợp SkipCredit() được gọi từ Button/UI khác.
+        if (!canSkip || isEnding)
             return;
 
         if (introCoroutine != null)

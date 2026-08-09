@@ -18,6 +18,10 @@ public class MainMenuController : MonoBehaviour
     public Button settingButton;
     public Button exitButton;
 
+    [Header("Menu Intro Lock")]
+    [Tooltip("Thời gian chờ animation của thằng cha chạy xong trước khi cho bấm 3 nút.")]
+    [SerializeField] private float menuInputDelay = 1f;
+
     [Header("Controller Axis")]
     [Tooltip("Axis dọc của Joystick 1 trong Legacy Input Manager.")]
     [SerializeField] private string verticalP1AxisName = "VerticalP1";
@@ -39,6 +43,12 @@ public class MainMenuController : MonoBehaviour
 
     private bool canMoveVertical = true;
     private bool isLoading;
+    private bool canUseMainMenu;
+
+    // Lưu trạng thái interactable ban đầu để sau 1 giây trả lại đúng như cũ.
+    private bool startButtonInteractableOnOpen;
+    private bool settingButtonInteractableOnOpen;
+    private bool exitButtonInteractableOnOpen;
 
     // Dùng để phát hiện Settings vừa đóng.
     private bool wasSettingOpen;
@@ -65,6 +75,11 @@ public class MainMenuController : MonoBehaviour
     private void Start()
     {
         SetupButtons();
+
+        // Khóa Start / Settings / Exit ngay từ frame đầu
+        // để animation của GameObject cha chạy xong.
+        LockMenuButtonsForIntro();
+
         SetupCursor();
         SetupAudio();
         SetupSetting();
@@ -72,19 +87,13 @@ public class MainMenuController : MonoBehaviour
 
         InitializeControllerState();
 
-        if (focusStartButtonOnOpen &&
-            ControllerManager.Instance != null &&
-            ControllerManager.Instance.HasAnyController())
-        {
-            StartCoroutine(
-                FocusButtonDelay(startButton)
-            );
-        }
         var ui = UIManager.Instance;
         if (ui != null)
         {
             ui.isShowKeyBoard = false;
         }
+
+        StartCoroutine(UnlockMenuAfterIntro());
     }
 
     private void Update()
@@ -93,6 +102,11 @@ public class MainMenuController : MonoBehaviour
             return;
 
         UpdateControllerState();
+
+        // Trong thời gian animation mở menu:
+        // không cho tay cầm di chuyển hoặc Submit.
+        if (!canUseMainMenu)
+            return;
 
         if (activeMenuController == 0)
             return;
@@ -138,6 +152,86 @@ public class MainMenuController : MonoBehaviour
         };
 
         currentButtonIndex = 0;
+    }
+
+    private void LockMenuButtonsForIntro()
+    {
+        canUseMainMenu = false;
+
+        if (startButton != null)
+        {
+            startButtonInteractableOnOpen =
+                startButton.interactable;
+
+            startButton.interactable = false;
+        }
+
+        if (settingButton != null)
+        {
+            settingButtonInteractableOnOpen =
+                settingButton.interactable;
+
+            settingButton.interactable = false;
+        }
+
+        if (exitButton != null)
+        {
+            exitButtonInteractableOnOpen =
+                exitButton.interactable;
+
+            exitButton.interactable = false;
+        }
+
+        // Không giữ focus cũ trong lúc 3 nút đang animation.
+        ClearControllerFocus();
+    }
+
+    private IEnumerator UnlockMenuAfterIntro()
+    {
+        if (menuInputDelay > 0f)
+        {
+            // Realtime để vẫn đúng 1 giây kể cả Time.timeScale thay đổi.
+            yield return new WaitForSecondsRealtime(
+                menuInputDelay
+            );
+        }
+
+        if (isLoading)
+            yield break;
+
+        if (startButton != null)
+        {
+            startButton.interactable =
+                startButtonInteractableOnOpen;
+        }
+
+        if (settingButton != null)
+        {
+            settingButton.interactable =
+                settingButtonInteractableOnOpen;
+        }
+
+        if (exitButton != null)
+        {
+            exitButton.interactable =
+                exitButtonInteractableOnOpen;
+        }
+
+        canUseMainMenu = true;
+
+        // Nếu analog đang bị giữ từ lúc animation chạy,
+        // bắt buộc thả về giữa trước khi được di chuyển menu.
+        canMoveVertical = false;
+
+        // Chỉ focus Start sau khi animation đã chạy xong.
+        if (focusStartButtonOnOpen &&
+            ControllerManager.Instance != null &&
+            ControllerManager.Instance.HasAnyController())
+        {
+            StartCoroutine(
+                FocusButtonDelay(startButton)
+            );
+        }
     }
 
     private void SetupCursor()
@@ -704,7 +798,9 @@ public class MainMenuController : MonoBehaviour
 
     public void OnStartClicked()
     {
-        if (isLoading)
+        // Bảo vệ thêm: dù onClick bị gọi từ nơi khác,
+        // 1 giây đầu vẫn không thực hiện chức năng.
+        if (!canUseMainMenu || isLoading)
             return;
 
         // Reset Pause ngay khi nhấn Start.
@@ -779,7 +875,9 @@ public class MainMenuController : MonoBehaviour
 
     public void OnSettingsClicked()
     {
-        if (isLoading)
+        // Bảo vệ thêm: dù onClick bị gọi từ nơi khác,
+        // 1 giây đầu vẫn không thực hiện chức năng.
+        if (!canUseMainMenu || isLoading)
             return;
 
         AudioManager audio =
@@ -813,7 +911,7 @@ public class MainMenuController : MonoBehaviour
 
         // Tránh analog đang giữ làm menu nhảy ngay sau khi đóng.
         canMoveVertical = false;
-        
+
         if (activeMenuController != 0)
         {
             StartCoroutine(
@@ -828,7 +926,9 @@ public class MainMenuController : MonoBehaviour
 
     public void OnExitClicked()
     {
-        if (isLoading)
+        // Bảo vệ thêm: dù onClick bị gọi từ nơi khác,
+        // 1 giây đầu vẫn không thực hiện chức năng.
+        if (!canUseMainMenu || isLoading)
             return;
 
         AudioManager audio =

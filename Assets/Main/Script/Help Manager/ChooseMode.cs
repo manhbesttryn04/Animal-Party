@@ -86,6 +86,13 @@ public class ChooseMode : MonoBehaviour
     private bool isStartingGame;
     private bool waitStartButtonRelease;
 
+    [Header("Start Button Animation")]
+    [SerializeField]
+    private float startButtonAnimationTime = 0.2f;
+
+    private bool canPressStartButton;
+    private Coroutine startButtonEnableRoutine;
+
     // =========================================================
     // UNITY
     // =========================================================
@@ -977,6 +984,9 @@ public class ChooseMode : MonoBehaviour
         // luôn hiện, khóa tương tác và giữ Disabled Color.
         if (isStartingGame)
         {
+            StopStartButtonEnableRoutine();
+            canPressStartButton = false;
+
             buttonStart.SetActive(true);
 
             if (btn != null)
@@ -988,30 +998,36 @@ public class ChooseMode : MonoBehaviour
             return;
         }
 
-        // Chưa bấm START mà Setting đang mở:
-        // ẩn nút START hoàn toàn.
+        // Setting đang mở:
+        // ẩn START và hủy thời gian chờ hiện tại.
         if (settingOpen)
         {
-            buttonStart.SetActive(false);
+            HideStartButton();
             return;
         }
 
-        // Setting đã đóng:
-        // chỉ hiện START khi cả hai Player đã chọn xong.
         bool bothSelected =
             isPlayer1Choose &&
             isPlayer2Choose;
 
-        buttonStart.SetActive(bothSelected);
+        if (!bothSelected)
+        {
+            HideStartButton();
+            return;
+        }
 
+        // START vừa xuất hiện -> chạy animation trước.
+        if (!buttonStart.activeSelf)
+        {
+            ShowStartButtonWithDelay();
+            return;
+        }
+
+        // Không ép visual về Normal mỗi frame.
+        // Chỉ cập nhật khả năng tương tác.
         if (btn != null)
         {
-            btn.interactable = bothSelected;
-
-            if (bothSelected)
-            {
-                ResetButtonToNormal(btn);
-            }
+            btn.interactable = canPressStartButton;
         }
     }
 
@@ -1021,20 +1037,105 @@ public class ChooseMode : MonoBehaviour
             isPlayer1Choose &&
             isPlayer2Choose;
 
-        if (buttonStart != null)
-        {
-            buttonStart.SetActive(
-                bothSelected
-            );
-        }
-
         if (bothSelected)
         {
+            ShowStartButtonWithDelay();
+
             /*
              * Không cho lần nhấn chọn nhân vật cuối
              * kích hoạt luôn nút Start.
              */
             waitStartButtonRelease = true;
+        }
+        else
+        {
+            HideStartButton();
+        }
+    }
+
+    private void ShowStartButtonWithDelay()
+    {
+        if (buttonStart == null)
+            return;
+
+        // Nếu START đã hiện và đã sẵn sàng thì không chạy lại delay.
+        if (buttonStart.activeSelf && canPressStartButton)
+            return;
+
+        buttonStart.SetActive(true);
+        canPressStartButton = false;
+
+        Button btn = buttonStart.GetComponent<Button>();
+        if (btn != null)
+        {
+            btn.interactable = false;
+        }
+
+        StopStartButtonEnableRoutine();
+        startButtonEnableRoutine =
+            StartCoroutine(EnableStartButtonAfterAnimation());
+    }
+
+    private IEnumerator EnableStartButtonAfterAnimation()
+    {
+        // Realtime để vẫn đúng 0.2 giây kể cả Time.timeScale thay đổi.
+        yield return new WaitForSecondsRealtime(
+            startButtonAnimationTime
+        );
+
+        startButtonEnableRoutine = null;
+
+        bool settingOpen =
+            SettingManager.Instance != null &&
+            SettingManager.Instance.IsSettingBlockingInput;
+
+        bool canEnable =
+            !settingOpen &&
+            !isStartingGame &&
+            isPlayer1Choose &&
+            isPlayer2Choose &&
+            buttonStart != null &&
+            buttonStart.activeSelf;
+
+        if (!canEnable)
+        {
+            canPressStartButton = false;
+            yield break;
+        }
+
+        canPressStartButton = true;
+
+        Button btn = buttonStart.GetComponent<Button>();
+        if (btn != null)
+        {
+            btn.interactable = true;
+        }
+    }
+
+    private void HideStartButton()
+    {
+        StopStartButtonEnableRoutine();
+        canPressStartButton = false;
+
+        if (buttonStart != null)
+        {
+            Button btn = buttonStart.GetComponent<Button>();
+
+            if (btn != null)
+            {
+                btn.interactable = false;
+            }
+
+            buttonStart.SetActive(false);
+        }
+    }
+
+    private void StopStartButtonEnableRoutine()
+    {
+        if (startButtonEnableRoutine != null)
+        {
+            StopCoroutine(startButtonEnableRoutine);
+            startButtonEnableRoutine = null;
         }
     }
 
@@ -1047,6 +1148,10 @@ public class ChooseMode : MonoBehaviour
         }
 
         if (isStartingGame)
+            return;
+
+        // START đang chạy animation 0.2 giây thì chưa nhận input.
+        if (!canPressStartButton)
             return;
 
         /*
@@ -1096,6 +1201,11 @@ public class ChooseMode : MonoBehaviour
 
     public void LoadScene(int buildIndex)
     {
+        // Không cho bất kỳ nguồn input nào kích START
+        // trước khi animation 0.2 giây chạy xong.
+        if (!canPressStartButton)
+            return;
+
         if (!isPlayer1Choose ||
             !isPlayer2Choose)
         {
