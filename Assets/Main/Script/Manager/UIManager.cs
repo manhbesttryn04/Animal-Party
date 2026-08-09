@@ -217,13 +217,15 @@ public class UIManager : MonoBehaviour
         Transform coinRoot =
             notifiplayer1.transform
             .GetChild(2)
-            .GetChild(0);
+            .GetChild(1);
 
         // Root chứa icon Coin Power Player 2
         Transform coinRoot2 =
             notifiplayer2.transform
             .GetChild(2)
-            .GetChild(0);
+            .GetChild(1);
+        Transform highlightYellowCoinPowerP1 = notifiplayer1.transform.GetChild(2).GetChild(0);
+        Transform highlightYellowCoinPowerP2 = notifiplayer2.transform.GetChild(2).GetChild(0);
 
         // =========================
         // PLAYER 1 COIN POWER
@@ -237,6 +239,13 @@ public class UIManager : MonoBehaviour
 
             // Nếu đã có Coin Power thì tắt panel đen
             blackPanel.gameObject.SetActive(i >= p1.countCoinPower);
+         var hightlightCoinPower = coinRoot.GetChild(i).GetComponent<UIImagePowerCoinColorEffect>();
+            if( i >= p1.countCoinPower)
+            {
+                hightlightCoinPower.enabled = false;
+                highlightYellowCoinPowerP1.GetChild(i).gameObject.SetActive(false);
+            }
+              
         }
 
         // =========================
@@ -251,6 +260,13 @@ public class UIManager : MonoBehaviour
 
             // Nếu đã có Coin Power thì tắt panel đen
             blackPanel.gameObject.SetActive(i >= p2.countCoinPower);
+            var hightlightCoinPower = coinRoot2.GetChild(i).GetComponent<UIImagePowerCoinColorEffect>();
+             if (i >= p2.countCoinPower)
+            {
+                hightlightCoinPower.enabled = false;
+                highlightYellowCoinPowerP2.GetChild(i).gameObject.SetActive(false);
+            }
+               
         }
     }
 
