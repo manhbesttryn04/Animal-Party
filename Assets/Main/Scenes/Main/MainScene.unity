@@ -1010,11 +1010,8 @@ MonoBehaviour:
   - Color Wipe removes color from adjacent tiles. Freeze temporarily stops your movement!
   - The bomb explodes when the countdown reaches 4 seconds, and whoever is holding
     it will be eliminated!
-  - " S\u1ED1 l\u01B0\u1EE3ng v\xE0 t\u1ED1c \u0111\u1ED9 b\u1EAFn c\u1EE7a c\xE1c
-    kh\u1EA9u ph\xE1o s\u1EBD \xE1p \u0111\u1EA3o ngay khi b\u1EAFt \u0111\u1EA7u
-    v\xE0 t\u0103ng d\u1EA7n theo th\u1EDDi gian The number and rate of fire of the
-    cannons will be overwhelming right from the start and will gradually increase
-    over time!"
+  - The number and rate of fire of the cannons will be overwhelming right from the
+    start and will gradually increase over time!
 --- !u!114 &288627991
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5755,7 +5752,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   timePerTurn: 20
-  open: 1
+  open: 0
   buttonsBlockedBySetting: []
   inputReleaseThreshold: 0.2
   horizontalJoystick1: HorizontalJoystick1
@@ -10400,6 +10397,22 @@ PrefabInstance:
     - target: {fileID: 1641012059991115128, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
       propertyPath: m_AnchorMin.x
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1673600168077231104, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
+      propertyPath: m_Color.a
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1673600168077231104, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
+      propertyPath: m_Color.b
+      value: 0.5764706
+      objectReference: {fileID: 0}
+    - target: {fileID: 1673600168077231104, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
+      propertyPath: m_Color.g
+      value: 0.07843138
+      objectReference: {fileID: 0}
+    - target: {fileID: 1673600168077231104, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
+      propertyPath: m_Color.r
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1799023804181028402, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
       propertyPath: m_AnchorMax.y

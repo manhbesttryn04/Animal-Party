@@ -2775,9 +2775,10 @@ MonoBehaviour:
   subtitlePanel: {fileID: 766502496}
   subtitleText: {fileID: 195171552}
   subtitleOutline: {fileID: 766502497}
-  skipHintObject: {fileID: 0}
+  skipHintObject: {fileID: 917506181}
   skipHintText: {fileID: 0}
   controllerSkipButtonIndex: 1
+  skipEnableDelay: 2
   normalGradient: {fileID: 11400000, guid: d79349da8678dcf4fb7f780f4dcd7a36, type: 2}
   finalGradient: {fileID: 11400000, guid: 41a3a6f1c47ea1946a73249ca2de1843, type: 2}
   normalOutlineColor: {r: 1, g: 1, b: 1, a: 0.2}
@@ -2793,6 +2794,7 @@ MonoBehaviour:
   typeSpeed: 0.04
   fadeOutDuration: 0.3
   betweenLineFade: 0.3
+  subtitleHideDelay: 0.2
   endAudioFadeTime: 4.18
 --- !u!1001 &148831496
 PrefabInstance:
@@ -14469,7 +14471,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &766502497
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14498,7 +14500,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 195171555}
-  - {fileID: 917506182}
   m_Father: {fileID: 1291046421}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
@@ -17001,12 +17002,12 @@ Transform:
   m_GameObject: {fileID: 917506181}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 677.63745, y: -18, z: 227.49985}
+  m_LocalPosition: {x: 677.6374, y: -537.4754, z: 227.49985}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5581431}
-  m_Father: {fileID: 766502498}
+  m_Father: {fileID: 1291046421}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &928001598
 PrefabInstance:
@@ -24463,6 +24464,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 766502498}
+  - {fileID: 917506182}
   m_Father: {fileID: 146939406}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -24531,7 +24533,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_TargetDisplay: 0
 --- !u!1001 &1293121857
 PrefabInstance:

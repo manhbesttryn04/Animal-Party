@@ -78,11 +78,25 @@ public class CutScene2 : MonoBehaviour
     public float fadeOutDuration = 0.4f;
     public float betweenLineFade = 0.5f;
 
+    [Tooltip("Sau khi narrator thực sự nói xong, chờ thêm thời gian này rồi tắt subtitle.")]
+    public float subtitleHideDelay = 0.2f;
+
+    [Tooltip("Riêng câu 3: thời điểm (giây) tính từ lúc voice bắt đầu để cắt ngay sau từ 'mini-games'.")]
+    public float voice3CutTime = 2.1f;
+
     [Header("--- END AUDIO FADE ---")]
     public float endAudioFadeTime = 4.5f;
 
     private bool isSkipped;
     private bool canSkip;
+
+    // Xác định câu subtitle mới nhất để coroutine câu cũ
+    // không thể tắt nhầm câu mới.
+    private int subtitleRequestId;
+
+    // Câu 4 sẽ được gọi ngay khi câu 3 bị cắt ở mốc 2.1 giây.
+    // Cờ này tránh câu 4 bị phát lại lần nữa ở mốc cutscene cũ.
+    private bool line4Started;
 
     // Sau khi đóng Setting, phải nhả Space/Enter/B/Circle
     // rồi mới cho phép skip cutscene.
@@ -410,13 +424,20 @@ public class CutScene2 : MonoBehaviour
             set.StartCutScene();
 
         // Move tới point 7 và câu số 4.
-        StartCoroutine(
-            ShowSubtitleWithVoice(
-                storyLines[4],
-                4,
-                false
-            )
-        );
+        // Bình thường câu 4 đã được gọi ngay lúc câu 3 bị cắt ở 2.1 giây.
+        // Chỉ gọi ở đây nếu vì lý do nào đó câu 4 chưa được chạy.
+        if (!line4Started)
+        {
+            line4Started = true;
+
+            StartCoroutine(
+                ShowSubtitleWithVoice(
+                    storyLines[4],
+                    4,
+                    false
+                )
+            );
+        }
 
         yield return StartCoroutine(
             MoveToTransform(transVideos[7])
@@ -519,6 +540,11 @@ public class CutScene2 : MonoBehaviour
         if (isSkipped)
             yield break;
 
+        // Mỗi câu mới bắt đầu sẽ thay ID.
+        // Quan trọng: vẫn giữ StopNarratorVoice() ngay bên dưới,
+        // nên câu 3 vẫn có thể bị câu 4 cắt giữa chừng đúng như logic cũ.
+        int mySubtitleRequestId = ++subtitleRequestId;
+
         StopNarratorVoice();
 
         if (subtitleText != null &&
@@ -556,6 +582,15 @@ public class CutScene2 : MonoBehaviour
 
         PlayVoice(voiceIndex);
 
+        // RIÊNG CÂU 3:
+        // Cắt theo THỜI GIAN AUDIO, không phụ thuộc tốc độ hiện chữ.
+        // Như vậy câu 3 vẫn nói bình thường tới đúng chữ "mini-games",
+        // rồi mới ngắt phần voice dư như "this island".
+        if (voiceIndex == 3)
+        {
+            StartCoroutine(CutVoice3AtTime(mySubtitleRequestId));
+        }
+
         foreach (char character in line)
         {
             if (isSkipped)
@@ -565,6 +600,14 @@ public class CutScene2 : MonoBehaviour
                 subtitleText.text += character;
 
             yield return new WaitForSeconds(typeSpeed);
+        }
+
+        // RIÊNG CÂU 3:
+        // Voice đã được coroutine CutVoice3AtTime() cắt đúng mốc audio.
+        // Không tự tắt subtitle câu 3 ở đây; giữ nó tới khi câu 4 bắt đầu.
+        if (voiceIndex == 3)
+        {
+            yield break;
         }
 
         AudioManager audio = AudioManager.Instance;
@@ -577,6 +620,45 @@ public class CutScene2 : MonoBehaviour
                     AudioManager.Instance != null &&
                     AudioManager.Instance.specialSource != null &&
                     AudioManager.Instance.specialSource.isPlaying
+            );
+        }
+
+        // Các câu khác: voice nói xong -> chờ 0.2 giây -> tắt subtitle.
+        if (!isSkipped)
+            yield return new WaitForSeconds(subtitleHideDelay);
+
+        // Nếu trong lúc đó câu mới đã bắt đầu,
+        // coroutine câu cũ không được phép tắt subtitle của câu mới.
+        if (!isSkipped && mySubtitleRequestId == subtitleRequestId)
+            HideSubtitleImmediate();
+    }
+
+    private IEnumerator CutVoice3AtTime(int requestId)
+    {
+        // Chờ đúng 2.1 giây kể từ lúc voice câu 3 bắt đầu.
+        yield return new WaitForSeconds(voice3CutTime);
+
+        if (isSkipped)
+            yield break;
+
+        // Chỉ xử lý nếu câu 3 vẫn đang là câu hiện tại.
+        if (requestId != subtitleRequestId)
+            yield break;
+
+        // Cắt câu 3 ngay sau "mini-games".
+        StopNarratorVoice();
+
+        // Qua câu 4 NGAY LẬP TỨC, không chờ camera tới mốc cũ.
+        if (!line4Started)
+        {
+            line4Started = true;
+
+            StartCoroutine(
+                ShowSubtitleWithVoice(
+                    storyLines[4],
+                    4,
+                    false
+                )
             );
         }
     }

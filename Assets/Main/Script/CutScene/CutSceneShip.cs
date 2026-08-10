@@ -64,8 +64,14 @@ public class CutSceneShip : MonoBehaviour
     public float fadeOutDuration = 0.3f;
     public float betweenLineFade = 0.2f;
 
+    [Tooltip("Sau khi narrator nói xong, chờ từng này giây rồi tắt dòng + chữ.")]
+    public float subtitleHideDelay = 0.2f;
+
     private bool isSkipped;
     private bool canSkip;
+
+    // Dùng để ngăn coroutine của câu cũ tắt nhầm câu mới.
+    private int subtitleRequestId;
 
     // Sau khi đóng Setting, phải nhả Space/Enter/B/Circle
     // rồi mới cho phép skip cutscene.
@@ -413,6 +419,8 @@ public class CutSceneShip : MonoBehaviour
         if (isSkipped)
             yield break;
 
+        int requestId = ++subtitleRequestId;
+
         if (index < 0 ||
             index >= storyLines.Length ||
             index >= narratorVoices.Length)
@@ -431,11 +439,11 @@ public class CutSceneShip : MonoBehaviour
         if (subtitleText != null &&
             !string.IsNullOrEmpty(subtitleText.text))
         {
-            yield return StartCoroutine(FadeOutLine());
+            yield return StartCoroutine(FadeOutLine(requestId));
             yield return new WaitForSeconds(betweenLineFade);
         }
 
-        if (isSkipped)
+        if (isSkipped || requestId != subtitleRequestId)
             yield break;
 
         if (subtitlePanel != null)
@@ -473,7 +481,7 @@ public class CutSceneShip : MonoBehaviour
 
         foreach (char character in line)
         {
-            if (isSkipped)
+            if (isSkipped || requestId != subtitleRequestId)
                 yield break;
 
             if (subtitleText != null)
@@ -493,10 +501,21 @@ public class CutSceneShip : MonoBehaviour
                     audio.specialSource.isPlaying
             );
         }
+
+        if (isSkipped || requestId != subtitleRequestId)
+            yield break;
+
+        yield return new WaitForSeconds(subtitleHideDelay);
+
+        if (isSkipped || requestId != subtitleRequestId)
+            yield break;
+
+        HideSubtitleImmediate();
     }
 
     public void HideSubtitle()
     {
+        subtitleRequestId++;
         StopNarratorVoice();
         StartCoroutine(FadeOutLine());
     }
@@ -511,6 +530,8 @@ public class CutSceneShip : MonoBehaviour
 
     private void HideSubtitleImmediate()
     {
+        subtitleRequestId++;
+
         if (subtitleText != null)
         {
             subtitleText.alpha = 1f;
@@ -521,7 +542,7 @@ public class CutSceneShip : MonoBehaviour
             subtitlePanel.SetActive(false);
     }
 
-    private IEnumerator FadeOutLine()
+    private IEnumerator FadeOutLine(int requestId = -1)
     {
         if (subtitleText == null)
             yield break;
@@ -532,8 +553,11 @@ public class CutSceneShip : MonoBehaviour
 
         while (time < duration)
         {
-            if (isSkipped)
+            if (isSkipped ||
+                (requestId >= 0 && requestId != subtitleRequestId))
+            {
                 yield break;
+            }
 
             time += Time.deltaTime;
 
@@ -545,6 +569,9 @@ public class CutSceneShip : MonoBehaviour
 
             yield return null;
         }
+
+        if (requestId >= 0 && requestId != subtitleRequestId)
+            yield break;
 
         subtitleText.alpha = 1f;
         subtitleText.text = "";
