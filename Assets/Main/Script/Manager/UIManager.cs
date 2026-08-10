@@ -28,6 +28,8 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI coinTextP2;
     public GameObject player1ResultUI;
     public GameObject player2ResultUI;
+    public Image avatarResultP1;
+    public Image avatarResultP2;
 
     [Header("Notification UI")]
     public GameObject canvasNotifi;
@@ -94,8 +96,18 @@ public class UIManager : MonoBehaviour
     public GameObject[] itemsList;
     public GameObject[] itemCardRandomList;
     [Header("Instruct Input KeyBoard")]
-    public List<GameObject> instructInputListP1;
-    public List<GameObject> instructInputListP2;
+    public GameObject instructKeyBoard;
+    public GameObject instructKeyBoardP1;
+    public GameObject instructKeyBoardP2;
+    public List<GameObject> instructKeyBoardInputListP1;
+    public List<GameObject> instructKeyBoardInputListP2;
+    public GameObject instructConsoleClone;
+    public GameObject instructConsoleCloneP1;
+    public GameObject instructConsoleCloneP2;
+    public List<GameObject> instructConsoleInputListP1;
+    public List<GameObject> instructConsoleInputListP2;
+    public GameObject instructBothConsole;
+    public List<GameObject> instructBothConsoleInputListP1;
 
     [Header("Screen Transition")]
     public GameObject blackPanel;
@@ -244,6 +256,10 @@ public class UIManager : MonoBehaviour
             {
                 hightlightCoinPower.enabled = false;
                 highlightYellowCoinPowerP1.GetChild(i).gameObject.SetActive(false);
+            }else
+            {
+                               hightlightCoinPower.enabled = true;
+                highlightYellowCoinPowerP1.GetChild(i).gameObject.SetActive(true);
             }
               
         }
@@ -265,6 +281,10 @@ public class UIManager : MonoBehaviour
             {
                 hightlightCoinPower.enabled = false;
                 highlightYellowCoinPowerP2.GetChild(i).gameObject.SetActive(false);
+            }else
+            {
+                               hightlightCoinPower.enabled = true;
+                highlightYellowCoinPowerP2.GetChild(i).gameObject.SetActive(true);
             }
                
         }
@@ -450,6 +470,10 @@ public class UIManager : MonoBehaviour
                 player2ResultUI.transform.GetChild(0).gameObject.SetActive(true);
                 player2ResultUI.transform.GetChild(1).gameObject.SetActive(false);
             }
+
+            avatarResultP1.sprite = playerManager1.GetComponent<PlayerInfo>().avatarCharacter;
+            avatarResultP2.sprite = playerManager2.GetComponent<PlayerInfo>().avatarCharacter;
+
         }
     }
 
