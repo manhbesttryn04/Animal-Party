@@ -13,10 +13,17 @@ public abstract class TrapBase : MonoBehaviour
     // Cooldown chung cho toàn bộ bẫy (không phân biệt P1/P2)
     private float lastTriggerTime = -999f;
 
-    // FIX: theo dõi player nào đang ở trong trigger để không bị trigger liên tục
-    // qua OnTriggerStay nếu player đứng yên tại chỗ (ví dụ do bị đóng băng ngay trên bẫy).
-    // Chỉ cho phép trigger lại sau khi player thực sự rời khỏi rồi vào lại (và hết cooldown).
-    private readonly HashSet<BombCarrier> insideTrap = new HashSet<BombCarrier>();
+    // FIX: đổi từ HashSet sang Dictionary lưu thời điểm vào bẫy.
+    // NGUYÊN NHÂN "lúc kích hoạt được lúc không": OnTriggerExit đôi khi KHÔNG fire
+    // (player bị launch/pull/teleport ra khỏi vùng bẫy quá nhanh, hoặc CharacterController/
+    // collider bị tắt-mở giữa lúc đang ở trong trigger). Khi đó carrier bị "kẹt" mãi trong
+    // insideTrap, khiến bẫy đó không bao giờ kích hoạt lại cho player đó nữa.
+    // -> Thêm safetyStuckTimeout: nếu quá lâu không thấy Exit, tự coi như đã rời và cho phép
+    // trigger lại, kèm log cảnh báo để biết khi nào việc này xảy ra.
+    private readonly Dictionary<BombCarrier, float> insideTrap = new Dictionary<BombCarrier, float>();
+
+    [Tooltip("Thời gian tối đa 1 player được coi là 'còn trong bẫy' nếu không thấy OnTriggerExit. Đề phòng trường hợp Exit bị miss do bị launch/pull/teleport ra ngoài quá nhanh.")]
+    public float stuckSafetyTimeout = 5f;
 
     private void Reset()
     {
@@ -27,14 +34,24 @@ public abstract class TrapBase : MonoBehaviour
     {
         if (TrapManager.Instance == null)
         {
-            Debug.LogWarning($"[TRAP DEBUG] {name}: TrapManager.Instance là NULL lúc Awake — bẫy sẽ KHÔNG được Register, có thể không bị ActivateTraps() gọi tới. Kiểm tra thứ tự Script Execution Order.");
-        }
-        else
-        {
-            Debug.Log($"[TRAP DEBUG] {name}: Đã Register với TrapManager. isActive hiện tại = {isActive}.");
+            Debug.LogWarning($"[TRAP DEBUG] {name}: TrapManager.Instance là NULL lúc Awake — sẽ thử Register lại ở Start().");
+            return;
         }
 
-        TrapManager.Instance?.Register(this);
+        Debug.Log($"[TRAP DEBUG] {name}: Đã Register với TrapManager (Awake). isActive hiện tại = {isActive}.");
+        TrapManager.Instance.Register(this);
+    }
+
+    protected virtual void Start()
+    {
+        // FIX: an toàn khi Script Execution Order khiến TrapBase.Awake() chạy TRƯỚC
+        // TrapManager.Awake() (Instance chưa set). Start() luôn chạy SAU Awake() của
+        // TẤT CẢ script trong scene, nên tới đây TrapManager.Instance chắc chắn đã có.
+        if (TrapManager.Instance != null && !TrapManager.Instance.IsRegistered(this))
+        {
+            Debug.Log($"[TRAP DEBUG] {name}: Register lại thành công ở Start() (Awake trước đó bị miss vì Instance null).");
+            TrapManager.Instance.Register(this);
+        }
     }
 
     protected virtual void OnDestroy()
@@ -55,8 +72,9 @@ public abstract class TrapBase : MonoBehaviour
     private void OnTriggerExit(Collider other)
     {
         BombCarrier carrier = GetCarrier(other);
-        if (carrier != null)
+        if (carrier != null && insideTrap.ContainsKey(carrier))
         {
+            Debug.Log($"[TRAP DEBUG] {name}: OnTriggerExit — '{carrier.name}' đã rời khỏi bẫy, có thể trigger lại (sau cooldown).");
             insideTrap.Remove(carrier);
         }
     }
@@ -114,16 +132,24 @@ public abstract class TrapBase : MonoBehaviour
         }
 
         // 4. Nếu player này đang được ghi nhận là "còn ở trong bẫy" (chưa OnTriggerExit)
-        // thì không trigger lại, tránh spam khi player đứng yên tại chỗ.
-        if (insideTrap.Contains(carrier))
+        // thì không trigger lại — TRỪ khi đã quá lâu (stuckSafetyTimeout) mà vẫn chưa thấy
+        // Exit, lúc đó coi như Exit đã bị miss và tự động cho phép trigger lại.
+        if (insideTrap.TryGetValue(carrier, out float enterTime))
         {
-            Debug.Log($"[TRAP DEBUG] {name}: KHÔNG kích hoạt vì '{carrier.name}' vẫn đang được ghi nhận ở trong bẫy (chưa OnTriggerExit).");
-            return;
+            float elapsed = Time.time - enterTime;
+
+            if (elapsed < stuckSafetyTimeout)
+            {
+                Debug.Log($"[TRAP DEBUG] {name}: KHÔNG kích hoạt vì '{carrier.name}' vẫn đang được ghi nhận ở trong bẫy (đã {elapsed:F2}s, chưa quá {stuckSafetyTimeout}s).");
+                return;
+            }
+
+            Debug.LogWarning($"[TRAP DEBUG] {name}: '{carrier.name}' bị 'kẹt' trong insideTrap quá {stuckSafetyTimeout}s mà không thấy OnTriggerExit — có thể do bị launch/pull/teleport ra ngoài. Tự động cho phép trigger lại.");
         }
 
         // 5. Đánh dấu thời gian dẫm bẫy MỚI NHẤT + đánh dấu player đang ở trong bẫy
         lastTriggerTime = Time.time;
-        insideTrap.Add(carrier);
+        insideTrap[carrier] = Time.time;
 
         Debug.Log($"[TRAP DEBUG] {name}: KÍCH HOẠT bẫy lên '{carrier.name}'.");
 

@@ -23,15 +23,11 @@ public class TrapManager : MonoBehaviour
         if (!allTraps.Contains(trap))
             allTraps.Add(trap);
 
-        // Nếu Bẫy spawn ra trong lúc Game ĐÃ VÀO TRẬN -> Cho nó Active luôn chứ đừng ép tắt!
-        if (isGameRunning && !useRandomSubset)
-        {
-            trap.SetActive(true);
-        }
-        else
-        {
-            trap.SetActive(false);
-        }
+        // BỎ chức năng ép isActive = false lúc Register.
+        // Trước đây bẫy bị tắt ngay khi Register nếu game chưa "isGameRunning",
+        // khiến bẫy đứng im vô thời hạn nếu ActivateTraps() không được gọi đúng lúc
+        // (test scene trực tiếp, thứ tự gọi sai, v.v.). Giờ bẫy mặc định LUÔN active,
+        // trừ khi bị tắt thủ công qua DeactivateTraps() hoặc SetActive(false).
     }
 
     public void Unregister(TrapBase trap)
@@ -39,14 +35,25 @@ public class TrapManager : MonoBehaviour
         allTraps.Remove(trap);
     }
 
+    public bool IsRegistered(TrapBase trap) => allTraps.Contains(trap);
+
     // ====== GỌI TỪ MiniGame6.StartMiniGame() ======
     public void ActivateTraps()
     {
         isGameRunning = true;
-        if (allTraps.Count == 0) return;
+
+        if (allTraps.Count == 0)
+        {
+            Debug.LogWarning("[TRAP DEBUG] TrapManager: allTraps rỗng — không có bẫy nào được Register. " +
+                "Kiểm tra Script Execution Order (TrapManager.Awake phải chạy TRƯỚC TrapBase.Awake), " +
+                "hoặc kiểm tra các bẫy có đang active trong Hierarchy lúc Awake chạy không.");
+            return;
+        }
 
         if (!useRandomSubset)
         {
+            Debug.Log($"[TRAP DEBUG] TrapManager: useRandomSubset = false -> Bật TẤT CẢ {allTraps.Count} bẫy.");
+
             foreach (var trap in allTraps)
                 trap.SetActive(true);
             return;
@@ -59,18 +66,29 @@ public class TrapManager : MonoBehaviour
         foreach (var trap in allTraps)
             trap.SetActive(false);
 
+        List<string> chosenNames = new List<string>();
+
         for (int i = 0; i < count; i++)
         {
             int idx = Random.Range(0, pool.Count);
             pool[idx].SetActive(true);
+            chosenNames.Add(pool[idx].name);
             pool.RemoveAt(idx);
         }
+
+        // FIX/DEBUG: log rõ bẫy nào được chọn bật ở round này, để không nhầm việc
+        // "random không chọn trúng bẫy này" với việc "bẫy bị bug không kích hoạt".
+        Debug.Log($"[TRAP DEBUG] TrapManager: useRandomSubset = true -> Chỉ bật {count}/{allTraps.Count} bẫy: " +
+            $"{string.Join(", ", chosenNames)}. Các bẫy KHÁC sẽ có isActive = false ở round này (đúng theo thiết kế).");
     }
 
     // ====== GỌI TỪ MiniGame6.StopMiniGame() ======
     public void DeactivateTraps()
     {
         isGameRunning = false;
+
+        Debug.Log($"[TRAP DEBUG] TrapManager: DeactivateTraps() — tắt toàn bộ {allTraps.Count} bẫy.");
+
         foreach (var trap in allTraps)
             trap.SetActive(false);
     }
