@@ -282,7 +282,7 @@ public class VolumeManager : MonoBehaviour
                     );
 
                     SetBloomActive(true);
-                    SetMotionBlurActive(false);
+                    SetMotionBlurActive(true);
                     SetColorAdjustmentsActive(true);
                     SetDepthOfFieldActive(true);
 
