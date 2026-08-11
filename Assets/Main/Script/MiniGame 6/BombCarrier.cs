@@ -20,9 +20,12 @@ public class BombCarrier : MonoBehaviour
     private bool isFrozen = false;
     private float defaultSpeed = 0f;
     private Coroutine freezeCoroutine;
+    private GameObject activeFreezeLoopVFX; // FIX: theo dõi VFX loop đang chạy để destroy thủ công khi bị dính bẫy lại
 
     // --- MAGNET ---
     private Coroutine magnetCoroutine;
+    private GameObject activeMagnetVFX; // FIX: theo dõi VFX magnet đang chạy để destroy thủ công khi bị dính bẫy lại
+    private bool isBeingPulled = false; // FIX: cờ trạng thái để chặn phát lại âm thanh/VFX khi đang bị hút
 
     void Awake()
     {
@@ -69,21 +72,40 @@ public class BombCarrier : MonoBehaviour
 
     public bool CanMove() => canMove;
 
+    /// <summary>
+    /// Bật/tắt trạng thái active của carrier trong game.
+    /// KHÔNG reset isEliminated ở đây — dùng ResetForNewGame() khi bắt đầu 1 game/round mới
+    /// để tránh việc gọi SetGameActive(false) sau khi loại player làm mất cờ isEliminated.
+    /// </summary>
     public void SetGameActive(bool active)
     {
         isGameActive = active;
         isHoldingBomb = false;
-        isEliminated = false;
         canMove = false;
 
         if (isFrozen)
         {
             if (freezeCoroutine != null) StopCoroutine(freezeCoroutine);
+            if (activeFreezeLoopVFX != null) { Destroy(activeFreezeLoopVFX); activeFreezeLoopVFX = null; }
             SetFrozen(false);
         }
 
         if (magnetCoroutine != null) StopCoroutine(magnetCoroutine);
+        if (activeMagnetVFX != null) { Destroy(activeMagnetVFX); activeMagnetVFX = null; }
+        isBeingPulled = false;
 
+        cooldownTimer = 0f;
+    }
+
+    /// <summary>
+    /// Gọi khi bắt đầu 1 trận mới (trước SetGameActive(true)) để reset toàn bộ trạng thái,
+    /// bao gồm cả isEliminated.
+    /// </summary>
+    public void ResetForNewGame()
+    {
+        isEliminated = false;
+        isHoldingBomb = false;
+        canMove = false;
         cooldownTimer = 0f;
     }
 
@@ -127,6 +149,7 @@ public class BombCarrier : MonoBehaviour
         if (eliminated && isFrozen)
         {
             if (freezeCoroutine != null) StopCoroutine(freezeCoroutine);
+            if (activeFreezeLoopVFX != null) { Destroy(activeFreezeLoopVFX); activeFreezeLoopVFX = null; }
             SetFrozen(false);
         }
     }
@@ -138,6 +161,11 @@ public class BombCarrier : MonoBehaviour
     {
         if (isEliminated) return;
 
+        // FIX: chặn tại nguồn — nếu đang đóng băng rồi thì không phát lại âm thanh/VFX/coroutine.
+        // Trước đây chỉ FreezeTrap tự check IsFrozen() trước khi gọi, nên nếu có nơi khác gọi
+        // trực tiếp (hoặc logic trap thay đổi) thì âm thanh/VFX vẫn có thể bị chồng.
+        if (isFrozen) return;
+
         // PHÁT ÂM THANH BẪY BĂNG TỪ AUDIOMANAGER
         if (AudioManager.Instance != null)
         {
@@ -148,6 +176,15 @@ public class BombCarrier : MonoBehaviour
         if (freezeCoroutine != null)
         {
             StopCoroutine(freezeCoroutine);
+        }
+
+        // FIX: StopCoroutine chỉ ngắt coroutine ngay tại điểm yield, KHÔNG chạy phần code
+        // dọn dẹp (Destroy loopVFX) nằm sau yield return trong FreezeRoutine cũ.
+        // Nếu không destroy thủ công ở đây, VFX loop cũ sẽ bị bỏ quên và chồng lên VFX mới.
+        if (activeFreezeLoopVFX != null)
+        {
+            Destroy(activeFreezeLoopVFX);
+            activeFreezeLoopVFX = null;
         }
 
         if (vfxScale == Vector3.zero) vfxScale = Vector3.one;
@@ -173,6 +210,10 @@ public class BombCarrier : MonoBehaviour
             loopVFX.transform.localScale = vfxScale;
         }
 
+        // FIX: lưu tham chiếu ra field để ApplyFreeze() có thể destroy thủ công
+        // nếu coroutine này bị Stop giữa đường (không kịp chạy tới đoạn Destroy dưới đây).
+        activeFreezeLoopVFX = loopVFX;
+
         yield return new WaitForSeconds(duration);
 
         if (loopVFX != null)
@@ -180,6 +221,7 @@ public class BombCarrier : MonoBehaviour
             Destroy(loopVFX);
         }
 
+        activeFreezeLoopVFX = null;
         SetFrozen(false);
         freezeCoroutine = null;
     }
@@ -210,6 +252,11 @@ public class BombCarrier : MonoBehaviour
     {
         if (isEliminated) return;
 
+        // FIX: chặn tại nguồn — nếu đang bị hút rồi thì không phát lại âm thanh/VFX/coroutine.
+        // Trước đây MagnetTrap không hề check trạng thái này, nên nếu bị 2 bẫy nam châm
+        // khác nhau hút gần nhau về thời gian, âm thanh + VFX sẽ bị chồng lên nhau.
+        if (isBeingPulled) return;
+
         // PHÁT ÂM THANH BẪY NAM CHÂM TỪ AUDIOMANAGER
         if (AudioManager.Instance != null)
         {
@@ -222,8 +269,17 @@ public class BombCarrier : MonoBehaviour
             StopCoroutine(magnetCoroutine);
         }
 
+        // FIX: tương tự Freeze — destroy thủ công VFX magnet cũ vì StopCoroutine
+        // không chạy phần dọn dẹp nằm sau while loop trong PulledRoutine cũ.
+        if (activeMagnetVFX != null)
+        {
+            Destroy(activeMagnetVFX);
+            activeMagnetVFX = null;
+        }
+
         if (vfxScale == Vector3.zero) vfxScale = Vector3.one;
 
+        isBeingPulled = true;
         magnetCoroutine = StartCoroutine(PulledRoutine(pullerTransform, force, duration, vfxPrefab, vfxOffset, vfxScale));
     }
 
@@ -235,6 +291,10 @@ public class BombCarrier : MonoBehaviour
             spawnedVFX = Instantiate(vfxPrefab, pullerTransform.position + vfxOffset, Quaternion.identity, pullerTransform);
             spawnedVFX.transform.localScale = vfxScale;
         }
+
+        // FIX: lưu tham chiếu ra field để ApplyPulledByPlayer() có thể destroy thủ công
+        // nếu coroutine này bị Stop giữa đường.
+        activeMagnetVFX = spawnedVFX;
 
         CharacterController cc = GetComponent<CharacterController>();
         Rigidbody rb = GetComponent<Rigidbody>();
@@ -275,6 +335,8 @@ public class BombCarrier : MonoBehaviour
             Destroy(spawnedVFX);
         }
 
+        activeMagnetVFX = null;
+        isBeingPulled = false;
         magnetCoroutine = null;
     }
 }

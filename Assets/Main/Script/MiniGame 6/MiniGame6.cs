@@ -92,6 +92,12 @@ public class MiniGame6 : MonoBehaviour
             return;
         }
 
+        // Reset toàn bộ trạng thái (bao gồm isEliminated) TRƯỚC khi kích hoạt game.
+        // Quan trọng khi StartMiniGame được gọi lại nhiều lần (replay) — nếu không reset,
+        // player bị loại ở trận trước sẽ vẫn còn cờ isEliminated = true.
+        carrier1.ResetForNewGame();
+        carrier2.ResetForNewGame();
+
         // Kích hoạt BombCarrier
         carrier1.SetGameActive(true);
         carrier2.SetGameActive(true);
@@ -380,6 +386,7 @@ public class MiniGame6 : MonoBehaviour
     {
         activePlayers.Remove(carrier);
         carrier.SetEliminated(true);
+        // Không còn bị mất cờ isEliminated nữa vì SetGameActive() đã không reset nó.
         carrier.SetGameActive(false);
     }
 
@@ -549,8 +556,11 @@ public class MiniGame6 : MonoBehaviour
         BombCarrier carrier = playerObj.GetComponent<BombCarrier>();
         PlayerMove move = playerObj.GetComponent<PlayerMove>();
 
-        if (move != null && carrier != null && !carrier.IsFrozen()
-            && !carrier1.IsEliminated() && !carrier2.IsEliminated())
+        // FIX: chỉ check trạng thái của CHÍNH player này, không check chéo carrier1/carrier2.
+        // Trước đây nếu bất kỳ player nào bị loại thì cả 2 đều không được set speed —
+        // vô hại với game 2 người (vì EndGame() sẽ chạy ngay sau), nhưng sai về logic
+        // và sẽ lộ rõ nếu mở rộng sang >2 người chơi.
+        if (move != null && carrier != null && !carrier.IsFrozen() && !carrier.IsEliminated())
             move.speed = speed;
     }
 
