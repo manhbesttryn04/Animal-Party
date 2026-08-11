@@ -74,6 +74,7 @@ public class UIManager : MonoBehaviour
     public GameObject rightCardCanvas;
     public GameObject[] leftCardsList;
     public GameObject[] rightCardsList;
+    public Sprite[] debuffSpriteList;
     public GameObject panelNotiifiChooseDebuff;
     public GameObject magicDebuffPanel;
     public GameObject cannonDebuffPanel;

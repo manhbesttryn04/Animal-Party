@@ -1,5 +1,6 @@
 ﻿using JetBrains.Annotations;
 using System.Collections;
+using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -40,6 +41,17 @@ public class GameManager : MonoBehaviour
     private MiniGameManager miniGameManager;
     private StateStoryGame stateGame;
     private float timer;
+
+    // =========================================================
+    // RANDOM MINIGAME KHÔNG LẶP
+    // =========================================================
+
+    // Danh sách những minigame chưa chơi
+    private List<int> remainingMiniGames = new List<int>();
+
+    // Minigame vừa chơi gần nhất
+    // -1 = chưa chơi minigame nào
+    private int lastMiniGame = -1;
 
     #endregion
 
@@ -84,6 +96,7 @@ public class GameManager : MonoBehaviour
         {
             FistRoundMiniGame();
         }
+
         timer += Time.deltaTime;
 
         if (timer < 1f)
@@ -202,26 +215,112 @@ public class GameManager : MonoBehaviour
 
         if (canRandomIndexMiniGame)
         {
-            // Random từ 1 đến 7
-            miniGameManager.indexMiniGame = Random.Range(1, 8);
+            // Random minigame chưa chơi
+            miniGameManager.indexMiniGame = GetRandomMiniGameNoRepeat();
+
+            Debug.Log(
+                "Random MiniGame: " +
+                miniGameManager.indexMiniGame
+            );
         }
-      
 
         // Chạy minigame
         miniGameManager.StartMiniGame();
     }
 
+    // =========================================================
+    // RANDOM MINIGAME KHÔNG LẶP
+    // =========================================================
+
+    private int GetRandomMiniGameNoRepeat()
+    {
+        // Nếu đã chơi hết toàn bộ minigame
+        // thì tạo lại danh sách 1 -> 7
+        if (remainingMiniGames.Count == 0)
+        {
+            ResetMiniGameRandomList();
+        }
+
+        int randomIndex;
+
+        // Random một minigame trong danh sách chưa chơi
+        do
+        {
+            randomIndex = Random.Range(
+                0,
+                remainingMiniGames.Count
+            );
+
+        }
+        // Khi vừa reset danh sách,
+        // tránh minigame cuối của chu kỳ trước
+        // xuất hiện lại ngay lập tức
+        while (
+            remainingMiniGames.Count > 1 &&
+            remainingMiniGames[randomIndex] == lastMiniGame
+        );
+
+        // Lấy index minigame
+        int selectedMiniGame =
+            remainingMiniGames[randomIndex];
+
+        // Xóa khỏi danh sách
+        // => minigame này sẽ không thể xuất hiện lại
+        // cho tới khi chơi hết tất cả
+        remainingMiniGames.RemoveAt(randomIndex);
+
+        // Lưu lại minigame vừa chơi
+        lastMiniGame = selectedMiniGame;
+
+        Debug.Log(
+            "MiniGame được chọn: " +
+            selectedMiniGame +
+            " | Số MiniGame còn lại: " +
+            remainingMiniGames.Count
+        );
+
+        return selectedMiniGame;
+    }
+
+    // Tạo lại danh sách minigame
+    private void ResetMiniGameRandomList()
+    {
+        remainingMiniGames.Clear();
+
+        // MiniGame index từ 1 -> 7
+        for (int i = 1; i <= 7; i++)
+        {
+            remainingMiniGames.Add(i);
+        }
+
+        Debug.Log(
+            "Đã reset danh sách MiniGame 1 -> 7"
+        );
+    }
+
+    // Có thể gọi hàm này nếu muốn reset toàn bộ
+    // lịch sử random khi bắt đầu một game mới
+    public void ResetMiniGameRandomSystem()
+    {
+        remainingMiniGames.Clear();
+        lastMiniGame = -1;
+
+        Debug.Log(
+            "Reset toàn bộ hệ thống Random MiniGame"
+        );
+    }
+
     // Kiểm tra cả 2 người chơi đã tới vòng 1 chưa
     public void FistRoundMiniGame()
     {
-       // PlayerRound r1 = player1Main.GetComponent<PlayerRound>();
-        //PlayerRound r2 = player2Main.GetComponent<PlayerRound>();
+        // PlayerRound r1 = player1Main.GetComponent<PlayerRound>();
+        // PlayerRound r2 = player2Main.GetComponent<PlayerRound>();
 
         // Nếu cả 2 đều ở vòng 1 thì bắt đầu minigame đầu tiên
-       // if (r1.isRound1 && r2.isRound1)
-       // {
-           // JoinRandomMiniGame();
-      //  }
+        // if (r1.isRound1 && r2.isRound1)
+        // {
+        //     JoinRandomMiniGame();
+        // }
     }
 
     // =========================================================
@@ -261,26 +360,28 @@ public class GameManager : MonoBehaviour
             p2.playerBuff.ResetBuff();
         }
     }
+
     public void PlayerTeleportToMain()
     {
         PlayerVFX v1 = player1Main.GetComponent<PlayerVFX>();
         PlayerVFX v2 = player2Main.GetComponent<PlayerVFX>();
-        if(v1 && v2  != null)
-        {
-          StartCoroutine(v1.DissolveInRoutine1());
-            StartCoroutine(v2.DissolveInRoutine1());
 
+        if (v1 && v2 != null)
+        {
+            StartCoroutine(v1.DissolveInRoutine1());
+            StartCoroutine(v2.DissolveInRoutine1());
         }
     }
+
     public void PlayerTeleportToMiniGame()
     {
         PlayerVFX v1 = player1Main.GetComponent<PlayerVFX>();
         PlayerVFX v2 = player2Main.GetComponent<PlayerVFX>();
+
         if (v1 && v2 != null)
         {
             StartCoroutine(v1.DissolveOutRoutine1());
             StartCoroutine(v2.DissolveOutRoutine1());
-
         }
     }
 
@@ -350,14 +451,22 @@ public class GameManager : MonoBehaviour
 
             // Tắt follow sau khi camera đã tới
             p1.playerCamera.isFllow2 = false;
-            AudioManager.Instance.PlaySpecial(AudioManager.Instance.playerOneClip);
+
+            AudioManager.Instance.PlaySpecial(
+                AudioManager.Instance.playerOneClip
+            );
+
             // Hiện thông báo roll dice
             yield return StartCoroutine(
-                player1Main.GetComponent<PlayerManager>().playerNotifi.SetNotifi()
+                player1Main
+                    .GetComponent<PlayerManager>()
+                    .playerNotifi
+                    .SetNotifi()
             );
 
             // Cho phép Player 1 bấm xúc xắc
-            p1.GetComponent<PlayerManager>().playerInputDice.isClick = false;
+            p1.GetComponent<PlayerManager>()
+                .playerInputDice.isClick = false;
         }
         else
         {
@@ -365,14 +474,19 @@ public class GameManager : MonoBehaviour
 
             // Camera vẫn bay tới Player 1 để báo lượt
             p1.playerCamera.isFllow2 = true;
-            AudioManager.Instance.PlaySpecial (AudioManager.Instance.skipDiceClip);
+
+            AudioManager.Instance.PlaySpecial(
+                AudioManager.Instance.skipDiceClip
+            );
+
             yield return new WaitForSeconds(2f);
 
             p1.playerCamera.isFllow2 = false;
 
             yield return new WaitForSeconds(1f);
 
-            // Bị cấm roll dice nên bỏ lượt và đánh dấu đã xong lượt
+            // Bị cấm roll dice nên bỏ lượt
+            // và đánh dấu đã xong lượt
             p1.playerRound.nextRound = true;
         }
     }
@@ -397,14 +511,22 @@ public class GameManager : MonoBehaviour
 
             // Tắt follow sau khi camera đã tới
             p2.playerCamera.isFllow2 = false;
-            AudioManager.Instance.PlayUI(AudioManager.Instance.playerTwoClip);
+
+            AudioManager.Instance.PlayUI(
+                AudioManager.Instance.playerTwoClip
+            );
+
             // Hiện thông báo roll dice
             yield return StartCoroutine(
-                player2Main.GetComponent<PlayerManager>().playerNotifi.SetNotifi()
+                player2Main
+                    .GetComponent<PlayerManager>()
+                    .playerNotifi
+                    .SetNotifi()
             );
 
             // Cho phép Player 2 bấm xúc xắc
-            p2.GetComponent<PlayerManager>().playerInputDice.isClick = false;
+            p2.GetComponent<PlayerManager>()
+                .playerInputDice.isClick = false;
         }
         else
         {
@@ -412,14 +534,19 @@ public class GameManager : MonoBehaviour
 
             // Camera vẫn bay tới Player 2 để báo lượt
             p2.playerCamera.isFllow2 = true;
-            AudioManager.Instance.PlaySFX(AudioManager.Instance.skipDiceClip);
+
+            AudioManager.Instance.PlaySFX(
+                AudioManager.Instance.skipDiceClip
+            );
+
             yield return new WaitForSeconds(2f);
 
             p2.playerCamera.isFllow2 = false;
 
             yield return new WaitForSeconds(1f);
 
-            // Bị cấm roll dice nên bỏ lượt và đánh dấu đã xong lượt
+            // Bị cấm roll dice nên bỏ lượt
+            // và đánh dấu đã xong lượt
             p2.playerRound.nextRound = true;
         }
     }
@@ -441,6 +568,7 @@ public class GameManager : MonoBehaviour
         )
         {
             canCheckPlayer2 = false;
+
             StartCoroutine(Player2Dice());
 
             // Khóa để không gọi Player2Dice liên tục trong Update
@@ -448,7 +576,8 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Nếu cả 2 player đều xong lượt thì bắt đầu minigame tiếp theo
+    // Nếu cả 2 player đều xong lượt
+    // thì bắt đầu minigame tiếp theo
     public void StartNextRound()
     {
         PlayerManager p1 = player1Main.GetComponent<PlayerManager>();
@@ -461,96 +590,149 @@ public class GameManager : MonoBehaviour
         )
         {
             canCheckMiniGame = false;
+
             PlayerTeleportToMiniGame();
-            
+
             JoinRandomMiniGame();
 
             // Khóa để tránh gọi minigame nhiều lần trong Update
             canStartNextRound = true;
         }
     }
-  public bool CheckWinnerByPowerCoinP1()
+
+    public bool CheckWinnerByPowerCoinP1()
     {
-        PlayerManager p = player1Main.GetComponent<PlayerManager>();
-        int coinCount = p.playerBuff.countCoinPower;
-        bool i = CheckWinPlayer.Instance.CheckWinnerByCoinPower(coinCount);
-        if(i)
+        PlayerManager p =
+            player1Main.GetComponent<PlayerManager>();
+
+        int coinCount =
+            p.playerBuff.countCoinPower;
+
+        bool i =
+            CheckWinPlayer.Instance
+                .CheckWinnerByCoinPower(coinCount);
+
+        if (i)
         {
             stateGame.SetOnePlayerWin(0);
-            AudioManager.Instance.PlaySFX(AudioManager.Instance.fourPowerCoinClip);
-            stateGame.hasWinByCoin = true;
-            SendPlayerWinner.Instance.SetInforPlayerWinner(player1Main);
-            return true;
 
+            AudioManager.Instance.PlaySFX(
+                AudioManager.Instance.fourPowerCoinClip
+            );
+
+            stateGame.hasWinByCoin = true;
+
+            SendPlayerWinner.Instance
+                .SetInforPlayerWinner(player1Main);
+
+            return true;
         }
+
         return false;
     }
+
     public bool CheckWinnerByPowerCoinP2()
     {
-        PlayerManager p = player2Main.GetComponent<PlayerManager>();
-        int coinCount = p.playerBuff.countCoinPower;
-        bool i = CheckWinPlayer.Instance.CheckWinnerByCoinPower(coinCount);
-        if(i)
+        PlayerManager p =
+            player2Main.GetComponent<PlayerManager>();
+
+        int coinCount =
+            p.playerBuff.countCoinPower;
+
+        bool i =
+            CheckWinPlayer.Instance
+                .CheckWinnerByCoinPower(coinCount);
+
+        if (i)
         {
-            AudioManager.Instance.PlaySpecialOneShot(AudioManager.Instance.fourPowerCoinClip);
+            AudioManager.Instance.PlaySpecialOneShot(
+                AudioManager.Instance.fourPowerCoinClip
+            );
+
             stateGame.SetOnePlayerWin(1);
+
             stateGame.hasWinByCoin = true;
-            SendPlayerWinner.Instance.SetInforPlayerWinner(player2Main);
+
+            SendPlayerWinner.Instance
+                .SetInforPlayerWinner(player2Main);
+
             return true;
         }
+
         return false;
-    } 
+    }
+
     public void CheckWinnerOrNextRound()
     {
-        if(stateGame.hasPlayer1Win || stateGame.hasPlayer2Win)
+        if (
+            stateGame.hasPlayer1Win ||
+            stateGame.hasPlayer2Win
+        )
         {
             ResetMagicDebuffAllPlayer();
-            if(UIManager.Instance != null)
+
+            if (UIManager.Instance != null)
             {
                 UIManager.Instance.HideUIMain();
                 UIManager.Instance.ActiveOpenSettingButton(false);
             }
-           
-            if(SettingManager.Instance != null)
+
+            if (SettingManager.Instance != null)
             {
                 SettingManager.Instance.canOpenSettingByEsc = true;
-                //SettingManager.Instance.isOpenExitButton = false;
+                // SettingManager.Instance.isOpenExitButton = false;
             }
-            
-           if(AudioManager.Instance != null)
+
+            if (AudioManager.Instance != null)
             {
                 AudioManager.Instance.StopMusic();
-                AudioManager.Instance.PlayMusic(AudioManager.Instance.winnerMiniGameClip1);
+
+                AudioManager.Instance.PlayMusic(
+                    AudioManager.Instance.winnerMiniGameClip1
+                );
             }
-        
-           // PointCheck.Instance.HideAllTraps();
+
+            // PointCheck.Instance.HideAllTraps();
+
             StartCutSceneWinner();
         }
         else
         {
             var cursor = CursorManager.Instance;
+
             if (cursor != null)
             {
                 cursor.ShowGameCursor();
             }
-           ExitNextRound();
+
+            ExitNextRound();
         }
     }
-    public bool CheckWinnerByIndex(bool isPlayer2, int index)
+
+    public bool CheckWinnerByIndex(
+        bool isPlayer2,
+        int index
+    )
     {
-        bool i = CheckWinPlayer.Instance.CheckWinnerByIndex(index);
+        bool i =
+            CheckWinPlayer.Instance
+                .CheckWinnerByIndex(index);
 
         if (i)
         {
             if (!isPlayer2)
             {
                 stateGame.SetOnePlayerWin(0);
-                SendPlayerWinner.Instance.SetInforPlayerWinner(player1Main);
+
+                SendPlayerWinner.Instance
+                    .SetInforPlayerWinner(player1Main);
             }
             else
             {
                 stateGame.SetOnePlayerWin(1);
-                SendPlayerWinner.Instance.SetInforPlayerWinner(player2Main);
+
+                SendPlayerWinner.Instance
+                    .SetInforPlayerWinner(player2Main);
             }
 
             stateGame.hasWinByIndex = true;
@@ -561,7 +743,9 @@ public class GameManager : MonoBehaviour
             canStartNextRound = true;
             stateGame.isNextRound = true;
 
-            AudioManager.Instance.PlaySpecialOneShot(AudioManager.Instance.threethirtyIndexClip);
+            AudioManager.Instance.PlaySpecialOneShot(
+                AudioManager.Instance.threethirtyIndexClip
+            );
 
             CheckWinnerOrNextRound();
 
@@ -570,31 +754,34 @@ public class GameManager : MonoBehaviour
 
         return false;
     }
+
     public void StartCutSceneWinner()
     {
         if (stateGame.hasWinByCoin)
         {
             if (stateGame.hasPlayer1Win)
             {
-                CutScenePowerCoin.Instance.PlayCutScene(player1Main);
+                CutScenePowerCoin.Instance
+                    .PlayCutScene(player1Main);
             }
             else if (stateGame.hasPlayer2Win)
             {
-                CutScenePowerCoin.Instance.PlayCutScene(player2Main);
+                CutScenePowerCoin.Instance
+                    .PlayCutScene(player2Main);
             }
         }
         else if (stateGame.hasWinByIndex)
         {
             if (stateGame.hasPlayer1Win)
             {
-               CutSceneToIndex.Instance.PlayCutScene(player1Main);
+                CutSceneToIndex.Instance
+                    .PlayCutScene(player1Main);
             }
             else if (stateGame.hasPlayer2Win)
             {
-               CutSceneToIndex.Instance.PlayCutScene(player2Main);
+                CutSceneToIndex.Instance
+                    .PlayCutScene(player2Main);
             }
-
         }
     }
-
 }

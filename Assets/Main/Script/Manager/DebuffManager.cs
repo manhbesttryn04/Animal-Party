@@ -18,10 +18,6 @@ public class DebuffManager : MonoBehaviour
 
     [Header("Manager References")]
     public UIManager ui;
-
-    [Header("Debuff Sprites")]
-    public Sprite[] debuffSprite;
-
     [Header("Prefabs")]
     public GameObject cannonPrefab;
 
@@ -653,7 +649,7 @@ public class DebuffManager : MonoBehaviour
             return;
 
         if (card.itemIndex < 0 ||
-            card.itemIndex >= debuffSprite.Length)
+            card.itemIndex >= UIManager.Instance.debuffSpriteList.Length)
         {
             Debug.LogWarning(
                 "DebuffManager: itemIndex không hợp lệ: " +
@@ -684,7 +680,11 @@ public class DebuffManager : MonoBehaviour
         rightActive = false;
 
         // Đổi từ hình dấu sao sang hình vật phẩm đã chọn.
-        image.sprite = debuffSprite[itemIndex];
+        if (UIManager.Instance != null)
+        {
+            image.sprite = UIManager.Instance.debuffSpriteList[itemIndex];
+        }
+       
 
         if (AudioManager.Instance != null)
         {
