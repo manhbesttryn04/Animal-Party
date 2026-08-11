@@ -7,6 +7,13 @@ public class BombCarrier : MonoBehaviour
     [Header("Tham chiếu")]
     public Transform bombAnchor;
 
+    // FIX ÂM THANH CHỒNG: dùng AudioSource RIÊNG cho tiếng bẫy (Freeze/Magnet) thay vì
+    // sfxSource dùng chung toàn game trong AudioManager. sfxSource.PlayOneShot() không
+    // cắt âm cũ — nếu clip dài hơn khoảng cách giữa 2 lần dính bẫy, âm thanh sẽ CHỒNG lên
+    // nhau dù đã có global throttle. Dùng AudioSource riêng + Stop() trước khi Play()
+    // đảm bảo tiếng bẫy của CHÍNH player này không bao giờ chồng lên chính nó.
+    private AudioSource trapAudioSource;
+
     // FIX: cooldown âm thanh bẫy dùng CHUNG cho toàn bộ game (static), không phải riêng
     // từng bẫy. Vì mỗi bẫy có cooldown riêng, khi player đi qua vùng nhiều bẫy đặt gần nhau,
     // mỗi bẫy khác nhau vẫn tự phát âm thanh của nó -> âm thanh dồn chồng liên tục không dứt.
@@ -17,9 +24,22 @@ public class BombCarrier : MonoBehaviour
 
     private static bool CanPlayTrapSfx()
     {
-        if (Time.time - lastTrapSfxTime < trapSfxMinInterval) return false;
-        lastTrapSfxTime = Time.time;
-        return true;
+        float elapsed = Time.time - lastTrapSfxTime;
+
+        // FIX: nếu Unity Editor bật "Enter Play Mode Options -> tắt Reload Domain",
+        // biến static lastTrapSfxTime KHÔNG reset giữa các lần bấm Play, trong khi
+        // Time.time LUÔN reset về 0 mỗi lần vào Play Mode mới. Hậu quả: elapsed bị âm
+        // rất lớn (vd Time.time=5, lastTrapSfxTime=500 từ session cũ) -> luôn nhỏ hơn
+        // trapSfxMinInterval -> CanPlayTrapSfx() trả về false VĨNH VIỄN -> không bao giờ
+        // phát âm thanh bẫy nữa cho tới khi Time.time > lastTrapSfxTime (có thể rất lâu).
+        // -> Coi elapsed âm là "đã hết hạn từ lâu", cho phép phát ngay.
+        if (elapsed < 0f || elapsed >= trapSfxMinInterval)
+        {
+            lastTrapSfxTime = Time.time;
+            return true;
+        }
+
+        return false;
     }
 
     private PlayerType playerType;
@@ -47,10 +67,35 @@ public class BombCarrier : MonoBehaviour
         playerType = GetComponent<PlayerType>();
         playerMove = GetComponent<PlayerMove>();
 
+        // FIX: KHÔNG dùng GetComponent<AudioSource>() — nếu player đã có sẵn 1 AudioSource
+        // dùng cho việc khác (ví dụ tiếng bước chân, do script khác Play()/loop liên tục
+        // trong Update), ta sẽ VÔ TÌNH lấy nhầm đúng source đó, gây xung đột: script kia
+        // tiếp tục Play()/set loop=true trên CHÍNH source ta đang dùng cho tiếng bẫy ->
+        // nghe như âm thanh phát liên tục không dứt.
+        // -> Luôn tạo 1 AudioSource MỚI, hoàn toàn độc lập, chỉ dành riêng cho tiếng bẫy.
+        trapAudioSource = gameObject.AddComponent<AudioSource>();
+        trapAudioSource.playOnAwake = false;
+        trapAudioSource.loop = false;
+        trapAudioSource.spatialBlend = 0f; // 2D sound mặc định, chỉnh lại trong Inspector nếu muốn 3D
+
         if (playerMove != null)
         {
             defaultSpeed = playerMove.speed;
         }
+    }
+
+    /// <summary>
+    /// Phát âm thanh bẫy bằng AudioSource RIÊNG của player này.
+    /// Stop() trước khi Play() để đảm bảo không chồng lên chính clip trước đó.
+    /// </summary>
+    private void PlayTrapSfx(AudioClip clip)
+    {
+        if (clip == null || trapAudioSource == null) return;
+
+        Debug.Log($"[TRAP DEBUG] {name}: PlayTrapSfx('{clip.name}') tại Time.time = {Time.time:F2}. trapAudioSource.isPlaying TRƯỚC khi Stop = {trapAudioSource.isPlaying}.");
+
+        trapAudioSource.Stop();
+        trapAudioSource.PlayOneShot(clip);
     }
 
     void Update()
@@ -177,17 +222,21 @@ public class BombCarrier : MonoBehaviour
         if (isEliminated) return;
 
         // FIX: chặn tại nguồn — nếu đang đóng băng rồi thì không phát lại âm thanh/VFX/coroutine.
-        // Trước đây chỉ FreezeTrap tự check IsFrozen() trước khi gọi, nên nếu có nơi khác gọi
-        // trực tiếp (hoặc logic trap thay đổi) thì âm thanh/VFX vẫn có thể bị chồng.
         if (isFrozen) return;
 
-        // PHÁT ÂM THANH BẪY BĂNG TỪ AUDIOMANAGER
-        // FIX: chỉ phát nếu chưa có bẫy nào khác vừa phát âm thanh gần đây (global throttle),
-        // tránh dồn chồng âm thanh khi đi qua vùng nhiều bẫy đặt gần nhau.
+        // FIX QUAN TRỌNG: set isFrozen = true NGAY LẬP TỨC ở đây (đồng bộ), TRƯỚC khi phát âm
+        // thanh và TRƯỚC khi StartCoroutine. Trước đây isFrozen chỉ được set bên trong
+        // FreezeRoutine (SetFrozen(true) là dòng đầu coroutine) — nếu có 2 bẫy Freeze đặt
+        // chồng/gần nhau, cả 2 có thể trigger OnTriggerEnter trong CÙNG 1 frame (Unity xử lý
+        // tuần tự nhưng không có gì ngăn code chạy tới đây trước khi frame trước set xong cờ),
+        // khiến bẫy thứ 2 gọi PlayTrapSfx() TRƯỚC khi guard "if (isFrozen) return;" kịp chặn.
+        isFrozen = true;
+
+        // PHÁT ÂM THANH BẪY BĂNG — dùng AudioSource riêng của player, không chồng.
         if (CanPlayTrapSfx() && AudioManager.Instance != null)
         {
             AudioClip clip = AudioManager.Instance.freezeTrapClip != null ? AudioManager.Instance.freezeTrapClip : AudioManager.Instance.iceMagicClip;
-            AudioManager.Instance.PlaySFX(clip);
+            PlayTrapSfx(clip);
         }
 
         if (freezeCoroutine != null)
@@ -211,12 +260,15 @@ public class BombCarrier : MonoBehaviour
 
     private IEnumerator FreezeRoutine(float duration, GameObject hitVfxPrefab, GameObject loopVfxPrefab, Vector3 vfxOffset, Vector3 vfxScale)
     {
-        SetFrozen(true);
+        // isFrozen đã được set = true đồng bộ trong ApplyFreeze() rồi.
+        // Ở đây chỉ cần áp dụng side-effect (speed = 0, update movement state).
+        ApplyFrozenSpeedEffect(true);
 
         if (hitVfxPrefab != null)
         {
             GameObject hitVFX = Instantiate(hitVfxPrefab, transform.position + vfxOffset, Quaternion.identity, transform);
             hitVFX.transform.localScale = vfxScale;
+            DisableEmbeddedAudioSources(hitVFX); // FIX: chặn VFX tự phát âm thanh riêng gây chồng tiếng
             Destroy(hitVFX, 2f);
         }
 
@@ -225,6 +277,7 @@ public class BombCarrier : MonoBehaviour
         {
             loopVFX = Instantiate(loopVfxPrefab, transform.position + vfxOffset, Quaternion.identity, transform);
             loopVFX.transform.localScale = vfxScale;
+            DisableEmbeddedAudioSources(loopVFX); // FIX: chặn VFX tự phát âm thanh riêng gây chồng tiếng
         }
 
         // FIX: lưu tham chiếu ra field để ApplyFreeze() có thể destroy thủ công
@@ -238,6 +291,14 @@ public class BombCarrier : MonoBehaviour
             Destroy(loopVFX);
         }
 
+        // FIX: dừng hẳn tiếng bẫy khi hiệu ứng freeze kết thúc, không phụ thuộc clip
+        // âm thanh dài bao nhiêu giây (vd file dài 34s nhưng freezeDuration chỉ 2s ->
+        // không để tiếng kéo dài quá thời lượng hiệu ứng thực tế).
+        if (trapAudioSource != null)
+        {
+            trapAudioSource.Stop();
+        }
+
         activeFreezeLoopVFX = null;
         SetFrozen(false);
         freezeCoroutine = null;
@@ -248,6 +309,16 @@ public class BombCarrier : MonoBehaviour
         if (isEliminated) return;
 
         isFrozen = frozen;
+        ApplyFrozenSpeedEffect(frozen);
+    }
+
+    /// <summary>
+    /// Chỉ áp dụng hiệu ứng phụ (speed = 0 / speed = default + update movement state),
+    /// KHÔNG đụng vào cờ isFrozen — vì ApplyFreeze() đã tự set isFrozen đồng bộ trước đó
+    /// để chặn kịp thời các lần trigger chồng trong cùng frame.
+    /// </summary>
+    private void ApplyFrozenSpeedEffect(bool frozen)
+    {
         if (playerMove == null) return;
 
         if (frozen)
@@ -274,12 +345,11 @@ public class BombCarrier : MonoBehaviour
         // khác nhau hút gần nhau về thời gian, âm thanh + VFX sẽ bị chồng lên nhau.
         if (isBeingPulled) return;
 
-        // PHÁT ÂM THANH BẪY NAM CHÂM TỪ AUDIOMANAGER
-        // FIX: dùng chung global throttle với Freeze để tránh dồn chồng âm thanh.
+        // PHÁT ÂM THANH BẪY NAM CHÂM — dùng AudioSource riêng của player, không chồng.
         if (CanPlayTrapSfx() && AudioManager.Instance != null)
         {
             AudioClip clip = AudioManager.Instance.magnetTrapClip != null ? AudioManager.Instance.magnetTrapClip : AudioManager.Instance.laserMoveClip;
-            AudioManager.Instance.PlaySFX(clip);
+            PlayTrapSfx(clip);
         }
 
         if (magnetCoroutine != null)
@@ -308,6 +378,7 @@ public class BombCarrier : MonoBehaviour
         {
             spawnedVFX = Instantiate(vfxPrefab, pullerTransform.position + vfxOffset, Quaternion.identity, pullerTransform);
             spawnedVFX.transform.localScale = vfxScale;
+            DisableEmbeddedAudioSources(spawnedVFX); // FIX: chặn VFX tự phát âm thanh riêng gây chồng tiếng
         }
 
         // FIX: lưu tham chiếu ra field để ApplyPulledByPlayer() có thể destroy thủ công
@@ -353,8 +424,40 @@ public class BombCarrier : MonoBehaviour
             Destroy(spawnedVFX);
         }
 
+        // FIX: dừng tiếng bẫy khi hiệu ứng magnet kết thúc, tương tự Freeze.
+        if (trapAudioSource != null)
+        {
+            trapAudioSource.Stop();
+        }
+
         activeMagnetVFX = null;
         isBeingPulled = false;
         magnetCoroutine = null;
+    }
+
+    /// <summary>
+    /// Tìm và tắt mọi AudioSource gắn trên VFX prefab vừa Instantiate.
+    /// Lý do: một số VFX prefab tự mang AudioSource riêng (Play On Awake) và tự phát âm
+    /// thanh độc lập, không đi qua trapAudioSource -> mỗi lần Instantiate VFX mới là thêm
+    /// 1 nguồn âm thanh chồng lên các bản VFX cũ chưa kịp Destroy, gây chồng tiếng liên tục
+    /// dù code phát âm thanh chính (PlayTrapSfx) đã được kiểm soát đúng.
+    /// </summary>
+    private void DisableEmbeddedAudioSources(GameObject vfxInstance)
+    {
+        if (vfxInstance == null) return;
+
+        AudioSource[] embeddedSources = vfxInstance.GetComponentsInChildren<AudioSource>(true);
+
+        if (embeddedSources.Length == 0) return;
+
+        Debug.Log($"[TRAP DEBUG] {vfxInstance.name}: Phát hiện {embeddedSources.Length} AudioSource gắn trên VFX -> tự động Stop + tắt Play On Awake để tránh chồng tiếng.");
+
+        foreach (AudioSource src in embeddedSources)
+        {
+            if (src == null) continue;
+            src.playOnAwake = false;
+            src.Stop();
+            src.enabled = false;
+        }
     }
 }
