@@ -7,6 +7,21 @@ public class BombCarrier : MonoBehaviour
     [Header("Tham chiếu")]
     public Transform bombAnchor;
 
+    // FIX: cooldown âm thanh bẫy dùng CHUNG cho toàn bộ game (static), không phải riêng
+    // từng bẫy. Vì mỗi bẫy có cooldown riêng, khi player đi qua vùng nhiều bẫy đặt gần nhau,
+    // mỗi bẫy khác nhau vẫn tự phát âm thanh của nó -> âm thanh dồn chồng liên tục không dứt.
+    [Header("--- TRAP SFX THROTTLE (Global) ---")]
+    [Tooltip("Khoảng thời gian tối thiểu giữa 2 lần phát âm thanh bẫy, tính chung cho MỌI bẫy/MỌI player.")]
+    public static float trapSfxMinInterval = 0.35f;
+    private static float lastTrapSfxTime = -999f;
+
+    private static bool CanPlayTrapSfx()
+    {
+        if (Time.time - lastTrapSfxTime < trapSfxMinInterval) return false;
+        lastTrapSfxTime = Time.time;
+        return true;
+    }
+
     private PlayerType playerType;
     private PlayerMove playerMove;
 
@@ -167,7 +182,9 @@ public class BombCarrier : MonoBehaviour
         if (isFrozen) return;
 
         // PHÁT ÂM THANH BẪY BĂNG TỪ AUDIOMANAGER
-        if (AudioManager.Instance != null)
+        // FIX: chỉ phát nếu chưa có bẫy nào khác vừa phát âm thanh gần đây (global throttle),
+        // tránh dồn chồng âm thanh khi đi qua vùng nhiều bẫy đặt gần nhau.
+        if (CanPlayTrapSfx() && AudioManager.Instance != null)
         {
             AudioClip clip = AudioManager.Instance.freezeTrapClip != null ? AudioManager.Instance.freezeTrapClip : AudioManager.Instance.iceMagicClip;
             AudioManager.Instance.PlaySFX(clip);
@@ -258,7 +275,8 @@ public class BombCarrier : MonoBehaviour
         if (isBeingPulled) return;
 
         // PHÁT ÂM THANH BẪY NAM CHÂM TỪ AUDIOMANAGER
-        if (AudioManager.Instance != null)
+        // FIX: dùng chung global throttle với Freeze để tránh dồn chồng âm thanh.
+        if (CanPlayTrapSfx() && AudioManager.Instance != null)
         {
             AudioClip clip = AudioManager.Instance.magnetTrapClip != null ? AudioManager.Instance.magnetTrapClip : AudioManager.Instance.laserMoveClip;
             AudioManager.Instance.PlaySFX(clip);

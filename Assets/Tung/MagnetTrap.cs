@@ -21,14 +21,27 @@ public class MagnetTrap : TrapBase
         // Gọi MiniGame6 hoặc Manager để tìm đối thủ của người vừa đạp bẫy
         BombCarrier targetToPull = MiniGame6.Instance?.GetOtherPlayer(victim);
 
-        // FIX: thêm check !IsFrozen() — nếu không, player đang bị đóng băng bởi
-        // FreezeTrap khác vẫn có thể bị hút trượt đi (ApplyPulledByPlayer di chuyển
-        // CharacterController trực tiếp, không bị chặn bởi cờ isFrozen), phá vỡ
-        // hiệu ứng đóng băng đang diễn ra.
-        if (targetToPull != null && !targetToPull.IsEliminated() && !targetToPull.IsFrozen())
+        if (targetToPull == null)
         {
-            // Cho đối thủ chạy Coroutine bị hút về phía người đạp bẫy (victim)
-            targetToPull.ApplyPulledByPlayer(victim.transform, pullForce, magnetDuration, magnetVFX, vfxOffset, vfxScale);
+            Debug.Log($"[TRAP DEBUG] {name}: KHÔNG tìm được đối thủ để hút (MiniGame6.Instance null hoặc GetOtherPlayer trả về null).");
+            return;
         }
+
+        if (targetToPull.IsEliminated())
+        {
+            Debug.Log($"[TRAP DEBUG] {name}: KHÔNG hút vì đối thủ '{targetToPull.name}' đã bị loại.");
+            return;
+        }
+
+        if (targetToPull.IsFrozen())
+        {
+            Debug.Log($"[TRAP DEBUG] {name}: KHÔNG hút vì đối thủ '{targetToPull.name}' đang bị đóng băng.");
+            return;
+        }
+
+        Debug.Log($"[TRAP DEBUG] {name}: Hút '{targetToPull.name}' về phía '{victim.name}'.");
+
+        // Cho đối thủ chạy Coroutine bị hút về phía người đạp bẫy (victim)
+        targetToPull.ApplyPulledByPlayer(victim.transform, pullForce, magnetDuration, magnetVFX, vfxOffset, vfxScale);
     }
 }
