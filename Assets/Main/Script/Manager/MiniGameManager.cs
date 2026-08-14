@@ -106,7 +106,7 @@ public class MiniGameManager : MonoBehaviour
         // Vì list dùng indexMiniGame - 1 nên indexMiniGame phải lớn hơn 0
         if (indexMiniGame <= 0)
         {
-            Debug.LogError("Index MiniGame invalid!");
+           // Debug.LogError("Index MiniGame invalid!");
             yield break;
         }
 
@@ -118,25 +118,25 @@ public class MiniGameManager : MonoBehaviour
 
         if (mapMiniGameList == null)
         {
-            Debug.LogError("MapMiniGameList is NULL!");
+            //Debug.LogError("MapMiniGameList is NULL!");
             yield break;
         }
 
         if (miniGameCamera == null)
         {
-            Debug.LogError("MiniGameCamera is NULL!");
+           // Debug.LogError("MiniGameCamera is NULL!");
             yield break;
         }
 
         if (spawnPoint == null)
         {
-            Debug.LogError("SpawnPoint is NULL!");
+           // Debug.LogError("SpawnPoint is NULL!");
             yield break;
         }
 
         if (miniGameList == null)
         {
-            Debug.LogError("MiniGameList is NULL!");
+            //Debug.LogError("MiniGameList is NULL!");
             yield break;
         }
 
@@ -146,19 +146,19 @@ public class MiniGameManager : MonoBehaviour
 
         if (miniGameIndex >= mapMiniGameList.mapMiniGameList.Count)
         {
-            Debug.LogError("Map MiniGame index out of range!");
+            //Debug.LogError("Map MiniGame index out of range!");
             yield break;
         }
 
         if (miniGameIndex >= miniGameCamera.cameraList.Count)
         {
-            Debug.LogError("Camera index out of range!");
+            //Debug.LogError("Camera index out of range!");
             yield break;
         }
 
         if (miniGameIndex >= spawnPoint.transSpawPlayerList.Count)
         {
-            Debug.LogError("Spawn index out of range!");
+           // Debug.LogError("Spawn index out of range!");
             yield break;
         }
 
@@ -283,25 +283,25 @@ public class MiniGameManager : MonoBehaviour
         }
         if (avatar1 == null || avatar2 == null)
         {
-            Debug.LogError("PlayerInfo missing!");
+           // Debug.LogError("PlayerInfo missing!");
             yield break;
         }
 
         if (coin1 == null || coin2 == null)
         {
-            Debug.LogError("PlayerCoin missing!");
+           // Debug.LogError("PlayerCoin missing!");
             yield break;
         }
 
         if (p1 == null || p2 == null)
         {
-            Debug.LogError("PlayerMiniGame missing!");
+            //Debug.LogError("PlayerMiniGame missing!");
             yield break;
         }
 
         if (player2Type == null)
         {
-            Debug.LogError("PlayerType missing!");
+           // Debug.LogError("PlayerType missing!");
             yield break;
         }
 
@@ -390,7 +390,10 @@ public class MiniGameManager : MonoBehaviour
         ui.errorGamePlayText.text = intrusTextList.errorTextList[miniGameIndex];
 
         // Set video hướng dẫn
-        videoIntrucs.clip = videoInstructList.videoInstructList[miniGameIndex];
+        if (videoInstructList.videoInstructList[miniGameIndex] != null)
+        {
+            videoIntrucs.clip = videoInstructList.videoInstructList[miniGameIndex];
+        }
 
         // Cho người chơi đọc hướng dẫn 5 giây
         yield return new WaitForSeconds(5f);
@@ -827,7 +830,7 @@ public class MiniGameManager : MonoBehaviour
                 break;
 
             default:
-                Debug.LogWarning("Index minigame chưa được setup thời gian!");
+                //Debug.LogWarning("Index minigame chưa được setup thời gian!");
                 break;
         }
     }
