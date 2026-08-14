@@ -32,13 +32,13 @@ public class TeleportAllPlayer : MonoBehaviour
         if (isPlayer2)
         {
             yield return StartCoroutine(TeleportOnePlayer(player2, move2, vfx2, index1));
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(0.4f);
             yield return StartCoroutine(TeleportOnePlayer(player1, move1, vfx1, index2));
         }
         else
         {
             yield return StartCoroutine(TeleportOnePlayer(player1, move1, vfx1, index2));
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(0.4f);
             yield return StartCoroutine(TeleportOnePlayer(player2, move2, vfx2, index1));
         }
     }
@@ -51,7 +51,7 @@ public class TeleportAllPlayer : MonoBehaviour
     {
         // Camera theo player này
         player.playerCamera.SetCamera2();
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.4f);
         // Hiện -> Ẩn
         yield return StartCoroutine(vfx.DissolveOutRoutine());
 
@@ -63,7 +63,7 @@ public class TeleportAllPlayer : MonoBehaviour
         yield return StartCoroutine(vfx.DissolveInRoutine());
 
         // Giữ camera 1 giây
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.2f);
 
         // Trả camera về trạng thái không follow
         player.playerCamera.isFllow2 = false;
