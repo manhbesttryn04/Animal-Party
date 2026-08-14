@@ -44,15 +44,13 @@ public class TrapManager : MonoBehaviour
 
         if (allTraps.Count == 0)
         {
-            Debug.LogWarning("[TRAP DEBUG] TrapManager: allTraps rỗng — không có bẫy nào được Register. " +
-                "Kiểm tra Script Execution Order (TrapManager.Awake phải chạy TRƯỚC TrapBase.Awake), " +
-                "hoặc kiểm tra các bẫy có đang active trong Hierarchy lúc Awake chạy không.");
+           
             return;
         }
 
         if (!useRandomSubset)
         {
-            Debug.Log($"[TRAP DEBUG] TrapManager: useRandomSubset = false -> Bật TẤT CẢ {allTraps.Count} bẫy.");
+          
 
             foreach (var trap in allTraps)
                 trap.SetActive(true);
@@ -78,8 +76,7 @@ public class TrapManager : MonoBehaviour
 
         // FIX/DEBUG: log rõ bẫy nào được chọn bật ở round này, để không nhầm việc
         // "random không chọn trúng bẫy này" với việc "bẫy bị bug không kích hoạt".
-        Debug.Log($"[TRAP DEBUG] TrapManager: useRandomSubset = true -> Chỉ bật {count}/{allTraps.Count} bẫy: " +
-            $"{string.Join(", ", chosenNames)}. Các bẫy KHÁC sẽ có isActive = false ở round này (đúng theo thiết kế).");
+        
     }
 
     // ====== GỌI TỪ MiniGame6.StopMiniGame() ======
@@ -87,7 +84,6 @@ public class TrapManager : MonoBehaviour
     {
         isGameRunning = false;
 
-        Debug.Log($"[TRAP DEBUG] TrapManager: DeactivateTraps() — tắt toàn bộ {allTraps.Count} bẫy.");
 
         foreach (var trap in allTraps)
             trap.SetActive(false);

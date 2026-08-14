@@ -22,24 +22,23 @@ public class MagnetTrap : TrapBase
         BombCarrier targetToPull = MiniGame6.Instance?.GetOtherPlayer(victim);
 
         if (targetToPull == null)
-        {
-            Debug.Log($"[TRAP DEBUG] {name}: KHÔNG tìm được đối thủ để hút (MiniGame6.Instance null hoặc GetOtherPlayer trả về null).");
+        { 
             return;
         }
 
         if (targetToPull.IsEliminated())
         {
-            Debug.Log($"[TRAP DEBUG] {name}: KHÔNG hút vì đối thủ '{targetToPull.name}' đã bị loại.");
+           // Debug.Log($"[TRAP DEBUG] {name}: KHÔNG hút vì đối thủ '{targetToPull.name}' đã bị loại.");
             return;
         }
 
         if (targetToPull.IsFrozen())
         {
-            Debug.Log($"[TRAP DEBUG] {name}: KHÔNG hút vì đối thủ '{targetToPull.name}' đang bị đóng băng.");
+            //Debug.Log($"[TRAP DEBUG] {name}: KHÔNG hút vì đối thủ '{targetToPull.name}' đang bị đóng băng.");
             return;
         }
 
-        Debug.Log($"[TRAP DEBUG] {name}: Hút '{targetToPull.name}' về phía '{victim.name}'.");
+       // Debug.Log($"[TRAP DEBUG] {name}: Hút '{targetToPull.name}' về phía '{victim.name}'.");
 
         // Cho đối thủ chạy Coroutine bị hút về phía người đạp bẫy (victim)
         targetToPull.ApplyPulledByPlayer(victim.transform, pullForce, magnetDuration, magnetVFX, vfxOffset, vfxScale);

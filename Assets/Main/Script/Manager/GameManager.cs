@@ -218,10 +218,7 @@ public class GameManager : MonoBehaviour
             // Random minigame chưa chơi
             miniGameManager.indexMiniGame = GetRandomMiniGameNoRepeat();
 
-            Debug.Log(
-                "Random MiniGame: " +
-                miniGameManager.indexMiniGame
-            );
+          
         }
 
         // Chạy minigame
@@ -272,12 +269,7 @@ public class GameManager : MonoBehaviour
         // Lưu lại minigame vừa chơi
         lastMiniGame = selectedMiniGame;
 
-        Debug.Log(
-            "MiniGame được chọn: " +
-            selectedMiniGame +
-            " | Số MiniGame còn lại: " +
-            remainingMiniGames.Count
-        );
+
 
         return selectedMiniGame;
     }
@@ -293,9 +285,7 @@ public class GameManager : MonoBehaviour
             remainingMiniGames.Add(i);
         }
 
-        Debug.Log(
-            "Đã reset danh sách MiniGame 1 -> 7"
-        );
+       
     }
 
     // Có thể gọi hàm này nếu muốn reset toàn bộ
@@ -305,9 +295,7 @@ public class GameManager : MonoBehaviour
         remainingMiniGames.Clear();
         lastMiniGame = -1;
 
-        Debug.Log(
-            "Reset toàn bộ hệ thống Random MiniGame"
-        );
+       
     }
 
     // Kiểm tra cả 2 người chơi đã tới vòng 1 chưa
@@ -690,6 +678,10 @@ public class GameManager : MonoBehaviour
                 AudioManager.Instance.PlayMusic(
                     AudioManager.Instance.winnerMiniGameClip1
                 );
+            }
+            if(CursorManager.Instance != null)
+            {
+                CursorManager.Instance.SetSceneCursorVisible(false);
             }
 
             // PointCheck.Instance.HideAllTraps();

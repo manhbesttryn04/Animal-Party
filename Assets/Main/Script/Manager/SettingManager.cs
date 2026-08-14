@@ -730,11 +730,7 @@ public class SettingManager : MonoBehaviour
 
             yield return null;
 
-            Debug.Log(
-                "Đã áp dụng Windowed: " +
-                Screen.width + "x" + Screen.height
-            );
-
+           
             displayApplyCoroutine = null;
             yield break;
         }

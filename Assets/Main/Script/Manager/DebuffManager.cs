@@ -151,7 +151,7 @@ public class DebuffManager : MonoBehaviour
 
         if (ui == null)
         {
-            Debug.LogWarning("DebuffManager: UIManager.Instance is null.");
+            
             return;
         }
 
@@ -651,10 +651,7 @@ public class DebuffManager : MonoBehaviour
         if (card.itemIndex < 0 ||
             card.itemIndex >= UIManager.Instance.debuffSpriteList.Length)
         {
-            Debug.LogWarning(
-                "DebuffManager: itemIndex không hợp lệ: " +
-                card.itemIndex
-            );
+          
 
             return;
         }
