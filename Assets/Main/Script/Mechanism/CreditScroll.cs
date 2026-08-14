@@ -86,6 +86,7 @@ public class CreditScroll : MonoBehaviour
         if (cursor != null)
         {
             cursor.SetSceneCursorVisible(false);
+            cursor.SetSettingCursorActive(false);
         }
         SetupCredit();
         SetupIntroPanel();

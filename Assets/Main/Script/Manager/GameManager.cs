@@ -681,7 +681,9 @@ public class GameManager : MonoBehaviour
             }
             if(CursorManager.Instance != null)
             {
+
                 CursorManager.Instance.SetSceneCursorVisible(false);
+                CursorManager.Instance.SetSettingCursorActive(false);
             }
 
             // PointCheck.Instance.HideAllTraps();
