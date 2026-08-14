@@ -112,6 +112,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip musicMiniGame8;
     public AudioClip musicMiniGame9;
     public AudioClip musicMiniGame10;
+    public AudioClip creditMusicClip;
 
     [Header("Minigame 1")]
     public AudioClip loadBrickClip;
@@ -200,6 +201,61 @@ public class AudioManager : MonoBehaviour
 
         musicSource.clip = clip;
         musicSource.Play();
+    }
+
+    /// <summary>
+    /// Phát nhạc và tăng dần âm lượng từ 0 đến mức đã cài đặt.
+    /// </summary>
+    public void FadeInMusic(AudioClip clip, float fadeTime)
+    {
+        if (clip == null || musicSource == null)
+            return;
+
+        CancelFadeOutAllAudio();
+
+        float targetVolume =
+            baseMusicVolume * musicSettingVolume * masterVolume;
+
+        musicSource.Stop();
+        musicSource.clip = clip;
+        musicSource.volume = 0f;
+        musicSource.Play();
+
+        fadeAllAudioCoroutine = StartCoroutine(
+            FadeInMusicRoutine(targetVolume, fadeTime)
+        );
+    }
+
+    private IEnumerator FadeInMusicRoutine(
+        float targetVolume,
+        float fadeTime
+    )
+    {
+        if (fadeTime <= 0f)
+        {
+            musicSource.volume = targetVolume;
+            fadeAllAudioCoroutine = null;
+            yield break;
+        }
+
+        float time = 0f;
+
+        while (time < fadeTime)
+        {
+            time += Time.unscaledDeltaTime;
+
+            float percent = Mathf.Clamp01(time / fadeTime);
+            musicSource.volume = Mathf.Lerp(
+                0f,
+                targetVolume,
+                percent
+            );
+
+            yield return null;
+        }
+
+        musicSource.volume = targetVolume;
+        fadeAllAudioCoroutine = null;
     }
 
     /// <summary>
@@ -350,7 +406,7 @@ public class AudioManager : MonoBehaviour
         }
         else
         {
-           
+
         }
     }
 

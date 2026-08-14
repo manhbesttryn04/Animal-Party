@@ -300,7 +300,6 @@ public class CutSceneEndGame : MonoBehaviour
                 LoadingManager.Instance.ShowLoading()
             );
         }
-
         SceneManager.LoadScene(6);
     }
 
@@ -604,7 +603,7 @@ public class CutSceneEndGame : MonoBehaviour
                     LoadingManager.Instance.ShowLoading()
                 );
             }
-
+            yield return new WaitForSeconds(5f);
             SceneManager.LoadScene(6);
         }
         else
