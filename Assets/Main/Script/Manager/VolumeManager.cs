@@ -59,9 +59,9 @@ public class VolumeManager : MonoBehaviour
 
         if (volume == null)
         {
-            Debug.LogError(
-                "VolumeManager chưa được gắn Global Volume!"
-            );
+           
+
+
 
             return;
         }
@@ -77,10 +77,7 @@ public class VolumeManager : MonoBehaviour
             );
         }
         else
-        {
-            Debug.LogError(
-                "Global Volume chưa được gắn Profile!"
-            );
+        { 
 
             return;
         }
@@ -240,7 +237,8 @@ public class VolumeManager : MonoBehaviour
 
     public void SetGraphicsQuality(int quality)
     {
-        Debug.Log("SetGraphicsQuality gọi với: " + quality);
+       
+
         currentQuality = Mathf.Clamp(
             quality,
             0,
@@ -257,11 +255,6 @@ public class VolumeManager : MonoBehaviour
             case 0:
                 {
                     SetAllCameraPostProcessing(false);
-
-                    Debug.Log(
-                        "Graphics Quality: LOW - " +
-                        "Post Processing OFF"
-                    );
 
                     break;
                 }
@@ -286,11 +279,6 @@ public class VolumeManager : MonoBehaviour
                     SetColorAdjustmentsActive(true);
                     SetDepthOfFieldActive(true);
 
-                    Debug.Log(
-                        "Graphics Quality: MEDIUM - " +
-                        "Post Processing ON"
-                    );
-
                     break;
                 }
 
@@ -314,10 +302,8 @@ public class VolumeManager : MonoBehaviour
                     SetColorAdjustmentsActive(true);
                     SetDepthOfFieldActive(true);
 
-                    Debug.Log(
-                        "Graphics Quality: HIGH - " +
-                        "Post Processing ON"
-                    );
+                 
+
 
                     break;
                 }
@@ -346,12 +332,7 @@ public class VolumeManager : MonoBehaviour
             enablePostProcessing
         );
 
-        Debug.Log(
-            "Đã cập nhật Camera scene mới. Quality: " +
-            currentQuality +
-            " | Post Processing: " +
-            enablePostProcessing
-        );
+       
     }
 
     private void SetAllCameraPostProcessing(

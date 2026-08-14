@@ -34,11 +34,11 @@ public abstract class TrapBase : MonoBehaviour
     {
         if (TrapManager.Instance == null)
         {
-            Debug.LogWarning($"[TRAP DEBUG] {name}: TrapManager.Instance là NULL lúc Awake — sẽ thử Register lại ở Start().");
+            //Debug.LogWarning($"[TRAP DEBUG] {name}: TrapManager.Instance là NULL lúc Awake — sẽ thử Register lại ở Start().");
             return;
         }
 
-        Debug.Log($"[TRAP DEBUG] {name}: Đã Register với TrapManager (Awake). isActive hiện tại = {isActive}.");
+        //Debug.Log($"[TRAP DEBUG] {name}: Đã Register với TrapManager (Awake). isActive hiện tại = {isActive}.");
         TrapManager.Instance.Register(this);
     }
 
@@ -49,7 +49,7 @@ public abstract class TrapBase : MonoBehaviour
         // TẤT CẢ script trong scene, nên tới đây TrapManager.Instance chắc chắn đã có.
         if (TrapManager.Instance != null && !TrapManager.Instance.IsRegistered(this))
         {
-            Debug.Log($"[TRAP DEBUG] {name}: Register lại thành công ở Start() (Awake trước đó bị miss vì Instance null).");
+           // Debug.Log($"[TRAP DEBUG] {name}: Register lại thành công ở Start() (Awake trước đó bị miss vì Instance null).");
             TrapManager.Instance.Register(this);
         }
     }
@@ -61,7 +61,7 @@ public abstract class TrapBase : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log($"[TRAP DEBUG] {name}: OnTriggerEnter với '{other.name}' (tag: {other.tag}).");
+      //  Debug.Log($"[TRAP DEBUG] {name}: OnTriggerEnter với '{other.name}' (tag: {other.tag}).");
         CheckAndTrigger(other);
     }
 
@@ -74,7 +74,7 @@ public abstract class TrapBase : MonoBehaviour
         BombCarrier carrier = GetCarrier(other);
         if (carrier != null && insideTrap.ContainsKey(carrier))
         {
-            Debug.Log($"[TRAP DEBUG] {name}: OnTriggerExit — '{carrier.name}' đã rời khỏi bẫy, có thể trigger lại (sau cooldown).");
+          //  Debug.Log($"[TRAP DEBUG] {name}: OnTriggerExit — '{carrier.name}' đã rời khỏi bẫy, có thể trigger lại (sau cooldown).");
             insideTrap.Remove(carrier);
         }
     }
@@ -90,7 +90,7 @@ public abstract class TrapBase : MonoBehaviour
     {
         if (!isActive)
         {
-            Debug.Log($"[TRAP DEBUG] {name}: KHÔNG kích hoạt vì isActive = false.");
+           // Debug.Log($"[TRAP DEBUG] {name}: KHÔNG kích hoạt vì isActive = false.");
             return;
         }
 
@@ -98,7 +98,7 @@ public abstract class TrapBase : MonoBehaviour
         if (Time.time - lastTriggerTime < cooldown)
         {
             float remaining = cooldown - (Time.time - lastTriggerTime);
-            Debug.Log($"[TRAP DEBUG] {name}: KHÔNG kích hoạt vì đang cooldown, còn {remaining:F2}s.");
+           // Debug.Log($"[TRAP DEBUG] {name}: KHÔNG kích hoạt vì đang cooldown, còn {remaining:F2}s.");
             return;
         }
 
@@ -107,19 +107,19 @@ public abstract class TrapBase : MonoBehaviour
 
         if (carrier == null)
         {
-            Debug.Log($"[TRAP DEBUG] {name}: KHÔNG tìm thấy BombCarrier trên '{other.name}' (đã thử GetComponent + GetComponentInParent).");
+           // Debug.Log($"[TRAP DEBUG] {name}: KHÔNG tìm thấy BombCarrier trên '{other.name}' (đã thử GetComponent + GetComponentInParent).");
             return;
         }
 
         if (!carrier.IsGameActive())
         {
-            Debug.Log($"[TRAP DEBUG] {name}: KHÔNG kích hoạt vì '{carrier.name}' chưa IsGameActive (game chưa bắt đầu / đã StopMiniGame).");
+            //Debug.Log($"[TRAP DEBUG] {name}: KHÔNG kích hoạt vì '{carrier.name}' chưa IsGameActive (game chưa bắt đầu / đã StopMiniGame).");
             return;
         }
 
         if (carrier.IsEliminated())
         {
-            Debug.Log($"[TRAP DEBUG] {name}: KHÔNG kích hoạt vì '{carrier.name}' đã bị loại (IsEliminated).");
+           // Debug.Log($"[TRAP DEBUG] {name}: KHÔNG kích hoạt vì '{carrier.name}' đã bị loại (IsEliminated).");
             return;
         }
 
@@ -127,7 +127,7 @@ public abstract class TrapBase : MonoBehaviour
         string targetTag = carrier.gameObject.tag;
         if (targetTag != "Player 1" && targetTag != "Player 2")
         {
-            Debug.Log($"[TRAP DEBUG] {name}: KHÔNG kích hoạt vì tag của '{carrier.name}' là '{targetTag}', không phải 'Player 1' hoặc 'Player 2'.");
+           // Debug.Log($"[TRAP DEBUG] {name}: KHÔNG kích hoạt vì tag của '{carrier.name}' là '{targetTag}', không phải 'Player 1' hoặc 'Player 2'.");
             return;
         }
 
@@ -140,18 +140,18 @@ public abstract class TrapBase : MonoBehaviour
 
             if (elapsed < stuckSafetyTimeout)
             {
-                Debug.Log($"[TRAP DEBUG] {name}: KHÔNG kích hoạt vì '{carrier.name}' vẫn đang được ghi nhận ở trong bẫy (đã {elapsed:F2}s, chưa quá {stuckSafetyTimeout}s).");
+              //  Debug.Log($"[TRAP DEBUG] {name}: KHÔNG kích hoạt vì '{carrier.name}' vẫn đang được ghi nhận ở trong bẫy (đã {elapsed:F2}s, chưa quá {stuckSafetyTimeout}s).");
                 return;
             }
 
-            Debug.LogWarning($"[TRAP DEBUG] {name}: '{carrier.name}' bị 'kẹt' trong insideTrap quá {stuckSafetyTimeout}s mà không thấy OnTriggerExit — có thể do bị launch/pull/teleport ra ngoài. Tự động cho phép trigger lại.");
+            //Debug.LogWarning($"[TRAP DEBUG] {name}: '{carrier.name}' bị 'kẹt' trong insideTrap quá {stuckSafetyTimeout}s mà không thấy OnTriggerExit — có thể do bị launch/pull/teleport ra ngoài. Tự động cho phép trigger lại.");
         }
 
         // 5. Đánh dấu thời gian dẫm bẫy MỚI NHẤT + đánh dấu player đang ở trong bẫy
         lastTriggerTime = Time.time;
         insideTrap[carrier] = Time.time;
 
-        Debug.Log($"[TRAP DEBUG] {name}: KÍCH HOẠT bẫy lên '{carrier.name}'.");
+        //Debug.Log($"[TRAP DEBUG] {name}: KÍCH HOẠT bẫy lên '{carrier.name}'.");
 
         // 6. Thực thi logic bẫy
         OnPlayerHit(carrier);
@@ -159,7 +159,7 @@ public abstract class TrapBase : MonoBehaviour
 
     public void SetActive(bool active)
     {
-        Debug.Log($"[TRAP DEBUG] {name}: SetActive({active}) được gọi.");
+       // Debug.Log($"[TRAP DEBUG] {name}: SetActive({active}) được gọi.");
 
         isActive = active;
 

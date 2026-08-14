@@ -1202,25 +1202,7 @@ public class ControllerManager : MonoBehaviour
 
     private void PrintControllerState()
     {
-        Debug.Log(
-            "Controller 1: " +
-            (IsConsole1Connected()
-                ? "Connected | " +
-                  console1Name +
-                  " | Input System Device ID " +
-                  console1JoystickIndex
-                : "Disconnected")
-        );
-
-        Debug.Log(
-            "Controller 2: " +
-            (IsConsole2Connected()
-                ? "Connected | " +
-                  console2Name +
-                  " | Input System Device ID " +
-                  console2JoystickIndex
-                : "Disconnected")
-        );
+       
     }
 
     // =========================================================

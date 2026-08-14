@@ -57,12 +57,11 @@ public class PlayerDiceRoll : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning(
-                "Dices chưa đủ 6 phần tử hoặc sắp xếp không đúng."
-            );
+            
+       
         }
 
-        Debug.Log("Dice Number: " + currentDiceNumber);
+        //Debug.Log("Dice Number: " + currentDiceNumber);
 
         // Ngăn nhiều Coroutine chạy cùng lúc
         if (hideDiceCoroutine != null)

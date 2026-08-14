@@ -75,7 +75,14 @@ public class CreditScroll : MonoBehaviour
         var audio = AudioManager.Instance;
         if (audio != null)
         {
+            audio.ZeroAllAudio();
+            audio.PauseAudio();
             audio.SetupMainGameAudio();
+        }
+        var cursor = CursorManager.Instance;
+        if (cursor != null)
+        {
+            cursor.SetSceneCursorVisible(false);
         }
         SetupCredit();
         SetupIntroPanel();

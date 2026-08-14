@@ -350,9 +350,7 @@ public class AudioManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning(
-                "Main game audio setup is not assigned."
-            );
+           
         }
     }
 
@@ -365,10 +363,6 @@ public class AudioManager : MonoBehaviour
 
         if (index < 0 || index >= audioSetupList.Count)
         {
-            Debug.LogWarning(
-                "AudioSetup index out of range: " +
-                indexMiniGame
-            );
 
             return;
         }

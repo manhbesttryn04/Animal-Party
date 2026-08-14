@@ -846,8 +846,8 @@ public class MiniGameManager : MonoBehaviour
 
     public void SetIndex()
     {
-        indexMiniGame++;
-        if (indexMiniGame > 7) indexMiniGame = 1;
+       // indexMiniGame++;
+        //if (indexMiniGame > 7) indexMiniGame = 1;
     }
 
     #endregion
