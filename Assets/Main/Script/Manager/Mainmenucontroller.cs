@@ -552,10 +552,7 @@ public class MainMenuController : MonoBehaviour
         {
             activeMenuController = 1;
 
-            Debug.Log(
-                "Main Menu dùng Console 1 | Joystick " +
-                controller.GetConsole1JoystickIndex()
-            );
+   
 
             return;
         }
@@ -566,19 +563,14 @@ public class MainMenuController : MonoBehaviour
         {
             activeMenuController = 2;
 
-            Debug.Log(
-                "Main Menu dùng Console 2 | Joystick " +
-                controller.GetConsole2JoystickIndex()
-            );
+            
 
             return;
         }
 
         activeMenuController = 0;
 
-        Debug.Log(
-            "Main Menu không có tay cầm."
-        );
+      
     }
 
     private void SetNoControllerState()
@@ -938,9 +930,7 @@ public class MainMenuController : MonoBehaviour
     {
         if (EventSystem.current == null)
         {
-            Debug.LogError(
-                "Không tìm thấy EventSystem trong scene."
-            );
+           
 
             return;
         }
