@@ -715,7 +715,7 @@ public class UIManager : MonoBehaviour
     }
     public void HideAllUI()
     {
-        for (int i = 0;i< allUI.Count; i++)
+        for (int i = 0;i < allUI.Count; i++)
         {
             if(allUI[i] != null && allUI[i].activeSelf)
             {

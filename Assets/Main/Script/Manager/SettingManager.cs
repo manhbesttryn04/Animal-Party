@@ -2093,6 +2093,7 @@ public class SettingManager : MonoBehaviour
                 UIManager.Instance.canvasMiniGame.SetActive(
                     false
                 );
+                UIManager.Instance.isShowKeyBoard = false;
                 UIManager.Instance.HideAllUI();
             }
         }
