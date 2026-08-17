@@ -31,6 +31,15 @@ public class CutSceneShip : MonoBehaviour
     public GameObject skipHintObject;
     public TMP_Text skipHintText;
 
+    [Header("--- SKIP HINT TEXT ---")]
+    [SerializeField]
+    private string keyboardSkipHint =
+        "Press Space to Skip";
+
+    [SerializeField]
+    private string controllerSkipHint =
+        "Press Space or B to Skip";
+
     [Header("--- CONTROLLER SKIP ---")]
     [Tooltip("Button 1 thường là B trên Xbox hoặc Circle trên PlayStation.")]
     [Range(0, 19)]
@@ -77,6 +86,10 @@ public class CutSceneShip : MonoBehaviour
     // rồi mới cho phép skip cutscene.
     private bool waitSkipReleaseAfterSetting;
 
+    // Cache để chỉ đổi text khi trạng thái tay cầm thay đổi.
+    private bool previousHasController;
+    private bool skipHintStateInitialized;
+
     private readonly string[] storyLines =
     {
         "Somewhere in the vast ocean, a ship sails toward an unknown island...",
@@ -89,6 +102,7 @@ public class CutSceneShip : MonoBehaviour
     private void Start()
     {
         canSkip = false;
+        UpdateSkipHintText(true);
 
         // Cutscene không cho hiện chuột.
         if (CursorManager.Instance != null)
@@ -135,6 +149,10 @@ public class CutSceneShip : MonoBehaviour
 
     private void Update()
     {
+        // Luôn cập nhật trước mọi lệnh return.
+        // Vì vậy cắm/rút tay cầm trong Setting vẫn đổi text ngay.
+        UpdateSkipHintText();
+
         if (isSkipped)
             return;
 
@@ -192,6 +210,33 @@ public class CutSceneShip : MonoBehaviour
             yield break;
 
         canSkip = true;
+    }
+
+    private void UpdateSkipHintText(bool force = false)
+    {
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        bool hasController =
+            controller != null &&
+            controller.HasAnyController();
+
+        if (!force &&
+            skipHintStateInitialized &&
+            hasController == previousHasController)
+        {
+            return;
+        }
+
+        previousHasController = hasController;
+        skipHintStateInitialized = true;
+
+        if (skipHintText != null)
+        {
+            skipHintText.text = hasController
+                ? controllerSkipHint
+                : keyboardSkipHint;
+        }
     }
 
     private bool IsControllerSkipDown()

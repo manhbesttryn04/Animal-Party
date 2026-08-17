@@ -37,6 +37,14 @@ public class SettingManager : MonoBehaviour
     [Header("Main Menu")]
     public Button backToMainMenuButton;
 
+    // Chỉ ẩn/hiện trực tiếp ba nút. Không tắt GameObject cha
+    // để Animator Intro trên cha không bị chạy lại khi bật menu.
+    private MainMenuController registeredMainMenuController;
+    private Button registeredStartButton;
+    private Button registeredSettingButton;
+    private Button registeredExitButton;
+    private bool mainMenuButtonsHiddenForControllerSetting;
+
     [Header("Buttons")]
     public Button openSettingButton;
     public int countClick;
@@ -730,7 +738,7 @@ public class SettingManager : MonoBehaviour
 
             yield return null;
 
-           
+
             displayApplyCoroutine = null;
             yield break;
         }
@@ -933,6 +941,9 @@ public class SettingManager : MonoBehaviour
         {
             if (IsAnySettingPanelOpen())
             {
+                // Settings vẫn đang mở và vừa có tay cầm trở lại:
+                // ẩn lại cụm Main Menu rồi chuyển focus vào Settings.
+                HideMainMenuButtonsForControllerSetting();
                 FocusFirstSettingItem();
             }
         }
@@ -943,6 +954,10 @@ public class SettingManager : MonoBehaviour
             ClearSelectedUI();
 
             waitControllerSettingButtonRelease = false;
+
+            // Không còn tay cầm nào trong lúc Settings vẫn mở:
+            // hiện lại cụm Main Menu để người chơi có thể dùng chuột.
+            ShowMainMenuButtonsAfterAllControllersDisconnected();
 
             /*
              * Không gọi ShowGameCursor() ở đây.
@@ -1757,6 +1772,8 @@ public class SettingManager : MonoBehaviour
         // Báo Setting đang mở cho CursorManager.
         SetCursorSettingState(true);
 
+        HideMainMenuButtonsForControllerSetting();
+
         FocusFirstSettingItem();
     }
 
@@ -1849,6 +1866,8 @@ public class SettingManager : MonoBehaviour
         SetExitButtonActive(isOpenExitButton);
         SetCursorSettingState(true);
 
+        HideMainMenuButtonsForControllerSetting();
+
         if (HasControllerForSetting())
         {
             FocusFirstSettingItem();
@@ -1897,6 +1916,8 @@ public class SettingManager : MonoBehaviour
 
         SetCursorSettingState(false);
 
+        RestoreMainMenuButtonsAfterControllerSetting();
+
         closeSettingCoroutine = null;
     }
 
@@ -1915,6 +1936,8 @@ public class SettingManager : MonoBehaviour
         SetSettingPanelActive(true);
         SetExitButtonActive(isOpenExitButton);
         SetCursorSettingState(true);
+
+        HideMainMenuButtonsForControllerSetting();
 
         if (GetActiveSettingConsole() != 0)
         {
@@ -1972,6 +1995,8 @@ public class SettingManager : MonoBehaviour
         {
             settingPanel.SetActive(false);
         }
+
+        RestoreMainMenuButtonsAfterControllerSetting();
     }
 
     private bool IsSettingPanelTransitioning()
@@ -2028,6 +2053,115 @@ public class SettingManager : MonoBehaviour
             EventSystem.current.SetSelectedGameObject(
                 null
             );
+        }
+    }
+
+    // ==================================================
+    // MAIN MENU CONTROLLER SETTING FLOW
+    // ==================================================
+
+    /// <summary>
+    /// Main Menu đăng ký trực tiếp ba nút Start/Setting/Exit.
+    /// GameObject cha có Animator luôn được giữ active.
+    /// </summary>
+    public void RegisterMainMenu(
+        MainMenuController mainMenuController,
+        Button startButton,
+        Button settingButton,
+        Button exitButton)
+    {
+        registeredMainMenuController = mainMenuController;
+        registeredStartButton = startButton;
+        registeredSettingButton = settingButton;
+        registeredExitButton = exitButton;
+        mainMenuButtonsHiddenForControllerSetting = false;
+
+        if (registeredStartButton == null ||
+            registeredSettingButton == null ||
+            registeredExitButton == null)
+        {
+            Debug.LogWarning(
+                "MainMenuController chưa gắn đủ Start, Setting hoặc Exit Button."
+            );
+        }
+    }
+
+    public void UnregisterMainMenu(
+        MainMenuController mainMenuController)
+    {
+        if (registeredMainMenuController != mainMenuController)
+            return;
+
+        registeredMainMenuController = null;
+        registeredStartButton = null;
+        registeredSettingButton = null;
+        registeredExitButton = null;
+        mainMenuButtonsHiddenForControllerSetting = false;
+    }
+
+    private void HideMainMenuButtonsForControllerSetting()
+    {
+        if (!HasControllerForSetting() ||
+            registeredMainMenuController == null ||
+            !HasAnyRegisteredMainMenuButton() ||
+            mainMenuButtonsHiddenForControllerSetting)
+        {
+            return;
+        }
+
+        mainMenuButtonsHiddenForControllerSetting = true;
+        ClearSelectedUI();
+        SetRegisteredMainMenuButtonsActive(false);
+    }
+
+    private void RestoreMainMenuButtonsAfterControllerSetting()
+    {
+        if (!mainMenuButtonsHiddenForControllerSetting)
+            return;
+
+        MainMenuController mainMenuController =
+            registeredMainMenuController;
+
+        ShowMainMenuButtonsAfterAllControllersDisconnected();
+
+        if (mainMenuController != null)
+        {
+            mainMenuController
+                .RestoreAfterControllerSettingClosed();
+        }
+    }
+
+    private void ShowMainMenuButtonsAfterAllControllersDisconnected()
+    {
+        if (!mainMenuButtonsHiddenForControllerSetting)
+            return;
+
+        mainMenuButtonsHiddenForControllerSetting = false;
+        SetRegisteredMainMenuButtonsActive(true);
+    }
+
+    private bool HasAnyRegisteredMainMenuButton()
+    {
+        return registeredStartButton != null ||
+               registeredSettingButton != null ||
+               registeredExitButton != null;
+    }
+
+    private void SetRegisteredMainMenuButtonsActive(bool active)
+    {
+        if (registeredStartButton != null)
+        {
+            registeredStartButton.gameObject.SetActive(active);
+        }
+
+        if (registeredSettingButton != null)
+        {
+            registeredSettingButton.gameObject.SetActive(active);
+        }
+
+        if (registeredExitButton != null)
+        {
+            registeredExitButton.gameObject.SetActive(active);
         }
     }
 

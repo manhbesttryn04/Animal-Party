@@ -67,6 +67,41 @@ public class ChooseMode : MonoBehaviour
     public GameObject buttonStart;
     public string sceneName;
 
+    [Header("Input Instruction UI")]
+    [Tooltip("Các UI hướng dẫn bàn phím dành riêng cho Player 1.")]
+    [SerializeField]
+    private List<GameObject> keyboardInstructP1List =
+        new List<GameObject>();
+
+    [Tooltip("Các UI hướng dẫn bàn phím dành riêng cho Player 2.")]
+    [SerializeField]
+    private List<GameObject> keyboardInstructP2List =
+        new List<GameObject>();
+
+    [Tooltip("Các UI hướng dẫn tay cầm dành riêng cho Player 1.")]
+    [SerializeField]
+    private List<GameObject> consoleInstructP1List =
+        new List<GameObject>();
+
+    [Tooltip("Các UI hướng dẫn tay cầm dành riêng cho Player 2.")]
+    [SerializeField]
+    private List<GameObject> consoleInstructP2List =
+        new List<GameObject>();
+
+    [Tooltip(
+        "UI hướng dẫn nút Start bằng tay cầm. " +
+        "Hiện khi P1 hoặc P2 có tay cầm."
+    )]
+    [SerializeField]
+    private GameObject startControllerInstruction;
+
+    [Tooltip(
+        "GameObject cha chứa toàn bộ UI nằm giữa hai người chơi. " +
+        "GameObject này sẽ ẩn khi lệnh Start được chấp nhận."
+    )]
+    [SerializeField]
+    private GameObject middlePlayersUIRoot;
+
     private int indexP1;
     private int indexP2;
 
@@ -93,6 +128,11 @@ public class ChooseMode : MonoBehaviour
     private bool canPressStartButton;
     private Coroutine startButtonEnableRoutine;
 
+    // Cache trạng thái để chỉ cập nhật UI khi tay cầm thay đổi.
+    private bool previousP1ControllerConnected;
+    private bool previousP2ControllerConnected;
+    private bool inputInstructionInitialized;
+
     // =========================================================
     // UNITY
     // =========================================================
@@ -102,6 +142,7 @@ public class ChooseMode : MonoBehaviour
         UpdatePlayer1();
         UpdatePlayer2();
         CheckStartButton();
+        UpdateInputInstructionUI(true);
 
         CursorManager cursor =
             CursorManager.Instance;
@@ -141,6 +182,10 @@ public class ChooseMode : MonoBehaviour
 
     private void Update()
     {
+        // Luôn cập nhật trước khi return vì Setting đang mở.
+        // Nhờ vậy rút/cắm tay cầm trong Setting vẫn đổi hướng dẫn ngay.
+        UpdateInputInstructionUI();
+
         bool settingOpen =
             SettingManager.Instance != null &&
             SettingManager.Instance.IsSettingBlockingInput;
@@ -443,6 +488,100 @@ public class ChooseMode : MonoBehaviour
         return ControllerManager.Instance != null &&
                ControllerManager.Instance
                    .IsConsole2Connected();
+    }
+
+    // =========================================================
+    // INPUT INSTRUCTION UI
+    // =========================================================
+
+    private void UpdateInputInstructionUI(bool force = false)
+    {
+        bool p1ControllerConnected =
+            IsPlayer1UsingController();
+
+        bool p2ControllerConnected =
+            IsPlayer2UsingController();
+
+        if (!force &&
+            inputInstructionInitialized &&
+            p1ControllerConnected ==
+                previousP1ControllerConnected &&
+            p2ControllerConnected ==
+                previousP2ControllerConnected)
+        {
+            return;
+        }
+
+        previousP1ControllerConnected =
+            p1ControllerConnected;
+
+        previousP2ControllerConnected =
+            p2ControllerConnected;
+
+        inputInstructionInitialized = true;
+
+        // Mỗi Player đổi hướng dẫn độc lập.
+        SetInstructionListActive(
+            keyboardInstructP1List,
+            !p1ControllerConnected
+        );
+
+        SetInstructionListActive(
+            consoleInstructP1List,
+            p1ControllerConnected
+        );
+
+        SetInstructionListActive(
+            keyboardInstructP2List,
+            !p2ControllerConnected
+        );
+
+        SetInstructionListActive(
+            consoleInstructP2List,
+            p2ControllerConnected
+        );
+
+        // Chỉ cần một trong hai Player còn tay cầm là hiện hướng dẫn Start.
+        // Khi START đã được chấp nhận thì phải giữ ẩn trong suốt lúc loading,
+        // kể cả khi người chơi cắm/rút tay cầm.
+        if (startControllerInstruction != null)
+        {
+            startControllerInstruction.SetActive(
+                !isStartingGame &&
+                (p1ControllerConnected ||
+                 p2ControllerConnected)
+            );
+        }
+    }
+
+    private void HideStartControllerInstruction()
+    {
+        if (startControllerInstruction != null)
+        {
+            startControllerInstruction.SetActive(false);
+        }
+    }
+
+    private void SetInstructionListActive(
+        List<GameObject> instructionList,
+        bool active)
+    {
+        if (instructionList == null)
+            return;
+
+        for (int i = 0;
+             i < instructionList.Count;
+             i++)
+        {
+            GameObject instruction =
+                instructionList[i];
+
+            if (instruction != null &&
+                instruction.activeSelf != active)
+            {
+                instruction.SetActive(active);
+            }
+        }
     }
 
     // =========================================================
@@ -1216,6 +1355,16 @@ public class ChooseMode : MonoBehaviour
             return;
 
         isStartingGame = true;
+
+        // START hợp lệ và đã bắt đầu tải màn:
+        // ẩn ngay hướng dẫn nút Start của tay cầm.
+        HideStartControllerInstruction();
+
+        // Ẩn toàn bộ cụm UI nằm giữa Player 1 và Player 2.
+        if (middlePlayersUIRoot != null)
+        {
+            middlePlayersUIRoot.SetActive(false);
+        }
 
         if (UIManager.Instance != null &&
             UIManager.Instance.exitMainMenuButton != null)
