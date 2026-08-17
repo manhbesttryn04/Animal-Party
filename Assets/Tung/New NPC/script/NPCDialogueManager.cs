@@ -24,11 +24,17 @@ public class NPCDialogueManager : MonoBehaviour
         public float bubbleDuration = 2.5f;
         public float gapBetweenLines = 1f;
 
-        [Header("Offset bong bóng - NPC A (đơn vị mét thật)")]
+        [Header("Offset bong bóng chat - NPC A (mét thật)")]
         public Vector3 bubbleOffsetA = new Vector3(0, 0.8f, 0);
 
-        [Header("Offset bong bóng - NPC B (đơn vị mét thật)")]
+        [Header("Offset bong bóng chat - NPC B (mét thật)")]
         public Vector3 bubbleOffsetB = new Vector3(0, 0.8f, 0);
+
+        [Header("Offset dấu ... - NPC A (mét thật)")]
+        public Vector3 typingOffsetA = new Vector3(0, 0.8f, 0);
+
+        [Header("Offset dấu ... - NPC B (mét thật)")]
+        public Vector3 typingOffsetB = new Vector3(0, 0.8f, 0);
 
         [Header("Random giờ bắt đầu (tránh mọi cụm nói cùng lúc)")]
         public float startDelayMin = 0f;
@@ -55,8 +61,11 @@ public class NPCDialogueManager : MonoBehaviour
         public float delayBetweenTalks = 6f;
         public float bubbleDuration = 2.5f;
 
-        [Header("Offset bong bóng (mét thật)")]
+        [Header("Offset bong bóng chat (mét thật)")]
         public Vector3 bubbleOffset = new Vector3(0, 0.8f, 0);
+
+        [Header("Offset dấu ... (mét thật)")]
+        public Vector3 typingOffset = new Vector3(0, 0.8f, 0);
 
         [Header("Random giờ bắt đầu")]
         public float startDelayMin = 0f;
@@ -127,7 +136,7 @@ public class NPCDialogueManager : MonoBehaviour
 
             if (group.linesA.Length > 0)
             {
-                yield return StartCoroutine(ShowTyping(group.npcA, group.bubbleOffsetA));
+                yield return StartCoroutine(ShowTyping(group.npcA, group.typingOffsetA));
                 string lineA = GetRandomLine(group.linesA, ref group.lastIndexA);
                 SpawnBubble(group.npcA, lineA, group.bubbleOffsetA, group.bubbleDuration);
             }
@@ -136,7 +145,7 @@ public class NPCDialogueManager : MonoBehaviour
 
             if (group.linesB.Length > 0)
             {
-                yield return StartCoroutine(ShowTyping(group.npcB, group.bubbleOffsetB));
+                yield return StartCoroutine(ShowTyping(group.npcB, group.typingOffsetB));
                 string lineB = GetRandomLine(group.linesB, ref group.lastIndexB);
                 SpawnBubble(group.npcB, lineB, group.bubbleOffsetB, group.bubbleDuration);
             }
@@ -156,14 +165,13 @@ public class NPCDialogueManager : MonoBehaviour
 
             if (solo.lines.Length > 0)
             {
-                yield return StartCoroutine(ShowTyping(solo.npc, solo.bubbleOffset));
+                yield return StartCoroutine(ShowTyping(solo.npc, solo.typingOffset));
                 string line = GetRandomLine(solo.lines, ref solo.lastIndex);
                 SpawnBubble(solo.npc, line, solo.bubbleOffset, solo.bubbleDuration);
             }
         }
     }
 
-    // Chọn câu random, tránh lặp lại đúng câu vừa nói lần trước
     string GetRandomLine(string[] lines, ref int lastIndex)
     {
         if (lines.Length == 0) return "";
@@ -217,8 +225,16 @@ public class NPCDialogueManager : MonoBehaviour
         bubble.transform.position = target.position + offset;
         bubble.transform.rotation = Quaternion.identity;
 
-        var tmp = bubble.GetComponentInChildren<TextMeshProUGUI>();
-        if (tmp != null) tmp.text = text;
+        var autoResize = bubble.GetComponent<AutoResizeBubble>();
+        if (autoResize != null)
+        {
+            autoResize.ResizeToFitText(text);
+        }
+        else
+        {
+            var tmp = bubble.GetComponentInChildren<TextMeshProUGUI>();
+            if (tmp != null) tmp.text = text;
+        }
 
         var popAnim = bubble.GetComponent<BubblePopAnimation>();
         if (popAnim != null)
