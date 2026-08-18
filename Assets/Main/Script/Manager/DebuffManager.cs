@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -48,6 +49,13 @@ public class DebuffManager : MonoBehaviour
 
     public bool leftActive;
     public bool rightActive;
+
+    [Header("Debuff Random Colors")]
+    [SerializeField] private Color magicDebuffColor = Color.blue;
+    [SerializeField] private Color cannonDebuffColor = Color.red;
+
+    private GameObject[] currentRandomDebuffCards;
+    private bool lastShowDebuffRandomColorLists;
 
     // =========================================================
     // NAVIGATION SETTINGS
@@ -99,11 +107,20 @@ public class DebuffManager : MonoBehaviour
     private void Start()
     {
         ui = UIManager.Instance;
-        if (isOpen) Open(0);
+        HideDebuffRandomColors();
+        if (isOpen) Open(1);
     }
 
     private void Update()
     {
+        // Cho phép bật/tắt công tắc UIManager ngay khi đang Play.
+        if (ui != null &&
+            ui.showDebuffRandomColorLists !=
+            lastShowDebuffRandomColorLists)
+        {
+            RefreshDebuffRandomColors();
+        }
+
         /*
          * Setting đang mở:
          * khóa hoàn toàn input chọn Debuff.
@@ -174,6 +191,7 @@ public class DebuffManager : MonoBehaviour
 
         ui.leftCardCanvas.SetActive(false);
         ui.rightCardCanvas.SetActive(false);
+        HideDebuffRandomColors();
 
         HideAllCards();
 
@@ -1227,6 +1245,113 @@ public class DebuffManager : MonoBehaviour
             randomCard.image.sprite =
                 randomCard.spriteStar;
         }
+
+        // Random hoàn tất: xử lý List A/B tại DebuffManager.
+        ShowDebuffRandomColors(cards);
+    }
+
+    // =========================================================
+    // DEBUFF RANDOM COLOR DEBUG
+    // =========================================================
+
+    private void ShowDebuffRandomColors(GameObject[] cards)
+    {
+        currentRandomDebuffCards = cards;
+        RefreshDebuffRandomColors();
+    }
+
+    private void HideDebuffRandomColors()
+    {
+        currentRandomDebuffCards = null;
+
+        if (ui == null)
+            return;
+
+        SetDebuffColorListVisible(ui.listA, false);
+        SetDebuffColorListVisible(ui.listB, false);
+
+        lastShowDebuffRandomColorLists =
+            ui.showDebuffRandomColorLists;
+    }
+
+    private void RefreshDebuffRandomColors()
+    {
+        if (ui == null)
+            return;
+
+        lastShowDebuffRandomColorLists =
+            ui.showDebuffRandomColorLists;
+
+        if (!ui.showDebuffRandomColorLists ||
+            currentRandomDebuffCards == null ||
+            currentRandomDebuffCards.Length < 2)
+        {
+            SetDebuffColorListVisible(ui.listA, false);
+            SetDebuffColorListVisible(ui.listB, false);
+            return;
+        }
+
+        ApplyDebuffCardColor(
+            currentRandomDebuffCards[0],
+            ui.listA
+        );
+
+        ApplyDebuffCardColor(
+            currentRandomDebuffCards[1],
+            ui.listB
+        );
+    }
+
+    private void ApplyDebuffCardColor(
+        GameObject cardObject,
+        List<Image> images)
+    {
+        if (cardObject == null)
+        {
+            SetDebuffColorListVisible(images, false);
+            return;
+        }
+
+        RandomCard card =
+            cardObject.GetComponent<RandomCard>();
+
+        if (card == null ||
+            (card.itemIndex != 0 && card.itemIndex != 1))
+        {
+            SetDebuffColorListVisible(images, false);
+            return;
+        }
+
+        // itemIndex 0 = Magic, itemIndex 1 = Cannon.
+        Color targetColor = card.itemIndex == 1
+            ? cannonDebuffColor
+            : magicDebuffColor;
+
+        SetDebuffColorListVisible(images, true);
+
+        for (int i = 0; i < images.Count; i++)
+        {
+            if (images[i] != null)
+            {
+                images[i].color = targetColor;
+            }
+        }
+    }
+
+    private void SetDebuffColorListVisible(
+        List<Image> images,
+        bool state)
+    {
+        if (images == null)
+            return;
+
+        for (int i = 0; i < images.Count; i++)
+        {
+            if (images[i] != null)
+            {
+                images[i].gameObject.SetActive(state);
+            }
+        }
     }
 
     private void SetHighlight(
@@ -1298,6 +1423,7 @@ public class DebuffManager : MonoBehaviour
             return;
 
         HideAllCards();
+        HideDebuffRandomColors();
 
         if (ui.leftCardCanvas != null)
         {

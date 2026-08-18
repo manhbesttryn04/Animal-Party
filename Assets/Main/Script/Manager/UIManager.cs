@@ -78,6 +78,13 @@ public class UIManager : MonoBehaviour
     public GameObject panelNotiifiChooseDebuff;
     public GameObject magicDebuffPanel;
     public GameObject cannonDebuffPanel;
+
+    [Header("Debuff Random Color Debug")]
+    [Tooltip("Bật để hiện List A/B sau khi hai card random xong.")]
+    public bool showDebuffRandomColorLists;
+    public List<Image> listA = new List<Image>();
+    public List<Image> listB = new List<Image>();
+
     [Header("Buff UI")]
     public GameObject cannonPowerPanel;
     public GameObject cannonShieldPanel;
@@ -212,7 +219,6 @@ public class UIManager : MonoBehaviour
         }
     }
 
-
     // =========================================================
     // COIN POWER UI
     // =========================================================
@@ -252,17 +258,18 @@ public class UIManager : MonoBehaviour
 
             // Nếu đã có Coin Power thì tắt panel đen
             blackPanel.gameObject.SetActive(i >= p1.countCoinPower);
-         var hightlightCoinPower = coinRoot.GetChild(i).GetComponent<UIImagePowerCoinColorEffect>();
-            if( i >= p1.countCoinPower)
+            var hightlightCoinPower = coinRoot.GetChild(i).GetComponent<UIImagePowerCoinColorEffect>();
+            if (i >= p1.countCoinPower)
             {
                 hightlightCoinPower.enabled = false;
                 highlightYellowCoinPowerP1.GetChild(i).gameObject.SetActive(false);
-            }else
+            }
+            else
             {
-                               hightlightCoinPower.enabled = true;
+                hightlightCoinPower.enabled = true;
                 highlightYellowCoinPowerP1.GetChild(i).gameObject.SetActive(true);
             }
-              
+
         }
 
         // =========================
@@ -282,12 +289,13 @@ public class UIManager : MonoBehaviour
             {
                 hightlightCoinPower.enabled = false;
                 highlightYellowCoinPowerP2.GetChild(i).gameObject.SetActive(false);
-            }else
+            }
+            else
             {
-                               hightlightCoinPower.enabled = true;
+                hightlightCoinPower.enabled = true;
                 highlightYellowCoinPowerP2.GetChild(i).gameObject.SetActive(true);
             }
-               
+
         }
     }
 
@@ -398,9 +406,9 @@ public class UIManager : MonoBehaviour
     /// <summary>
     /// Hiển thị thông báo trong 2 giây.
     /// </summary>
-  public IEnumerator ShowDebuffAndBuffPanel(GameObject ui)
+    public IEnumerator ShowDebuffAndBuffPanel(GameObject ui)
     {
-           if(ui!= null)
+        if (ui != null)
         {
             ui.SetActive(true);
             yield return new WaitForSeconds(1.4f);
@@ -715,13 +723,13 @@ public class UIManager : MonoBehaviour
     }
     public void HideAllUI()
     {
-        for (int i = 0;i < allUI.Count; i++)
+        for (int i = 0; i < allUI.Count; i++)
         {
-            if(allUI[i] != null && allUI[i].activeSelf)
+            if (allUI[i] != null && allUI[i].activeSelf)
             {
                 allUI[i].SetActive(false);
             }
-            
+
         }
     }
 }
