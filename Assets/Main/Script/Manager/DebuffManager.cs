@@ -21,6 +21,23 @@ public class DebuffManager : MonoBehaviour
     [Header("Prefabs")]
     public GameObject cannonPrefab;
 
+    [Header("Cannon Camera")]
+    [SerializeField]
+    private Vector3 bombCameraOffset =
+        new Vector3(0f, 2f, -4f);
+
+    [SerializeField]
+    private Vector3 cannonTargetCameraOffset =
+        new Vector3(0f, 5f, -8f);
+
+    [SerializeField]
+    private float cannonCameraFollowSpeed = 8f;
+
+    [SerializeField]
+    private float cannonTargetSettleTime = 0.5f;
+
+    private bool cannonTeleportTookCamera;
+
     // =========================================================
     // CARD SELECTION
     // =========================================================
@@ -151,7 +168,7 @@ public class DebuffManager : MonoBehaviour
 
         if (ui == null)
         {
-            
+
             return;
         }
 
@@ -651,7 +668,7 @@ public class DebuffManager : MonoBehaviour
         if (card.itemIndex < 0 ||
             card.itemIndex >= UIManager.Instance.debuffSpriteList.Length)
         {
-          
+
 
             return;
         }
@@ -681,7 +698,7 @@ public class DebuffManager : MonoBehaviour
         {
             image.sprite = UIManager.Instance.debuffSpriteList[itemIndex];
         }
-       
+
 
         if (AudioManager.Instance != null)
         {
@@ -721,7 +738,7 @@ public class DebuffManager : MonoBehaviour
 
     private IEnumerator ApplyMagicDebuff(int playerIndex)
     {
-        if(AudioManager.Instance != null)
+        if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlaySpecial(AudioManager.Instance.petrificatioDebuffVoiceClip);
         }
@@ -826,6 +843,8 @@ public class DebuffManager : MonoBehaviour
 
     private IEnumerator ApplyCannonDebuff(int playerIndex)
     {
+        cannonTeleportTookCamera = false;
+
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlaySpecial(AudioManager.Instance.cannonDebuffVoiceClip);
@@ -906,9 +925,9 @@ public class DebuffManager : MonoBehaviour
             }
             if (UIManager.Instance != null)
             {
-               yield return StartCoroutine(UIManager.Instance.ShowDebuffAndBuffPanel(
-                     UIManager.Instance.cannonPowerPanel)
-                 );
+                yield return StartCoroutine(UIManager.Instance.ShowDebuffAndBuffPanel(
+                      UIManager.Instance.cannonPowerPanel)
+                  );
             }
         }
 
@@ -918,7 +937,9 @@ public class DebuffManager : MonoBehaviour
             cannonScript.Fire(target.transform);
 
         // Phải kiểm tra bomb trước khi dùng bomb.power.
-        if (bomb != null)
+        if (bomb != null &&
+            ownerBuff != null &&
+            ownerBuff.isBuffCanon)
         {
             bomb.power += 3;
         }
@@ -944,11 +965,49 @@ public class DebuffManager : MonoBehaviour
         PlayerTrapState trapState =
             target.GetComponent<PlayerTrapState>();
 
-        if (trapState != null)
+        PlayerMoveAI moveAI =
+            target.GetComponent<PlayerMoveAI>();
+
+        // Sau khi bom chạm mục tiêu, DebuffManager tiếp tục điều khiển
+        // camera và bám theo player cho tới khi đẩy lùi hoàn tất.
+        yield return StartCoroutine(
+            FollowCannonTarget(
+                target.transform,
+                moveAI
+            )
+        );
+
+        // Nếu chuỗi đẩy lùi kích hoạt Teleport thì camera của
+        // TeleportAllPlayer tiếp quản. DebuffManager chỉ chờ toàn bộ
+        // Teleport và trap hoàn thành, bay camera lên rồi mở Shop.
+        if (cannonTeleportTookCamera)
         {
             yield return new WaitUntil(
-                () => !trapState.isTrapActive
+                () =>
+                    !TeleportAllPlayer.IsTeleporting &&
+                    (trapState == null ||
+                     !trapState.isTrapActive)
             );
+
+            if (VolumeManager.Instance != null)
+            {
+                VolumeManager.Instance.ResetMotionBlur();
+            }
+
+            // Teleport đã hoàn tất và đã trả quyền camera.
+            // Bay lên như luồng Debuff bình thường trước khi mở Shop.
+            if (CameraManager.Instance != null)
+            {
+                yield return StartCoroutine(
+                    CameraManager.Instance.FlyUp(
+                        15f,
+                        1.2f
+                    )
+                );
+            }
+
+            ReturnToShop();
+            yield break;
         }
 
         if (VolumeManager.Instance != null)
@@ -956,19 +1015,8 @@ public class DebuffManager : MonoBehaviour
             VolumeManager.Instance.ResetMotionBlur();
         }
 
-        yield return new WaitForSeconds(2f);
-
         if (CameraManager.Instance != null)
         {
-            yield return StartCoroutine(
-                CameraManager.Instance.MoveToTarget(
-                    target.transform,
-                    0.5f
-                )
-            );
-
-            yield return new WaitForSeconds(1f);
-
             yield return StartCoroutine(
                 CameraManager.Instance.FlyUp(
                     15f,
@@ -995,17 +1043,118 @@ public class DebuffManager : MonoBehaviour
 
             Vector3 desiredPosition =
                 bomb.position +
-                new Vector3(0f, 2f, -4f);
+                bombCameraOffset;
 
             cam.transform.position =
                 Vector3.Lerp(
                     cam.transform.position,
                     desiredPosition,
-                    8f * Time.deltaTime
+                    cannonCameraFollowSpeed *
+                    Time.deltaTime
                 );
 
             cam.transform.LookAt(bomb.position);
 
+            yield return null;
+        }
+    }
+
+    // =========================================================
+    // PLAYER FOLLOW AFTER CANNON HIT
+    // =========================================================
+
+    private IEnumerator FollowCannonTarget(
+        Transform target,
+        PlayerMoveAI moveAI
+    )
+    {
+        const float waitForKnockbackStart = 0.75f;
+        const float safetyTimeout = 10f;
+
+        float elapsed = 0f;
+        float settleTimer = 0f;
+        bool knockbackStarted = false;
+
+        while (target != null &&
+               elapsed < safetyTimeout)
+        {
+            // Teleport có camera riêng. Ngừng Debuff follow ngay để
+            // hai hệ thống không cùng ghi vị trí Camera.main.
+            if (TeleportAllPlayer.IsTeleporting)
+            {
+                cannonTeleportTookCamera = true;
+                yield break;
+            }
+
+            Camera cam = Camera.main;
+
+            if (cam == null)
+                yield break;
+
+            Vector3 desiredPosition =
+                target.position +
+                cannonTargetCameraOffset;
+
+            float followAmount =
+                cannonCameraFollowSpeed *
+                Time.deltaTime;
+
+            cam.transform.position =
+                Vector3.Lerp(
+                    cam.transform.position,
+                    desiredPosition,
+                    followAmount
+                );
+
+            Vector3 lookDirection =
+                target.position -
+                cam.transform.position;
+
+            if (lookDirection.sqrMagnitude > 0.001f)
+            {
+                Quaternion targetRotation =
+                    Quaternion.LookRotation(
+                        lookDirection
+                    );
+
+                cam.transform.rotation =
+                    Quaternion.Slerp(
+                        cam.transform.rotation,
+                        targetRotation,
+                        followAmount
+                    );
+            }
+
+            // DebuffManager không kiểm tra NavMesh, ô bom, coin
+            // hoặc Teleport. PlayerMoveAI tự xử lý toàn bộ chuỗi đó.
+            // Camera chỉ đọc tín hiệu vòng đời của BoomHitEffect.
+            bool knockbackActive =
+                moveAI != null &&
+                moveAI.IsBoomHitActive;
+
+            if (knockbackActive)
+            {
+                knockbackStarted = true;
+                settleTimer = 0f;
+            }
+            else if (knockbackStarted)
+            {
+                settleTimer += Time.deltaTime;
+
+                if (settleTimer >=
+                    cannonTargetSettleTime)
+                {
+                    yield break;
+                }
+            }
+            else if (elapsed >= waitForKnockbackStart)
+            {
+                // Bomb không kích hoạt BoomHitEffect: không chờ
+                // timeout dài, trả camera về luồng Debuff ngay.
+                yield break;
+            }
+
+            elapsed += Time.deltaTime;
             yield return null;
         }
     }

@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class TrapRow : MonoBehaviour
@@ -23,12 +22,32 @@ public class TrapRow : MonoBehaviour
     [HideInInspector]
     public bool isRunning = false;
 
-    Vector3[] sharkStartPos;
-    Animator[] sharkAnimators;
+    private Vector3[] sharkStartPos;
+    private Vector3[] brickStartScales;
+    private Animator[] sharkAnimators;
+    private bool isInitialized;
 
-    void Start()
+    private void Awake()
     {
+        InitializeRow();
+    }
+
+    private void InitializeRow()
+    {
+        if (isInitialized)
+            return;
+
         mini1 = GetComponentInParent<MiniGame1>();
+
+        if (sharks == null)
+            sharks = new Transform[0];
+
+        if (skulls == null)
+            skulls = new GameObject[0];
+
+        if (bricks == null)
+            bricks = new GameObject[0];
+
         // Lưu vị trí ban đầu cá mập
         sharkStartPos = new Vector3[sharks.Length];
 
@@ -37,6 +56,9 @@ public class TrapRow : MonoBehaviour
 
         for (int i = 0; i < sharks.Length; i++)
         {
+            if (sharks[i] == null)
+                continue;
+
             sharkStartPos[i] = sharks[i].position;
 
             // Lấy animator
@@ -50,8 +72,30 @@ public class TrapRow : MonoBehaviour
         // Ẩn đầu lâu lúc đầu
         foreach (GameObject skull in skulls)
         {
-            skull.SetActive(false);
+            if (skull != null)
+                skull.SetActive(false);
         }
+
+        brickStartScales = new Vector3[bricks.Length];
+
+        for (int i = 0; i < bricks.Length; i++)
+        {
+            brickStartScales[i] = bricks[i] != null
+                ? bricks[i].transform.localScale
+                : Vector3.one;
+        }
+
+        isInitialized = true;
+    }
+
+    public void StartRow()
+    {
+        InitializeRow();
+
+        if (isRunning || !isActiveAndEnabled)
+            return;
+
+        StartCoroutine(RowRoutine());
     }
 
     public IEnumerator RowRoutine()
@@ -62,8 +106,8 @@ public class TrapRow : MonoBehaviour
 
         isRunning = true;
 
-        
-         yield return new WaitForSeconds(warningTime);
+
+        yield return new WaitForSeconds(warningTime);
 
 
         // =========================
@@ -71,6 +115,9 @@ public class TrapRow : MonoBehaviour
         // =========================
         for (int i = 0; i < sharks.Length; i++)
         {
+            if (sharks[i] == null)
+                continue;
+
             sharks[i].gameObject.SetActive(true);
 
             if (sharkAnimators[i] != null)
@@ -89,6 +136,9 @@ public class TrapRow : MonoBehaviour
         // =========================
         foreach (GameObject brick in bricks)
         {
+            if (brick == null)
+                continue;
+
             MeshRenderer mesh =
                 brick.GetComponent<MeshRenderer>();
 
@@ -117,7 +167,8 @@ public class TrapRow : MonoBehaviour
         // =========================
         foreach (Transform shark in sharks)
         {
-            shark.gameObject.SetActive(false);
+            if (shark != null)
+                shark.gameObject.SetActive(false);
         }
 
         // =========================
@@ -136,17 +187,36 @@ public class TrapRow : MonoBehaviour
         // Hồi từng cục
         for (int i = 0; i < bricks.Length; i++)
         {
+            if (bricks[i] == null)
+                continue;
+
             StartCoroutine(
-                RestoreSingleBrick(bricks[i])
-              
+                RestoreSingleBrick(
+                    bricks[i],
+                    brickStartScales[i]
+                )
+
             );
-            AudioManager.Instance.PlaySFX(AudioManager.Instance.loadBrickClip);
- 
+
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlaySFX(
+                    AudioManager.Instance.loadBrickClip
+                );
+            }
+
             // Delay giữa từng cục
-             yield return new WaitForSeconds(0.18f);
+            yield return new WaitForSeconds(0.18f);
         }
+
+        // Coroutine hồi viên gạch cuối cần 0.3 giây nhưng vòng lặp
+        // mới chờ 0.18 giây. Chờ phần còn lại trước khi kết thúc row.
+        yield return new WaitForSeconds(0.12f);
     }
-    IEnumerator RestoreSingleBrick(GameObject brick)
+    IEnumerator RestoreSingleBrick(
+        GameObject brick,
+        Vector3 targetScale
+    )
     {
         float time = 0;
         float duration = 0.3f;
@@ -155,7 +225,7 @@ public class TrapRow : MonoBehaviour
         Collider col =
             brick.GetComponent<Collider>();
         MeshRenderer mes = brick.GetComponent<MeshRenderer>();
-        if(mes != null) { mes.enabled = true; }
+        if (mes != null) { mes.enabled = true; }
 
         if (col != null)
             col.enabled = true;
@@ -174,7 +244,7 @@ public class TrapRow : MonoBehaviour
             brick.transform.localScale =
                 Vector3.Lerp(
                     Vector3.zero,
-                    Vector3.one,
+                    targetScale,
                     smoothTime
                 );
 
@@ -183,7 +253,7 @@ public class TrapRow : MonoBehaviour
 
         // FIX SCALE
         brick.transform.localScale =
-            Vector3.one;
+            targetScale;
     }
 
     IEnumerator MoveSharks(bool moveUp)
@@ -195,6 +265,9 @@ public class TrapRow : MonoBehaviour
 
         for (int i = 0; i < sharks.Length; i++)
         {
+            if (sharks[i] == null)
+                continue;
+
             if (moveUp)
             {
                 targetPos[i] =
@@ -214,6 +287,9 @@ public class TrapRow : MonoBehaviour
 
             for (int i = 0; i < sharks.Length; i++)
             {
+                if (sharks[i] == null)
+                    continue;
+
                 sharks[i].position =
                     Vector3.Lerp(
                         sharks[i].position,
@@ -224,12 +300,19 @@ public class TrapRow : MonoBehaviour
 
             yield return null;
         }
+
+        for (int i = 0; i < sharks.Length; i++)
+        {
+            if (sharks[i] != null)
+                sharks[i].position = targetPos[i];
+        }
     }
     public void ShowWarning()
     {
         foreach (GameObject skull in skulls)
         {
-            skull.SetActive(true);
+            if (skull != null)
+                skull.SetActive(true);
         }
     }
 
@@ -237,11 +320,14 @@ public class TrapRow : MonoBehaviour
     {
         foreach (GameObject skull in skulls)
         {
-            skull.SetActive(false);
+            if (skull != null)
+                skull.SetActive(false);
         }
     }
     public void ResetRow()
     {
+        InitializeRow();
+
         // Dừng toàn bộ coroutine đang chạy trên TrapRow
         StopAllCoroutines();
 
@@ -261,12 +347,14 @@ public class TrapRow : MonoBehaviour
         }
 
         // Phục hồi toàn bộ gạch
-        foreach (GameObject brick in bricks)
+        for (int i = 0; i < bricks.Length; i++)
         {
+            GameObject brick = bricks[i];
+
             if (brick == null)
                 continue;
 
-            brick.transform.localScale = Vector3.one;
+            brick.transform.localScale = brickStartScales[i];
 
             MeshRenderer mesh =
                 brick.GetComponent<MeshRenderer>();
@@ -279,6 +367,14 @@ public class TrapRow : MonoBehaviour
 
             if (col != null)
                 col.enabled = true;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (isInitialized)
+        {
+            ResetRow();
         }
     }
 }

@@ -87,11 +87,10 @@ public class MiniGame1 : MonoBehaviour
     {
         isRunning = false;
 
-        if (gameRoutine != null)
-        {
-            StopCoroutine(gameRoutine);
-            gameRoutine = null;
-        }
+        // Dừng cả vòng lặp chính và mọi coroutine phụ từng được
+        // khởi chạy bởi MiniGame1.
+        StopAllCoroutines();
+        gameRoutine = null;
 
         if (rows == null)
             return;
@@ -118,22 +117,8 @@ public class MiniGame1 : MonoBehaviour
 
             if (selectedRows.Count == 0)
             {
-                Debug.LogWarning(
-                    "MiniGame1: Không có TrapRow hợp lệ."
-                );
-
                 break;
             }
-
-            // Xem kết quả random trong Console
-            string result = "Selected rows: ";
-
-            foreach (TrapRow row in selectedRows)
-            {
-                result += row.name + " ";
-            }
-
-            // Debug.Log(result);
 
             // =========================
             // HIỆN WARNING
@@ -187,9 +172,9 @@ public class MiniGame1 : MonoBehaviour
                 if (row == null)
                     continue;
 
-                StartCoroutine(
-                    row.RowRoutine()
-                );
+                // Để TrapRow tự sở hữu coroutine của nó.
+                // ResetRow() khi đó chắc chắn dừng được hàng đang chạy.
+                row.StartRow();
 
                 if (AudioManager.Instance != null)
                 {
@@ -349,11 +334,6 @@ public class MiniGame1 : MonoBehaviour
         previousSelectedRows =
             new List<TrapRow>(selectedRows);
 
-        Debug.Log(
-            "Excluded row: " +
-            excludedRow.name
-        );
-
         return selectedRows;
     }
 
@@ -503,9 +483,9 @@ public class MiniGame1 : MonoBehaviour
         PlayerVFX vfx = player.GetComponent<PlayerVFX>();
         PlayerMiniGame playerMiniGame =
             player.GetComponent<PlayerMiniGame>();
-        if(vfx != null)
+        if (vfx != null)
         {
-           StartCoroutine( vfx.DissolveInNoParticleRoutine(0.5f));
+            StartCoroutine(vfx.DissolveInNoParticleRoutine(0.5f));
         }
         if (playerMiniGame != null)
         {

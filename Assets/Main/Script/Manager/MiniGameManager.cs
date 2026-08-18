@@ -106,7 +106,7 @@ public class MiniGameManager : MonoBehaviour
         // Vì list dùng indexMiniGame - 1 nên indexMiniGame phải lớn hơn 0
         if (indexMiniGame <= 0)
         {
-           // Debug.LogError("Index MiniGame invalid!");
+            // Debug.LogError("Index MiniGame invalid!");
             yield break;
         }
 
@@ -124,13 +124,13 @@ public class MiniGameManager : MonoBehaviour
 
         if (miniGameCamera == null)
         {
-           // Debug.LogError("MiniGameCamera is NULL!");
+            // Debug.LogError("MiniGameCamera is NULL!");
             yield break;
         }
 
         if (spawnPoint == null)
         {
-           // Debug.LogError("SpawnPoint is NULL!");
+            // Debug.LogError("SpawnPoint is NULL!");
             yield break;
         }
 
@@ -158,7 +158,7 @@ public class MiniGameManager : MonoBehaviour
 
         if (miniGameIndex >= spawnPoint.transSpawPlayerList.Count)
         {
-           // Debug.LogError("Spawn index out of range!");
+            // Debug.LogError("Spawn index out of range!");
             yield break;
         }
 
@@ -283,13 +283,13 @@ public class MiniGameManager : MonoBehaviour
         }
         if (avatar1 == null || avatar2 == null)
         {
-           // Debug.LogError("PlayerInfo missing!");
+            // Debug.LogError("PlayerInfo missing!");
             yield break;
         }
 
         if (coin1 == null || coin2 == null)
         {
-           // Debug.LogError("PlayerCoin missing!");
+            // Debug.LogError("PlayerCoin missing!");
             yield break;
         }
 
@@ -301,7 +301,7 @@ public class MiniGameManager : MonoBehaviour
 
         if (player2Type == null)
         {
-           // Debug.LogError("PlayerType missing!");
+            // Debug.LogError("PlayerType missing!");
             yield break;
         }
 
@@ -416,7 +416,10 @@ public class MiniGameManager : MonoBehaviour
             inputMinigame.ShowInputMinigame(indexMiniGame);
         }
         yield return new WaitForSeconds(5f);
-        inputMinigame.HideAllInput();
+        if (inputMinigame != null)
+        {
+            inputMinigame.HideAllInput();
+        }
         ui.canvasInstructInput.SetActive(false);
         // Tắt màn đen sau khi chuẩn bị xong
         ui.flastBlackPanel.SetActive(false);
@@ -493,7 +496,7 @@ public class MiniGameManager : MonoBehaviour
 
             miniGameList.miniGame4.BeginTimeoutSequence();
 
-            float maxWaitTime = 15f;
+            float maxWaitTime = 20f;
 
             while (miniGameList.miniGame4.IsFinishingSequence &&
                    maxWaitTime > 0f)
@@ -592,7 +595,10 @@ public class MiniGameManager : MonoBehaviour
 
             cursor.ShowGameCursor();
         }
-        setting.canOpenSettingByController = true;
+        if (setting != null)
+        {
+            setting.canOpenSettingByController = true;
+        }
 
         // =====================================================
         // DISABLE CAMERA
@@ -632,6 +638,9 @@ public class MiniGameManager : MonoBehaviour
         // Xóa player runtime trong minigame
         Destroy(currentPlayer1);
         Destroy(currentPlayer2);
+
+        currentPlayer1 = null;
+        currentPlayer2 = null;
 
         // =====================================================
         // DISABLE MAP MINIGAME
@@ -849,7 +858,7 @@ public class MiniGameManager : MonoBehaviour
 
     public void SetIndex()
     {
-       // indexMiniGame++;
+        // indexMiniGame++;
         //if (indexMiniGame > 7) indexMiniGame = 1;
     }
 
