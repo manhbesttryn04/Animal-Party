@@ -96,6 +96,40 @@ public class NPCDialogueManager : MonoBehaviour
     [Header("Danh sách NPC nói một mình (không cần cặp)")]
     public List<SoloNPC> soloNpcs = new List<SoloNPC>();
 
+    // Theo dõi tất cả bubble đang tồn tại để dọn sạch khi restart/destroy
+    List<GameObject> activeBubbles = new List<GameObject>();
+
+    // Đảm bảo chỉ có duy nhất 1 Manager chạy tại 1 thời điểm (chống bug do nhiều instance)
+    static NPCDialogueManager instance;
+
+    void Awake()
+    {
+        if (instance != null && instance != this)
+        {
+            Debug.LogWarning("[NPCDialogueManager] Phát hiện nhiều hơn 1 Manager trong Scene, huỷ bản thừa để tránh conflict.");
+            Destroy(gameObject);
+            return;
+        }
+        instance = this;
+    }
+
+    void OnEnable()
+    {
+        // Reset lại toàn bộ trạng thái mỗi lần bật (kể cả Play lại nhiều lần) để tránh state rác
+        foreach (var group in groups)
+        {
+            group.isRunning = false;
+            group.lastIndexA = -1;
+            group.lastIndexB = -1;
+        }
+        foreach (var solo in soloNpcs)
+        {
+            solo.isRunning = false;
+            solo.lastIndex = -1;
+        }
+        activeBubbles.Clear();
+    }
+
     void Start()
     {
         foreach (var group in groups)
@@ -111,6 +145,34 @@ public class NPCDialogueManager : MonoBehaviour
             if (solo.npc == null) continue;
             StartCoroutine(RunSolo(solo));
         }
+    }
+
+    void OnDisable()
+    {
+        // Dừng hết coroutine và dọn sạch bubble đang tồn tại khi Manager bị tắt/Play dừng
+        StopAllCoroutines();
+        CleanupAllBubbles();
+
+        foreach (var group in groups)
+            group.isRunning = false;
+        foreach (var solo in soloNpcs)
+            solo.isRunning = false;
+    }
+
+    void OnDestroy()
+    {
+        CleanupAllBubbles();
+        if (instance == this)
+            instance = null;
+    }
+
+    void CleanupAllBubbles()
+    {
+        foreach (var b in activeBubbles)
+        {
+            if (b != null) Destroy(b);
+        }
+        activeBubbles.Clear();
     }
 
     void FaceEachOther(ConversationGroup group)
@@ -134,6 +196,8 @@ public class NPCDialogueManager : MonoBehaviour
         {
             yield return new WaitForSeconds(group.delayBetweenTalks);
 
+            if (group.npcA == null || group.npcB == null) yield break; // NPC bị destroy giữa chừng thì thoát an toàn
+
             if (group.linesA.Length > 0)
             {
                 yield return StartCoroutine(ShowTyping(group.npcA, group.typingOffsetA));
@@ -142,6 +206,8 @@ public class NPCDialogueManager : MonoBehaviour
             }
 
             yield return new WaitForSeconds(group.gapBetweenLines);
+
+            if (group.npcA == null || group.npcB == null) yield break;
 
             if (group.linesB.Length > 0)
             {
@@ -162,6 +228,8 @@ public class NPCDialogueManager : MonoBehaviour
         while (solo.isRunning)
         {
             yield return new WaitForSeconds(solo.delayBetweenTalks);
+
+            if (solo.npc == null) yield break;
 
             if (solo.lines.Length > 0)
             {
@@ -193,6 +261,8 @@ public class NPCDialogueManager : MonoBehaviour
         if (typingIndicatorPrefab == null || target == null) yield break;
 
         GameObject typing = Instantiate(typingIndicatorPrefab);
+        activeBubbles.Add(typing);
+
         typing.transform.SetParent(target);
         typing.transform.position = target.position + offset;
         typing.transform.rotation = Quaternion.identity;
@@ -213,7 +283,10 @@ public class NPCDialogueManager : MonoBehaviour
         yield return new WaitForSeconds(waitTime);
 
         if (typing != null)
+        {
+            activeBubbles.Remove(typing);
             Destroy(typing);
+        }
     }
 
     void SpawnBubble(Transform target, string text, Vector3 offset, float duration)
@@ -221,6 +294,8 @@ public class NPCDialogueManager : MonoBehaviour
         if (bubblePrefab == null || target == null) return;
 
         GameObject bubble = Instantiate(bubblePrefab);
+        activeBubbles.Add(bubble);
+
         bubble.transform.SetParent(target);
         bubble.transform.position = target.position + offset;
         bubble.transform.rotation = Quaternion.identity;
@@ -247,6 +322,14 @@ public class NPCDialogueManager : MonoBehaviour
             bubble.transform.localScale = Vector3.one * bubbleFixedScale;
             Destroy(bubble, duration);
         }
+
+        StartCoroutine(RemoveFromActiveList(bubble, duration + 1f));
+    }
+
+    IEnumerator RemoveFromActiveList(GameObject bubble, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        activeBubbles.Remove(bubble);
     }
 
     public void SetGroupActive(string groupName, bool active)
