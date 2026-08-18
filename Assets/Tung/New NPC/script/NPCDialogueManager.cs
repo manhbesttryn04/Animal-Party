@@ -43,6 +43,9 @@ public class NPCDialogueManager : MonoBehaviour
         [HideInInspector] public bool isRunning = false;
         [HideInInspector] public int lastIndexA = -1;
         [HideInInspector] public int lastIndexB = -1;
+
+        // Cho phép chạy hay không dựa theo khoảng cách camera
+        [HideInInspector] public bool allowedByDistance = true;
     }
 
     [System.Serializable]
@@ -73,6 +76,8 @@ public class NPCDialogueManager : MonoBehaviour
 
         [HideInInspector] public bool isRunning = false;
         [HideInInspector] public int lastIndex = -1;
+
+        [HideInInspector] public bool allowedByDistance = true;
     }
 
     [Header("Bubble Prefab dùng chung cho tất cả cụm")]
@@ -90,16 +95,25 @@ public class NPCDialogueManager : MonoBehaviour
     [Header("Fallback nếu prefab typing không có TypingDotsAnimation")]
     public float typingDurationFallback = 0.9f;
 
+    [Header("--- Giới hạn theo khoảng cách Camera ---")]
+    [Tooltip("Bật để chỉ chạy dialogue cho NPC gần camera")]
+    public bool useDistanceLimit = true;
+
+    [Tooltip("Bán kính (mét) tính từ camera - NPC trong phạm vi này mới chạy dialogue")]
+    public float maxDistanceFromCamera = 20f;
+
+    [Tooltip("Tần suất kiểm tra khoảng cách (giây) - không cần check mỗi frame")]
+    public float distanceCheckInterval = 0.5f;
+
+    Camera cachedCamera;
+
     [Header("Danh sách các cụm NPC nói chuyện (2 NPC/cụm)")]
     public List<ConversationGroup> groups = new List<ConversationGroup>();
 
     [Header("Danh sách NPC nói một mình (không cần cặp)")]
     public List<SoloNPC> soloNpcs = new List<SoloNPC>();
 
-    // Theo dõi tất cả bubble đang tồn tại để dọn sạch khi restart/destroy
     List<GameObject> activeBubbles = new List<GameObject>();
-
-    // Đảm bảo chỉ có duy nhất 1 Manager chạy tại 1 thời điểm (chống bug do nhiều instance)
     static NPCDialogueManager instance;
 
     void Awake()
@@ -115,23 +129,26 @@ public class NPCDialogueManager : MonoBehaviour
 
     void OnEnable()
     {
-        // Reset lại toàn bộ trạng thái mỗi lần bật (kể cả Play lại nhiều lần) để tránh state rác
         foreach (var group in groups)
         {
             group.isRunning = false;
             group.lastIndexA = -1;
             group.lastIndexB = -1;
+            group.allowedByDistance = true;
         }
         foreach (var solo in soloNpcs)
         {
             solo.isRunning = false;
             solo.lastIndex = -1;
+            solo.allowedByDistance = true;
         }
         activeBubbles.Clear();
     }
 
     void Start()
     {
+        cachedCamera = Camera.main;
+
         foreach (var group in groups)
         {
             if (group.npcA == null || group.npcB == null) continue;
@@ -145,11 +162,13 @@ public class NPCDialogueManager : MonoBehaviour
             if (solo.npc == null) continue;
             StartCoroutine(RunSolo(solo));
         }
+
+        if (useDistanceLimit)
+            StartCoroutine(DistanceCheckLoop());
     }
 
     void OnDisable()
     {
-        // Dừng hết coroutine và dọn sạch bubble đang tồn tại khi Manager bị tắt/Play dừng
         StopAllCoroutines();
         CleanupAllBubbles();
 
@@ -175,6 +194,37 @@ public class NPCDialogueManager : MonoBehaviour
         activeBubbles.Clear();
     }
 
+    // Vòng lặp kiểm tra khoảng cách định kỳ, không cần check mỗi frame
+    IEnumerator DistanceCheckLoop()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(distanceCheckInterval);
+
+            if (cachedCamera == null)
+            {
+                cachedCamera = Camera.main;
+                if (cachedCamera == null) continue;
+            }
+
+            Vector3 camPos = cachedCamera.transform.position;
+
+            foreach (var group in groups)
+            {
+                if (group.npcA == null) continue;
+                float dist = Vector3.Distance(camPos, group.npcA.position);
+                group.allowedByDistance = dist <= maxDistanceFromCamera;
+            }
+
+            foreach (var solo in soloNpcs)
+            {
+                if (solo.npc == null) continue;
+                float dist = Vector3.Distance(camPos, solo.npc.position);
+                solo.allowedByDistance = dist <= maxDistanceFromCamera;
+            }
+        }
+    }
+
     void FaceEachOther(ConversationGroup group)
     {
         Vector3 dir = (group.npcB.position - group.npcA.position).normalized;
@@ -196,7 +246,13 @@ public class NPCDialogueManager : MonoBehaviour
         {
             yield return new WaitForSeconds(group.delayBetweenTalks);
 
-            if (group.npcA == null || group.npcB == null) yield break; // NPC bị destroy giữa chừng thì thoát an toàn
+            // Nếu đang bật giới hạn khoảng cách và NPC đang ở ngoài phạm vi, chờ tới khi vào lại
+            if (useDistanceLimit)
+            {
+                yield return new WaitUntil(() => group.allowedByDistance);
+            }
+
+            if (group.npcA == null || group.npcB == null) yield break;
 
             if (group.linesA.Length > 0)
             {
@@ -228,6 +284,11 @@ public class NPCDialogueManager : MonoBehaviour
         while (solo.isRunning)
         {
             yield return new WaitForSeconds(solo.delayBetweenTalks);
+
+            if (useDistanceLimit)
+            {
+                yield return new WaitUntil(() => solo.allowedByDistance);
+            }
 
             if (solo.npc == null) yield break;
 
