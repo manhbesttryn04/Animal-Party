@@ -23,7 +23,7 @@ public class MiniGame3 : MonoBehaviour
     {
         [Tooltip("Giây thứ mấy thì Tắt Lửa, bắt đầu Lazer Bay?")]
         public float startTime = 60f;
-        
+
         [Header("Độ Khó (Difficulty)")]
         public float laserSpeed = 6f;
         [Tooltip("Số lượng Lazer bắn ra trong 1 đợt (Wave)")]
@@ -39,7 +39,7 @@ public class MiniGame3 : MonoBehaviour
     {
         [Tooltip("Giây thứ mấy thì Lazer Bay tăng tốc Ép Xung?")]
         public float startTime = 90f;
-        
+
         [Header("Độ Khó (Difficulty)")]
         public float laserSpeed = 8.5f;
         public int lasersPerWave = 5;
@@ -131,19 +131,17 @@ public class MiniGame3 : MonoBehaviour
 
     public void StopMiniGame()
     {
-        if (!isRunning || isGameOver) return;
+        // Không return sớm theo isRunning/isGameOver.
+        // Manager có thể đã đổi state trước khi gọi hàm này, nhưng bẫy vẫn
+        // luôn cần được cleanup cưỡng bức.
+        ShutdownMiniGame(true);
+    }
 
-        isRunning = false;
-        isGameOver = true;
-
-        if (fixBugMiniGame3 != null)
-            fixBugMiniGame3.StopAndClearPlayers();
+    private void OnDisable()
+    {
+        // Lớp an toàn khi manager tắt thẳng GameObject/minigame map.
         StopAllCoroutines();
-        ClearAllLasers();
         ToggleFlamethrowers(false);
-
-        if (centralHub != null && centralHub.gameObject.activeInHierarchy)
-            centralHub.EndMinigameAndSink();
     }
 
     private void Update()
@@ -196,6 +194,11 @@ public class MiniGame3 : MonoBehaviour
 
     private void CompleteMiniGame()
     {
+        ShutdownMiniGame(true);
+    }
+
+    private void ShutdownMiniGame(bool sinkCentralHub)
+    {
         isRunning = false;
         isGameOver = true;
 
@@ -206,7 +209,7 @@ public class MiniGame3 : MonoBehaviour
         ClearAllLasers();
         ToggleFlamethrowers(false);
 
-        if (centralHub != null && centralHub.gameObject.activeInHierarchy)
+        if (sinkCentralHub && centralHub != null && centralHub.gameObject.activeInHierarchy)
             centralHub.EndMinigameAndSink();
     }
 
@@ -238,13 +241,13 @@ public class MiniGame3 : MonoBehaviour
             ToggleFlamethrowers(false);
 
             currentMode = SpawnMode.Alternating;
-            
+
             // Gán thông số từ Inspector
             currentLaserSpeed = phase3_Spam.laserSpeed;
             lasersPerWave = phase3_Spam.lasersPerWave;
             timeBetweenWaves = phase3_Spam.waveDelay;
-            delayBetweenLasers = phase3_Spam.delayBetweenLasers; 
-            
+            delayBetweenLasers = phase3_Spam.delayBetweenLasers;
+
             waveTimer = timeBetweenWaves;
         }
         // Phase 4
@@ -254,13 +257,13 @@ public class MiniGame3 : MonoBehaviour
             ToggleFlamethrowers(false);
 
             currentMode = SpawnMode.AutoMixed;
-            
+
             // Gán thông số từ Inspector
             currentLaserSpeed = phase4_Hard.laserSpeed;
             lasersPerWave = phase4_Hard.lasersPerWave;
             timeBetweenWaves = phase4_Hard.waveDelay;
-            delayBetweenLasers = phase4_Hard.delayBetweenLasers; 
-            
+            delayBetweenLasers = phase4_Hard.delayBetweenLasers;
+
             waveTimer = timeBetweenWaves;
         }
     }
@@ -296,6 +299,26 @@ public class MiniGame3 : MonoBehaviour
             Debug.LogWarning(
                 "[MiniGame3] Chưa gán Master_Flamethrower vào flamethrowerBrain!"
             );
+        }
+
+        // Khi tắt, ép từng core reset trực tiếp để vẫn an toàn nếu reference
+        // flamethrowerBrain bị thiếu hoặc cấu hình sai trong Inspector.
+        if (!state && flamethrowerTraps != null)
+        {
+            foreach (GameObject trap in flamethrowerTraps)
+            {
+                if (trap == null)
+                    continue;
+
+                WallFlamethrowerCore[] cores =
+                    trap.GetComponentsInChildren<WallFlamethrowerCore>(true);
+
+                foreach (WallFlamethrowerCore core in cores)
+                {
+                    if (core != null)
+                        core.ForceStopImmediately();
+                }
+            }
         }
     }
 
@@ -396,7 +419,7 @@ public class MiniGame3 : MonoBehaviour
     {
         if (manager == null || manager.currentPlayer1 == null || manager.currentPlayer2 == null)
         {
-            Debug.LogWarning("[MiniGame3] SetUpAllPlayer: manager or player references are missing.");
+            //Debug.LogWarning("[MiniGame3] SetUpAllPlayer: manager or player references are missing.");
             return;
         }
 
@@ -405,7 +428,7 @@ public class MiniGame3 : MonoBehaviour
 
         if (p1 == null || p2 == null)
         {
-            Debug.LogWarning("[MiniGame3] SetUpAllPlayer: PlayerManager component missing on a player.");
+            //Debug.LogWarning("[MiniGame3] SetUpAllPlayer: PlayerManager component missing on a player.");
             return;
         }
 

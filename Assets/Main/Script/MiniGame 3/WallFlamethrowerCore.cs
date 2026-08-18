@@ -9,14 +9,14 @@ public class WallFlamethrowerCore : MonoBehaviour
     [Header("--- Cấu Hình Thành Phần (References) ---")]
     [Tooltip("Kéo Particle System hiệu ứng lửa vào đây")]
     public ParticleSystem fireParticles;
-    
+
     [Tooltip("Kéo Box Collider (Vùng gây sát thương) vào đây")]
     public BoxCollider fireCollider;
 
     [Header("--- Cấu Hình Sát Thương & Vật Lý ---")]
     [Tooltip("Lực hất văng người chơi ra khỏi luồng lửa")]
     public float knockbackForce = 12f;
-    
+
     [Tooltip("Thời gian giãn cách giữa các lần đốt máu (giây)")]
     public float hitCooldown = 0.5f;
 
@@ -39,12 +39,22 @@ public class WallFlamethrowerCore : MonoBehaviour
         }
     }
 
+    private void OnDisable()
+    {
+        ForceStopImmediately();
+    }
+
+    public void ForceStopImmediately()
+    {
+        SyncFlamethrowerState(false);
+    }
+
     public void SyncFlamethrowerState(bool state)
     {
         isFiring = state;
         _lastState = state;
         var audio = AudioManager.Instance;
-        if (fireCollider != null) 
+        if (fireCollider != null)
         {
             fireCollider.enabled = state;
         }
@@ -54,21 +64,28 @@ public class WallFlamethrowerCore : MonoBehaviour
             if (state)
             {
                 fireParticles.Play();
-                if (audio)
-                {
-                    audio.PlaySFXNoOneShot(audio.openFireClip);
-                }
-
             }
             else
             {
-                fireParticles.Stop();
-                if (audio) { audio.StopSFXNoOneShot(); }
+                // Xóa toàn bộ hạt đang sống để lửa biến mất ngay khi hết giờ.
+                fireParticles.Stop(
+                    true,
+                    ParticleSystemStopBehavior.StopEmittingAndClear
+                );
             }
         }
 
+        // Âm thanh phải được xử lý kể cả khi quên gán Particle System.
+        if (audio != null)
+        {
+            if (state)
+                audio.PlaySFXNoOneShot(audio.openFireClip);
+            else
+                audio.StopSFXNoOneShot();
+        }
+
         // Nếu tắt lửa thì dọn dẹp bộ nhớ đệm để sẵn sàng cho lần xịt kế tiếp
-        if (!state) 
+        if (!state)
         {
             _lastHitTimes.Clear();
         }
@@ -86,13 +103,13 @@ public class WallFlamethrowerCore : MonoBehaviour
         {
             // Triệt tiêu một phần quán tính cũ
             rb.linearVelocity = new Vector3(rb.linearVelocity.x * 0.2f, 0f, rb.linearVelocity.z * 0.2f);
-            
+
             // Đẩy nhân vật bay theo hướng họng súng
-            Vector3 pushDir = transform.forward; 
-            pushDir.y = 0.7f; 
-            
+            Vector3 pushDir = transform.forward;
+            pushDir.y = 0.7f;
+
             rb.AddForce(pushDir * knockbackForce, ForceMode.Impulse);
-            
+
             // Ghi nhận thời gian va chạm
             _lastHitTimes[other] = Time.time;
         }
@@ -113,15 +130,12 @@ public class WallFlamethrowerCore : MonoBehaviour
         // 1. Tự động kiểm tra lỗi lật ngược Scale (Negative Scale) gây hỏng ma trận vật lý
         if (transform.localScale.x < 0 || transform.localScale.y < 0 || transform.localScale.z < 0)
         {
-            Debug.LogError($"<color=red><b>[LỖI NGHIÊM TRỌNG]:</b></color> Object '{gameObject.name}' đang để Scale âm! " +
-                           $"Hãy trả Scale về số dương (1, 1, 1) và dùng góc xoay Rotation Y để lật hướng bẫy.");
-        }
 
+        }
         // 2. Tự động nhắc nhở nếu quên chưa tích chọn thuộc tính Trigger trên Collider của lửa
         if (fireCollider != null && !fireCollider.isTrigger)
         {
-            Debug.LogWarning($"<color=yellow><b>[CẢNH BÁO]:</b></color> BoxCollider trên '{gameObject.name}' chưa bật 'Is Trigger'. " +
-                             $"Hệ thống đã tự động bật nó lên để tránh nhân vật bị kẹt vật lý khi va chạm.");
+           
             fireCollider.isTrigger = true;
         }
     }

@@ -15,10 +15,17 @@ public class CameraShake : MonoBehaviour
     {
         if (shakeRoutine != null)
         {
-            StopCoroutine(shakeRoutine);
+            StopShake();
         }
 
         originalPos = transform.localPosition;
+
+        if (duration <= 0f || strength <= 0f)
+        {
+            transform.localPosition = originalPos;
+            return;
+        }
+
         shakeRoutine = StartCoroutine(ShakeRoutine(duration, strength));
     }
 
@@ -59,5 +66,10 @@ public class CameraShake : MonoBehaviour
         }
 
         transform.localPosition = originalPos;
+    }
+
+    private void OnDisable()
+    {
+        StopShake();
     }
 }
