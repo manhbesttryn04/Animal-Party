@@ -91,7 +91,9 @@ public class FixBugMiniGame3 : MonoBehaviour
 
         if (miniGameManager == null)
         {
-          
+            Debug.LogWarning(
+                "[FixBugMiniGame3] Chưa gán MiniGameManager."
+            );
 
             return;
         }
@@ -132,7 +134,9 @@ public class FixBugMiniGame3 : MonoBehaviour
 
         isRunning = true;
 
-       
+        Debug.Log(
+            "[FixBugMiniGame3] Đã bắt đầu hệ thống sửa lỗi."
+        );
     }
 
     private PlayerMove GetPlayerMove(GameObject playerObject)
@@ -162,7 +166,9 @@ public class FixBugMiniGame3 : MonoBehaviour
         {
             if (move != null)
             {
-              
+                Debug.LogWarning(
+                    $"[FixBugMiniGame3] {move.name} chưa có CharacterController."
+                );
             }
 
             return;
@@ -171,7 +177,10 @@ public class FixBugMiniGame3 : MonoBehaviour
         originalHeight = move.controller.height;
         originalCenterY = move.controller.center.y;
 
-       
+        Debug.Log(
+            $"[FixBugMiniGame3] Đã lưu {move.name}: " +
+            $"Height = {originalHeight}, Center Y = {originalCenterY}"
+        );
     }
 
     private void SaveOriginalPlayerData(
@@ -190,7 +199,9 @@ public class FixBugMiniGame3 : MonoBehaviour
 
         if (move.transform.childCount == 0)
         {
-           
+            Debug.LogWarning(
+                $"[FixBugMiniGame3] {move.name} không có Child 0."
+            );
 
             return;
         }
@@ -305,15 +316,18 @@ public class FixBugMiniGame3 : MonoBehaviour
             player1NeedRecover = true;
             player1RecoverTimer = 0f;
 
-            
-            
+            Debug.Log(
+                "[FixBugMiniGame3] Player 1 đã bật cờ sửa lỗi."
+            );
         }
         else if (move == player2)
         {
             player2NeedRecover = true;
             player2RecoverTimer = 0f;
 
-            
+            Debug.Log(
+                "[FixBugMiniGame3] Player 2 đã bật cờ sửa lỗi."
+            );
         }
     }
 
@@ -391,7 +405,9 @@ public class FixBugMiniGame3 : MonoBehaviour
         RemoveEffectObjects(move);
         ResetAnimator(move);
 
-        
+        Debug.Log(
+            $"[FixBugMiniGame3] Đã khôi phục {move.name}."
+        );
     }
 
     private void RestorePlayer(
@@ -528,7 +544,9 @@ public class FixBugMiniGame3 : MonoBehaviour
 
         ClearData();
 
-      
+        Debug.Log(
+            "[FixBugMiniGame3] Đã dừng và xóa dữ liệu."
+        );
     }
 
     private void StopFixBug()

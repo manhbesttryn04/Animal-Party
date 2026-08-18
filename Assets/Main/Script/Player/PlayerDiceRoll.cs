@@ -103,7 +103,7 @@ public class PlayerDiceRoll : MonoBehaviour
     private IEnumerator HideDiceAfterTime()
     {
         // Hiện mặt xúc xắc trong 3 giây
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(3f);
 
         if (manager != null && manager.playerCamera != null)
         {

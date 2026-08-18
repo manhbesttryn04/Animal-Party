@@ -9,7 +9,7 @@ OcclusionCullingSettings:
     smallestHole: 0.25
     backfaceThreshold: 100
   m_SceneGUID: 14f126fce0b9dfd4688932e253f84da9
-  m_OcclusionCullingData: {fileID: 36300000, guid: 0f9843b9fc1fd3d42b3f1a7a48bd17ce, type: 2}
+  m_OcclusionCullingData: {fileID: 36300000, guid: 3bbd49be26dfc76438a2915245bc6187, type: 2}
 --- !u!104 &2
 RenderSettings:
   m_ObjectHideFlags: 0
@@ -826,7 +826,7 @@ MonoBehaviour:
   canStartNextRound: 0
   canCheckPlayer2: 1
   canCheckMiniGame: 1
-  canRandomIndexMiniGame: 0
+  canRandomIndexMiniGame: 1
 --- !u!4 &265678874
 Transform:
   m_ObjectHideFlags: 0
@@ -5243,10 +5243,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   ui: {fileID: 1937041803}
   cannonPrefab: {fileID: 3025485861563049401, guid: 545d4b28a12fa654e99574cc0bf88887, type: 3}
-  bombCameraOffset: {x: 0, y: 2, z: -4}
-  cannonTargetCameraOffset: {x: 0, y: 5, z: -8}
-  cannonCameraFollowSpeed: 8
-  cannonTargetSettleTime: 0.5
   leftIndex: 0
   rightIndex: 0
   leftActive: 0

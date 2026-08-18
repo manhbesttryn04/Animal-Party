@@ -22,10 +22,6 @@ public class PlayerMoveAI : MonoBehaviour
     [Header("State")]
     public bool isMoving = false;
 
-    // Tín hiệu riêng dành cho camera Cannon Debuff.
-    public int activeBoomHitCount = 0;
-    public bool IsBoomHitActive => activeBoomHitCount > 0;
-
     #endregion
 
     #region Unity Events
@@ -35,18 +31,11 @@ public class PlayerMoveAI : MonoBehaviour
         playerTrapState = GetComponent<PlayerTrapState>();
         navMeshAgent = GetComponent<NavMeshAgent>();
 
-        navMeshAgent.obstacleAvoidanceType =
-            ObstacleAvoidanceType.NoObstacleAvoidance;
-
+        navMeshAgent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
         navMeshAgent.avoidancePriority = 50;
         navMeshAgent.updateRotation = false;
 
-        PointCheck boardPoint = FindAnyObjectByType<PointCheck>();
-
-        if (boardPoint != null)
-        {
-            pointCheck = boardPoint.point.ToList();
-        }
+        pointCheck = FindAnyObjectByType<PointCheck>().point.ToList();
 
         FindPoint();
     }
@@ -74,32 +63,19 @@ public class PlayerMoveAI : MonoBehaviour
         navMeshAgent.acceleration = 8f;
 
         int finishIndex = pointCheck.Count - 1;
-
-        int stepCanMove = Mathf.Min(
-            value,
-            finishIndex - currentIndex
-        );
+        int stepCanMove = Mathf.Min(value, finishIndex - currentIndex);
 
         for (int i = 0; i <= stepCanMove; i++)
         {
-            if (AudioManager.Instance != null)
-            {
-                AudioManager.Instance.PlaySFX(
-                    AudioManager.Instance.walkPlayerClip
-                );
-            }
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.walkPlayerClip);
 
             currentIndex++;
 
             GameObject target = pointCheck[currentIndex];
 
-            Vector3 finalPosition =
-                target.transform.position +
-                GetPlayerOffset();
+            Vector3 offset = GetPlayerOffset();
 
-            yield return StartCoroutine(
-                JumpTo(finalPosition)
-            );
+            yield return StartCoroutine(JumpTo(target.transform.position + offset));
 
             if (CheckFinishIndex())
             {
@@ -121,13 +97,7 @@ public class PlayerMoveAI : MonoBehaviour
             yield break;
         }
 
-        // Chỉ kiểm tra ô sau khi đã đi đủ số bước.
-        if (playerTrapState != null)
-        {
-            yield return StartCoroutine(
-                playerTrapState.CheckCurrentTile()
-            );
-        }
+        yield return StartCoroutine(playerTrapState.CheckCurrentTile());
 
         if (CheckFinishIndex())
         {
@@ -147,47 +117,27 @@ public class PlayerMoveAI : MonoBehaviour
     {
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.PlaySpecial(
-                AudioManager.Instance.bonusDiceVoiceClip
-            );
+            AudioManager.Instance.PlaySpecial(AudioManager.Instance.bonusDiceVoiceClip);
         }
 
-        if (UIManager.Instance != null)
-        {
-            StartCoroutine(
-                UIManager.Instance.HideBonusPanel()
-            );
-        }
+        StartCoroutine(UIManager.Instance.HideBonusPanel());
 
         yield return new WaitForSeconds(1.7f);
 
         int finishIndex = pointCheck.Count - 1;
-
-        int bonusStep = Mathf.Min(
-            2,
-            finishIndex - currentIndex
-        );
+        int bonusStep = Mathf.Min(2, finishIndex - currentIndex);
 
         for (int i = 0; i < bonusStep; i++)
         {
-            if (AudioManager.Instance != null)
-            {
-                AudioManager.Instance.PlaySFX(
-                    AudioManager.Instance.walkPlayerClip
-                );
-            }
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.walkPlayerClip);
 
             currentIndex++;
 
             GameObject target = pointCheck[currentIndex];
 
-            Vector3 finalPosition =
-                target.transform.position +
-                GetPlayerOffset();
+            Vector3 offset = GetPlayerOffset();
 
-            yield return StartCoroutine(
-                JumpTo(finalPosition)
-            );
+            yield return StartCoroutine(JumpTo(target.transform.position + offset));
 
             if (CheckFinishIndex())
             {
@@ -201,17 +151,12 @@ public class PlayerMoveAI : MonoBehaviour
 
         LookNextPoint();
 
-        if (playerTrapState != null)
-        {
-            yield return StartCoroutine(
-                playerTrapState.CheckCurrentTile()
-            );
-        }
+        yield return StartCoroutine(playerTrapState.CheckCurrentTile());
 
         if (CheckFinishIndex())
         {
-            StopAllCameraFollow();
             isMoving = false;
+          
             yield break;
         }
 
@@ -224,55 +169,36 @@ public class PlayerMoveAI : MonoBehaviour
 
     public bool CheckFinishIndex()
     {
-        if (pointCheck == null ||
-            pointCheck.Count == 0)
-        {
-            return false;
-        }
-
-        int finishIndex = pointCheck.Count - 1;
-
-        if (currentIndex < finishIndex)
+        if (pointCheck == null || pointCheck.Count == 0)
             return false;
 
-        currentIndex = finishIndex;
+        int finishIndex = pointCheck.Count - 1; // Point 33 = index 32
 
-        bool isPlayer2 =
-            manager.playerType.isPlayer2;
-
-        bool hasWin =
-            GameManager.Instance != null &&
-            GameManager.Instance.CheckWinnerByIndex(
-                isPlayer2,
-                currentIndex
-            );
-
-        if (hasWin)
+        if (currentIndex >= finishIndex)
         {
-            isMoving = false;
+            currentIndex = finishIndex;
 
-            if (navMeshAgent != null &&
-                navMeshAgent.enabled)
+            bool isPlayer2 = manager.playerType.isPlayer2;
+
+            bool hasWin = GameManager.Instance.CheckWinnerByIndex(isPlayer2, currentIndex);
+
+            if (hasWin)
             {
+                isMoving = false;
                 navMeshAgent.ResetPath();
             }
+
+            return hasWin;
         }
 
-        return hasWin;
+        return false;
     }
 
     #endregion
 
     #region End Turn
-
     private void StopAllCameraFollow()
     {
-        if (manager == null ||
-            manager.playerCamera == null)
-        {
-            return;
-        }
-
         manager.playerCamera.isFllow2 = false;
         manager.playerCamera.isFllow3 = false;
     }
@@ -310,112 +236,52 @@ public class PlayerMoveAI : MonoBehaviour
 
     public IEnumerator BoomHitEffect(int power)
     {
-        // Mỗi lần bom kích hoạt sẽ tăng bộ đếm.
-        // Nếu gặp tiếp một quả bom khác thì camera vẫn tiếp tục bám.
-        activeBoomHitCount++;
         isMoving = true;
 
-        try
+        manager.playerAnimator.playerAnimator.SetTrigger("HitBomb");
+
+        currentIndex = Mathf.Max(0, currentIndex - power);
+
+        GameObject targetPoint = pointCheck[currentIndex];
+
+        Vector3 finalPos = targetPoint.transform.position + GetPlayerOffset();
+
+        navMeshAgent.speed = 25f;
+        navMeshAgent.acceleration = 999f;
+
+        navMeshAgent.SetDestination(finalPos);
+        yield return StartCoroutine(playerTrapState.CheckCurrentTile());
+        while (navMeshAgent.pathPending ||
+               navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance)
         {
-            if (manager.playerAnimator != null)
-            {
-                manager.playerAnimator
-                    .playerAnimator
-                    .SetTrigger("HitBomb");
-            }
-
-            currentIndex = Mathf.Max(
-                0,
-                currentIndex - power
-            );
-
-            GameObject targetPoint =
-                pointCheck[currentIndex];
-
-            Vector3 finalPosition =
-                targetPoint.transform.position +
-                GetPlayerOffset();
-
-            navMeshAgent.speed = 25f;
-            navMeshAgent.acceleration = 999f;
-
-            navMeshAgent.SetDestination(finalPosition);
-            if (playerTrapState != null)
-            {
-                yield return StartCoroutine(
-                    playerTrapState.CheckCurrentTile()
-                );
-            }
-          
-
-            // Chờ NavMesh tính đường.
-            while (navMeshAgent.enabled &&
-                   navMeshAgent.pathPending)
-            {
-                yield return null;
-            }
-
-            // Đợi người chơi thật sự đến ô đích.
-            float moveTimeout = 5f;
-
-            while (navMeshAgent.enabled &&
-                   navMeshAgent.hasPath &&
-                   navMeshAgent.remainingDistance >
-                   navMeshAgent.stoppingDistance &&
-                   moveTimeout > 0f)
-            {
-                moveTimeout -= Time.deltaTime;
-                yield return null;
-            }
-
-            navMeshAgent.speed = 4f;
-            navMeshAgent.acceleration = 8f;
-
-            if (navMeshAgent.enabled)
-            {
-                navMeshAgent.ResetPath();
-                navMeshAgent.Warp(transform.position);
-            }
-
-            // Chỉ kiểm tra bomb, coin hoặc teleport
-            // sau khi đã đáp đến ô đích.
-           
+            yield return null;
         }
-        finally
-        {
-            activeBoomHitCount = Mathf.Max(
-                0,
-                activeBoomHitCount = 0
-            );
 
-            // Chỉ kết thúc khi toàn bộ chuỗi bom đã chạy xong.
-            isMoving = activeBoomHitCount > 0;
-        }
+        navMeshAgent.speed = 4f;
+        navMeshAgent.acceleration = 8f;
+
+        navMeshAgent.ResetPath();
+        navMeshAgent.Warp(transform.position);
+
+       
+
+        isMoving = false;
     }
 
     public IEnumerator TeleportEffect(int targetIndex)
     {
         isMoving = true;
 
-        currentIndex = Mathf.Clamp(
-            targetIndex,
-            0,
-            pointCheck.Count - 1
-        );
+        currentIndex = Mathf.Clamp(targetIndex, 0, pointCheck.Count - 1);
 
-        GameObject targetPoint =
-            pointCheck[currentIndex];
+        GameObject targetPoint = pointCheck[currentIndex];
 
-        Vector3 finalPosition =
-            targetPoint.transform.position +
-            GetPlayerOffset();
+        Vector3 finalPos = targetPoint.transform.position + GetPlayerOffset();
 
         navMeshAgent.enabled = false;
-
-        transform.position = finalPosition;
-
+        transform.position = finalPos;
         navMeshAgent.enabled = true;
-        navMeshAgent.Warp(finalPosition);
+        navMeshAgent.Warp(finalPos);
 
         if (CheckFinishIndex())
         {
@@ -427,57 +293,40 @@ public class PlayerMoveAI : MonoBehaviour
         yield return null;
     }
 
-    private IEnumerator JumpTo(Vector3 targetPosition)
+    private IEnumerator JumpTo(Vector3 targetPos)
     {
         navMeshAgent.enabled = false;
 
-        Vector3 startPosition = transform.position;
+        Vector3 startPos = transform.position;
 
-        manager.playerAnimator
-            .playerAnimator
-            .SetTrigger("Jump");
+        manager.playerAnimator.playerAnimator.SetTrigger("Jump");
 
-        while (!manager.playerAnimator
-                   .playerAnimator
-                   .GetCurrentAnimatorStateInfo(0)
-                   .IsName("Jump"))
+        while (!manager.playerAnimator.playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("Jump"))
         {
             yield return null;
         }
 
         float duration = 0.4f;
         float height = 0.8f;
-        float elapsed = 0f;
+        float t = 0f;
 
-        while (elapsed < duration)
+        while (t < duration)
         {
-            elapsed += Time.deltaTime;
+            t += Time.deltaTime;
 
-            float percent = Mathf.Clamp01(
-                elapsed / duration
-            );
+            float percent = t / duration;
 
-            Vector3 position = Vector3.Lerp(
-                startPosition,
-                targetPosition,
-                percent
-            );
+            Vector3 pos = Vector3.Lerp(startPos, targetPos, percent);
+            pos.y += Mathf.Sin(percent * Mathf.PI) * height;
 
-            position.y +=
-                Mathf.Sin(percent * Mathf.PI) *
-                height;
-
-            transform.position = position;
+            transform.position = pos;
 
             yield return null;
         }
 
-        transform.position = targetPosition;
+        transform.position = targetPos;
 
-        while (manager.playerAnimator
-                   .playerAnimator
-                   .GetCurrentAnimatorStateInfo(0)
-                   .IsName("Jump"))
+        while (manager.playerAnimator.playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("Jump"))
         {
             yield return null;
         }
@@ -485,8 +334,9 @@ public class PlayerMoveAI : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
 
         navMeshAgent.enabled = true;
-        navMeshAgent.Warp(targetPosition);
+        navMeshAgent.Warp(targetPos);
     }
+
 
     #endregion
 
@@ -494,48 +344,24 @@ public class PlayerMoveAI : MonoBehaviour
 
     public void FindPoint()
     {
-        if (pointCheck == null)
-        {
-            pointCheck = new List<GameObject>();
-        }
-
-        while (pointCheck.Count < 33)
-        {
-            pointCheck.Add(null);
-        }
-
         for (int i = 0; i < 33; i++)
         {
-            GameObject point =
-                GameObject.Find($"Point {i + 1}");
-
-            if (point != null)
-            {
-                pointCheck[i] = point;
-            }
+            pointCheck[i] = GameObject.Find($"Point {i + 1}");
         }
     }
 
     private Vector3 GetPlayerOffset()
     {
         return manager.playerType.isPlayer2
-            ? new Vector3(0f, 0f, -0.3f)
-            : new Vector3(0f, 0f, 0.3f);
+            ? new Vector3(0, 0, -0.3f)
+            : new Vector3(0, 0, 0.3f);
     }
 
     private void LookNextPoint()
     {
-        if (currentIndex + 1 >= pointCheck.Count)
-            return;
-
-        GameObject nextPoint =
-            pointCheck[currentIndex + 1];
-
-        if (nextPoint != null)
+        if (currentIndex + 1 < pointCheck.Count)
         {
-            transform.LookAt(
-                nextPoint.transform.position
-            );
+            transform.LookAt(pointCheck[currentIndex + 1].transform.position);
         }
     }
 

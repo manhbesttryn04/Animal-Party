@@ -50,7 +50,6 @@ public class PlayerTrapState : MonoBehaviour
             //==========================
             if (trap.hasTelep)
             {
-                
                 trap.TelepActivated();
                 if (AudioManager.Instance != null)
                 {

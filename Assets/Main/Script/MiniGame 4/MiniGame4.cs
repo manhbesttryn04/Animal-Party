@@ -49,7 +49,6 @@ public class MiniGame4 : MonoBehaviour
     private GameObject currentAttackTarget;
     private bool isWaitingAttackEvent;
     private bool hasSetEndTimer;
-    private bool hasGivenReward;
 
     private Quaternion backRotation;
     private Quaternion lookRotation;
@@ -59,10 +58,6 @@ public class MiniGame4 : MonoBehaviour
     private HashSet<GameObject> detectedPlayers = new HashSet<GameObject>();
     private HashSet<GameObject> deadPlayers = new HashSet<GameObject>();
     private List<GameObject> finishedPlayers = new List<GameObject>();
-
-    // Chỉ dùng để dọn những viên đạn còn tồn tại khi minigame dừng.
-    // Không thay đổi cách bay hoặc cách gây chết của đạn.
-    private HashSet<GameObject> activeBullets = new HashSet<GameObject>();
 
     private Dictionary<GameObject, Vector3> redStartPositions =
         new Dictionary<GameObject, Vector3>();
@@ -78,34 +73,10 @@ public class MiniGame4 : MonoBehaviour
 
     public void StartMiniGame()
     {
-        if (isRunning || IsFinishingSequence) return;
-
-        StopAllCoroutines();
-
-        // Dọn phòng trường hợp một viên đạn cũ còn sót từ lần chơi trước.
-        ClearActiveBullets();
-
-        isWatching = false;
-        isAttacking = false;
-        hasLaughThisWatch = false;
-        isWaitingAttackEvent = false;
-        currentAttackTarget = null;
+        if (isRunning) return;
 
         hasSetEndTimer = false;
-        hasGivenReward = false;
         IsFinishingSequence = false;
-
-        attackQueue.Clear();
-        detectedPlayers.Clear();
-        deadPlayers.Clear();
-        finishedPlayers.Clear();
-        redStartPositions.Clear();
-
-        if (muzzleFlash != null)
-            muzzleFlash.SetActive(false);
-
-        if (animator != null)
-            animator.ResetTrigger("Attack");
 
         SetUpAllPlayer();
         isRunning = true;
@@ -115,33 +86,17 @@ public class MiniGame4 : MonoBehaviour
     public void StopMiniGame()
     {
         isRunning = false;
-        isWatching = false;
-        isAttacking = false;
-        hasLaughThisWatch = false;
-        isWaitingAttackEvent = false;
         IsFinishingSequence = false;
-        currentAttackTarget = null;
 
         StopAllCoroutines();
-        ClearActiveBullets();
-
-        if (muzzleFlash != null)
-            muzzleFlash.SetActive(false);
-
-        if (animator != null)
-            animator.ResetTrigger("Attack");
 
         AudioManager.Instance.StopEnvironment();
         AudioManager.Instance.StopSpecial();
 
 
         // Tính thưởng trước khi Clear
-        if (!hasGivenReward && manager != null)
-        {
-            hasGivenReward = true;
-            CheckFinishReward(manager.currentPlayer1);
-            CheckFinishReward(manager.currentPlayer2);
-        }
+        CheckFinishReward(manager.currentPlayer1);
+        CheckFinishReward(manager.currentPlayer2);
 
         attackQueue.Clear();
         detectedPlayers.Clear();
@@ -149,6 +104,8 @@ public class MiniGame4 : MonoBehaviour
         finishedPlayers.Clear();
         redStartPositions.Clear();
 
+        currentAttackTarget = null;
+        isWaitingAttackEvent = false;
         hasSetEndTimer = false;
 
         transform.rotation = startRotation;
@@ -196,10 +153,6 @@ public class MiniGame4 : MonoBehaviour
                 CheckFinish(manager.currentPlayer1);
                 CheckFinish(manager.currentPlayer2);
 
-                // Nếu cả hai đã chết thì không cần tiếp tục thời gian quan sát.
-                if (AreBothPlayersDead())
-                    break;
-
                 CheckPlayer(manager.currentPlayer1);
                 CheckPlayer(manager.currentPlayer2);
 
@@ -212,9 +165,7 @@ public class MiniGame4 : MonoBehaviour
 
             isWatching = false;
 
-            while (isAttacking ||
-                   attackQueue.Count > 0 ||
-                   activeBullets.Count > 0)
+            while (isAttacking || attackQueue.Count > 0)
             {
                 if (!isAttacking && attackQueue.Count > 0)
                     StartCoroutine(ProcessAttackQueue());
@@ -222,14 +173,6 @@ public class MiniGame4 : MonoBehaviour
                 yield return null;
             }
             AudioManager.Instance.StopSpecial();
-
-            // Giữ nguyên hướng cướp biển sau phát bắn cuối.
-            // Không quay lưng và không bắt đầu nhịp xanh khi cả hai đã chết.
-            if (AreBothPlayersDead())
-            {
-                isRunning = false;
-                yield break;
-            }
 
             yield return StartCoroutine(RotateTo(backRotation, rotateSpeed));
 
@@ -361,10 +304,6 @@ public class MiniGame4 : MonoBehaviour
     // GỌI HÀM NÀY TRONG ANIMATION EVENT ATTACK
     public void PiraterAttack()
     {
-        // Animation Event cũ không được phép bắn sau khi minigame đã dừng.
-        if (!isRunning && !IsFinishingSequence)
-            return;
-
         StartCoroutine(ShowMuzzleFlash());
 
         if (currentAttackTarget != null)
@@ -393,9 +332,6 @@ public class MiniGame4 : MonoBehaviour
             Quaternion.identity
         );
 
-        if (bullet != null)
-            activeBullets.Add(bullet);
-
         StartCoroutine(FakeBulletFly(bullet, target, targetPos));
     }
 
@@ -423,7 +359,6 @@ public class MiniGame4 : MonoBehaviour
             yield return null;
         }
 
-        activeBullets.Remove(bullet);
         Destroy(bullet);
         KillFakePlayer(target);
     }
@@ -433,13 +368,6 @@ public class MiniGame4 : MonoBehaviour
         if (IsFinishingSequence)
             return;
 
-        // Ghi nhận người vừa qua đích đúng thời điểm đồng hồ về 00:00.
-        if (manager != null)
-        {
-            CheckFinish(manager.currentPlayer1);
-            CheckFinish(manager.currentPlayer2);
-        }
-
         isRunning = false;
         isWatching = false;
         isAttacking = false;
@@ -448,7 +376,6 @@ public class MiniGame4 : MonoBehaviour
 
         // Dừng vòng quay bình thường và các đòn tấn công đang chạy.
         StopAllCoroutines();
-        ClearActiveBullets();
 
         attackQueue.Clear();
         detectedPlayers.Clear();
@@ -564,19 +491,6 @@ public class MiniGame4 : MonoBehaviour
 
         return deadPlayers.Contains(player) ||
                finishedPlayers.Contains(player);
-    }
-
-    bool AreBothPlayersDead()
-    {
-        if (manager == null ||
-            manager.currentPlayer1 == null ||
-            manager.currentPlayer2 == null)
-        {
-            return false;
-        }
-
-        return deadPlayers.Contains(manager.currentPlayer1) &&
-               deadPlayers.Contains(manager.currentPlayer2);
     }
 
     void CheckEndCondition()
@@ -722,17 +636,6 @@ public class MiniGame4 : MonoBehaviour
 
         if (muzzleFlash != null)
             muzzleFlash.SetActive(false);
-    }
-
-    void ClearActiveBullets()
-    {
-        foreach (GameObject bullet in activeBullets)
-        {
-            if (bullet != null)
-                Destroy(bullet);
-        }
-
-        activeBullets.Clear();
     }
 
     public void SetUpAllPlayer()
