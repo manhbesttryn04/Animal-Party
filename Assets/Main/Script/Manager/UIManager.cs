@@ -249,10 +249,23 @@ public class UIManager : MonoBehaviour
     public List<GameObject> globalAnyControllerInstructionList =
         new List<GameObject>();
 
-    // Cache riêng cho nhóm Global, không liên quan InstructInputMinigame.
+    // Cache trạng thái tay cầm dùng chung cho toàn bộ UI ngoài minigame.
+    // Không liên quan tới InstructInputMinigame.
     private bool previousGlobalP1ControllerConnected;
     private bool previousGlobalP2ControllerConnected;
+    private bool previousIsShowKeyboard;
     private bool globalInstructionInitialized;
+
+    [Tooltip(
+        "Chu kỳ kiểm tra cha của các Global Instruction vừa được mở/đóng."
+    )]
+    [Min(0.05f)]
+    [SerializeField]
+    private float globalParentVisibilityCheckInterval = 0.25f;
+
+    private float globalParentVisibilityCheckTimer;
+    private int previousGlobalParentVisibilityHash;
+    private bool globalParentVisibilityInitialized;
 
     [Header("Screen Transition")]
     public GameObject blackPanel;
@@ -325,21 +338,20 @@ public class UIManager : MonoBehaviour
             .GetComponent<PlayerManager>();
         UpdateAllPlayMainUI();
 
-        if (ControllerManager.Instance != null)
-        {
-            ControllerManager.Instance
-                .RefreshInputInstructionUI();
-        }
-
-        // UIManager chỉ quản lý nhóm Global ngoài minigame.
-        UpdateGlobalDeviceInstructionUI(true);
+        // UIManager quản lý toàn bộ UI kết nối tay cầm ngoài minigame.
+        UpdateControllerConnectionUI(true, true);
     }
 
     private void Update()
     {
-        // Luôn kiểm tra trước khi return để hướng dẫn vẫn cập nhật
-        // khi đang mở Setting, Shop hoặc một UI khác.
-        UpdateGlobalDeviceInstructionUI();
+        bool globalParentVisibilityChanged =
+            CheckGlobalInstructionParentVisibilityChanged();
+
+        // Trạng thái gốc vẫn lấy từ ControllerManager.
+        // UI chỉ thay đổi khi P1/P2 đổi kết nối hoặc cha Global vừa mở lại.
+        UpdateControllerConnectionUI(
+            globalParentVisibilityChanged
+        );
 
         if (notifiPlay == null ||
             !notifiPlay.activeSelf)
@@ -362,10 +374,17 @@ public class UIManager : MonoBehaviour
 
     public void RefreshGlobalDeviceInstructionUI()
     {
-        UpdateGlobalDeviceInstructionUI(true);
+        UpdateControllerConnectionUI(true);
     }
 
-    private void UpdateGlobalDeviceInstructionUI(bool force = false)
+    public void RefreshControllerConnectionUI()
+    {
+        UpdateControllerConnectionUI(true);
+    }
+
+    private void UpdateControllerConnectionUI(
+        bool force = false,
+        bool showInitialNotifications = false)
     {
         ControllerManager controller =
             ControllerManager.Instance;
@@ -378,12 +397,28 @@ public class UIManager : MonoBehaviour
             controller != null &&
             controller.IsConsole2Connected();
 
+        bool wasInitialized =
+            globalInstructionInitialized;
+
+        bool p1ConnectionChanged =
+            wasInitialized &&
+            p1ControllerConnected !=
+                previousGlobalP1ControllerConnected;
+
+        bool p2ConnectionChanged =
+            wasInitialized &&
+            p2ControllerConnected !=
+                previousGlobalP2ControllerConnected;
+
+        bool keyboardDisplayModeChanged =
+            wasInitialized &&
+            isShowKeyBoard != previousIsShowKeyboard;
+
         if (!force &&
-            globalInstructionInitialized &&
-            p1ControllerConnected ==
-                previousGlobalP1ControllerConnected &&
-            p2ControllerConnected ==
-                previousGlobalP2ControllerConnected)
+            wasInitialized &&
+            !p1ConnectionChanged &&
+            !p2ConnectionChanged &&
+            !keyboardDisplayModeChanged)
         {
             return;
         }
@@ -394,7 +429,31 @@ public class UIManager : MonoBehaviour
         previousGlobalP2ControllerConnected =
             p2ControllerConnected;
 
+        previousIsShowKeyboard =
+            isShowKeyBoard;
+
         globalInstructionInitialized = true;
+
+        bool hasAnyController =
+            p1ControllerConnected ||
+            p2ControllerConnected;
+
+        bool hasBothControllers =
+            p1ControllerConnected &&
+            p2ControllerConnected;
+
+        SetGameObjectActiveIfChanged(
+            instructConsolePanel,
+            hasAnyController
+        );
+
+        if (isShowKeyBoard)
+        {
+            SetGameObjectActiveIfChanged(
+                instructKeyBoardPanel,
+                !hasBothControllers
+            );
+        }
 
         // Chỉ thay đổi nhóm Global, không chạm vào list của minigame.
         SetGlobalInstructionListActive(
@@ -417,15 +476,89 @@ public class UIManager : MonoBehaviour
             p2ControllerConnected
         );
 
-        bool hasAnyController =
-            p1ControllerConnected ||
-            p2ControllerConnected;
-
         // Có 1/2 hoặc 2/2 tay cầm thì hiện hướng dẫn chung.
         SetGlobalInstructionListActive(
             globalAnyControllerInstructionList,
             hasAnyController
         );
+
+        if (wasInitialized)
+        {
+            if (p1ConnectionChanged)
+            {
+                ShowControllerConnectionNotification(
+                    0,
+                    p1ControllerConnected
+                );
+            }
+
+            if (p2ConnectionChanged)
+            {
+                ShowControllerConnectionNotification(
+                    1,
+                    p2ControllerConnected
+                );
+            }
+        }
+        else if (showInitialNotifications)
+        {
+            if (p1ControllerConnected)
+            {
+                ShowControllerConnectionNotification(0, true);
+            }
+
+            if (p2ControllerConnected)
+            {
+                ShowControllerConnectionNotification(1, true);
+            }
+        }
+    }
+
+    private void SetGameObjectActiveIfChanged(
+        GameObject target,
+        bool active)
+    {
+        if (target != null &&
+            target.activeSelf != active)
+        {
+            target.SetActive(active);
+        }
+    }
+
+    private void ShowControllerConnectionNotification(
+        int playerIndex,
+        bool connected)
+    {
+        GameObject notification;
+
+        if (playerIndex == 0)
+        {
+            notification = connected
+                ? consoleOpenImageP1
+                : consoleCloseImageP1;
+        }
+        else
+        {
+            notification = connected
+                ? consoleOpenImageP2
+                : consoleCloseImageP2;
+        }
+
+        if (notification == null)
+            return;
+
+        if (connected)
+        {
+            StartCoroutine(
+                ShowConsoleConect(notification)
+            );
+        }
+        else
+        {
+            StartCoroutine(
+                ShowConsoleFailConect(notification)
+            );
+        }
     }
 
     private void SetGlobalInstructionListActive(
@@ -442,11 +575,137 @@ public class UIManager : MonoBehaviour
             GameObject instruction =
                 instructionList[i];
 
-            if (instruction != null &&
-                instruction.activeSelf != active)
+            if (instruction == null)
+                continue;
+
+            Transform parent =
+                instruction.transform.parent;
+
+            // UI cha đang bị ẩn thì toàn bộ UI con cũng không nhìn thấy.
+            // Không cần gọi SetActive cho mục này cho tới khi cha được mở lại.
+            if (parent != null &&
+                !parent.gameObject.activeInHierarchy)
+            {
+                continue;
+            }
+
+            if (instruction.activeSelf != active)
             {
                 instruction.SetActive(active);
             }
+        }
+    }
+
+    private bool CheckGlobalInstructionParentVisibilityChanged()
+    {
+        globalParentVisibilityCheckTimer +=
+            Time.unscaledDeltaTime;
+
+        float interval = Mathf.Max(
+            0.05f,
+            globalParentVisibilityCheckInterval
+        );
+
+        if (globalParentVisibilityInitialized &&
+            globalParentVisibilityCheckTimer < interval)
+        {
+            return false;
+        }
+
+        globalParentVisibilityCheckTimer = 0f;
+
+        int currentHash =
+            CalculateGlobalInstructionParentVisibilityHash();
+
+        if (!globalParentVisibilityInitialized)
+        {
+            previousGlobalParentVisibilityHash =
+                currentHash;
+
+            globalParentVisibilityInitialized = true;
+            return false;
+        }
+
+        if (currentHash ==
+            previousGlobalParentVisibilityHash)
+        {
+            return false;
+        }
+
+        previousGlobalParentVisibilityHash =
+            currentHash;
+
+        return true;
+    }
+
+    private int CalculateGlobalInstructionParentVisibilityHash()
+    {
+        unchecked
+        {
+            int hash = 17;
+
+            AddInstructionParentVisibilityToHash(
+                globalKeyboardInstructionListP1,
+                ref hash
+            );
+
+            AddInstructionParentVisibilityToHash(
+                globalConsoleInstructionListP1,
+                ref hash
+            );
+
+            AddInstructionParentVisibilityToHash(
+                globalKeyboardInstructionListP2,
+                ref hash
+            );
+
+            AddInstructionParentVisibilityToHash(
+                globalConsoleInstructionListP2,
+                ref hash
+            );
+
+            AddInstructionParentVisibilityToHash(
+                globalAnyControllerInstructionList,
+                ref hash
+            );
+
+            return hash;
+        }
+    }
+
+    private void AddInstructionParentVisibilityToHash(
+        List<GameObject> instructionList,
+        ref int hash)
+    {
+        if (instructionList == null)
+            return;
+
+        for (int i = 0;
+             i < instructionList.Count;
+             i++)
+        {
+            GameObject instruction =
+                instructionList[i];
+
+            if (instruction == null)
+                continue;
+
+            Transform parent =
+                instruction.transform.parent;
+
+            if (parent == null)
+            {
+                hash = hash * 31 + 1;
+                continue;
+            }
+
+            hash = hash * 31 +
+                   parent.GetInstanceID();
+
+            hash = hash * 31 +
+                   (parent.gameObject.activeInHierarchy
+                       ? 1
+                       : 0);
         }
     }
 

@@ -59,7 +59,6 @@ public class InstructInputMinigame : MonoBehaviour
     {
         if (!isInstructionShowing)
             return;
-
         ControllerManager controllerManager =
             ControllerManager.Instance;
 
@@ -98,11 +97,6 @@ public class InstructInputMinigame : MonoBehaviour
 
         if (selectedBoolList == null)
         {
-            Debug.LogWarning(
-                $"Index minigame không hợp lệ: {indexMinigame}. " +
-                "Index phải từ 1 đến 8."
-            );
-
             HideAllInput();
             return;
         }

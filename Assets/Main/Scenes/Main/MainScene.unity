@@ -834,6 +834,7 @@ MonoBehaviour:
   playerWinRound: 
   player1Main: {fileID: 0}
   player2Main: {fileID: 0}
+  canRunGameLoopUpdate: 1
   canStartNextRound: 0
   canCheckPlayer2: 1
   canCheckMiniGame: 1
@@ -9629,6 +9630,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2133488384}
     m_Modifications:
+    - target: {fileID: 1112012010094564293, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1624046535044534861, guid: daf74ac61d42e5c4f8d3fca2a4ed2b8e, type: 3}
       propertyPath: m_Name
       value: Trap Minigame 6
@@ -10027,6 +10032,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: MiniGame 4
       objectReference: {fileID: 0}
+    - target: {fileID: 8343005598665273476, guid: 8bf137949f257d34bb43024206c0cfd5, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -10106,6 +10115,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3364063199238348523, guid: 4ede0bf0bcac27e4caf9356a6938336d, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5245506355553191634, guid: 4ede0bf0bcac27e4caf9356a6938336d, type: 3}
       propertyPath: moveSpeed
       value: 7
@@ -10146,6 +10159,10 @@ PrefabInstance:
     - target: {fileID: 1787248676946116622, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
       propertyPath: m_Name
       value: MiniGame 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3921973622742797499, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3945112802847102104, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
       propertyPath: manager
@@ -10512,6 +10529,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2175463609442826208, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2471266372007175701, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -10543,6 +10564,10 @@ PrefabInstance:
     - target: {fileID: 4185238870661718190, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
       propertyPath: m_Name
       value: UI Manager
+      objectReference: {fileID: 0}
+    - target: {fileID: 4584611091938301912, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5024982370493737988, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -10620,9 +10645,17 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7656766372887103380, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8413204129309809847, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8561886219460763543, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8699851112556421970, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
       propertyPath: m_IsActive
@@ -10701,6 +10734,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: MiniGame 3
       objectReference: {fileID: 0}
+    - target: {fileID: 9055710793541359638, guid: be209fedaaf98dd45b5aeeae493e3b70, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -10769,6 +10806,14 @@ PrefabInstance:
     - target: {fileID: 7576957497667481728, guid: 8c1a2e4f67c39234b8ca76303e14e560, type: 3}
       propertyPath: waitAtPoint
       value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7686807452040099702, guid: 8c1a2e4f67c39234b8ca76303e14e560, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8149235726067356008, guid: 8c1a2e4f67c39234b8ca76303e14e560, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8573759635235798894, guid: 8c1a2e4f67c39234b8ca76303e14e560, type: 3}
       propertyPath: m_LocalPosition.x
@@ -10889,6 +10934,10 @@ PrefabInstance:
     - target: {fileID: 6877302535575896659, guid: f37a00a7f6ae6e1409f6e8a4f6957b83, type: 3}
       propertyPath: moveSpeed
       value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 8011059454052248926, guid: f37a00a7f6ae6e1409f6e8a4f6957b83, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -110,8 +110,7 @@ public class ControllerManager : MonoBehaviour
         float waitTimer = 0f;
         const float maxWaitTime = 2f;
 
-        while ((UIManager.Instance == null ||
-                AudioManager.Instance == null) &&
+        while (AudioManager.Instance == null &&
                waitTimer < maxWaitTime)
         {
             waitTimer += Time.unscaledDeltaTime;
@@ -119,7 +118,7 @@ public class ControllerManager : MonoBehaviour
         }
 
         allowControllerSounds = true;
-        ShowInitialConnectedControllers();
+        PlayInitialConnectedSound();
     }
 
     private void Update()
@@ -142,8 +141,6 @@ public class ControllerManager : MonoBehaviour
         {
             RefreshControllerState();
         }
-
-        UpdateConsoleInstructionUI();
     }
 
     private void HandleInputDeviceChange(
@@ -196,7 +193,6 @@ public class ControllerManager : MonoBehaviour
 
         controllerStateDirty = false;
 
-        UpdateConsoleInstructionUI();
         UpdateCursor();
         PrintControllerState();
     }
@@ -216,7 +212,6 @@ public class ControllerManager : MonoBehaviour
         if (!changed)
             return;
 
-        UpdateConsoleInstructionUI();
         UpdateCursor();
         PrintControllerState();
     }
@@ -434,7 +429,6 @@ public class ControllerManager : MonoBehaviour
 
         if (notify)
         {
-            ShowConsole1Connected();
             PlayConnectSound();
         }
     }
@@ -462,7 +456,6 @@ public class ControllerManager : MonoBehaviour
 
         if (notify)
         {
-            ShowConsole2Connected();
             PlayConnectSound();
         }
     }
@@ -489,7 +482,6 @@ public class ControllerManager : MonoBehaviour
         console1LastChange =
             ControllerChangeType.Disconnected;
 
-        ShowConsole1Disconnected();
         PlayDisconnectSound();
     }
 
@@ -511,7 +503,6 @@ public class ControllerManager : MonoBehaviour
         console2LastChange =
             ControllerChangeType.Disconnected;
 
-        ShowConsole2Disconnected();
         PlayDisconnectSound();
     }
 
@@ -993,39 +984,14 @@ public class ControllerManager : MonoBehaviour
     // UI
     // =========================================================
 
+    // Giữ hàm public cũ để các script khác không bị lỗi compile.
+    // Toàn bộ logic UI thật sự đã được chuyển sang UIManager.
     public void RefreshInputInstructionUI()
     {
-        UpdateConsoleInstructionUI();
-    }
-
-    private void UpdateConsoleInstructionUI()
-    {
-        UIManager ui = UIManager.Instance;
-
-        if (ui == null)
-            return;
-
-        bool hasAnyController =
-            IsConsole1Connected() ||
-            IsConsole2Connected();
-
-        bool hasBothControllers =
-            IsConsole1Connected() &&
-            IsConsole2Connected();
-
-        if (ui.instructConsolePanel != null)
+        if (UIManager.Instance != null)
         {
-            ui.instructConsolePanel.SetActive(
-                hasAnyController
-            );
-        }
-
-        if (ui.instructKeyBoardPanel != null &&
-            ui.isShowKeyBoard)
-        {
-            ui.instructKeyBoardPanel.SetActive(
-                !hasBothControllers
-            );
+            UIManager.Instance
+                .RefreshControllerConnectionUI();
         }
     }
 
@@ -1039,97 +1005,15 @@ public class ControllerManager : MonoBehaviour
     }
 
     // =========================================================
-    // CONNECT UI
+    // INITIAL CONNECTION SOUND
     // =========================================================
 
-    private void ShowInitialConnectedControllers()
+    private void PlayInitialConnectedSound()
     {
-        bool showedController = false;
-
-        if (IsConsole1Connected())
-        {
-            ShowConsole1Connected();
-            showedController = true;
-        }
-
-        if (IsConsole2Connected())
-        {
-            ShowConsole2Connected();
-            showedController = true;
-        }
-
-        if (showedController)
+        if (HasAnyController())
         {
             PlayConnectSound();
         }
-    }
-
-    private void ShowConsole1Connected()
-    {
-        UIManager ui = UIManager.Instance;
-
-        if (ui == null ||
-            ui.consoleOpenImageP1 == null)
-        {
-            return;
-        }
-
-        StartCoroutine(
-            ui.ShowConsoleConect(
-                ui.consoleOpenImageP1
-            )
-        );
-    }
-
-    private void ShowConsole2Connected()
-    {
-        UIManager ui = UIManager.Instance;
-
-        if (ui == null ||
-            ui.consoleOpenImageP2 == null)
-        {
-            return;
-        }
-
-        StartCoroutine(
-            ui.ShowConsoleConect(
-                ui.consoleOpenImageP2
-            )
-        );
-    }
-
-    private void ShowConsole1Disconnected()
-    {
-        UIManager ui = UIManager.Instance;
-
-        if (ui == null ||
-            ui.consoleCloseImageP1 == null)
-        {
-            return;
-        }
-
-        StartCoroutine(
-            ui.ShowConsoleFailConect(
-                ui.consoleCloseImageP1
-            )
-        );
-    }
-
-    private void ShowConsole2Disconnected()
-    {
-        UIManager ui = UIManager.Instance;
-
-        if (ui == null ||
-            ui.consoleCloseImageP2 == null)
-        {
-            return;
-        }
-
-        StartCoroutine(
-            ui.ShowConsoleFailConect(
-                ui.consoleCloseImageP2
-            )
-        );
     }
 
     // =========================================================
@@ -1202,7 +1086,7 @@ public class ControllerManager : MonoBehaviour
 
     private void PrintControllerState()
     {
-       
+
     }
 
     // =========================================================

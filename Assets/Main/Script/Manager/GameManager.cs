@@ -26,6 +26,7 @@ public class GameManager : MonoBehaviour
     public GameObject player2Main;
 
     [Header("Game Loop")]
+    public bool canRunGameLoopUpdate = true;
     public bool canStartNextRound = false;
     public bool canCheckPlayer2 = true;
     public bool canCheckMiniGame = true;
@@ -91,10 +92,11 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        // Nếu chưa qua vòng đầu tiên thì kiểm tra điều kiện bắt đầu minigame đầu
-        if (!stateGame.isFistRound)
+        // Minigame, debuff hoặc shop đang xử lý thì tạm dừng kiểm tra lượt chơi.
+        if (!canRunGameLoopUpdate)
         {
-            FistRoundMiniGame();
+            timer = 0f;
+            return;
         }
 
         timer += Time.deltaTime;
@@ -207,18 +209,12 @@ public class GameManager : MonoBehaviour
     // Bắt đầu minigame ngẫu nhiên
     public void JoinRandomMiniGame()
     {
-        // Đánh dấu đã qua vòng đầu
-        if (!stateGame.isFistRound)
-        {
-            stateGame.isFistRound = true;
-        }
-
         if (canRandomIndexMiniGame)
         {
             // Random minigame chưa chơi
             miniGameManager.indexMiniGame = GetRandomMiniGameNoRepeat();
 
-          
+
         }
 
         // Chạy minigame
@@ -285,7 +281,7 @@ public class GameManager : MonoBehaviour
             remainingMiniGames.Add(i);
         }
 
-       
+
     }
 
     // Có thể gọi hàm này nếu muốn reset toàn bộ
@@ -295,20 +291,7 @@ public class GameManager : MonoBehaviour
         remainingMiniGames.Clear();
         lastMiniGame = -1;
 
-       
-    }
 
-    // Kiểm tra cả 2 người chơi đã tới vòng 1 chưa
-    public void FistRoundMiniGame()
-    {
-        // PlayerRound r1 = player1Main.GetComponent<PlayerRound>();
-        // PlayerRound r2 = player2Main.GetComponent<PlayerRound>();
-
-        // Nếu cả 2 đều ở vòng 1 thì bắt đầu minigame đầu tiên
-        // if (r1.isRound1 && r2.isRound1)
-        // {
-        //     JoinRandomMiniGame();
-        // }
     }
 
     // =========================================================
@@ -577,6 +560,9 @@ public class GameManager : MonoBehaviour
             !canStartNextRound
         )
         {
+            // Cả hai người chơi đã roll xong:
+            // khóa Update trong suốt minigame, debuff và shop.
+            canRunGameLoopUpdate = false;
             canCheckMiniGame = false;
 
             PlayerTeleportToMiniGame();
@@ -679,7 +665,7 @@ public class GameManager : MonoBehaviour
                     AudioManager.Instance.winnerMiniGameClip1
                 );
             }
-            if(CursorManager.Instance != null)
+            if (CursorManager.Instance != null)
             {
 
                 CursorManager.Instance.SetSceneCursorVisible(false);
