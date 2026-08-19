@@ -27,6 +27,9 @@ public class CreditScroll : MonoBehaviour
     public float outroFadeTime = 4f;
 
     [Header("Fade All Audio")]
+    [Tooltip("Thời gian tăng dần âm lượng nhạc khi Credit bắt đầu")]
+    public float startAudioFadeTime = 5f;
+
     [Tooltip("Thời gian giảm toàn bộ âm thanh về 0")]
     public float endAudioFadeTime = 4f;
 
@@ -83,6 +86,7 @@ public class CreditScroll : MonoBehaviour
         if (cursor != null)
         {
             cursor.SetSceneCursorVisible(false);
+            cursor.SetSettingCursorActive(false);
         }
         SetupCredit();
         SetupIntroPanel();
@@ -220,8 +224,10 @@ public class CreditScroll : MonoBehaviour
             return;
         }
 
-
-        audio.PlayMusic(audio.musicMiniGame7);
+        audio.FadeInMusic(
+            audio.creditMusicClip,
+            startAudioFadeTime
+        );
     }
 
     //==================================================

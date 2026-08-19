@@ -41,9 +41,13 @@ public class MiniGame2 : MonoBehaviour
 
     private Color targetColor;
     private int currentRound = 1;
+    private Color defaultTargetColor = Color.white;
 
     private void Awake()
     {
+        if (targetColorImage != null)
+            defaultTargetColor = targetColorImage.color;
+
         InitializeColorPools();
     }
 
@@ -51,16 +55,25 @@ public class MiniGame2 : MonoBehaviour
     {
         if (isRunning)
             return;
+
+        if (manager == null ||
+            manager.currentPlayer1 == null ||
+            manager.currentPlayer2 == null ||
+            !HasValidPad())
+        {
+            return;
+        }
+
+        StopAllCoroutines();
+
+        if (cameraShake != null)
+            cameraShake.StopShake();
+
         SetUpAllPlayer();
         AudioManager.Instance.PlayEnvironment(AudioManager.Instance.javaLoopClip);
         if (canvasMiniGame != null)
         {
             canvasMiniGame.SetActive(true);
-        }
-
-        if (allPads.Count == 0)
-        {
-            return;
         }
 
         StartCoroutine(ColorGameLoop());
@@ -72,15 +85,21 @@ public class MiniGame2 : MonoBehaviour
         AudioManager.Instance.StopEnvironment();
         StopAllCoroutines();
 
+        if (cameraShake != null)
+            cameraShake.StopShake();
+
         if (canvasMiniGame != null)
         {
             canvasMiniGame.SetActive(false);
         }
 
-        foreach (ColorPad pad in allPads)
+        if (allPads != null)
         {
-            if (pad != null)
-                pad.ResetPad();
+            foreach (ColorPad pad in allPads)
+            {
+                if (pad != null)
+                    pad.ResetPad();
+            }
         }
 
         if (timerText != null)
@@ -88,10 +107,19 @@ public class MiniGame2 : MonoBehaviour
 
         if (roundText != null)
             roundText.text = "";
+
+        if (targetColorImage != null)
+            targetColorImage.color = defaultTargetColor;
+
+        currentRound = 1;
     }
 
     void InitializeColorPools()
     {
+        easyColors.Clear();
+        mediumColors.Clear();
+        hardColors.Clear();
+
         easyColors.Add(Color.red);
         easyColors.Add(Color.blue);
         easyColors.Add(Color.yellow);
@@ -152,7 +180,19 @@ public class MiniGame2 : MonoBehaviour
                 targetColorImage.color = targetColor;
             }
 
-            List<ColorPad> shuffledPads = new List<ColorPad>(allPads);
+            List<ColorPad> shuffledPads = new List<ColorPad>();
+
+            foreach (ColorPad pad in allPads)
+            {
+                if (pad != null)
+                    shuffledPads.Add(pad);
+            }
+
+            if (shuffledPads.Count == 0)
+            {
+                isRunning = false;
+                yield break;
+            }
 
             for (int i = 0; i < shuffledPads.Count; i++)
             {
@@ -233,7 +273,8 @@ public class MiniGame2 : MonoBehaviour
             // Thực hiện cho sập các ô đã được đánh dấu unsafe
             foreach (ColorPad pad in allPads)
             {
-                pad.CheckSurvival();
+                if (pad != null)
+                    pad.CheckSurvival();
             }
 
             // Chờ người chơi rơi
@@ -242,7 +283,8 @@ public class MiniGame2 : MonoBehaviour
             // Hồi lại các ô
             foreach (ColorPad pad in allPads)
             {
-                pad.ResetPad();
+                if (pad != null)
+                    pad.ResetPad();
             }
 
             // Chờ animation hồi sàn hoàn tất
@@ -297,6 +339,7 @@ public class MiniGame2 : MonoBehaviour
     {
         float elapsed = 0f;
         bool toggle = false;
+        float safeBlinkInterval = Mathf.Max(0.02f, blinkInterval);
 
         // Lưu lại màu gốc của các ô không an toàn để chớp tắt linh hoạt
         Dictionary<ColorPad, Color> originalColors = new Dictionary<ColorPad, Color>();
@@ -329,8 +372,8 @@ public class MiniGame2 : MonoBehaviour
                 }
             }
 
-            yield return new WaitForSeconds(blinkInterval);
-            elapsed += blinkInterval;
+            yield return new WaitForSeconds(safeBlinkInterval);
+            elapsed += safeBlinkInterval;
         }
 
         // Trả lại màu gốc một khoảnh khắc trước khi chính thức sập
@@ -345,6 +388,9 @@ public class MiniGame2 : MonoBehaviour
 
     private int CountPlayersOnPad(GameObject padObj)
     {
+        if (padObj == null)
+            return 0;
+
         Vector3 center = padObj.transform.position + Vector3.up * 1f;
         Vector3 halfExtents = new Vector3(0.49f, 1f, 0.49f);
 
@@ -376,10 +422,37 @@ public class MiniGame2 : MonoBehaviour
 
     public void SetUpAllPlayer()
     {
-        PlayerManager p1 = manager.currentPlayer1.GetComponent<PlayerManager>();
-        PlayerManager p2 = manager.currentPlayer2.GetComponent<PlayerManager>();
+        if (manager == null)
+            return;
 
-        p1.playerAttack.hasAttack = true;
-        p2.playerAttack.hasAttack = true;
+        SetUpPlayerAttack(manager.currentPlayer1);
+        SetUpPlayerAttack(manager.currentPlayer2);
+    }
+
+    private void SetUpPlayerAttack(GameObject playerObject)
+    {
+        if (playerObject == null)
+            return;
+
+        PlayerManager player = playerObject.GetComponent<PlayerManager>();
+
+        if (player == null || player.playerAttack == null)
+            return;
+
+        player.playerAttack.hasAttack = true;
+    }
+
+    private bool HasValidPad()
+    {
+        if (allPads == null)
+            return false;
+
+        foreach (ColorPad pad in allPads)
+        {
+            if (pad != null)
+                return true;
+        }
+
+        return false;
     }
 }

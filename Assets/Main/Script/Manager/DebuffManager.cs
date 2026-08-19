@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,6 +22,23 @@ public class DebuffManager : MonoBehaviour
     [Header("Prefabs")]
     public GameObject cannonPrefab;
 
+    [Header("Cannon Camera")]
+    [SerializeField]
+    private Vector3 bombCameraOffset =
+        new Vector3(0f, 2f, -4f);
+
+    [SerializeField]
+    private Vector3 cannonTargetCameraOffset =
+        new Vector3(0f, 5f, -8f);
+
+    [SerializeField]
+    private float cannonCameraFollowSpeed = 8f;
+
+    [SerializeField]
+    private float cannonTargetSettleTime = 0.5f;
+
+    private bool cannonTeleportTookCamera;
+
     // =========================================================
     // CARD SELECTION
     // =========================================================
@@ -31,6 +49,13 @@ public class DebuffManager : MonoBehaviour
 
     public bool leftActive;
     public bool rightActive;
+
+    [Header("Debuff Random Colors")]
+    [SerializeField] private Color magicDebuffColor = Color.blue;
+    [SerializeField] private Color cannonDebuffColor = Color.red;
+
+    private GameObject[] currentRandomDebuffCards;
+    private bool lastShowDebuffRandomColorLists;
 
     // =========================================================
     // NAVIGATION SETTINGS
@@ -82,11 +107,20 @@ public class DebuffManager : MonoBehaviour
     private void Start()
     {
         ui = UIManager.Instance;
-        if (isOpen) Open(0);
+        HideDebuffRandomColors();
+        if (isOpen) Open(1);
     }
 
     private void Update()
     {
+        // Cho phép bật/tắt công tắc UIManager ngay khi đang Play.
+        if (ui != null &&
+            ui.showDebuffRandomColorLists !=
+            lastShowDebuffRandomColorLists)
+        {
+            RefreshDebuffRandomColors();
+        }
+
         /*
          * Setting đang mở:
          * khóa hoàn toàn input chọn Debuff.
@@ -151,12 +185,13 @@ public class DebuffManager : MonoBehaviour
 
         if (ui == null)
         {
-            
+
             return;
         }
 
         ui.leftCardCanvas.SetActive(false);
         ui.rightCardCanvas.SetActive(false);
+        HideDebuffRandomColors();
 
         HideAllCards();
 
@@ -651,7 +686,7 @@ public class DebuffManager : MonoBehaviour
         if (card.itemIndex < 0 ||
             card.itemIndex >= UIManager.Instance.debuffSpriteList.Length)
         {
-          
+
 
             return;
         }
@@ -681,7 +716,7 @@ public class DebuffManager : MonoBehaviour
         {
             image.sprite = UIManager.Instance.debuffSpriteList[itemIndex];
         }
-       
+
 
         if (AudioManager.Instance != null)
         {
@@ -721,7 +756,7 @@ public class DebuffManager : MonoBehaviour
 
     private IEnumerator ApplyMagicDebuff(int playerIndex)
     {
-        if(AudioManager.Instance != null)
+        if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlaySpecial(AudioManager.Instance.petrificatioDebuffVoiceClip);
         }
@@ -826,6 +861,8 @@ public class DebuffManager : MonoBehaviour
 
     private IEnumerator ApplyCannonDebuff(int playerIndex)
     {
+        cannonTeleportTookCamera = false;
+
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlaySpecial(AudioManager.Instance.cannonDebuffVoiceClip);
@@ -906,9 +943,9 @@ public class DebuffManager : MonoBehaviour
             }
             if (UIManager.Instance != null)
             {
-               yield return StartCoroutine(UIManager.Instance.ShowDebuffAndBuffPanel(
-                     UIManager.Instance.cannonPowerPanel)
-                 );
+                yield return StartCoroutine(UIManager.Instance.ShowDebuffAndBuffPanel(
+                      UIManager.Instance.cannonPowerPanel)
+                  );
             }
         }
 
@@ -918,7 +955,9 @@ public class DebuffManager : MonoBehaviour
             cannonScript.Fire(target.transform);
 
         // Phải kiểm tra bomb trước khi dùng bomb.power.
-        if (bomb != null)
+        if (bomb != null &&
+            ownerBuff != null &&
+            ownerBuff.isBuffCanon)
         {
             bomb.power += 3;
         }
@@ -944,11 +983,49 @@ public class DebuffManager : MonoBehaviour
         PlayerTrapState trapState =
             target.GetComponent<PlayerTrapState>();
 
-        if (trapState != null)
+        PlayerMoveAI moveAI =
+            target.GetComponent<PlayerMoveAI>();
+
+        // Sau khi bom chạm mục tiêu, DebuffManager tiếp tục điều khiển
+        // camera và bám theo player cho tới khi đẩy lùi hoàn tất.
+        yield return StartCoroutine(
+            FollowCannonTarget(
+                target.transform,
+                moveAI
+            )
+        );
+
+        // Nếu chuỗi đẩy lùi kích hoạt Teleport thì camera của
+        // TeleportAllPlayer tiếp quản. DebuffManager chỉ chờ toàn bộ
+        // Teleport và trap hoàn thành, bay camera lên rồi mở Shop.
+        if (cannonTeleportTookCamera)
         {
             yield return new WaitUntil(
-                () => !trapState.isTrapActive
+                () =>
+                    !TeleportAllPlayer.IsTeleporting &&
+                    (trapState == null ||
+                     !trapState.isTrapActive)
             );
+
+            if (VolumeManager.Instance != null)
+            {
+                VolumeManager.Instance.ResetMotionBlur();
+            }
+
+            // Teleport đã hoàn tất và đã trả quyền camera.
+            // Bay lên như luồng Debuff bình thường trước khi mở Shop.
+            if (CameraManager.Instance != null)
+            {
+                yield return StartCoroutine(
+                    CameraManager.Instance.FlyUp(
+                        15f,
+                        1.2f
+                    )
+                );
+            }
+
+            ReturnToShop();
+            yield break;
         }
 
         if (VolumeManager.Instance != null)
@@ -956,19 +1033,8 @@ public class DebuffManager : MonoBehaviour
             VolumeManager.Instance.ResetMotionBlur();
         }
 
-        yield return new WaitForSeconds(2f);
-
         if (CameraManager.Instance != null)
         {
-            yield return StartCoroutine(
-                CameraManager.Instance.MoveToTarget(
-                    target.transform,
-                    0.5f
-                )
-            );
-
-            yield return new WaitForSeconds(1f);
-
             yield return StartCoroutine(
                 CameraManager.Instance.FlyUp(
                     15f,
@@ -995,17 +1061,118 @@ public class DebuffManager : MonoBehaviour
 
             Vector3 desiredPosition =
                 bomb.position +
-                new Vector3(0f, 2f, -4f);
+                bombCameraOffset;
 
             cam.transform.position =
                 Vector3.Lerp(
                     cam.transform.position,
                     desiredPosition,
-                    8f * Time.deltaTime
+                    cannonCameraFollowSpeed *
+                    Time.deltaTime
                 );
 
             cam.transform.LookAt(bomb.position);
 
+            yield return null;
+        }
+    }
+
+    // =========================================================
+    // PLAYER FOLLOW AFTER CANNON HIT
+    // =========================================================
+
+    private IEnumerator FollowCannonTarget(
+        Transform target,
+        PlayerMoveAI moveAI
+    )
+    {
+        const float waitForKnockbackStart = 0.75f;
+        const float safetyTimeout = 10f;
+
+        float elapsed = 0f;
+        float settleTimer = 0f;
+        bool knockbackStarted = false;
+
+        while (target != null &&
+               elapsed < safetyTimeout)
+        {
+            // Teleport có camera riêng. Ngừng Debuff follow ngay để
+            // hai hệ thống không cùng ghi vị trí Camera.main.
+            if (TeleportAllPlayer.IsTeleporting)
+            {
+                cannonTeleportTookCamera = true;
+                yield break;
+            }
+
+            Camera cam = Camera.main;
+
+            if (cam == null)
+                yield break;
+
+            Vector3 desiredPosition =
+                target.position +
+                cannonTargetCameraOffset;
+
+            float followAmount =
+                cannonCameraFollowSpeed *
+                Time.deltaTime;
+
+            cam.transform.position =
+                Vector3.Lerp(
+                    cam.transform.position,
+                    desiredPosition,
+                    followAmount
+                );
+
+            Vector3 lookDirection =
+                target.position -
+                cam.transform.position;
+
+            if (lookDirection.sqrMagnitude > 0.001f)
+            {
+                Quaternion targetRotation =
+                    Quaternion.LookRotation(
+                        lookDirection
+                    );
+
+                cam.transform.rotation =
+                    Quaternion.Slerp(
+                        cam.transform.rotation,
+                        targetRotation,
+                        followAmount
+                    );
+            }
+
+            // DebuffManager không kiểm tra NavMesh, ô bom, coin
+            // hoặc Teleport. PlayerMoveAI tự xử lý toàn bộ chuỗi đó.
+            // Camera chỉ đọc tín hiệu vòng đời của BoomHitEffect.
+            bool knockbackActive =
+                moveAI != null &&
+                moveAI.IsBoomHitActive;
+
+            if (knockbackActive)
+            {
+                knockbackStarted = true;
+                settleTimer = 0f;
+            }
+            else if (knockbackStarted)
+            {
+                settleTimer += Time.deltaTime;
+
+                if (settleTimer >=
+                    cannonTargetSettleTime)
+                {
+                    yield break;
+                }
+            }
+            else if (elapsed >= waitForKnockbackStart)
+            {
+                // Bomb không kích hoạt BoomHitEffect: không chờ
+                // timeout dài, trả camera về luồng Debuff ngay.
+                yield break;
+            }
+
+            elapsed += Time.deltaTime;
             yield return null;
         }
     }
@@ -1078,6 +1245,113 @@ public class DebuffManager : MonoBehaviour
             randomCard.image.sprite =
                 randomCard.spriteStar;
         }
+
+        // Random hoàn tất: xử lý List A/B tại DebuffManager.
+        ShowDebuffRandomColors(cards);
+    }
+
+    // =========================================================
+    // DEBUFF RANDOM COLOR DEBUG
+    // =========================================================
+
+    private void ShowDebuffRandomColors(GameObject[] cards)
+    {
+        currentRandomDebuffCards = cards;
+        RefreshDebuffRandomColors();
+    }
+
+    private void HideDebuffRandomColors()
+    {
+        currentRandomDebuffCards = null;
+
+        if (ui == null)
+            return;
+
+        SetDebuffColorListVisible(ui.listA, false);
+        SetDebuffColorListVisible(ui.listB, false);
+
+        lastShowDebuffRandomColorLists =
+            ui.showDebuffRandomColorLists;
+    }
+
+    private void RefreshDebuffRandomColors()
+    {
+        if (ui == null)
+            return;
+
+        lastShowDebuffRandomColorLists =
+            ui.showDebuffRandomColorLists;
+
+        if (!ui.showDebuffRandomColorLists ||
+            currentRandomDebuffCards == null ||
+            currentRandomDebuffCards.Length < 2)
+        {
+            SetDebuffColorListVisible(ui.listA, false);
+            SetDebuffColorListVisible(ui.listB, false);
+            return;
+        }
+
+        ApplyDebuffCardColor(
+            currentRandomDebuffCards[0],
+            ui.listA
+        );
+
+        ApplyDebuffCardColor(
+            currentRandomDebuffCards[1],
+            ui.listB
+        );
+    }
+
+    private void ApplyDebuffCardColor(
+        GameObject cardObject,
+        List<Image> images)
+    {
+        if (cardObject == null)
+        {
+            SetDebuffColorListVisible(images, false);
+            return;
+        }
+
+        RandomCard card =
+            cardObject.GetComponent<RandomCard>();
+
+        if (card == null ||
+            (card.itemIndex != 0 && card.itemIndex != 1))
+        {
+            SetDebuffColorListVisible(images, false);
+            return;
+        }
+
+        // itemIndex 0 = Magic, itemIndex 1 = Cannon.
+        Color targetColor = card.itemIndex == 1
+            ? cannonDebuffColor
+            : magicDebuffColor;
+
+        SetDebuffColorListVisible(images, true);
+
+        for (int i = 0; i < images.Count; i++)
+        {
+            if (images[i] != null)
+            {
+                images[i].color = targetColor;
+            }
+        }
+    }
+
+    private void SetDebuffColorListVisible(
+        List<Image> images,
+        bool state)
+    {
+        if (images == null)
+            return;
+
+        for (int i = 0; i < images.Count; i++)
+        {
+            if (images[i] != null)
+            {
+                images[i].gameObject.SetActive(state);
+            }
+        }
     }
 
     private void SetHighlight(
@@ -1149,6 +1423,7 @@ public class DebuffManager : MonoBehaviour
             return;
 
         HideAllCards();
+        HideDebuffRandomColors();
 
         if (ui.leftCardCanvas != null)
         {

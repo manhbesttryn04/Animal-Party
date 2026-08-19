@@ -5,6 +5,7 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
@@ -78,6 +79,13 @@ public class UIManager : MonoBehaviour
     public GameObject panelNotiifiChooseDebuff;
     public GameObject magicDebuffPanel;
     public GameObject cannonDebuffPanel;
+
+    [Header("Debuff Random Color Debug")]
+    [Tooltip("Bật để hiện List A/B sau khi hai card random xong.")]
+    public bool showDebuffRandomColorLists;
+    public List<Image> listA = new List<Image>();
+    public List<Image> listB = new List<Image>();
+
     [Header("Buff UI")]
     public GameObject cannonPowerPanel;
     public GameObject cannonShieldPanel;
@@ -96,19 +104,168 @@ public class UIManager : MonoBehaviour
     public GameObject panelPlayer2Turn;
     public GameObject[] itemsList;
     public GameObject[] itemCardRandomList;
-    [Header("Instruct Input KeyBoard")]
-    public GameObject instructKeyBoard;
-    public GameObject instructKeyBoardP1;
-    public GameObject instructKeyBoardP2;
-    public List<GameObject> instructKeyBoardInputListP1;
-    public List<GameObject> instructKeyBoardInputListP2;
-    public GameObject instructConsoleClone;
-    public GameObject instructConsoleCloneP1;
-    public GameObject instructConsoleCloneP2;
-    public List<GameObject> instructConsoleInputListP1;
-    public List<GameObject> instructConsoleInputListP2;
-    public GameObject instructBothConsole;
-    public List<GameObject> instructBothConsoleInputListP1;
+    [Header("Minigame Input Instructions")]
+    [FormerlySerializedAs("instructKeyBoard")]
+    public GameObject minigameKeyboardRoot;
+
+    [FormerlySerializedAs("instructKeyBoardP1")]
+    public GameObject minigameKeyboardP1Root;
+
+    [FormerlySerializedAs("instructKeyBoardP2")]
+    public GameObject minigameKeyboardP2Root;
+
+    [FormerlySerializedAs("instructKeyBoardInputListP1")]
+    public List<GameObject> minigameKeyboardInputListP1 =
+        new List<GameObject>();
+
+    [FormerlySerializedAs("instructKeyBoardInputListP2")]
+    public List<GameObject> minigameKeyboardInputListP2 =
+        new List<GameObject>();
+
+    [FormerlySerializedAs("instructConsoleClone")]
+    public GameObject minigameConsoleRoot;
+
+    [FormerlySerializedAs("instructConsoleCloneP1")]
+    public GameObject minigameConsoleP1Root;
+
+    [FormerlySerializedAs("instructConsoleCloneP2")]
+    public GameObject minigameConsoleP2Root;
+
+    [FormerlySerializedAs("instructConsoleInputListP1")]
+    public List<GameObject> minigameConsoleInputListP1 =
+        new List<GameObject>();
+
+    [FormerlySerializedAs("instructConsoleInputListP2")]
+    public List<GameObject> minigameConsoleInputListP2 =
+        new List<GameObject>();
+
+    [FormerlySerializedAs("instructBothConsole")]
+    public GameObject minigameBothControllersRoot;
+
+    [FormerlySerializedAs("instructBothConsoleInputListP1")]
+    public List<GameObject> minigameBothControllersInputList =
+        new List<GameObject>();
+
+    // =========================================================
+    // LEGACY MINIGAME FIELD ALIASES
+    // Giữ InstructInputMinigame cũ tiếp tục compile và hoạt động.
+    // Các property này không xuất hiện trong Inspector.
+    // =========================================================
+
+    public GameObject instructKeyBoard
+    {
+        get => minigameKeyboardRoot;
+        set => minigameKeyboardRoot = value;
+    }
+
+    public GameObject instructKeyBoardP1
+    {
+        get => minigameKeyboardP1Root;
+        set => minigameKeyboardP1Root = value;
+    }
+
+    public GameObject instructKeyBoardP2
+    {
+        get => minigameKeyboardP2Root;
+        set => minigameKeyboardP2Root = value;
+    }
+
+    public List<GameObject> instructKeyBoardInputListP1
+    {
+        get => minigameKeyboardInputListP1;
+        set => minigameKeyboardInputListP1 = value;
+    }
+
+    public List<GameObject> instructKeyBoardInputListP2
+    {
+        get => minigameKeyboardInputListP2;
+        set => minigameKeyboardInputListP2 = value;
+    }
+
+    public GameObject instructConsoleClone
+    {
+        get => minigameConsoleRoot;
+        set => minigameConsoleRoot = value;
+    }
+
+    public GameObject instructConsoleCloneP1
+    {
+        get => minigameConsoleP1Root;
+        set => minigameConsoleP1Root = value;
+    }
+
+    public GameObject instructConsoleCloneP2
+    {
+        get => minigameConsoleP2Root;
+        set => minigameConsoleP2Root = value;
+    }
+
+    public List<GameObject> instructConsoleInputListP1
+    {
+        get => minigameConsoleInputListP1;
+        set => minigameConsoleInputListP1 = value;
+    }
+
+    public List<GameObject> instructConsoleInputListP2
+    {
+        get => minigameConsoleInputListP2;
+        set => minigameConsoleInputListP2 = value;
+    }
+
+    public GameObject instructBothConsole
+    {
+        get => minigameBothControllersRoot;
+        set => minigameBothControllersRoot = value;
+    }
+
+    public List<GameObject> instructBothConsoleInputListP1
+    {
+        get => minigameBothControllersInputList;
+        set => minigameBothControllersInputList = value;
+    }
+
+    [Header("Global Device Instructions")]
+    [Tooltip("UI bàn phím bổ sung ngoài phần hướng dẫn minigame của Player 1.")]
+    public List<GameObject> globalKeyboardInstructionListP1 =
+        new List<GameObject>();
+
+    [Tooltip("UI bàn phím bổ sung ngoài phần hướng dẫn minigame của Player 2.")]
+    public List<GameObject> globalKeyboardInstructionListP2 =
+        new List<GameObject>();
+
+    [Tooltip("UI tay cầm bổ sung ngoài phần hướng dẫn minigame của Player 1.")]
+    public List<GameObject> globalConsoleInstructionListP1 =
+        new List<GameObject>();
+
+    [Tooltip("UI tay cầm bổ sung ngoài phần hướng dẫn minigame của Player 2.")]
+    public List<GameObject> globalConsoleInstructionListP2 =
+        new List<GameObject>();
+
+    [Tooltip(
+        "UI tay cầm dùng chung ngoài minigame như Setting hoặc Shop. " +
+        "Chỉ cần P1 hoặc P2 có tay cầm thì các UI trong list này sẽ hiện."
+    )]
+    [FormerlySerializedAs("instructAnyControllerInputList")]
+    public List<GameObject> globalAnyControllerInstructionList =
+        new List<GameObject>();
+
+    // Cache trạng thái tay cầm dùng chung cho toàn bộ UI ngoài minigame.
+    // Không liên quan tới InstructInputMinigame.
+    private bool previousGlobalP1ControllerConnected;
+    private bool previousGlobalP2ControllerConnected;
+    private bool previousIsShowKeyboard;
+    private bool globalInstructionInitialized;
+
+    [Tooltip(
+        "Chu kỳ kiểm tra cha của các Global Instruction vừa được mở/đóng."
+    )]
+    [Min(0.05f)]
+    [SerializeField]
+    private float globalParentVisibilityCheckInterval = 0.25f;
+
+    private float globalParentVisibilityCheckTimer;
+    private int previousGlobalParentVisibilityHash;
+    private bool globalParentVisibilityInitialized;
 
     [Header("Screen Transition")]
     public GameObject blackPanel;
@@ -181,16 +338,26 @@ public class UIManager : MonoBehaviour
             .GetComponent<PlayerManager>();
         UpdateAllPlayMainUI();
 
-        if (ControllerManager.Instance != null)
-        {
-            ControllerManager.Instance
-                .RefreshInputInstructionUI();
-        }
+        // UIManager quản lý toàn bộ UI kết nối tay cầm ngoài minigame.
+        UpdateControllerConnectionUI(true, true);
     }
 
     private void Update()
     {
-        if (!notifiPlay.activeSelf) return;
+        bool globalParentVisibilityChanged =
+            CheckGlobalInstructionParentVisibilityChanged();
+
+        // Trạng thái gốc vẫn lấy từ ControllerManager.
+        // UI chỉ thay đổi khi P1/P2 đổi kết nối hoặc cha Global vừa mở lại.
+        UpdateControllerConnectionUI(
+            globalParentVisibilityChanged
+        );
+
+        if (notifiPlay == null ||
+            !notifiPlay.activeSelf)
+        {
+            return;
+        }
 
         updateTimer += Time.deltaTime;
 
@@ -198,6 +365,347 @@ public class UIManager : MonoBehaviour
         {
             updateTimer = 0f;
             UpdateAllPlayMainUI();
+        }
+    }
+
+    // =========================================================
+    // GLOBAL DEVICE INSTRUCTION
+    // =========================================================
+
+    public void RefreshGlobalDeviceInstructionUI()
+    {
+        UpdateControllerConnectionUI(true);
+    }
+
+    public void RefreshControllerConnectionUI()
+    {
+        UpdateControllerConnectionUI(true);
+    }
+
+    private void UpdateControllerConnectionUI(
+        bool force = false,
+        bool showInitialNotifications = false)
+    {
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        bool p1ControllerConnected =
+            controller != null &&
+            controller.IsConsole1Connected();
+
+        bool p2ControllerConnected =
+            controller != null &&
+            controller.IsConsole2Connected();
+
+        bool wasInitialized =
+            globalInstructionInitialized;
+
+        bool p1ConnectionChanged =
+            wasInitialized &&
+            p1ControllerConnected !=
+                previousGlobalP1ControllerConnected;
+
+        bool p2ConnectionChanged =
+            wasInitialized &&
+            p2ControllerConnected !=
+                previousGlobalP2ControllerConnected;
+
+        bool keyboardDisplayModeChanged =
+            wasInitialized &&
+            isShowKeyBoard != previousIsShowKeyboard;
+
+        if (!force &&
+            wasInitialized &&
+            !p1ConnectionChanged &&
+            !p2ConnectionChanged &&
+            !keyboardDisplayModeChanged)
+        {
+            return;
+        }
+
+        previousGlobalP1ControllerConnected =
+            p1ControllerConnected;
+
+        previousGlobalP2ControllerConnected =
+            p2ControllerConnected;
+
+        previousIsShowKeyboard =
+            isShowKeyBoard;
+
+        globalInstructionInitialized = true;
+
+        bool hasAnyController =
+            p1ControllerConnected ||
+            p2ControllerConnected;
+
+        bool hasBothControllers =
+            p1ControllerConnected &&
+            p2ControllerConnected;
+
+        SetGameObjectActiveIfChanged(
+            instructConsolePanel,
+            hasAnyController
+        );
+
+        if (isShowKeyBoard)
+        {
+            SetGameObjectActiveIfChanged(
+                instructKeyBoardPanel,
+                !hasBothControllers
+            );
+        }
+
+        // Chỉ thay đổi nhóm Global, không chạm vào list của minigame.
+        SetGlobalInstructionListActive(
+            globalKeyboardInstructionListP1,
+            !p1ControllerConnected
+        );
+
+        SetGlobalInstructionListActive(
+            globalConsoleInstructionListP1,
+            p1ControllerConnected
+        );
+
+        SetGlobalInstructionListActive(
+            globalKeyboardInstructionListP2,
+            !p2ControllerConnected
+        );
+
+        SetGlobalInstructionListActive(
+            globalConsoleInstructionListP2,
+            p2ControllerConnected
+        );
+
+        // Có 1/2 hoặc 2/2 tay cầm thì hiện hướng dẫn chung.
+        SetGlobalInstructionListActive(
+            globalAnyControllerInstructionList,
+            hasAnyController
+        );
+
+        if (wasInitialized)
+        {
+            if (p1ConnectionChanged)
+            {
+                ShowControllerConnectionNotification(
+                    0,
+                    p1ControllerConnected
+                );
+            }
+
+            if (p2ConnectionChanged)
+            {
+                ShowControllerConnectionNotification(
+                    1,
+                    p2ControllerConnected
+                );
+            }
+        }
+        else if (showInitialNotifications)
+        {
+            if (p1ControllerConnected)
+            {
+                ShowControllerConnectionNotification(0, true);
+            }
+
+            if (p2ControllerConnected)
+            {
+                ShowControllerConnectionNotification(1, true);
+            }
+        }
+    }
+
+    private void SetGameObjectActiveIfChanged(
+        GameObject target,
+        bool active)
+    {
+        if (target != null &&
+            target.activeSelf != active)
+        {
+            target.SetActive(active);
+        }
+    }
+
+    private void ShowControllerConnectionNotification(
+        int playerIndex,
+        bool connected)
+    {
+        GameObject notification;
+
+        if (playerIndex == 0)
+        {
+            notification = connected
+                ? consoleOpenImageP1
+                : consoleCloseImageP1;
+        }
+        else
+        {
+            notification = connected
+                ? consoleOpenImageP2
+                : consoleCloseImageP2;
+        }
+
+        if (notification == null)
+            return;
+
+        if (connected)
+        {
+            StartCoroutine(
+                ShowConsoleConect(notification)
+            );
+        }
+        else
+        {
+            StartCoroutine(
+                ShowConsoleFailConect(notification)
+            );
+        }
+    }
+
+    private void SetGlobalInstructionListActive(
+        List<GameObject> instructionList,
+        bool active)
+    {
+        if (instructionList == null)
+            return;
+
+        for (int i = 0;
+             i < instructionList.Count;
+             i++)
+        {
+            GameObject instruction =
+                instructionList[i];
+
+            if (instruction == null)
+                continue;
+
+            Transform parent =
+                instruction.transform.parent;
+
+            // UI cha đang bị ẩn thì toàn bộ UI con cũng không nhìn thấy.
+            // Không cần gọi SetActive cho mục này cho tới khi cha được mở lại.
+            if (parent != null &&
+                !parent.gameObject.activeInHierarchy)
+            {
+                continue;
+            }
+
+            if (instruction.activeSelf != active)
+            {
+                instruction.SetActive(active);
+            }
+        }
+    }
+
+    private bool CheckGlobalInstructionParentVisibilityChanged()
+    {
+        globalParentVisibilityCheckTimer +=
+            Time.unscaledDeltaTime;
+
+        float interval = Mathf.Max(
+            0.05f,
+            globalParentVisibilityCheckInterval
+        );
+
+        if (globalParentVisibilityInitialized &&
+            globalParentVisibilityCheckTimer < interval)
+        {
+            return false;
+        }
+
+        globalParentVisibilityCheckTimer = 0f;
+
+        int currentHash =
+            CalculateGlobalInstructionParentVisibilityHash();
+
+        if (!globalParentVisibilityInitialized)
+        {
+            previousGlobalParentVisibilityHash =
+                currentHash;
+
+            globalParentVisibilityInitialized = true;
+            return false;
+        }
+
+        if (currentHash ==
+            previousGlobalParentVisibilityHash)
+        {
+            return false;
+        }
+
+        previousGlobalParentVisibilityHash =
+            currentHash;
+
+        return true;
+    }
+
+    private int CalculateGlobalInstructionParentVisibilityHash()
+    {
+        unchecked
+        {
+            int hash = 17;
+
+            AddInstructionParentVisibilityToHash(
+                globalKeyboardInstructionListP1,
+                ref hash
+            );
+
+            AddInstructionParentVisibilityToHash(
+                globalConsoleInstructionListP1,
+                ref hash
+            );
+
+            AddInstructionParentVisibilityToHash(
+                globalKeyboardInstructionListP2,
+                ref hash
+            );
+
+            AddInstructionParentVisibilityToHash(
+                globalConsoleInstructionListP2,
+                ref hash
+            );
+
+            AddInstructionParentVisibilityToHash(
+                globalAnyControllerInstructionList,
+                ref hash
+            );
+
+            return hash;
+        }
+    }
+
+    private void AddInstructionParentVisibilityToHash(
+        List<GameObject> instructionList,
+        ref int hash)
+    {
+        if (instructionList == null)
+            return;
+
+        for (int i = 0;
+             i < instructionList.Count;
+             i++)
+        {
+            GameObject instruction =
+                instructionList[i];
+
+            if (instruction == null)
+                continue;
+
+            Transform parent =
+                instruction.transform.parent;
+
+            if (parent == null)
+            {
+                hash = hash * 31 + 1;
+                continue;
+            }
+
+            hash = hash * 31 +
+                   parent.GetInstanceID();
+
+            hash = hash * 31 +
+                   (parent.gameObject.activeInHierarchy
+                       ? 1
+                       : 0);
         }
     }
 
@@ -211,7 +719,6 @@ public class UIManager : MonoBehaviour
             UpdateCurrentBuffPlayer();
         }
     }
-
 
     // =========================================================
     // COIN POWER UI
@@ -252,17 +759,18 @@ public class UIManager : MonoBehaviour
 
             // Nếu đã có Coin Power thì tắt panel đen
             blackPanel.gameObject.SetActive(i >= p1.countCoinPower);
-         var hightlightCoinPower = coinRoot.GetChild(i).GetComponent<UIImagePowerCoinColorEffect>();
-            if( i >= p1.countCoinPower)
+            var hightlightCoinPower = coinRoot.GetChild(i).GetComponent<UIImagePowerCoinColorEffect>();
+            if (i >= p1.countCoinPower)
             {
                 hightlightCoinPower.enabled = false;
                 highlightYellowCoinPowerP1.GetChild(i).gameObject.SetActive(false);
-            }else
+            }
+            else
             {
-                               hightlightCoinPower.enabled = true;
+                hightlightCoinPower.enabled = true;
                 highlightYellowCoinPowerP1.GetChild(i).gameObject.SetActive(true);
             }
-              
+
         }
 
         // =========================
@@ -282,12 +790,13 @@ public class UIManager : MonoBehaviour
             {
                 hightlightCoinPower.enabled = false;
                 highlightYellowCoinPowerP2.GetChild(i).gameObject.SetActive(false);
-            }else
+            }
+            else
             {
-                               hightlightCoinPower.enabled = true;
+                hightlightCoinPower.enabled = true;
                 highlightYellowCoinPowerP2.GetChild(i).gameObject.SetActive(true);
             }
-               
+
         }
     }
 
@@ -398,9 +907,9 @@ public class UIManager : MonoBehaviour
     /// <summary>
     /// Hiển thị thông báo trong 2 giây.
     /// </summary>
-  public IEnumerator ShowDebuffAndBuffPanel(GameObject ui)
+    public IEnumerator ShowDebuffAndBuffPanel(GameObject ui)
     {
-           if(ui!= null)
+        if (ui != null)
         {
             ui.SetActive(true);
             yield return new WaitForSeconds(1.4f);
@@ -715,13 +1224,13 @@ public class UIManager : MonoBehaviour
     }
     public void HideAllUI()
     {
-        for (int i = 0;i< allUI.Count; i++)
+        for (int i = 0; i < allUI.Count; i++)
         {
-            if(allUI[i] != null && allUI[i].activeSelf)
+            if (allUI[i] != null && allUI[i].activeSelf)
             {
                 allUI[i].SetActive(false);
             }
-            
+
         }
     }
 }

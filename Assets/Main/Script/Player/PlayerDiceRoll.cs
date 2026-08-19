@@ -15,6 +15,10 @@ public class PlayerDiceRoll : MonoBehaviour
 
     private Coroutine hideDiceCoroutine;
 
+    // 0 = không ép số, lần tung tiếp theo vẫn random bình thường.
+    // 1 -> 6 = kết quả được tool tay cầm chọn cho lần tung kế tiếp.
+    private int forcedNextDiceNumber;
+
     private void Start()
     {
         manager = GetComponent<PlayerManager>();
@@ -43,7 +47,20 @@ public class PlayerDiceRoll : MonoBehaviour
          */
         int[] diceWeights = { 1, 1, 10, 29, 29, 30 };
 
-        currentDiceNumber = GetWeightedDiceNumber(diceWeights);
+        if (forcedNextDiceNumber >= 1 &&
+            forcedNextDiceNumber <= 6)
+        {
+            currentDiceNumber =
+                forcedNextDiceNumber;
+
+            // Chỉ ép đúng một lần tung rồi trở lại random.
+            forcedNextDiceNumber = 0;
+        }
+        else
+        {
+            currentDiceNumber =
+                GetWeightedDiceNumber(diceWeights);
+        }
 
         // Tắt toàn bộ mặt xúc xắc
         HideAllDices();
@@ -57,8 +74,8 @@ public class PlayerDiceRoll : MonoBehaviour
         }
         else
         {
-            
-       
+
+
         }
 
         //Debug.Log("Dice Number: " + currentDiceNumber);
@@ -70,6 +87,14 @@ public class PlayerDiceRoll : MonoBehaviour
         }
 
         hideDiceCoroutine = StartCoroutine(HideDiceAfterTime());
+    }
+
+    public void ForceNextDiceNumber(int diceNumber)
+    {
+        if (diceNumber < 1 || diceNumber > 6)
+            return;
+
+        forcedNextDiceNumber = diceNumber;
     }
 
     private int GetWeightedDiceNumber(int[] weights)
@@ -103,7 +128,7 @@ public class PlayerDiceRoll : MonoBehaviour
     private IEnumerator HideDiceAfterTime()
     {
         // Hiện mặt xúc xắc trong 3 giây
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(1f);
 
         if (manager != null && manager.playerCamera != null)
         {
@@ -121,7 +146,7 @@ public class PlayerDiceRoll : MonoBehaviour
 
             // Di chuyển đúng số bước từ 1 đến 6
             StartCoroutine(
-                manager.playerMoveAI.AIToPoint(currentDiceNumber -1)
+                manager.playerMoveAI.AIToPoint(currentDiceNumber - 1)
             );
         }
 

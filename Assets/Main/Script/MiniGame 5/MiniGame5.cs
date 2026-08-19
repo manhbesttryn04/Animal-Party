@@ -1,9 +1,14 @@
-using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using UnityEngine;
 
-public enum PadHazardType { None, Bomb, Freeze }
+public enum PadHazardType
+{
+    None,
+    Bomb,
+    Freeze
+}
 
 public class MiniGame5 : MonoBehaviour
 {
@@ -13,7 +18,6 @@ public class MiniGame5 : MonoBehaviour
 
     [Header("Danh sách các ô")]
     public List<GameObject> allPadRenderers = new List<GameObject>();
-    private List<PaintPadData> allPads = new List<PaintPadData>();
 
     [Header("Material")]
     public Material defaultMaterial;
@@ -39,83 +43,121 @@ public class MiniGame5 : MonoBehaviour
     public float itemSpawnHeight = 0.5f;
 
     [Header("UI")]
-    public TextMeshProUGUI timerText;
     public TextMeshProUGUI resultText;
     public float gameDuration = 57f;
 
+    private readonly List<PaintPadData> allPads =
+        new List<PaintPadData>();
+
     private bool isPlayer1Frozen = false;
     private bool isPlayer2Frozen = false;
+    private bool isFinishing = false;
+
+    private float gameplayTimeLeft = 0f;
 
     private Vector3 player1OriginalScale = Vector3.one;
     private Vector3 player2OriginalScale = Vector3.one;
 
-    private GameObject currentSpawnedItem = null;
-    private Coroutine itemDestroyCoroutine = null;
+    private GameObject currentSpawnedItem;
+    private Coroutine itemDestroyCoroutine;
 
-    void Awake()
+    private void Awake()
     {
         InitializeManualPads();
     }
 
-    void Update()
+    private void Update()
     {
-        if (!isPlaying) return;
+        if (!isPlaying)
+            return;
 
         foreach (PaintPadData pad in allPads)
         {
+            if (pad == null)
+                continue;
+
             pad.UpdateDetection();
 
             if (pad.hazardType == PadHazardType.Bomb)
             {
-                pad.UpdateBombFlashing(Color.white, bombFlashColor, bombFlashSpeed);
+                pad.UpdateBombFlashing(
+                    Color.white,
+                    bombFlashColor,
+                    bombFlashSpeed
+                );
             }
         }
     }
 
-    void InitializeManualPads()
+    private void InitializeManualPads()
     {
         allPads.Clear();
 
-        foreach (GameObject padObj in allPadRenderers)
+        foreach (GameObject padObject in allPadRenderers)
         {
-            if (padObj == null) continue;
+            if (padObject == null)
+                continue;
 
-            BoxCollider col = padObj.GetComponent<BoxCollider>();
-            if (col != null) col.isTrigger = false;
+            BoxCollider[] colliders =
+                padObject.GetComponents<BoxCollider>();
 
-            MeshRenderer renderer = padObj.GetComponent<MeshRenderer>();
-
-            if (renderer != null)
+            foreach (BoxCollider col in colliders)
             {
-                PaintPadData data = new PaintPadData(padObj, renderer, this);
-                allPads.Add(data);
-                data.ResetColor();
+                if (col != null)
+                    col.isTrigger = false;
             }
+
+            MeshRenderer padRenderer =
+                padObject.GetComponent<MeshRenderer>();
+
+            if (padRenderer == null)
+                continue;
+
+            PaintPadData data = new PaintPadData(
+                padObject,
+                padRenderer,
+                this
+            );
+
+            allPads.Add(data);
+            data.ResetColor();
         }
     }
 
     public void StartMiniGame()
     {
-        AudioManager.Instance.PlayEnvironment(AudioManager.Instance.snowFallClip);
+        if (isPlaying || isFinishing)
+            return;
 
-        if (isPlaying) return;
-
-        if (resultText != null) resultText.gameObject.SetActive(true);
-
-        isPlaying = true;
-        isPlayer1Frozen = false;
-        isPlayer2Frozen = false;
-        resultText.text = "";
-        // if (resultText != null) resultText.text = "Minigame Start";
-
-        SetUpPlayer();
-
-        foreach (PaintPadData pad in allPads)
+        if (manager == null ||
+            manager.currentPlayer1 == null ||
+            manager.currentPlayer2 == null ||
+            allPads.Count == 0)
         {
-            pad.ResetColor();
+            return;
         }
 
-        ClearCurrentSpawnedItem();
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayEnvironment(
+                AudioManager.Instance.snowFallClip
+            );
+        }
+
+        isPlaying = true;
+        isFinishing = false;
+        isPlayer1Frozen = false;
+        isPlayer2Frozen = false;
+        gameplayTimeLeft = Mathf.Max(0f, gameDuration);
+
+        if (resultText != null)
+        {
+            resultText.gameObject.SetActive(true);
+            resultText.text = "";
+        }
+
+        ResetAllPadsToDefault();
+        SetUpPlayer();
 
         StartCoroutine(PaintGameRoutine());
         StartCoroutine(SpawnHazardsRoutine());
@@ -124,17 +166,19 @@ public class MiniGame5 : MonoBehaviour
 
     public void StopMiniGame()
     {
-        AudioManager.Instance.StopEnvironment();
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.StopEnvironment();
+        }
 
         isPlaying = false;
+        isFinishing = false;
+        gameplayTimeLeft = 0f;
+
         StopAllCoroutines();
+        itemDestroyCoroutine = null;
 
-        ClearCurrentSpawnedItem();
-
-        foreach (PaintPadData pad in allPads)
-        {
-            pad.RemoveSpawnedBomb();
-        }
+        ResetAllPadsToDefault();
 
         if (manager != null)
         {
@@ -142,150 +186,174 @@ public class MiniGame5 : MonoBehaviour
             SetHighlightPlayer(manager.currentPlayer2, false);
         }
 
-        if (timerText != null) timerText.text = "-";
-        if (resultText != null) resultText.gameObject.SetActive(false);
+        if (resultText != null)
+        {
+            resultText.gameObject.SetActive(false);
+        }
     }
 
-    IEnumerator PaintGameRoutine()
+    private IEnumerator PaintGameRoutine()
     {
-        float timeLeft = gameDuration;
-
-        while (timeLeft > 0 && isPlaying)
+        while (gameplayTimeLeft > 0f && isPlaying)
         {
-            if (timerText != null)
-                timerText.text = Mathf.CeilToInt(timeLeft).ToString();
-
-            yield return new WaitForSeconds(1f);
-            timeLeft -= 1f;
+            gameplayTimeLeft -= Time.deltaTime;
+            yield return null;
         }
 
-        isPlaying = false;
+        if (!isPlaying)
+            yield break;
 
-       // if (timerText != null) timerText.text = "End Time";
+        gameplayTimeLeft = 0f;
+        isPlaying = false;
+        isFinishing = true;
 
         ClearCurrentSpawnedItem();
-
         CalculateFinalScore();
 
         StartCoroutine(ResetPadsAfterResult());
     }
-    IEnumerator ResetPadsAfterResult()
+
+    private IEnumerator ResetPadsAfterResult()
     {
         yield return new WaitForSeconds(3.5f);
-
         ResetAllPadsToDefault();
     }
-    void ResetAllPadsToDefault()    
+
+    private void ResetAllPadsToDefault()
     {
         foreach (PaintPadData pad in allPads)
         {
-            pad.ResetColor();
-            pad.RemoveSpawnedBomb();
+            if (pad != null)
+                pad.ResetColor();
         }
 
         ClearCurrentSpawnedItem();
 
         isPlayer1Frozen = false;
         isPlayer2Frozen = false;
-       
     }
 
     public void SetUpPlayer()
     {
-        if (manager == null) return;
-        
+        if (manager == null)
+            return;
+
         SetHighlightPlayer(manager.currentPlayer1, true);
         SetHighlightPlayer(manager.currentPlayer2, true);
     }
 
-    void SetHighlightPlayer(GameObject playerObj, bool isActive)
+    private void SetHighlightPlayer(
+        GameObject playerObject,
+        bool isActive
+    )
     {
-        if (playerObj == null) return;
+        if (playerObject == null)
+            return;
 
-        foreach (Transform t in playerObj.GetComponentsInChildren<Transform>(true))
+        foreach (Transform child in
+                 playerObject.GetComponentsInChildren<Transform>(true))
         {
-            if (t.name == "Hight Light Player")
-            {
-                t.gameObject.SetActive(isActive);
-                break;
-            }
+            if (child.name != "Hight Light Player")
+                continue;
+
+            child.gameObject.SetActive(isActive);
+            break;
         }
     }
 
-    IEnumerator SpawnHazardsRoutine()
+    private IEnumerator SpawnHazardsRoutine()
     {
         while (isPlaying)
         {
-            foreach (PaintPadData pad in allPads)
-            {
-                if (pad.hazardType == PadHazardType.Bomb ||
-                    pad.hazardType == PadHazardType.Freeze)
-                {
-                    pad.hazardType = PadHazardType.None;
-                    pad.RestoreVisualAfterHazard();
-                    pad.RemoveSpawnedBomb();
-                }
-            }
+            ClearCurrentHazards();
 
-            float timeLeft = gameDuration;
-
-            if (timerText != null &&
-                float.TryParse(timerText.text, out float parsedTime))
-            {
-                timeLeft = parsedTime;
-            }
-
-            int bombCount =
-                timeLeft > 30f ? Random.Range(2, 11) : Random.Range(11, 21);
+            int bombCount = gameplayTimeLeft > 30f
+                ? Random.Range(2, 11)
+                : Random.Range(11, 21);
 
             int freezeCount = Random.Range(1, 6);
 
-            List<PaintPadData> availablePads = new List<PaintPadData>();
+            List<PaintPadData> availablePads =
+                new List<PaintPadData>();
 
             foreach (PaintPadData pad in allPads)
             {
-                if (pad.hazardType == PadHazardType.None)
+                if (pad != null &&
+                    pad.hazardType == PadHazardType.None)
+                {
                     availablePads.Add(pad);
+                }
             }
 
-            int totalHazards =
-                Mathf.Min(bombCount + freezeCount, availablePads.Count);
+            ShufflePads(availablePads);
 
-            for (int i = 0; i < availablePads.Count; i++)
-            {
-                PaintPadData temp = availablePads[i];
-                int randomIndex = Random.Range(i, availablePads.Count);
-                availablePads[i] = availablePads[randomIndex];
-                availablePads[randomIndex] = temp;
-            }
+            int totalHazards = Mathf.Min(
+                bombCount + freezeCount,
+                availablePads.Count
+            );
 
             int currentIndex = 0;
 
             for (int i = 0; i < bombCount; i++)
             {
-                if (currentIndex >= totalHazards) break;
+                if (currentIndex >= totalHazards)
+                    break;
 
-                availablePads[currentIndex].hazardType = PadHazardType.Bomb;
-                availablePads[currentIndex].ApplyHazardVisual();
-
+                PaintPadData pad = availablePads[currentIndex];
+                pad.hazardType = PadHazardType.Bomb;
+                pad.ApplyHazardVisual();
                 currentIndex++;
             }
 
             for (int i = 0; i < freezeCount; i++)
             {
-                if (currentIndex >= totalHazards) break;
+                if (currentIndex >= totalHazards)
+                    break;
 
-                availablePads[currentIndex].hazardType = PadHazardType.Freeze;
-                availablePads[currentIndex].ApplyHazardVisual();
-
+                PaintPadData pad = availablePads[currentIndex];
+                pad.hazardType = PadHazardType.Freeze;
+                pad.ApplyHazardVisual();
                 currentIndex++;
             }
 
-            yield return new WaitForSeconds(hazardResetInterval);
+            yield return new WaitForSeconds(
+                Mathf.Max(0.1f, hazardResetInterval)
+            );
         }
     }
 
-    IEnumerator SpawnGrowItemPrefabRoutine()
+    private void ClearCurrentHazards()
+    {
+        foreach (PaintPadData pad in allPads)
+        {
+            if (pad == null)
+                continue;
+
+            if (pad.hazardType != PadHazardType.Bomb &&
+                pad.hazardType != PadHazardType.Freeze)
+            {
+                continue;
+            }
+
+            pad.hazardType = PadHazardType.None;
+            pad.RestoreVisualAfterHazard();
+            pad.RemoveSpawnedBomb();
+        }
+    }
+
+    private static void ShufflePads(List<PaintPadData> pads)
+    {
+        for (int i = 0; i < pads.Count; i++)
+        {
+            int randomIndex = Random.Range(i, pads.Count);
+
+            PaintPadData temp = pads[i];
+            pads[i] = pads[randomIndex];
+            pads[randomIndex] = temp;
+        }
+    }
+
+    private IEnumerator SpawnGrowItemPrefabRoutine()
     {
         yield return new WaitForSeconds(5f);
 
@@ -298,52 +366,75 @@ public class MiniGame5 : MonoBehaviour
                 PaintPadData randomPad =
                     allPads[Random.Range(0, allPads.Count)];
 
-                Vector3 spawnPos =
-                    randomPad.padObject.transform.position +
-                    Vector3.up * itemSpawnHeight;
+                if (randomPad != null &&
+                    randomPad.padObject != null)
+                {
+                    Vector3 spawnPosition =
+                        randomPad.padObject.transform.position +
+                        Vector3.up * itemSpawnHeight;
 
-                currentSpawnedItem =
-                    Instantiate(growItemPrefab, spawnPos, Quaternion.identity);
+                    currentSpawnedItem = Instantiate(
+                        growItemPrefab,
+                        spawnPosition,
+                        Quaternion.identity
+                    );
 
-                GrowItem itemScript =
-                    currentSpawnedItem.GetComponent<GrowItem>();
+                    GrowItem itemScript =
+                        currentSpawnedItem.GetComponent<GrowItem>();
 
-                if (itemScript != null)
-                    itemScript.Setup(this);
+                    if (itemScript != null)
+                        itemScript.Setup(this);
 
-                itemDestroyCoroutine =
-                    StartCoroutine(DestroyItemAfterDelay(
-                        currentSpawnedItem,
-                        itemExistDuration
-                    ));
+                    itemDestroyCoroutine = StartCoroutine(
+                        DestroyItemAfterDelay(
+                            currentSpawnedItem,
+                            itemExistDuration
+                        )
+                    );
+                }
             }
 
             yield return new WaitForSeconds(11f);
         }
     }
 
-    IEnumerator DestroyItemAfterDelay(GameObject item, float delay)
+    private IEnumerator DestroyItemAfterDelay(
+        GameObject item,
+        float delay
+    )
     {
-        yield return new WaitForSeconds(delay);
+        yield return new WaitForSeconds(Mathf.Max(0f, delay));
 
         if (item != null && item == currentSpawnedItem)
         {
             Destroy(item);
             currentSpawnedItem = null;
         }
+
+        itemDestroyCoroutine = null;
     }
 
-    public void OnPadTriggered(PaintPadData padData, GameObject playerObj)
+    public void OnPadTriggered(
+        PaintPadData padData,
+        GameObject playerObject
+    )
     {
-        if (!isPlaying) return;
+        if (!isPlaying || padData == null || playerObject == null)
+            return;
 
-        PlayerType pType = playerObj.GetComponent<PlayerType>();
-        if (pType == null) return;
+        PlayerType playerType =
+            playerObject.GetComponent<PlayerType>();
 
-        bool isP2 = pType.isPlayer2;
+        if (playerType == null)
+            return;
 
-        if (!isP2 && isPlayer1Frozen) return;
-        if (isP2 && isPlayer2Frozen) return;
+        bool isPlayer2 = playerType.isPlayer2;
+
+        if (!isPlayer2 && isPlayer1Frozen)
+            return;
+
+        if (isPlayer2 && isPlayer2Frozen)
+            return;
 
         if (padData.hazardType == PadHazardType.Bomb)
         {
@@ -353,112 +444,149 @@ public class MiniGame5 : MonoBehaviour
 
         if (padData.hazardType == PadHazardType.Freeze)
         {
-            TriggerFreezeStatus(isP2, playerObj);
+            TriggerFreezeStatus(isPlayer2, playerObject);
             padData.ResetColor();
             return;
         }
 
-        if (!isP2)
-            padData.SetOwner("Player 1", player1Material);
-        else
+        if (isPlayer2)
+        {
             padData.SetOwner("Player 2", player2Material);
+        }
+        else
+        {
+            padData.SetOwner("Player 1", player1Material);
+        }
     }
 
-    void TriggerBombExplosion(PaintPadData explodedPad)
+    private void TriggerBombExplosion(PaintPadData explodedPad)
     {
-        GameObject bombObj = explodedPad.spawnedBomb;
+        GameObject bombObject = explodedPad.spawnedBomb;
 
         explodedPad.spawnedBomb = null;
         explodedPad.hazardType = PadHazardType.None;
 
-        if (bombObj != null)
+        if (bombObject != null)
         {
-            Bomb bomb = bombObj.GetComponent<Bomb>();
+            Bomb bomb = bombObject.GetComponent<Bomb>();
 
             if (bomb != null)
             {
                 bomb.TriggerBomb();
-                Destroy(bombObj, bomb.explodeDelay + 1.5f);
+
+                Destroy(
+                    bombObject,
+                    Mathf.Max(0f, bomb.explodeDelay) + 1.5f
+                );
             }
             else
             {
-                Destroy(bombObj);
+                Destroy(bombObject);
             }
         }
 
         foreach (PaintPadData pad in allPads)
         {
+            if (pad == null ||
+                pad.padObject == null ||
+                explodedPad.padObject == null)
+            {
+                continue;
+            }
+
             float distance = Vector3.Distance(
                 explodedPad.padObject.transform.position,
                 pad.padObject.transform.position
             );
 
             if (distance <= 2.5f)
-            {
                 pad.ResetColor();
-            }
         }
     }
 
-    void TriggerFreezeStatus(bool isPlayer2, GameObject playerObj)
+    private void TriggerFreezeStatus(
+        bool isPlayer2,
+        GameObject playerObject
+    )
     {
         if (!isPlayer2)
         {
             if (!isPlayer1Frozen)
-                StartCoroutine(FreezePlayerRoutine(1, playerObj));
+            {
+                StartCoroutine(
+                    FreezePlayerRoutine(1, playerObject)
+                );
+            }
         }
-        else
+        else if (!isPlayer2Frozen)
         {
-            if (!isPlayer2Frozen)
-                StartCoroutine(FreezePlayerRoutine(2, playerObj));
+            StartCoroutine(
+                FreezePlayerRoutine(2, playerObject)
+            );
         }
     }
 
-    IEnumerator FreezePlayerRoutine(int playerNumber, GameObject playerObj)
+    private IEnumerator FreezePlayerRoutine(
+        int playerNumber,
+        GameObject playerObject
+    )
     {
+        if (playerObject == null)
+            yield break;
+
         if (playerNumber == 1)
             isPlayer1Frozen = true;
         else
             isPlayer2Frozen = true;
 
-        // Tìm IceBlock trong Player (kể cả đang tắt)
         Transform iceBlock = null;
 
-        foreach (Transform t in playerObj.GetComponentsInChildren<Transform>(true))
+        foreach (Transform child in
+                 playerObject.GetComponentsInChildren<Transform>(true))
         {
-            if (t.name == "IceBlock")
-            {
-                iceBlock = t;
-                break;
-            }
+            if (child.name != "IceBlock")
+                continue;
+
+            iceBlock = child;
+            break;
         }
 
-        // Lấy PlayerMove và PlayerManager
-        PlayerMove move = playerObj.GetComponent<PlayerMove>();
-        PlayerAnimator manager = playerObj.GetComponent<PlayerAnimator>();
+        PlayerMove movement =
+            playerObject.GetComponent<PlayerMove>();
 
-        // Hiện khối băng
+        PlayerAnimator playerAnimator =
+            playerObject.GetComponent<PlayerAnimator>();
+
         if (iceBlock != null)
             iceBlock.gameObject.SetActive(true);
-        AudioManager.Instance.PlaySFX(AudioManager.Instance.iceMagicClip);
 
-        // Đóng băng người chơi
-        if (move != null)
-            move.isJumpAndMove = false;
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(
+                AudioManager.Instance.iceMagicClip
+            );
+        }
 
-        if (manager != null)
-            manager.playerAnimator.speed = 0f;
+        if (movement != null)
+            movement.isJumpAndMove = false;
+
+        if (playerAnimator != null &&
+            playerAnimator.playerAnimator != null)
+        {
+            playerAnimator.playerAnimator.speed = 0f;
+        }
 
         yield return new WaitForSeconds(2f);
 
-        // Bỏ đóng băng
-        if (move != null)
-            move.isJumpAndMove = true;
+        if (movement != null)
+            movement.isJumpAndMove = true;
 
-        if (manager != null)
-            manager.playerAnimator.speed = 1f;
+        if (playerAnimator != null &&
+            playerAnimator.playerAnimator != null)
+        {
+            playerAnimator.playerAnimator.speed = 1f;
+        }
 
-        // Ẩn khối băng
         if (iceBlock != null)
             iceBlock.gameObject.SetActive(false);
 
@@ -468,75 +596,110 @@ public class MiniGame5 : MonoBehaviour
             isPlayer2Frozen = false;
     }
 
-    public void OnGrowItemPickedUp(bool isPlayer2, GameObject playerObj)
+    public void OnGrowItemPickedUp(
+        bool isPlayer2,
+        GameObject playerObject
+    )
     {
-        if (!isPlaying) return;
-        AudioManager.Instance.PlaySFX(AudioManager.Instance.buffBigClip);
+        if (!isPlaying || playerObject == null)
+            return;
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(
+                AudioManager.Instance.buffBigClip
+            );
+        }
+
         if (itemDestroyCoroutine != null)
         {
             StopCoroutine(itemDestroyCoroutine);
             itemDestroyCoroutine = null;
         }
 
+        GameObject pickedItem = currentSpawnedItem;
         currentSpawnedItem = null;
 
-        StartCoroutine(GrowPlayerRoutine(isPlayer2, playerObj));
+        if (pickedItem != null)
+            Destroy(pickedItem);
+
+        StartCoroutine(
+            GrowPlayerRoutine(isPlayer2, playerObject)
+        );
     }
 
-    IEnumerator GrowPlayerRoutine(bool isPlayer2, GameObject playerObj)
+    private IEnumerator GrowPlayerRoutine(
+        bool isPlayer2,
+        GameObject playerObject
+    )
     {
-        CharacterController cc = playerObj.GetComponent<CharacterController>();
-        if (cc != null) cc.enabled = false;
+        if (playerObject == null)
+            yield break;
+
+        CharacterController controller =
+            playerObject.GetComponent<CharacterController>();
+
+        if (controller != null)
+            controller.enabled = false;
 
         if (!isPlayer2)
-            player1OriginalScale = playerObj.transform.localScale;
+            player1OriginalScale = playerObject.transform.localScale;
         else
-            player2OriginalScale = playerObj.transform.localScale;
+            player2OriginalScale = playerObject.transform.localScale;
 
         float liftOffset = 1f;
 
-        Collider playerCollider = playerObj.GetComponent<Collider>();
+        Collider playerCollider =
+            playerObject.GetComponent<Collider>();
+
         if (playerCollider != null)
             liftOffset = playerCollider.bounds.size.y;
 
-        Vector3 originalScale =
-            !isPlayer2 ? player1OriginalScale : player2OriginalScale;
+        Vector3 originalScale = isPlayer2
+            ? player2OriginalScale
+            : player1OriginalScale;
 
         Vector3 targetScale = originalScale * growMultiplier;
 
-        playerObj.transform.localScale = targetScale;
+        playerObject.transform.localScale = targetScale;
+        playerObject.transform.position +=
+            Vector3.up * liftOffset *
+            (growMultiplier - 1f) * 0.5f;
 
-        playerObj.transform.position +=
-            Vector3.up * liftOffset * (growMultiplier - 1f) * 0.5f;
-
-        if (cc != null) cc.enabled = true;
+        if (controller != null)
+            controller.enabled = true;
 
         float originalSpeed = 5f;
 
-        PlayerMove movementScript = playerObj.GetComponent<PlayerMove>();
+        PlayerMove movement =
+            playerObject.GetComponent<PlayerMove>();
 
-        if (movementScript != null)
+        if (movement != null)
         {
-            originalSpeed = movementScript.speed;
-            movementScript.speed = originalSpeed * 0.5f;
+            originalSpeed = movement.speed;
+            movement.speed = originalSpeed * 0.5f;
         }
 
-        yield return new WaitForSeconds(growDuration);
+        yield return new WaitForSeconds(
+            Mathf.Max(0f, growDuration)
+        );
 
-        if (playerObj != null)
-        {
-            if (cc != null) cc.enabled = false;
+        if (playerObject == null)
+            yield break;
 
-            playerObj.transform.localScale = originalScale;
+        if (controller != null)
+            controller.enabled = false;
 
-            if (cc != null) cc.enabled = true;
+        playerObject.transform.localScale = originalScale;
 
-            if (movementScript != null)
-                movementScript.speed = originalSpeed;
-        }
+        if (controller != null)
+            controller.enabled = true;
+
+        if (movement != null)
+            movement.speed = originalSpeed;
     }
 
-    void ClearCurrentSpawnedItem()
+    private void ClearCurrentSpawnedItem()
     {
         if (itemDestroyCoroutine != null)
         {
@@ -544,20 +707,23 @@ public class MiniGame5 : MonoBehaviour
             itemDestroyCoroutine = null;
         }
 
-        if (currentSpawnedItem != null)
-        {
-            Destroy(currentSpawnedItem);
-            currentSpawnedItem = null;
-        }
+        if (currentSpawnedItem == null)
+            return;
+
+        Destroy(currentSpawnedItem);
+        currentSpawnedItem = null;
     }
 
-    void CalculateFinalScore()
+    private void CalculateFinalScore()
     {
-        int p1Count = 0;
-        int p2Count = 0;
+        int player1Count = 0;
+        int player2Count = 0;
 
         foreach (PaintPadData pad in allPads)
         {
+            if (pad == null)
+                continue;
+
             if (pad.hazardType == PadHazardType.Bomb ||
                 pad.hazardType == PadHazardType.Freeze)
             {
@@ -567,197 +733,256 @@ public class MiniGame5 : MonoBehaviour
             }
 
             if (pad.ownerTag == "Player 1")
-                p1Count++;
+                player1Count++;
             else if (pad.ownerTag == "Player 2")
-                p2Count++;
+                player2Count++;
         }
 
         if (resultText != null)
         {
-            if (p1Count > p2Count)
+            if (player1Count > player2Count)
             {
-                resultText.text = $"P1 win! ({p1Count} vs {p2Count})";
+                resultText.text =
+                    $"P1 win! ({player1Count} vs {player2Count})";
                 resultText.color = Color.blue;
-                AudioManager.Instance.PlaySpecial(AudioManager.Instance.playerOneWinClip);
+
+                if (AudioManager.Instance != null)
+                {
+                    AudioManager.Instance.PlaySpecial(
+                        AudioManager.Instance.playerOneWinClip
+                    );
+                }
             }
-            else if (p2Count > p1Count)
+            else if (player2Count > player1Count)
             {
-                resultText.text = $"P2 win! ({p2Count} vs {p1Count})";
+                resultText.text =
+                    $"P2 win! ({player2Count} vs {player1Count})";
                 resultText.color = Color.red;
-                AudioManager.Instance.PlaySpecial(AudioManager.Instance.playerTwoWinClip);
+
+                if (AudioManager.Instance != null)
+                {
+                    AudioManager.Instance.PlaySpecial(
+                        AudioManager.Instance.playerTwoWinClip
+                    );
+                }
             }
             else
             {
-                resultText.text = $"Draw! ({p1Count} vs {p2Count})";
+                resultText.text =
+                    $"Draw! ({player1Count} vs {player2Count})";
                 resultText.color = Color.yellow;
             }
         }
 
-     //   Debug.Log("Điểm P1: " + p1Count + " | P2: " + p2Count);
-
-        ExitResultAllPlayer(p1Count, p2Count);
+        ExitResultAllPlayer(player1Count, player2Count);
     }
 
-    public void ExitResultAllPlayer(int countPadP1, int countPadP2)
+    public void ExitResultAllPlayer(
+        int countPadPlayer1,
+        int countPadPlayer2
+    )
     {
-        PlayerMiniGame p1 =
+        if (manager == null ||
+            manager.currentPlayer1 == null ||
+            manager.currentPlayer2 == null)
+        {
+            return;
+        }
+
+        PlayerMiniGame player1 =
             manager.currentPlayer1.GetComponent<PlayerMiniGame>();
 
-        PlayerMiniGame p2 =
+        PlayerMiniGame player2 =
             manager.currentPlayer2.GetComponent<PlayerMiniGame>();
 
-        if (p1 == null || p2 == null) return;
+        if (player1 == null || player2 == null)
+            return;
 
-        if (countPadP1 > countPadP2)
-            p1.UpCoin(1, 100);
-        else if (countPadP2 > countPadP1)
-            p2.UpCoin(1, 100);
+        if (countPadPlayer1 > countPadPlayer2)
+            player1.UpCoin(1, 100);
+        else if (countPadPlayer2 > countPadPlayer1)
+            player2.UpCoin(1, 100);
     }
 }
 
 public class PaintPadData
 {
+    private static readonly int BaseColorId =
+        Shader.PropertyToID("_BaseColor");
+
+    private static readonly int ColorId =
+        Shader.PropertyToID("_Color");
+
     public GameObject padObject;
     public MeshRenderer renderer;
     public string ownerTag = "";
     public PadHazardType hazardType = PadHazardType.None;
-
     public GameObject spawnedBomb;
 
-    private MiniGame5 manager;
+    private readonly MiniGame5 manager;
+    private readonly MaterialPropertyBlock propertyBlock =
+        new MaterialPropertyBlock();
 
     public PaintPadData(
-        GameObject obj,
-        MeshRenderer meshRenderer,
+        GameObject pad,
+        MeshRenderer padRenderer,
         MiniGame5 gameManager
     )
     {
-        padObject = obj;
-        renderer = meshRenderer;
+        padObject = pad;
+        renderer = padRenderer;
         manager = gameManager;
     }
 
     public void UpdateDetection()
     {
+        if (padObject == null || manager == null)
+            return;
+
         Vector3 centerPosition =
-            padObject.transform.position + new Vector3(0f, 0.6f, 0f);
+            padObject.transform.position +
+            new Vector3(0f, 0.6f, 0f);
 
-        Vector3 checkSize = new Vector3(1.1f, 0.5f, 1.1f);
+        Vector3 checkSize =
+            new Vector3(1.1f, 0.5f, 1.1f);
 
-        Collider[] hitColliders =
-            Physics.OverlapBox(
-                centerPosition,
-                checkSize,
-                padObject.transform.rotation
-            );
+        Collider[] hitColliders = Physics.OverlapBox(
+            centerPosition,
+            checkSize,
+            padObject.transform.rotation
+        );
 
         foreach (Collider col in hitColliders)
         {
-            GameObject pObj = col.gameObject;
+            if (col == null)
+                continue;
 
-            if (pObj.GetComponent<PlayerType>() != null)
+            GameObject playerObject = col.gameObject;
+
+            if (playerObject.GetComponent<PlayerType>() == null)
+                continue;
+
+            Collider playerCollider =
+                playerObject.GetComponent<Collider>();
+
+            if (playerCollider == null)
+                continue;
+
+            Vector3 padCenter = padObject.transform.position;
+            Vector3 closestPoint =
+                playerCollider.ClosestPoint(padCenter);
+
+            float distanceX =
+                Mathf.Abs(closestPoint.x - padCenter.x);
+
+            float distanceZ =
+                Mathf.Abs(closestPoint.z - padCenter.z);
+
+            float targetRadius = 0.42f;
+
+            if (playerObject.transform.localScale.x > 1.5f)
             {
-                Collider playerCollider = pObj.GetComponent<Collider>();
-                if (playerCollider == null) continue;
-
-                Vector3 padCenter = padObject.transform.position;
-                Vector3 closestPoint = playerCollider.ClosestPoint(padCenter);
-
-                float distanceX = Mathf.Abs(closestPoint.x - padCenter.x);
-                float distanceZ = Mathf.Abs(closestPoint.z - padCenter.z);
-
-                float targetRadius = 0.42f;
-
-                if (pObj.transform.localScale.x > 1.5f)
-                {
-                    targetRadius = 0.42f * pObj.transform.localScale.x;
-                }
-
-                if (distanceX < targetRadius && distanceZ < targetRadius)
-                {
-                    manager.OnPadTriggered(this, pObj);
-                }
+                targetRadius *=
+                    playerObject.transform.localScale.x;
             }
+
+            if (distanceX >= targetRadius ||
+                distanceZ >= targetRadius)
+            {
+                continue;
+            }
+
+            manager.OnPadTriggered(this, playerObject);
         }
     }
 
-    public void UpdateBombFlashing(Color c1, Color c2, float speed)
+    public void UpdateBombFlashing(
+        Color firstColor,
+        Color secondColor,
+        float speed
+    )
     {
-        if (renderer == null) return;
+        if (renderer == null)
+            return;
 
-        float lerpFactor = Mathf.PingPong(Time.time * speed, 1f);
-        renderer.material.color = Color.Lerp(c1, c2, lerpFactor);
+        float lerpFactor = Mathf.PingPong(
+            Time.time * Mathf.Max(0f, speed),
+            1f
+        );
+
+        SetColorOverride(
+            UnityEngine.Color.Lerp(
+                firstColor,
+                secondColor,
+                lerpFactor
+            )
+        );
     }
 
-    public void SetOwner(string tag, Material playerMat)
+    public void SetOwner(string tag, Material playerMaterial)
     {
-        if (hazardType != PadHazardType.None) return;
+        if (hazardType != PadHazardType.None || ownerTag == tag)
+            return;
 
         ownerTag = tag;
-
-        if (renderer != null)
-        {
-            renderer.material = playerMat;
-            renderer.material.color = Color.white;
-        }
+        SetMaterial(playerMaterial);
     }
 
     public void ApplyHazardVisual()
     {
-        if (renderer == null) return;
-
-        renderer.material.color = Color.white;
-
         if (hazardType == PadHazardType.Bomb)
         {
-            renderer.material = manager.bombMaterial;
-
+            SetMaterial(manager.bombMaterial);
             SpawnFakeBomb();
         }
         else if (hazardType == PadHazardType.Freeze)
         {
-            renderer.material = manager.freezeMaterial;
+            SetMaterial(manager.freezeMaterial);
             RemoveSpawnedBomb();
         }
     }
 
-    void SpawnFakeBomb()
+    private void SpawnFakeBomb()
     {
-        if (manager.bombPrefab == null) return;
-        if (spawnedBomb != null) return;
+        if (manager == null ||
+            manager.bombPrefab == null ||
+            padObject == null ||
+            spawnedBomb != null)
+        {
+            return;
+        }
 
-        Vector3 spawnPos =
+        Vector3 spawnPosition =
             padObject.transform.position +
             Vector3.up * manager.bombSpawnHeight;
 
-        spawnedBomb =
-            GameObject.Instantiate(
-                manager.bombPrefab,
-                spawnPos,
-                Quaternion.identity
-            );
+        spawnedBomb = GameObject.Instantiate(
+            manager.bombPrefab,
+            spawnPosition,
+            Quaternion.identity
+        );
 
         Collider[] bombColliders =
             spawnedBomb.GetComponentsInChildren<Collider>();
 
         foreach (Collider col in bombColliders)
         {
-            col.enabled = false;
+            if (col != null)
+                col.enabled = false;
         }
     }
 
     public void RestoreVisualAfterHazard()
     {
-        if (renderer == null) return;
-
-        renderer.material.color = Color.white;
+        if (manager == null)
+            return;
 
         if (ownerTag == "Player 1")
-            renderer.material = manager.player1Material;
+            SetMaterial(manager.player1Material);
         else if (ownerTag == "Player 2")
-            renderer.material = manager.player2Material;
+            SetMaterial(manager.player2Material);
         else
-            renderer.material = manager.defaultMaterial;
+            SetMaterial(manager.defaultMaterial);
     }
 
     public void ResetColor()
@@ -767,19 +992,45 @@ public class PaintPadData
 
         RemoveSpawnedBomb();
 
-        if (renderer != null)
-        {
-            renderer.material = manager.defaultMaterial;
-            renderer.material.color = Color.white;
-        }
+        if (manager != null)
+            SetMaterial(manager.defaultMaterial);
     }
 
     public void RemoveSpawnedBomb()
     {
-        if (spawnedBomb != null)
-        {
-            GameObject.Destroy(spawnedBomb);
-            spawnedBomb = null;
-        }
+        if (spawnedBomb == null)
+            return;
+
+        GameObject.Destroy(spawnedBomb);
+        spawnedBomb = null;
+    }
+
+    private void SetMaterial(Material material)
+    {
+        if (renderer == null || material == null)
+            return;
+
+        renderer.sharedMaterial = material;
+        ClearColorOverride();
+    }
+
+    private void SetColorOverride(Color color)
+    {
+        if (renderer == null)
+            return;
+
+        propertyBlock.Clear();
+        propertyBlock.SetColor(BaseColorId, color);
+        propertyBlock.SetColor(ColorId, color);
+        renderer.SetPropertyBlock(propertyBlock);
+    }
+
+    private void ClearColorOverride()
+    {
+        if (renderer == null)
+            return;
+
+        propertyBlock.Clear();
+        renderer.SetPropertyBlock(propertyBlock);
     }
 }

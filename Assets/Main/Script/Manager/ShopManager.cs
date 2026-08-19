@@ -651,8 +651,8 @@ public class ShopManager : MonoBehaviour
     }
     public IEnumerator AnimationCloseShop()
     {
-        Animator anishop =ui.shopPanel.GetComponent<Animator>();
-        if( anishop != null)
+        Animator anishop = ui.shopPanel.GetComponent<Animator>();
+        if (anishop != null)
         {
             anishop.SetTrigger("Close");
 

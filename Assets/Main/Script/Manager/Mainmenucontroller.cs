@@ -20,8 +20,8 @@ public class MainMenuController : MonoBehaviour
 
     [Header("Menu Intro Lock")]
     [Tooltip(
-        "Nếu có Menu Intro Animator thì biến này chỉ dùng làm thời gian dự phòng. " +
-        "Nếu không gắn Animator, Main Menu sẽ khóa input đúng thời gian này."
+        "Thời gian khóa input tối thiểu của Main Menu. " +
+        "Ngay cả khi Animator báo xong sớm, nút vẫn bị khóa đủ thời gian này."
     )]
     [SerializeField] private float menuInputDelay = 1f;
 
@@ -35,6 +35,27 @@ public class MainMenuController : MonoBehaviour
     [Tooltip("Layer Animator chứa animation intro của menu.")]
     [Min(0)]
     [SerializeField] private int menuIntroAnimatorLayer = 0;
+
+    [Tooltip(
+        "Tên chính xác của state Intro trong Animator. " +
+        "Có thể dùng tên ngắn như MenuIntro hoặc đường dẫn Base Layer.MenuIntro. " +
+        "Để trống thì script tự tìm state không Loop đang chạy."
+    )]
+    [SerializeField] private string menuIntroStateName = "";
+
+    [Tooltip(
+        "Thời gian tối đa chờ tìm state Intro. " +
+        "Nếu nhập sai tên state, script chỉ mở khóa sau timeout và báo Warning."
+    )]
+    [Min(0.1f)]
+    [SerializeField] private float menuIntroStateTimeout = 10f;
+
+    [Header("Menu Intro Raycast Lock")]
+    [Tooltip(
+        "CanvasGroup trên GameObject cha chứa Start / Setting / Exit. " +
+        "Nếu để trống và ba nút có cùng cha, script sẽ tự lấy hoặc tự thêm."
+    )]
+    [SerializeField] private CanvasGroup menuButtonsCanvasGroup;
 
     [Header("Setting Button Selected Visual")]
     [Tooltip(
@@ -78,6 +99,9 @@ public class MainMenuController : MonoBehaviour
     private bool startButtonInteractableOnOpen;
     private bool settingButtonInteractableOnOpen;
     private bool exitButtonInteractableOnOpen;
+
+    private bool menuCanvasGroupInteractableOnOpen = true;
+    private bool menuCanvasGroupBlocksRaycastsOnOpen = true;
 
     // Dùng để phát hiện Settings vừa đóng.
     private bool wasSettingOpen;
@@ -223,11 +247,63 @@ public class MainMenuController : MonoBehaviour
         };
 
         currentButtonIndex = 0;
+
+        SetupMenuButtonsCanvasGroup();
+    }
+
+    private void SetupMenuButtonsCanvasGroup()
+    {
+        if (menuButtonsCanvasGroup != null)
+            return;
+
+        if (startButton == null ||
+            settingButton == null ||
+            exitButton == null)
+        {
+            return;
+        }
+
+        Transform commonParent =
+            startButton.transform.parent;
+
+        if (commonParent == null ||
+            !settingButton.transform.IsChildOf(commonParent) ||
+            !exitButton.transform.IsChildOf(commonParent))
+        {
+            Debug.LogWarning(
+                "Không tự tìm được GameObject cha chung của Start/Setting/Exit. " +
+                "Hãy gắn CanvasGroup vào Menu Buttons Canvas Group."
+            );
+
+            return;
+        }
+
+        menuButtonsCanvasGroup =
+            commonParent.GetComponent<CanvasGroup>();
+
+        if (menuButtonsCanvasGroup == null)
+        {
+            menuButtonsCanvasGroup =
+                commonParent.gameObject
+                    .AddComponent<CanvasGroup>();
+        }
     }
 
     private void LockMenuButtonsForIntro()
     {
         canUseMainMenu = false;
+
+        if (menuButtonsCanvasGroup != null)
+        {
+            menuCanvasGroupInteractableOnOpen =
+                menuButtonsCanvasGroup.interactable;
+
+            menuCanvasGroupBlocksRaycastsOnOpen =
+                menuButtonsCanvasGroup.blocksRaycasts;
+
+            menuButtonsCanvasGroup.interactable = false;
+            menuButtonsCanvasGroup.blocksRaycasts = false;
+        }
 
         if (startButton != null)
         {
@@ -260,10 +336,11 @@ public class MainMenuController : MonoBehaviour
     private IEnumerator UnlockMenuAfterIntro()
     {
         // =====================================================
-        // LOGIC 1:
-        // Nếu có Animator -> chờ ANIMATION THẬT SỰ chạy xong.
-        // Nếu không có Animator -> dùng menuInputDelay dự phòng.
+        // Có Animator: chờ đúng state Intro chạy xong.
+        // Đồng thời luôn khóa ít nhất menuInputDelay giây.
         // =====================================================
+
+        float lockStartTime = Time.unscaledTime;
 
         if (menuIntroAnimator != null &&
             menuIntroAnimator.gameObject.activeInHierarchy &&
@@ -273,10 +350,18 @@ public class MainMenuController : MonoBehaviour
                 WaitForMenuIntroAnimation()
             );
         }
-        else if (menuInputDelay > 0f)
+        float elapsedLockTime =
+            Time.unscaledTime - lockStartTime;
+
+        float remainingMinimumLockTime =
+            Mathf.Max(0f, menuInputDelay - elapsedLockTime);
+
+        // Dù Animator bị cấu hình sai, không bao giờ mở khóa
+        // trước thời gian tối thiểu menuInputDelay.
+        if (remainingMinimumLockTime > 0f)
         {
             yield return new WaitForSecondsRealtime(
-                menuInputDelay
+                remainingMinimumLockTime
             );
         }
 
@@ -301,6 +386,15 @@ public class MainMenuController : MonoBehaviour
                 exitButtonInteractableOnOpen;
         }
 
+        if (menuButtonsCanvasGroup != null)
+        {
+            menuButtonsCanvasGroup.interactable =
+                menuCanvasGroupInteractableOnOpen;
+
+            menuButtonsCanvasGroup.blocksRaycasts =
+                menuCanvasGroupBlocksRaycastsOnOpen;
+        }
+
         // Chỉ đến đây mới cho phép Main Menu nhận input.
         canUseMainMenu = true;
 
@@ -321,7 +415,7 @@ public class MainMenuController : MonoBehaviour
 
     private IEnumerator WaitForMenuIntroAnimation()
     {
-        // Cho Animator ít nhất 1 frame để vào state intro.
+        // Cho Animator ít nhất 1 frame để bắt đầu transition/state Intro.
         yield return null;
 
         if (menuIntroAnimator == null)
@@ -335,10 +429,19 @@ public class MainMenuController : MonoBehaviour
             layer = 0;
         }
 
-        AnimatorStateInfo firstState =
-            menuIntroAnimator.GetCurrentAnimatorStateInfo(layer);
+        string configuredStateName =
+            menuIntroStateName == null
+                ? ""
+                : menuIntroStateName.Trim();
 
-        int introStateHash = firstState.fullPathHash;
+        int configuredShortNameHash =
+            string.IsNullOrEmpty(configuredStateName)
+                ? 0
+                : Animator.StringToHash(configuredStateName);
+
+        int introStateFullPathHash = 0;
+        bool introStarted = false;
+        float waitStartTime = Time.unscaledTime;
 
         while (menuIntroAnimator != null &&
                menuIntroAnimator.enabled &&
@@ -350,25 +453,107 @@ public class MainMenuController : MonoBehaviour
             bool isTransitioning =
                 menuIntroAnimator.IsInTransition(layer);
 
-            // Trường hợp animation intro ở nguyên state:
-            // normalizedTime >= 1 nghĩa là đã chạy hết 100%.
-            if (currentState.fullPathHash == introStateHash &&
-                currentState.normalizedTime >= 1f &&
-                !isTransitioning)
+            AnimatorStateInfo nextState = default;
+
+            if (isTransitioning)
             {
-                break;
+                nextState =
+                    menuIntroAnimator
+                        .GetNextAnimatorStateInfo(layer);
             }
 
-            // Trường hợp intro chạy xong rồi Animator tự chuyển sang Idle:
-            // Khi đã chuyển hẳn sang state khác thì intro cũng đã kết thúc.
-            if (currentState.fullPathHash != introStateHash &&
-                !isTransitioning)
+            if (introStateFullPathHash == 0)
             {
-                break;
+                bool currentIsIntro =
+                    IsMenuIntroState(
+                        currentState,
+                        configuredStateName,
+                        configuredShortNameHash
+                    );
+
+                bool nextIsIntro =
+                    isTransitioning &&
+                    IsMenuIntroState(
+                        nextState,
+                        configuredStateName,
+                        configuredShortNameHash
+                    );
+
+                if (currentIsIntro)
+                {
+                    introStateFullPathHash =
+                        currentState.fullPathHash;
+
+                    introStarted = true;
+                }
+                else if (nextIsIntro)
+                {
+                    introStateFullPathHash =
+                        nextState.fullPathHash;
+                }
+            }
+
+            if (introStateFullPathHash != 0)
+            {
+                bool currentIsTarget =
+                    currentState.fullPathHash ==
+                    introStateFullPathHash;
+
+                bool nextIsTarget =
+                    isTransitioning &&
+                    nextState.fullPathHash ==
+                    introStateFullPathHash;
+
+                if (currentIsTarget)
+                {
+                    introStarted = true;
+
+                    // State Intro đã chạy đủ 100% và không còn transition.
+                    if (currentState.normalizedTime >= 1f &&
+                        !isTransitioning)
+                    {
+                        yield break;
+                    }
+                }
+                else if (introStarted &&
+                         !nextIsTarget &&
+                         !isTransitioning)
+                {
+                    // Intro đã chuyển hoàn toàn sang state khác.
+                    yield break;
+                }
+            }
+
+            if (Time.unscaledTime - waitStartTime >=
+                Mathf.Max(0.1f, menuIntroStateTimeout))
+            {
+                Debug.LogWarning(
+                    "Không tìm thấy hoặc không thể chờ hết state Intro '" +
+                    configuredStateName +
+                    "'. Hãy kiểm tra Menu Intro State Name trong Inspector."
+                );
+
+                yield break;
             }
 
             yield return null;
         }
+    }
+
+    private bool IsMenuIntroState(
+        AnimatorStateInfo state,
+        string configuredStateName,
+        int configuredShortNameHash)
+    {
+        if (!string.IsNullOrEmpty(configuredStateName))
+        {
+            return state.shortNameHash ==
+                       configuredShortNameHash ||
+                   state.IsName(configuredStateName);
+        }
+
+        // Tự động: state Intro thường là state one-shot không Loop.
+        return !state.loop;
     }
 
     private void SetupCursor()
@@ -401,6 +586,12 @@ public class MainMenuController : MonoBehaviour
         {
             setting.isOpenExitButton = false;
             setting.canOpenSettingByController = false;
+            setting.RegisterMainMenu(
+                this,
+                startButton,
+                settingButton,
+                exitButton
+            );
         }
     }
 
@@ -552,10 +743,7 @@ public class MainMenuController : MonoBehaviour
         {
             activeMenuController = 1;
 
-            Debug.Log(
-                "Main Menu dùng Console 1 | Joystick " +
-                controller.GetConsole1JoystickIndex()
-            );
+
 
             return;
         }
@@ -566,19 +754,14 @@ public class MainMenuController : MonoBehaviour
         {
             activeMenuController = 2;
 
-            Debug.Log(
-                "Main Menu dùng Console 2 | Joystick " +
-                controller.GetConsole2JoystickIndex()
-            );
+
 
             return;
         }
 
         activeMenuController = 0;
 
-        Debug.Log(
-            "Main Menu không có tay cầm."
-        );
+
     }
 
     private void SetNoControllerState()
@@ -938,9 +1121,7 @@ public class MainMenuController : MonoBehaviour
     {
         if (EventSystem.current == null)
         {
-            Debug.LogError(
-                "Không tìm thấy EventSystem trong scene."
-            );
+
 
             return;
         }
@@ -1024,6 +1205,30 @@ public class MainMenuController : MonoBehaviour
     public void FocusExitButton()
     {
         FocusButton(exitButton);
+    }
+
+    /// <summary>
+    /// Được SettingManager gọi sau khi B/Circle đóng Setting.
+    /// Lúc này cụm menu đã được hiện lại, nên trả focus về nút Setting.
+    /// </summary>
+    public void RestoreAfterControllerSettingClosed()
+    {
+        if (isLoading)
+            return;
+
+        // Ba nút vừa được bật lại, cập nhật tay cầm đang điều khiển
+        // trước khi tạo focus.
+        SelectActiveMenuController();
+
+        wasSettingOpen = false;
+        canMoveVertical = false;
+
+        if (activeMenuController == 0)
+            return;
+
+        StartCoroutine(
+            FocusButtonDelay(settingButton)
+        );
     }
 
     private void PlayMoveSound()
@@ -1199,5 +1404,15 @@ public class MainMenuController : MonoBehaviour
 #else
         Application.Quit();
 #endif
+    }
+
+    private void OnDestroy()
+    {
+        SettingManager setting = SettingManager.Instance;
+
+        if (setting != null)
+        {
+            setting.UnregisterMainMenu(this);
+        }
     }
 }

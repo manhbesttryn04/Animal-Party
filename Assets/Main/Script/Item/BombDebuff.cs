@@ -120,7 +120,9 @@ public class BombDebuff : MonoBehaviour
             return;
         }
 
-        StartCoroutine(moveAI.BoomHitEffect(power));
+        moveAI.StartCoroutine(
+      moveAI.BoomHitEffect(power)
+  );
 
         Destroy(gameObject);
     }
