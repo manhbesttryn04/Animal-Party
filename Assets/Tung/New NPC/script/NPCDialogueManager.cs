@@ -24,11 +24,17 @@ public class NPCDialogueManager : MonoBehaviour
         public float bubbleDuration = 2.5f;
         public float gapBetweenLines = 1f;
 
-        [Header("Offset bong bóng - NPC A (đơn vị mét thật)")]
+        [Header("Offset bong bóng chat - NPC A (mét thật)")]
         public Vector3 bubbleOffsetA = new Vector3(0, 0.8f, 0);
 
-        [Header("Offset bong bóng - NPC B (đơn vị mét thật)")]
+        [Header("Offset bong bóng chat - NPC B (mét thật)")]
         public Vector3 bubbleOffsetB = new Vector3(0, 0.8f, 0);
+
+        [Header("Offset dấu ... - NPC A (mét thật)")]
+        public Vector3 typingOffsetA = new Vector3(0, 0.8f, 0);
+
+        [Header("Offset dấu ... - NPC B (mét thật)")]
+        public Vector3 typingOffsetB = new Vector3(0, 0.8f, 0);
 
         [Header("Random giờ bắt đầu (tránh mọi cụm nói cùng lúc)")]
         public float startDelayMin = 0f;
@@ -37,6 +43,9 @@ public class NPCDialogueManager : MonoBehaviour
         [HideInInspector] public bool isRunning = false;
         [HideInInspector] public int lastIndexA = -1;
         [HideInInspector] public int lastIndexB = -1;
+
+        // Cho phép chạy hay không dựa theo khoảng cách camera
+        [HideInInspector] public bool allowedByDistance = true;
     }
 
     [System.Serializable]
@@ -55,8 +64,11 @@ public class NPCDialogueManager : MonoBehaviour
         public float delayBetweenTalks = 6f;
         public float bubbleDuration = 2.5f;
 
-        [Header("Offset bong bóng (mét thật)")]
+        [Header("Offset bong bóng chat (mét thật)")]
         public Vector3 bubbleOffset = new Vector3(0, 0.8f, 0);
+
+        [Header("Offset dấu ... (mét thật)")]
+        public Vector3 typingOffset = new Vector3(0, 0.8f, 0);
 
         [Header("Random giờ bắt đầu")]
         public float startDelayMin = 0f;
@@ -64,6 +76,8 @@ public class NPCDialogueManager : MonoBehaviour
 
         [HideInInspector] public bool isRunning = false;
         [HideInInspector] public int lastIndex = -1;
+
+        [HideInInspector] public bool allowedByDistance = true;
     }
 
     [Header("Bubble Prefab dùng chung cho tất cả cụm")]
@@ -81,14 +95,60 @@ public class NPCDialogueManager : MonoBehaviour
     [Header("Fallback nếu prefab typing không có TypingDotsAnimation")]
     public float typingDurationFallback = 0.9f;
 
+    [Header("--- Giới hạn theo khoảng cách Camera ---")]
+    [Tooltip("Bật để chỉ chạy dialogue cho NPC gần camera")]
+    public bool useDistanceLimit = true;
+
+    [Tooltip("Bán kính (mét) tính từ camera - NPC trong phạm vi này mới chạy dialogue")]
+    public float maxDistanceFromCamera = 20f;
+
+    [Tooltip("Tần suất kiểm tra khoảng cách (giây) - không cần check mỗi frame")]
+    public float distanceCheckInterval = 0.5f;
+
+    Camera cachedCamera;
+
     [Header("Danh sách các cụm NPC nói chuyện (2 NPC/cụm)")]
     public List<ConversationGroup> groups = new List<ConversationGroup>();
 
     [Header("Danh sách NPC nói một mình (không cần cặp)")]
     public List<SoloNPC> soloNpcs = new List<SoloNPC>();
 
+    List<GameObject> activeBubbles = new List<GameObject>();
+    static NPCDialogueManager instance;
+
+    void Awake()
+    {
+        if (instance != null && instance != this)
+        {
+            Debug.LogWarning("[NPCDialogueManager] Phát hiện nhiều hơn 1 Manager trong Scene, huỷ bản thừa để tránh conflict.");
+            Destroy(gameObject);
+            return;
+        }
+        instance = this;
+    }
+
+    void OnEnable()
+    {
+        foreach (var group in groups)
+        {
+            group.isRunning = false;
+            group.lastIndexA = -1;
+            group.lastIndexB = -1;
+            group.allowedByDistance = true;
+        }
+        foreach (var solo in soloNpcs)
+        {
+            solo.isRunning = false;
+            solo.lastIndex = -1;
+            solo.allowedByDistance = true;
+        }
+        activeBubbles.Clear();
+    }
+
     void Start()
     {
+        cachedCamera = Camera.main;
+
         foreach (var group in groups)
         {
             if (group.npcA == null || group.npcB == null) continue;
@@ -101,6 +161,67 @@ public class NPCDialogueManager : MonoBehaviour
         {
             if (solo.npc == null) continue;
             StartCoroutine(RunSolo(solo));
+        }
+
+        if (useDistanceLimit)
+            StartCoroutine(DistanceCheckLoop());
+    }
+
+    void OnDisable()
+    {
+        StopAllCoroutines();
+        CleanupAllBubbles();
+
+        foreach (var group in groups)
+            group.isRunning = false;
+        foreach (var solo in soloNpcs)
+            solo.isRunning = false;
+    }
+
+    void OnDestroy()
+    {
+        CleanupAllBubbles();
+        if (instance == this)
+            instance = null;
+    }
+
+    void CleanupAllBubbles()
+    {
+        foreach (var b in activeBubbles)
+        {
+            if (b != null) Destroy(b);
+        }
+        activeBubbles.Clear();
+    }
+
+    // Vòng lặp kiểm tra khoảng cách định kỳ, không cần check mỗi frame
+    IEnumerator DistanceCheckLoop()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(distanceCheckInterval);
+
+            if (cachedCamera == null)
+            {
+                cachedCamera = Camera.main;
+                if (cachedCamera == null) continue;
+            }
+
+            Vector3 camPos = cachedCamera.transform.position;
+
+            foreach (var group in groups)
+            {
+                if (group.npcA == null) continue;
+                float dist = Vector3.Distance(camPos, group.npcA.position);
+                group.allowedByDistance = dist <= maxDistanceFromCamera;
+            }
+
+            foreach (var solo in soloNpcs)
+            {
+                if (solo.npc == null) continue;
+                float dist = Vector3.Distance(camPos, solo.npc.position);
+                solo.allowedByDistance = dist <= maxDistanceFromCamera;
+            }
         }
     }
 
@@ -125,18 +246,28 @@ public class NPCDialogueManager : MonoBehaviour
         {
             yield return new WaitForSeconds(group.delayBetweenTalks);
 
+            // Nếu đang bật giới hạn khoảng cách và NPC đang ở ngoài phạm vi, chờ tới khi vào lại
+            if (useDistanceLimit)
+            {
+                yield return new WaitUntil(() => group.allowedByDistance);
+            }
+
+            if (group.npcA == null || group.npcB == null) yield break;
+
             if (group.linesA.Length > 0)
             {
-                yield return StartCoroutine(ShowTyping(group.npcA, group.bubbleOffsetA));
+                yield return StartCoroutine(ShowTyping(group.npcA, group.typingOffsetA));
                 string lineA = GetRandomLine(group.linesA, ref group.lastIndexA);
                 SpawnBubble(group.npcA, lineA, group.bubbleOffsetA, group.bubbleDuration);
             }
 
             yield return new WaitForSeconds(group.gapBetweenLines);
 
+            if (group.npcA == null || group.npcB == null) yield break;
+
             if (group.linesB.Length > 0)
             {
-                yield return StartCoroutine(ShowTyping(group.npcB, group.bubbleOffsetB));
+                yield return StartCoroutine(ShowTyping(group.npcB, group.typingOffsetB));
                 string lineB = GetRandomLine(group.linesB, ref group.lastIndexB);
                 SpawnBubble(group.npcB, lineB, group.bubbleOffsetB, group.bubbleDuration);
             }
@@ -154,16 +285,22 @@ public class NPCDialogueManager : MonoBehaviour
         {
             yield return new WaitForSeconds(solo.delayBetweenTalks);
 
+            if (useDistanceLimit)
+            {
+                yield return new WaitUntil(() => solo.allowedByDistance);
+            }
+
+            if (solo.npc == null) yield break;
+
             if (solo.lines.Length > 0)
             {
-                yield return StartCoroutine(ShowTyping(solo.npc, solo.bubbleOffset));
+                yield return StartCoroutine(ShowTyping(solo.npc, solo.typingOffset));
                 string line = GetRandomLine(solo.lines, ref solo.lastIndex);
                 SpawnBubble(solo.npc, line, solo.bubbleOffset, solo.bubbleDuration);
             }
         }
     }
 
-    // Chọn câu random, tránh lặp lại đúng câu vừa nói lần trước
     string GetRandomLine(string[] lines, ref int lastIndex)
     {
         if (lines.Length == 0) return "";
@@ -185,6 +322,8 @@ public class NPCDialogueManager : MonoBehaviour
         if (typingIndicatorPrefab == null || target == null) yield break;
 
         GameObject typing = Instantiate(typingIndicatorPrefab);
+        activeBubbles.Add(typing);
+
         typing.transform.SetParent(target);
         typing.transform.position = target.position + offset;
         typing.transform.rotation = Quaternion.identity;
@@ -205,7 +344,10 @@ public class NPCDialogueManager : MonoBehaviour
         yield return new WaitForSeconds(waitTime);
 
         if (typing != null)
+        {
+            activeBubbles.Remove(typing);
             Destroy(typing);
+        }
     }
 
     void SpawnBubble(Transform target, string text, Vector3 offset, float duration)
@@ -213,12 +355,22 @@ public class NPCDialogueManager : MonoBehaviour
         if (bubblePrefab == null || target == null) return;
 
         GameObject bubble = Instantiate(bubblePrefab);
+        activeBubbles.Add(bubble);
+
         bubble.transform.SetParent(target);
         bubble.transform.position = target.position + offset;
         bubble.transform.rotation = Quaternion.identity;
 
-        var tmp = bubble.GetComponentInChildren<TextMeshProUGUI>();
-        if (tmp != null) tmp.text = text;
+        var autoResize = bubble.GetComponent<AutoResizeBubble>();
+        if (autoResize != null)
+        {
+            autoResize.ResizeToFitText(text);
+        }
+        else
+        {
+            var tmp = bubble.GetComponentInChildren<TextMeshProUGUI>();
+            if (tmp != null) tmp.text = text;
+        }
 
         var popAnim = bubble.GetComponent<BubblePopAnimation>();
         if (popAnim != null)
@@ -231,6 +383,14 @@ public class NPCDialogueManager : MonoBehaviour
             bubble.transform.localScale = Vector3.one * bubbleFixedScale;
             Destroy(bubble, duration);
         }
+
+        StartCoroutine(RemoveFromActiveList(bubble, duration + 1f));
+    }
+
+    IEnumerator RemoveFromActiveList(GameObject bubble, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        activeBubbles.Remove(bubble);
     }
 
     public void SetGroupActive(string groupName, bool active)
