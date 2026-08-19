@@ -208,31 +208,31 @@ public class InstructInputMinigame : MonoBehaviour
         // =====================================================
 
         SetListState(
-            ui.instructKeyBoardInputListP1,
+            ui.minigameKeyboardInputListP1,
             boolList,
             false
         );
 
         SetListState(
-            ui.instructKeyBoardInputListP2,
+            ui.minigameKeyboardInputListP2,
             boolList,
             false
         );
 
         SetListState(
-            ui.instructConsoleInputListP1,
+            ui.minigameConsoleInputListP1,
             boolList,
             false
         );
 
         SetListState(
-            ui.instructConsoleInputListP2,
+            ui.minigameConsoleInputListP2,
             boolList,
             false
         );
 
         SetListState(
-            ui.instructBothConsoleInputListP1,
+            ui.minigameBothControllersInputList,
             boolList,
             false
         );
@@ -246,45 +246,45 @@ public class InstructInputMinigame : MonoBehaviour
         {
             // Tắt toàn bộ Keyboard.
             SetActiveSafe(
-                ui.instructKeyBoard,
+                ui.minigameKeyboardRoot,
                 false
             );
 
             SetActiveSafe(
-                ui.instructKeyBoardP1,
+                ui.minigameKeyboardP1Root,
                 false
             );
 
             SetActiveSafe(
-                ui.instructKeyBoardP2,
+                ui.minigameKeyboardP2Root,
                 false
             );
 
             // Tắt Console Clone riêng P1/P2.
             SetActiveSafe(
-                ui.instructConsoleClone,
+                ui.minigameConsoleRoot,
                 false
             );
 
             SetActiveSafe(
-                ui.instructConsoleCloneP1,
+                ui.minigameConsoleP1Root,
                 false
             );
 
             SetActiveSafe(
-                ui.instructConsoleCloneP2,
+                ui.minigameConsoleP2Root,
                 false
             );
 
             // Hiện UI dành cho cả 2 Controller.
             SetActiveSafe(
-                ui.instructBothConsole,
+                ui.minigameBothControllersRoot,
                 true
             );
 
             // Áp đúng List<bool> của minigame.
             SetListState(
-                ui.instructBothConsoleInputListP1,
+                ui.minigameBothControllersInputList,
                 boolList,
                 true
             );
@@ -297,7 +297,7 @@ public class InstructInputMinigame : MonoBehaviour
         // =====================================================
 
         SetActiveSafe(
-            ui.instructBothConsole,
+            ui.minigameBothControllersRoot,
             false
         );
 
@@ -310,7 +310,7 @@ public class InstructInputMinigame : MonoBehaviour
             !p2Controller;
 
         SetActiveSafe(
-            ui.instructKeyBoard,
+            ui.minigameKeyboardRoot,
             hasKeyboardPlayer
         );
 
@@ -322,12 +322,12 @@ public class InstructInputMinigame : MonoBehaviour
             !p1Controller;
 
         SetActiveSafe(
-            ui.instructKeyBoardP1,
+            ui.minigameKeyboardP1Root,
             showKeyboardP1
         );
 
         SetListState(
-            ui.instructKeyBoardInputListP1,
+            ui.minigameKeyboardInputListP1,
             boolList,
             showKeyboardP1
         );
@@ -340,12 +340,12 @@ public class InstructInputMinigame : MonoBehaviour
             !p2Controller;
 
         SetActiveSafe(
-            ui.instructKeyBoardP2,
+            ui.minigameKeyboardP2Root,
             showKeyboardP2
         );
 
         SetListState(
-            ui.instructKeyBoardInputListP2,
+            ui.minigameKeyboardInputListP2,
             boolList,
             showKeyboardP2
         );
@@ -359,7 +359,7 @@ public class InstructInputMinigame : MonoBehaviour
             p2Controller;
 
         SetActiveSafe(
-            ui.instructConsoleClone,
+            ui.minigameConsoleRoot,
             hasControllerPlayer
         );
 
@@ -368,12 +368,12 @@ public class InstructInputMinigame : MonoBehaviour
         // =====================================================
 
         SetActiveSafe(
-            ui.instructConsoleCloneP1,
+            ui.minigameConsoleP1Root,
             p1Controller
         );
 
         SetListState(
-            ui.instructConsoleInputListP1,
+            ui.minigameConsoleInputListP1,
             boolList,
             p1Controller
         );
@@ -383,12 +383,12 @@ public class InstructInputMinigame : MonoBehaviour
         // =====================================================
 
         SetActiveSafe(
-            ui.instructConsoleCloneP2,
+            ui.minigameConsoleP2Root,
             p2Controller
         );
 
         SetListState(
-            ui.instructConsoleInputListP2,
+            ui.minigameConsoleInputListP2,
             boolList,
             p2Controller
         );
@@ -478,63 +478,63 @@ public class InstructInputMinigame : MonoBehaviour
 
         // ROOT
         SetActiveSafe(
-            ui.instructKeyBoard,
+            ui.minigameKeyboardRoot,
             false
         );
 
         SetActiveSafe(
-            ui.instructKeyBoardP1,
+            ui.minigameKeyboardP1Root,
             false
         );
 
         SetActiveSafe(
-            ui.instructKeyBoardP2,
+            ui.minigameKeyboardP2Root,
             false
         );
 
         SetActiveSafe(
-            ui.instructConsoleClone,
+            ui.minigameConsoleRoot,
             false
         );
 
         SetActiveSafe(
-            ui.instructConsoleCloneP1,
+            ui.minigameConsoleP1Root,
             false
         );
 
         SetActiveSafe(
-            ui.instructConsoleCloneP2,
+            ui.minigameConsoleP2Root,
             false
         );
 
         SetActiveSafe(
-            ui.instructBothConsole,
+            ui.minigameBothControllersRoot,
             false
         );
 
         // LIST KEYBOARD P1
         HideList(
-            ui.instructKeyBoardInputListP1
+            ui.minigameKeyboardInputListP1
         );
 
         // LIST KEYBOARD P2
         HideList(
-            ui.instructKeyBoardInputListP2
+            ui.minigameKeyboardInputListP2
         );
 
         // LIST CONTROLLER P1
         HideList(
-            ui.instructConsoleInputListP1
+            ui.minigameConsoleInputListP1
         );
 
         // LIST CONTROLLER P2
         HideList(
-            ui.instructConsoleInputListP2
+            ui.minigameConsoleInputListP2
         );
 
         // LIST BOTH CONTROLLER
         HideList(
-            ui.instructBothConsoleInputListP1
+            ui.minigameBothControllersInputList
         );
     }
 

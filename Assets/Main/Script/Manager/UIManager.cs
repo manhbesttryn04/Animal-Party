@@ -5,6 +5,7 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
@@ -103,19 +104,155 @@ public class UIManager : MonoBehaviour
     public GameObject panelPlayer2Turn;
     public GameObject[] itemsList;
     public GameObject[] itemCardRandomList;
-    [Header("Instruct Input KeyBoard")]
-    public GameObject instructKeyBoard;
-    public GameObject instructKeyBoardP1;
-    public GameObject instructKeyBoardP2;
-    public List<GameObject> instructKeyBoardInputListP1;
-    public List<GameObject> instructKeyBoardInputListP2;
-    public GameObject instructConsoleClone;
-    public GameObject instructConsoleCloneP1;
-    public GameObject instructConsoleCloneP2;
-    public List<GameObject> instructConsoleInputListP1;
-    public List<GameObject> instructConsoleInputListP2;
-    public GameObject instructBothConsole;
-    public List<GameObject> instructBothConsoleInputListP1;
+    [Header("Minigame Input Instructions")]
+    [FormerlySerializedAs("instructKeyBoard")]
+    public GameObject minigameKeyboardRoot;
+
+    [FormerlySerializedAs("instructKeyBoardP1")]
+    public GameObject minigameKeyboardP1Root;
+
+    [FormerlySerializedAs("instructKeyBoardP2")]
+    public GameObject minigameKeyboardP2Root;
+
+    [FormerlySerializedAs("instructKeyBoardInputListP1")]
+    public List<GameObject> minigameKeyboardInputListP1 =
+        new List<GameObject>();
+
+    [FormerlySerializedAs("instructKeyBoardInputListP2")]
+    public List<GameObject> minigameKeyboardInputListP2 =
+        new List<GameObject>();
+
+    [FormerlySerializedAs("instructConsoleClone")]
+    public GameObject minigameConsoleRoot;
+
+    [FormerlySerializedAs("instructConsoleCloneP1")]
+    public GameObject minigameConsoleP1Root;
+
+    [FormerlySerializedAs("instructConsoleCloneP2")]
+    public GameObject minigameConsoleP2Root;
+
+    [FormerlySerializedAs("instructConsoleInputListP1")]
+    public List<GameObject> minigameConsoleInputListP1 =
+        new List<GameObject>();
+
+    [FormerlySerializedAs("instructConsoleInputListP2")]
+    public List<GameObject> minigameConsoleInputListP2 =
+        new List<GameObject>();
+
+    [FormerlySerializedAs("instructBothConsole")]
+    public GameObject minigameBothControllersRoot;
+
+    [FormerlySerializedAs("instructBothConsoleInputListP1")]
+    public List<GameObject> minigameBothControllersInputList =
+        new List<GameObject>();
+
+    // =========================================================
+    // LEGACY MINIGAME FIELD ALIASES
+    // Giữ InstructInputMinigame cũ tiếp tục compile và hoạt động.
+    // Các property này không xuất hiện trong Inspector.
+    // =========================================================
+
+    public GameObject instructKeyBoard
+    {
+        get => minigameKeyboardRoot;
+        set => minigameKeyboardRoot = value;
+    }
+
+    public GameObject instructKeyBoardP1
+    {
+        get => minigameKeyboardP1Root;
+        set => minigameKeyboardP1Root = value;
+    }
+
+    public GameObject instructKeyBoardP2
+    {
+        get => minigameKeyboardP2Root;
+        set => minigameKeyboardP2Root = value;
+    }
+
+    public List<GameObject> instructKeyBoardInputListP1
+    {
+        get => minigameKeyboardInputListP1;
+        set => minigameKeyboardInputListP1 = value;
+    }
+
+    public List<GameObject> instructKeyBoardInputListP2
+    {
+        get => minigameKeyboardInputListP2;
+        set => minigameKeyboardInputListP2 = value;
+    }
+
+    public GameObject instructConsoleClone
+    {
+        get => minigameConsoleRoot;
+        set => minigameConsoleRoot = value;
+    }
+
+    public GameObject instructConsoleCloneP1
+    {
+        get => minigameConsoleP1Root;
+        set => minigameConsoleP1Root = value;
+    }
+
+    public GameObject instructConsoleCloneP2
+    {
+        get => minigameConsoleP2Root;
+        set => minigameConsoleP2Root = value;
+    }
+
+    public List<GameObject> instructConsoleInputListP1
+    {
+        get => minigameConsoleInputListP1;
+        set => minigameConsoleInputListP1 = value;
+    }
+
+    public List<GameObject> instructConsoleInputListP2
+    {
+        get => minigameConsoleInputListP2;
+        set => minigameConsoleInputListP2 = value;
+    }
+
+    public GameObject instructBothConsole
+    {
+        get => minigameBothControllersRoot;
+        set => minigameBothControllersRoot = value;
+    }
+
+    public List<GameObject> instructBothConsoleInputListP1
+    {
+        get => minigameBothControllersInputList;
+        set => minigameBothControllersInputList = value;
+    }
+
+    [Header("Global Device Instructions")]
+    [Tooltip("UI bàn phím bổ sung ngoài phần hướng dẫn minigame của Player 1.")]
+    public List<GameObject> globalKeyboardInstructionListP1 =
+        new List<GameObject>();
+
+    [Tooltip("UI bàn phím bổ sung ngoài phần hướng dẫn minigame của Player 2.")]
+    public List<GameObject> globalKeyboardInstructionListP2 =
+        new List<GameObject>();
+
+    [Tooltip("UI tay cầm bổ sung ngoài phần hướng dẫn minigame của Player 1.")]
+    public List<GameObject> globalConsoleInstructionListP1 =
+        new List<GameObject>();
+
+    [Tooltip("UI tay cầm bổ sung ngoài phần hướng dẫn minigame của Player 2.")]
+    public List<GameObject> globalConsoleInstructionListP2 =
+        new List<GameObject>();
+
+    [Tooltip(
+        "UI tay cầm dùng chung ngoài minigame như Setting hoặc Shop. " +
+        "Chỉ cần P1 hoặc P2 có tay cầm thì các UI trong list này sẽ hiện."
+    )]
+    [FormerlySerializedAs("instructAnyControllerInputList")]
+    public List<GameObject> globalAnyControllerInstructionList =
+        new List<GameObject>();
+
+    // Cache riêng cho nhóm Global, không liên quan InstructInputMinigame.
+    private bool previousGlobalP1ControllerConnected;
+    private bool previousGlobalP2ControllerConnected;
+    private bool globalInstructionInitialized;
 
     [Header("Screen Transition")]
     public GameObject blackPanel;
@@ -193,11 +330,22 @@ public class UIManager : MonoBehaviour
             ControllerManager.Instance
                 .RefreshInputInstructionUI();
         }
+
+        // UIManager chỉ quản lý nhóm Global ngoài minigame.
+        UpdateGlobalDeviceInstructionUI(true);
     }
 
     private void Update()
     {
-        if (!notifiPlay.activeSelf) return;
+        // Luôn kiểm tra trước khi return để hướng dẫn vẫn cập nhật
+        // khi đang mở Setting, Shop hoặc một UI khác.
+        UpdateGlobalDeviceInstructionUI();
+
+        if (notifiPlay == null ||
+            !notifiPlay.activeSelf)
+        {
+            return;
+        }
 
         updateTimer += Time.deltaTime;
 
@@ -205,6 +353,100 @@ public class UIManager : MonoBehaviour
         {
             updateTimer = 0f;
             UpdateAllPlayMainUI();
+        }
+    }
+
+    // =========================================================
+    // GLOBAL DEVICE INSTRUCTION
+    // =========================================================
+
+    public void RefreshGlobalDeviceInstructionUI()
+    {
+        UpdateGlobalDeviceInstructionUI(true);
+    }
+
+    private void UpdateGlobalDeviceInstructionUI(bool force = false)
+    {
+        ControllerManager controller =
+            ControllerManager.Instance;
+
+        bool p1ControllerConnected =
+            controller != null &&
+            controller.IsConsole1Connected();
+
+        bool p2ControllerConnected =
+            controller != null &&
+            controller.IsConsole2Connected();
+
+        if (!force &&
+            globalInstructionInitialized &&
+            p1ControllerConnected ==
+                previousGlobalP1ControllerConnected &&
+            p2ControllerConnected ==
+                previousGlobalP2ControllerConnected)
+        {
+            return;
+        }
+
+        previousGlobalP1ControllerConnected =
+            p1ControllerConnected;
+
+        previousGlobalP2ControllerConnected =
+            p2ControllerConnected;
+
+        globalInstructionInitialized = true;
+
+        // Chỉ thay đổi nhóm Global, không chạm vào list của minigame.
+        SetGlobalInstructionListActive(
+            globalKeyboardInstructionListP1,
+            !p1ControllerConnected
+        );
+
+        SetGlobalInstructionListActive(
+            globalConsoleInstructionListP1,
+            p1ControllerConnected
+        );
+
+        SetGlobalInstructionListActive(
+            globalKeyboardInstructionListP2,
+            !p2ControllerConnected
+        );
+
+        SetGlobalInstructionListActive(
+            globalConsoleInstructionListP2,
+            p2ControllerConnected
+        );
+
+        bool hasAnyController =
+            p1ControllerConnected ||
+            p2ControllerConnected;
+
+        // Có 1/2 hoặc 2/2 tay cầm thì hiện hướng dẫn chung.
+        SetGlobalInstructionListActive(
+            globalAnyControllerInstructionList,
+            hasAnyController
+        );
+    }
+
+    private void SetGlobalInstructionListActive(
+        List<GameObject> instructionList,
+        bool active)
+    {
+        if (instructionList == null)
+            return;
+
+        for (int i = 0;
+             i < instructionList.Count;
+             i++)
+        {
+            GameObject instruction =
+                instructionList[i];
+
+            if (instruction != null &&
+                instruction.activeSelf != active)
+            {
+                instruction.SetActive(active);
+            }
         }
     }
 
