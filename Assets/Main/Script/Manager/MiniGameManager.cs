@@ -205,7 +205,7 @@ public class MiniGameManager : MonoBehaviour
 
         // Tắt loading
         LoadingManager.Instance.HideLoading();
-
+        SettingManager.Instance.ResetSetting();
         // Bật màn đen nếu muốn che cảnh lúc đổi camera
         var ui = UIManager.Instance;
         ui.flastBlackPanel.SetActive(false);
@@ -426,7 +426,7 @@ public class MiniGameManager : MonoBehaviour
         //UIManager.Instance.ActiveOpenSettingButton(true);
         if (cursor != null)
         {
-           // cursor.ShowGameCursor();
+           cursor.ShowGameCursor();
         }
         var setting = SettingManager.Instance;
         if (setting != null)
@@ -450,7 +450,7 @@ public class MiniGameManager : MonoBehaviour
         // =====================================================
 
         // Hiện UI chính của minigame
-        //ui.canvasMiniGame.SetActive(true);
+        ui.canvasMiniGame.SetActive(true);
 
         // =====================================================
         // START MINIGAME LOGIC
