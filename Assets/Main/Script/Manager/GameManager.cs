@@ -26,7 +26,7 @@ public class GameManager : MonoBehaviour
     public GameObject player2Main;
 
     [Header("Game Loop")]
-    public bool canRunGameLoopUpdate = true;
+   // public bool canRunGameLoopUpdate = true;
     public bool canStartNextRound = false;
     public bool canCheckPlayer2 = true;
     public bool canCheckMiniGame = true;
@@ -93,11 +93,7 @@ public class GameManager : MonoBehaviour
     private void Update()
     {
         // Minigame, debuff hoặc shop đang xử lý thì tạm dừng kiểm tra lượt chơi.
-        if (!canRunGameLoopUpdate)
-        {
-            timer = 0f;
-            return;
-        }
+        
 
         timer += Time.deltaTime;
 
@@ -562,7 +558,7 @@ public class GameManager : MonoBehaviour
         {
             // Cả hai người chơi đã roll xong:
             // khóa Update trong suốt minigame, debuff và shop.
-            canRunGameLoopUpdate = false;
+            //canRunGameLoopUpdate = false;
             canCheckMiniGame = false;
 
             PlayerTeleportToMiniGame();
