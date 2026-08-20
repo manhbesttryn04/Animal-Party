@@ -31,6 +31,9 @@ public class CutSceneShip : MonoBehaviour
     public GameObject skipHintObject;
     public TMP_Text skipHintText;
 
+    [Tooltip("UI biểu tượng nút B. Có tay cầm thì hiện, không có thì ẩn.")]
+    public GameObject controllerBHintObject;
+
     [Header("--- SKIP HINT TEXT ---")]
     [SerializeField]
     private string keyboardSkipHint =
@@ -236,6 +239,11 @@ public class CutSceneShip : MonoBehaviour
             skipHintText.text = hasController
                 ? controllerSkipHint
                 : keyboardSkipHint;
+        }
+
+        if (controllerBHintObject != null)
+        {
+            controllerBHintObject.SetActive(hasController);
         }
     }
 
