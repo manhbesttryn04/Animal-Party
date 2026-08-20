@@ -423,10 +423,10 @@ public class MiniGameManager : MonoBehaviour
         ui.canvasInstructInput.SetActive(false);
         // Tắt màn đen sau khi chuẩn bị xong
         ui.flastBlackPanel.SetActive(false);
-        UIManager.Instance.ActiveOpenSettingButton(true);
+        //UIManager.Instance.ActiveOpenSettingButton(true);
         if (cursor != null)
         {
-            cursor.ShowGameCursor();
+           // cursor.ShowGameCursor();
         }
         var setting = SettingManager.Instance;
         if (setting != null)
@@ -450,7 +450,7 @@ public class MiniGameManager : MonoBehaviour
         // =====================================================
 
         // Hiện UI chính của minigame
-        ui.canvasMiniGame.SetActive(true);
+        //ui.canvasMiniGame.SetActive(true);
 
         // =====================================================
         // START MINIGAME LOGIC
@@ -863,4 +863,4 @@ public class MiniGameManager : MonoBehaviour
     }
 
     #endregion
-}
+}   
