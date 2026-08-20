@@ -27,11 +27,17 @@ namespace QLDATN.ProjectTracker
         private const double HeartbeatSeconds = 30.0;
         private const double GitRefreshSeconds = 60.0;
         private const double RecentSourceActivitySeconds = 90.0;
-        private const string ClientVersion = "qldatn-unity-3.4.0";
+        private const string ClientVersion = "qldatn-unity-3.6.0";
         private const string PendingUpdatePreference = "QLDATN_PROJECT_TRACKER_PENDING_UPDATE";
         private const int MaximumOfflinePayloads = 50;
         private const string TrackerFileName = "QLDATNSceneTracker.cs";
         private const string BranchRecoveryHookMarker = "# QLDATN_UNITY_TRACKER_POST_CHECKOUT";
+        private const double LiveActivityDebounceSeconds = 0.35;
+        private const int MaximumLiveActivitiesPerBatch = 24;
+        private const int MaximumLiveSourceSnapshotChars = 96000;
+        private const int MaximumLiveSourceDiffChars = 8000;
+        private const int MaximumLiveSourceSnapshots = 500;
+        private const int MaximumInitialLiveSourceChars = 2000000;
         private static readonly double[] RetryDelaysSeconds = { 2.0, 5.0, 15.0 };
 
         private static readonly string SessionIdPath = Path.Combine(
@@ -64,6 +70,10 @@ namespace QLDATN.ProjectTracker
         private static double _lastSourceActivity = -RecentSourceActivitySeconds;
         private static long _lastSequence;
         private static bool _updateCompilationFailed;
+        private static readonly Dictionary<string, double> LastLiveActivityAt =
+            new Dictionary<string, double>();
+        private static readonly Dictionary<string, string> LiveSourceSnapshots =
+            new Dictionary<string, string>();
 
         static SceneTracker()
         {
@@ -81,6 +91,7 @@ namespace QLDATN.ProjectTracker
 
             EditorApplication.delayCall += () =>
             {
+                PrimeLiveSourceSnapshots();
                 RefreshState(true);
                 _lastKnownDirty = _isDirty;
                 QueueSend(CurrentStatus());
@@ -128,6 +139,7 @@ namespace QLDATN.ProjectTracker
             RefreshState(false);
             _lastKnownDirty = _isDirty;
             QueueSend(CurrentStatus());
+            QueueLiveActivity("UNITY_SCENE_OPENED", _sceneValue.path);
         }
 
         private static void OnSceneClosed(Scene _sceneValue)
@@ -145,6 +157,7 @@ namespace QLDATN.ProjectTracker
             RefreshState(false);
             _lastKnownDirty = _isDirty;
             QueueSend(CurrentStatus(), "SCENE_SAVED", 1);
+            QueueLiveActivity("UNITY_SCENE_SAVED", _sceneValue.path);
         }
 
         private static void OnPlayModeStateChanged(PlayModeStateChange state)
@@ -917,12 +930,275 @@ namespace QLDATN.ProjectTracker
             return difference == 0;
         }
 
-        public static void ReportAssetChanges(int count)
+        public static void ReportAssetChanges(
+            string[] importedAssets,
+            string[] deletedAssets,
+            string[] movedAssets
+        )
         {
+            var count = importedAssets.Length + deletedAssets.Length + movedAssets.Length;
             if (count <= 0) return;
             _lastSourceActivity = EditorApplication.timeSinceStartup;
             _pendingAssetChanges += count;
             _assetFlushAt = EditorApplication.timeSinceStartup + 2.0;
+            QueueLiveActivityBatch("UNITY_ASSET_CHANGED", importedAssets);
+            QueueLiveActivityBatch("UNITY_ASSET_DELETED", deletedAssets);
+            QueueLiveActivityBatch("UNITY_ASSET_CHANGED", movedAssets);
+        }
+
+        private static void QueueLiveActivityBatch(string action, string[] assetPaths)
+        {
+            if (assetPaths == null) return;
+            for (var index = 0; index < assetPaths.Length && index < MaximumLiveActivitiesPerBatch; index++)
+            {
+                QueueLiveActivity(action, assetPaths[index]);
+            }
+        }
+
+        // Live source activity only holds a baseline in editor memory to build a diff.
+        private static void QueueLiveActivity(string action, string sourcePath)
+        {
+            if (!IsConfigured()) return;
+            var path = NormalizeLiveSourcePath(sourcePath);
+            if (string.IsNullOrEmpty(path)) return;
+            var key = action + ":" + path;
+            var now = EditorApplication.timeSinceStartup;
+            if (
+                LastLiveActivityAt.TryGetValue(key, out var previous)
+                && now - previous < LiveActivityDebounceSeconds
+            ) {
+                return;
+            }
+            LastLiveActivityAt[key] = now;
+            if (LastLiveActivityAt.Count > 1000) LastLiveActivityAt.Clear();
+            var sourceChange = action != "UNITY_SCENE_OPENED";
+            var diff = sourceChange ? CaptureLiveSourceDiff(path) : "";
+            if (sourceChange && string.IsNullOrEmpty(diff)) return;
+            _ = SendLiveActivityAsync(action, path, diff);
+        }
+
+        private static string NormalizeLiveSourcePath(string sourcePath)
+        {
+            if (string.IsNullOrEmpty(sourcePath)) return "";
+            var normalized = sourcePath.Replace("\\", "/").Trim();
+            if (
+                !normalized.StartsWith("Assets/", StringComparison.Ordinal)
+                || normalized.Contains("../")
+                || normalized.EndsWith(".meta", StringComparison.OrdinalIgnoreCase)
+                || normalized.Contains("/QLDATNSceneTracker", StringComparison.OrdinalIgnoreCase)
+            ) {
+                return "";
+            }
+            var extension = Path.GetExtension(normalized).ToLowerInvariant();
+            switch (extension)
+            {
+                case ".asmdef":
+                case ".cs":
+                case ".hlsl":
+                case ".json":
+                case ".prefab":
+                case ".shader":
+                case ".unity":
+                case ".yaml":
+                case ".yml":
+                    return normalized.Length <= 240 ? normalized : normalized.Substring(0, 240);
+                default:
+                    return "";
+            }
+        }
+
+        private static void PrimeLiveSourceSnapshots()
+        {
+            try
+            {
+                var totalCharacters = 0;
+                foreach (var fullPath in Directory.GetFiles(
+                    Application.dataPath,
+                    "*",
+                    SearchOption.AllDirectories
+                ))
+                {
+                    if (
+                        LiveSourceSnapshots.Count >= MaximumLiveSourceSnapshots
+                        || totalCharacters >= MaximumInitialLiveSourceChars
+                    ) {
+                        return;
+                    }
+                    var relative = fullPath.Substring(Application.dataPath.Length)
+                        .TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                        .Replace("\\", "/");
+                    var sourcePath = NormalizeLiveSourcePath("Assets/" + relative);
+                    if (string.IsNullOrEmpty(sourcePath)) continue;
+                    if (!TryReadLiveSource(sourcePath, out var source)) continue;
+                    if (source.Length > MaximumInitialLiveSourceChars - totalCharacters) continue;
+                    LiveSourceSnapshots[sourcePath] = source;
+                    totalCharacters += source.Length;
+                }
+            }
+            catch
+            {
+                // Priming only improves the first live diff and must not affect the editor.
+            }
+        }
+
+        private static bool TryReadLiveSource(string sourcePath, out string source)
+        {
+            source = "";
+            try
+            {
+                var projectDirectory = Directory.GetParent(Application.dataPath)?.FullName;
+                if (string.IsNullOrEmpty(projectDirectory)) return false;
+                var fullPath = Path.GetFullPath(Path.Combine(projectDirectory, sourcePath));
+                var projectRoot = Path.GetFullPath(projectDirectory) + Path.DirectorySeparatorChar;
+                if (!fullPath.StartsWith(projectRoot, StringComparison.Ordinal)) return false;
+                var info = new FileInfo(fullPath);
+                if (!info.Exists || info.Length > MaximumLiveSourceSnapshotChars) return false;
+                source = File.ReadAllText(fullPath)
+                    .Replace("\r\n", "\n")
+                    .Replace("\r", "\n");
+                return source.Length <= MaximumLiveSourceSnapshotChars;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static string CaptureLiveSourceDiff(string sourcePath)
+        {
+            var hasPrevious = LiveSourceSnapshots.TryGetValue(sourcePath, out var previous);
+            if (!TryReadLiveSource(sourcePath, out var current))
+            {
+                if (!hasPrevious) return "";
+                LiveSourceSnapshots.Remove(sourcePath);
+                return CreateLiveSourceDiff(previous, "", false);
+            }
+            if (hasPrevious || LiveSourceSnapshots.Count < MaximumLiveSourceSnapshots)
+            {
+                LiveSourceSnapshots[sourcePath] = current;
+            }
+            return CreateLiveSourceDiff(previous ?? "", current, !hasPrevious);
+        }
+
+        private static string CreateLiveSourceDiff(
+            string previous,
+            string current,
+            bool isInitial
+        )
+        {
+            if (!isInitial && previous == current) return "";
+            var previousLines = string.IsNullOrEmpty(previous)
+                ? new string[0]
+                : previous.Split('\n');
+            var currentLines = string.IsNullOrEmpty(current)
+                ? new string[0]
+                : current.Split('\n');
+            var prefix = 0;
+            while (
+                prefix < previousLines.Length
+                && prefix < currentLines.Length
+                && previousLines[prefix] == currentLines[prefix]
+            ) {
+                prefix++;
+            }
+            var suffix = 0;
+            while (
+                suffix < previousLines.Length - prefix
+                && suffix < currentLines.Length - prefix
+                && previousLines[previousLines.Length - 1 - suffix]
+                    == currentLines[currentLines.Length - 1 - suffix]
+            ) {
+                suffix++;
+            }
+
+            var output = new StringBuilder(isInitial
+                ? "@@ current source snapshot (initial baseline) @@"
+                : "@@ source change @@");
+            var contextStart = Math.Max(0, prefix - 2);
+            for (var index = contextStart; index < prefix; index++)
+            {
+                AppendLiveDiffLine(output, ' ', currentLines[index]);
+            }
+            for (var index = prefix; index < previousLines.Length - suffix; index++)
+            {
+                AppendLiveDiffLine(output, '-', previousLines[index]);
+            }
+            for (var index = prefix; index < currentLines.Length - suffix; index++)
+            {
+                AppendLiveDiffLine(output, '+', currentLines[index]);
+            }
+            var suffixStart = currentLines.Length - suffix;
+            for (
+                var index = suffixStart;
+                index < Math.Min(currentLines.Length, suffixStart + 2);
+                index++
+            ) {
+                AppendLiveDiffLine(output, ' ', currentLines[index]);
+            }
+
+            var text = output.ToString();
+            if (text.Length <= MaximumLiveSourceDiffChars) return text;
+            var marker = "\n... [live diff truncated]";
+            return text.Substring(0, MaximumLiveSourceDiffChars - marker.Length) + marker;
+        }
+
+        private static void AppendLiveDiffLine(StringBuilder output, char prefix, string line)
+        {
+            output.Append('\n');
+            output.Append(prefix);
+            output.Append(line);
+        }
+
+        private static async Task SendLiveActivityAsync(
+            string action,
+            string sourcePath,
+            string diff
+        )
+        {
+            try
+            {
+                var heartbeatUrl = EditorPrefs.GetString(TrackerUrlPreference);
+                var heartbeatUri = new Uri(heartbeatUrl);
+                var endpoint = heartbeatUri.GetLeftPart(UriPartial.Authority)
+                    + "/api/project-tracker/live-activity";
+                var json = JsonUtility.ToJson(new LiveActivityPayload
+                {
+                    action = action,
+                    path = sourcePath,
+                    diff = string.IsNullOrEmpty(diff) ? null : diff
+                });
+                var timestamp = UnixTimeMilliseconds().ToString();
+                var sequence = NextSequence().ToString();
+                var body = Encoding.UTF8.GetBytes(json);
+                using var request = new UnityWebRequest(endpoint, "POST");
+                request.timeout = 5;
+                request.uploadHandler = new UploadHandlerRaw(body);
+                request.downloadHandler = new DownloadHandlerBuffer();
+                request.SetRequestHeader("Content-Type", "application/json");
+                request.SetRequestHeader(
+                    "Authorization",
+                    "Device " + EditorPrefs.GetString(DeviceKeyIdPreference)
+                );
+                request.SetRequestHeader("X-Tracker-Timestamp", timestamp);
+                request.SetRequestHeader("X-Tracker-Sequence", sequence);
+                request.SetRequestHeader(
+                    "X-Tracker-Device",
+                    EditorPrefs.GetString(DeviceIdPreference)
+                );
+                request.SetRequestHeader(
+                    "X-Tracker-Signature",
+                    SignRequest(
+                        EditorPrefs.GetString(DeviceSecretPreference),
+                        timestamp + "." + sequence + "." + json
+                    )
+                );
+                var operation = request.SendWebRequest();
+                while (!operation.isDone) await Task.Delay(50);
+            }
+            catch
+            {
+                // Live events are intentionally best-effort and leave no offline record.
+            }
         }
 
         public static void ReportBuildStarted(string target)
@@ -1085,6 +1361,14 @@ namespace QLDATN.ProjectTracker
         }
 
         [Serializable]
+        private class LiveActivityPayload
+        {
+            public string action;
+            public string path;
+            public string diff;
+        }
+
+        [Serializable]
         private class HeartbeatResponse
         {
             public ClientUpdatePayload clientUpdate;
@@ -1110,9 +1394,7 @@ namespace QLDATN.ProjectTracker
             string[] _movedFromAssetPaths
         )
         {
-            SceneTracker.ReportAssetChanges(
-                importedAssets.Length + deletedAssets.Length + movedAssets.Length
-            );
+            SceneTracker.ReportAssetChanges(importedAssets, deletedAssets, movedAssets);
         }
     }
 
