@@ -112,7 +112,7 @@ public class CutSceneEndGame : MonoBehaviour
         "Behold... the island that legends are made of.",
         "Riches untold, claimed by only the worthy.",
         "This is what it was all for.",
-        "The Animal Party has found its true champion!"
+        "The Party Animal has found its true champion!"
     };
 
     private Vector3 teleportOriginalScale;
