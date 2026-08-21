@@ -423,7 +423,7 @@ public class MiniGameManager : MonoBehaviour
         ui.canvasInstructInput.SetActive(false);
         // Tắt màn đen sau khi chuẩn bị xong
         ui.flastBlackPanel.SetActive(false);
-        //UIManager.Instance.ActiveOpenSettingButton(true);
+        UIManager.Instance.ActiveOpenSettingButton(true);
         if (cursor != null)
         {
            cursor.ShowGameCursor();

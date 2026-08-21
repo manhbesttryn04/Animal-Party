@@ -108,7 +108,7 @@ public class DebuffManager : MonoBehaviour
     {
         ui = UIManager.Instance;
         HideDebuffRandomColors();
-        if (isOpen) Open(1);
+        if (isOpen) Open(0);
     }
 
     private void Update()
