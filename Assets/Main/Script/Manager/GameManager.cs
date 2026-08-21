@@ -649,6 +649,7 @@ public class GameManager : MonoBehaviour
 
             if (SettingManager.Instance != null)
             {
+                SettingManager.Instance.enableSettingMusic = false;
                 SettingManager.Instance.canOpenSettingByEsc = true;
                 // SettingManager.Instance.isOpenExitButton = false;
             }

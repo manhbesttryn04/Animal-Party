@@ -34,7 +34,7 @@ public class SetUpStartMainScene : MonoBehaviour
         {
             setting.ResetSetting();
             setting.isOpenExitButton = true;
-            
+            setting.enableSettingMusic = true;
             setting.canOpenSettingByEsc = false;
 
             setting.canOpenSettingByController = true;

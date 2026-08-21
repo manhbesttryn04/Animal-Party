@@ -584,6 +584,7 @@ public class MainMenuController : MonoBehaviour
 
         if (setting != null)
         {
+            setting.enableSettingMusic = true;
             setting.isOpenExitButton = false;
             setting.canOpenSettingByController = false;
             setting.RegisterMainMenu(

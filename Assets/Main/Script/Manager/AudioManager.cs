@@ -157,6 +157,8 @@ public class AudioManager : MonoBehaviour
     public float masterVolume = 1f;
     private float musicSettingVolume = 1f;
     private float sfxSettingVolume = 1f;
+    private bool settingMusicMode;
+    private float settingMusicVolumeMultiplier = 0.15f;
 
 
     private void Awake()
@@ -471,8 +473,18 @@ public class AudioManager : MonoBehaviour
     private void RefreshAllVolumes()
     {
         if (musicSource != null)
-            musicSource.volume = baseMusicVolume * musicSettingVolume * masterVolume;
+        {
+            float settingMultiplier =
+                settingMusicMode
+                    ? settingMusicVolumeMultiplier
+                    : 1f;
 
+            musicSource.volume =
+                baseMusicVolume *
+                musicSettingVolume *
+                masterVolume *
+                settingMultiplier;
+        }
         if (sfxSource != null)
             sfxSource.volume = baseSFXVolume * sfxSettingVolume * masterVolume;
 
@@ -499,6 +511,16 @@ public class AudioManager : MonoBehaviour
 
             source.volume = baseExtraSourceVolumes[i] * masterVolume;
         }
+    }
+    public void SetSettingMusicMode(
+    bool enabled,
+    float volumeMultiplier = 0.15f)
+    {
+        settingMusicMode = enabled;
+        settingMusicVolumeMultiplier =
+            Mathf.Clamp01(volumeMultiplier);
+
+        RefreshAllVolumes();
     }
 
     private void CacheExtraAudioSourceVolumes()
@@ -638,7 +660,15 @@ public class AudioManager : MonoBehaviour
 
     public void PauseGameplayAudio()
     {
-        if (musicSource != null) musicSource.Pause();
+        var setting = SettingManager.Instance;
+        if(setting != null)
+        {
+            if (!setting.enableSettingMusic)
+            {
+                if (musicSource != null) musicSource.Pause();
+            }
+        }
+       
         if (sfxSource != null)
             sfxSource.Pause();
 

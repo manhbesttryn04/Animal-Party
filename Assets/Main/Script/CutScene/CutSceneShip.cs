@@ -141,6 +141,7 @@ public class CutSceneShip : MonoBehaviour
 
         if (setting != null)
         {
+            setting.enableSettingMusic = false;
             setting.ResetSetting();
             setting.canOpenSettingByEsc = true;
 

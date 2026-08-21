@@ -15,6 +15,12 @@ public class SettingManager : MonoBehaviour
     public Slider musicSlider;
     public Slider sfxSlider;
 
+    [Header("Setting Music")]
+    public bool enableSettingMusic = true;
+
+    [Range(0f, 1f)]
+    [SerializeField] private float settingMusicVolume = 0.15f;
+
     [Header("UI")]
     public GameObject settingPanel;
 
@@ -1765,6 +1771,7 @@ public class SettingManager : MonoBehaviour
         isSettingOpen = true;
         isEscSettingOpen = false;
         countClick = 1;
+        ApplySettingMusicState(true);
 
         SetSettingPanelActive(true);
         SetExitButtonActive(isOpenExitButton);
@@ -1865,7 +1872,7 @@ public class SettingManager : MonoBehaviour
         SetSettingPanelActive(true);
         SetExitButtonActive(isOpenExitButton);
         SetCursorSettingState(true);
-
+        ApplySettingMusicState(true);
         HideMainMenuButtonsForControllerSetting();
 
         if (HasControllerForSetting())
@@ -1911,6 +1918,7 @@ public class SettingManager : MonoBehaviour
         isSettingOpen = false;
         isEscSettingOpen = false;
         countClick = 0;
+        ApplySettingMusicState(false);
 
         waitControllerSettingButtonRelease = false;
 
@@ -1936,6 +1944,7 @@ public class SettingManager : MonoBehaviour
         SetSettingPanelActive(true);
         SetExitButtonActive(isOpenExitButton);
         SetCursorSettingState(true);
+        ApplySettingMusicState(true);
 
         HideMainMenuButtonsForControllerSetting();
 
@@ -1975,6 +1984,7 @@ public class SettingManager : MonoBehaviour
         isSettingOpen = false;
         isEscSettingOpen = false;
         countClick = 0;
+        ApplySettingMusicState(false);
 
         // ResetSetting là force reset khi đổi scene / khởi tạo,
         // vì vậy xóa luôn thời gian khóa.
@@ -2245,6 +2255,23 @@ public class SettingManager : MonoBehaviour
         }
 
         SceneManager.LoadScene(indexScene);
+    }
+    private void ApplySettingMusicState(bool settingOpen)
+    {
+        if (AudioManager.Instance == null)
+            return;
+
+        if (settingOpen && enableSettingMusic)
+        {
+            AudioManager.Instance.SetSettingMusicMode(
+                true,
+                settingMusicVolume
+            );
+        }
+        else
+        {
+            AudioManager.Instance.SetSettingMusicMode(false);
+        }
     }
 
     // ==================================================
