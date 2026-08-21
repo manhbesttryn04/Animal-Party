@@ -154,6 +154,7 @@ public class CutSceneEndGame : MonoBehaviour
         var setting = SettingManager.Instance;
         if (setting != null)
         {
+            setting.ResetSetting();
             setting.canOpenSettingByEsc = true;
             setting.isOpenExitButton = false;
             setting.canOpenSettingByController = true;

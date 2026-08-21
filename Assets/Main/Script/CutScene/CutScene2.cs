@@ -155,6 +155,7 @@ public class CutScene2 : MonoBehaviour
         var setting = SettingManager.Instance;
         if (setting != null)
         {
+            setting.ResetSetting();
             setting.canOpenSettingByEsc = true;
             setting.canOpenSettingByController = true;
         }

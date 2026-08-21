@@ -6,27 +6,33 @@ public class SetUpStartMainScene : MonoBehaviour
    
     void Start()
     {
-        if(AudioManager.Instance != null)
+        var audio = AudioManager.Instance;
+        if(audio != null)
         {
-            AudioManager.Instance.SetupMainGameAudio();
-            AudioManager.Instance.PlayUI(AudioManager.Instance.moveCamera);
-            AudioManager.Instance.PlayMusic(AudioManager.Instance.musicMainClip);
+            audio.SetupMainGameAudio();
+            audio.PlayUI(AudioManager.Instance.moveCamera);
+            audio.PlayMusic(AudioManager.Instance.musicMainClip);
         }
-       if(UIManager.Instance != null)
+
+       var ui = UIManager.Instance;
+       if(ui  != null)
         {
-            UIManager.Instance.canvasNotifi.SetActive(true);
-            UIManager.Instance.openSettingPanelButton.SetActive(true);
-            UIManager.Instance.FindPlayerManager();
+            ui.canvasNotifi.SetActive(true);
+            ui.ActiveOpenSettingButton(true);
+            ui.FindPlayerManager();
         }
-       if(CursorManager.Instance != null)
+
+       var cursor = CursorManager.Instance;
+       if(cursor != null)
         {
 
-            CursorManager.Instance.SetSceneCursorVisible(true);
-            CursorManager.Instance.SetSettingCursorActive(true);
+          cursor.SetSceneCursorVisible(true);
+          cursor.SetSettingCursorActive(true);
         }
        var setting = SettingManager.Instance;
         if(setting != null)
         {
+            setting.ResetSetting();
             setting.isOpenExitButton = true;
             
             setting.canOpenSettingByEsc = false;

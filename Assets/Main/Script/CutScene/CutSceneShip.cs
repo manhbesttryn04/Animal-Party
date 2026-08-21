@@ -108,14 +108,12 @@ public class CutSceneShip : MonoBehaviour
         UpdateSkipHintText(true);
 
         // Cutscene không cho hiện chuột.
-        if (CursorManager.Instance != null)
+        var cursor = CursorManager.Instance;
+        if (cursor!= null)
         {
-            CursorManager.Instance.SetSceneCursorVisible(false);
-            CursorManager.Instance.SetSettingCursorActive(false);
+            cursor.SetSceneCursorVisible(false);
+            cursor.SetSettingCursorActive(false);
         }
-
-
-
         if (subtitlePanel != null)
             subtitlePanel.SetActive(false);
 
@@ -139,10 +137,11 @@ public class CutSceneShip : MonoBehaviour
             audio.PlayMusic(audio.musicCutScene1Clip);
         }
 
-        SettingManager setting = SettingManager.Instance;
+         var setting = SettingManager.Instance;
 
         if (setting != null)
         {
+            setting.ResetSetting();
             setting.canOpenSettingByEsc = true;
 
             // Không cho nút Menu của tay cầm mở Setting.
