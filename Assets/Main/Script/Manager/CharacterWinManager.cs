@@ -75,7 +75,7 @@ public class CharacterWinManager : MonoBehaviour
                isSlothUnlocked = true;
                break;
            default:
-               Debug.LogWarning("Character name not recognized: " + name);
+             
                break;
        }
        this.isPlayer2 = isPlayer2;

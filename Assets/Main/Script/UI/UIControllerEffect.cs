@@ -85,11 +85,7 @@ public class UIControllerEffect : MonoBehaviour
     {
         if (targetImage == null)
         {
-            Debug.LogWarning(
-                $"{name}: UIStateEffect chưa được gán Target Image.",
-                this
-            );
-
+   
             return;
         }
 
@@ -132,11 +128,6 @@ public class UIControllerEffect : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning(
-                $"{name}: Chưa bật công tắc Open hoặc Close.",
-                this
-            );
-
             effectCoroutine = null;
             yield break;
         }

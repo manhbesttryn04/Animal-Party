@@ -15,7 +15,7 @@ public class AutoHitboxFitter : MonoBehaviour
     {
         if (fireParticle == null)
         {
-            Debug.LogError("Chưa kéo object Lửa vào ô Fire Particle kìa!");
+           // Debug.LogError("Chưa kéo object Lửa vào ô Fire Particle kìa!");
             return;
         }
 
@@ -37,6 +37,6 @@ public class AutoHitboxFitter : MonoBehaviour
         // Tự động tích luôn ô Is Trigger cho khỏi quên
         col.isTrigger = true;
 
-        Debug.Log($"<color=green><b>[Đã Căn Xong!]</b></color> Chiều dài Hitbox: {fireLength}");
+       // Debug.Log($"<color=green><b>[Đã Căn Xong!]</b></color> Chiều dài Hitbox: {fireLength}");
     }
 }

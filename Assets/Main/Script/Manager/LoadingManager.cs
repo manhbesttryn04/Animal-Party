@@ -22,7 +22,6 @@ public class LoadingManager : MonoBehaviour
     {
         if (loadingPanel == null || slider == null)
         {
-            Debug.LogWarning("LoadingManager: Chưa gán Loading Panel hoặc Slider.");
             yield break;
         }
 

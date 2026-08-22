@@ -190,15 +190,11 @@ public class ShopManager : MonoBehaviour
 
         if (p1 != null)
             players[0] = p1.GetComponent<PlayerManager>();
-        else
-            Debug.LogError("Không tìm thấy Player 1");
 
         GameObject p2 = GameObject.FindGameObjectWithTag("Player 2");
 
         if (p2 != null)
             players[1] = p2.GetComponent<PlayerManager>();
-        else
-            Debug.LogError("Không tìm thấy Player 2");
 
         GameManager.Instance.ResetBuffAllPlayer();
     }

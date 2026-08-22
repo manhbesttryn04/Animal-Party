@@ -16,7 +16,6 @@ public class HitBox : MonoBehaviour
         if (target == null)
             return;
 
-        Debug.Log(name + " đá trúng " + other.name);
 
         // Hướng đẩy
         Vector3 pushDir =

@@ -88,7 +88,7 @@ public class MiniGame6 : MonoBehaviour
 
         if (carrier1 == null || carrier2 == null)
         {
-            Debug.LogWarning("[BOMB] Missing BombCarrier on player!");
+            //Debug.LogWarning("[BOMB] Missing BombCarrier on player!");
             return;
         }
 
@@ -405,7 +405,7 @@ public class MiniGame6 : MonoBehaviour
 
         if (activePlayers.Count != 1)
         {
-            Debug.LogError("[MiniGame6] Không xác định được người thắng!");
+           // Debug.LogError("[MiniGame6] Không xác định được người thắng!");
             return;
         }
 

@@ -284,10 +284,6 @@ public class SettingManager : MonoBehaviour
     {
         if (resolutionDropdown == null)
         {
-            Debug.LogWarning(
-                "Chưa gắn Resolution Dropdown vào SettingManager."
-            );
-
             return;
         }
 
@@ -721,11 +717,6 @@ public class SettingManager : MonoBehaviour
 
             yield return null;
 
-            Debug.Log(
-                "Đã áp dụng Borderless: " +
-                Screen.width + "x" + Screen.height
-            );
-
             displayApplyCoroutine = null;
             yield break;
         }
@@ -772,15 +763,6 @@ public class SettingManager : MonoBehaviour
 
         yield return null;
         yield return new WaitForEndOfFrame();
-
-        Debug.Log(
-            "Đã áp dụng Exclusive Fullscreen: yêu cầu " +
-            selectedResolution.x + "x" +
-            selectedResolution.y +
-            " | thực tế " +
-            Screen.width + "x" + Screen.height +
-            " | Mode: " + Screen.fullScreenMode
-        );
 
         displayApplyCoroutine = null;
     }
@@ -2090,9 +2072,9 @@ public class SettingManager : MonoBehaviour
             registeredSettingButton == null ||
             registeredExitButton == null)
         {
-            Debug.LogWarning(
-                "MainMenuController chưa gắn đủ Start, Setting hoặc Exit Button."
-            );
+           // Debug.LogWarning(
+               // "MainMenuController chưa gắn đủ Start, Setting hoặc Exit Button."
+           // );
         }
     }
 

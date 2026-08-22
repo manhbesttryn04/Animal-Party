@@ -221,11 +221,7 @@ public class CreditScroll : MonoBehaviour
         AudioManager audio = AudioManager.Instance;
 
         if (audio == null)
-        {
-            Debug.LogWarning(
-                "CreditScroll: Không tìm thấy AudioManager.Instance."
-            );
-
+        { 
             return;
         }
 

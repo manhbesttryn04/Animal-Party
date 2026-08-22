@@ -911,9 +911,6 @@ public class CutScene2 : MonoBehaviour
     {
         if (cam == null)
         {
-            Debug.LogError(
-                "CutScene2 chưa gán Camera."
-            );
 
             return false;
         }
@@ -921,9 +918,6 @@ public class CutScene2 : MonoBehaviour
         if (transVideos == null ||
             transVideos.Count < 11)
         {
-            Debug.LogError(
-                "CutScene2 cần ít nhất 11 Transform."
-            );
 
             return false;
         }
@@ -932,10 +926,6 @@ public class CutScene2 : MonoBehaviour
         {
             if (transVideos[i] == null)
             {
-                Debug.LogError(
-                    "transVideos[" + i + "] chưa được gán."
-                );
-
                 return false;
             }
         }

@@ -24,7 +24,7 @@ public class MovingBoatDecoration : MonoBehaviour
         // Kiểm tra xem người dùng đã kéo đủ điểm chưa
         if (pointA == null || pointB == null)
         {
-            Debug.LogError($"[MovingBoat] Vui lòng kéo đầy đủ Point A và Point B vào Script trên {gameObject.name}!");
+           // Debug.LogError($"[MovingBoat] Vui lòng kéo đầy đủ Point A và Point B vào Script trên {gameObject.name}!");
             enabled = false; // Tắt script nếu thiếu dữ liệu để tránh lỗi hệ thống
             return;
         }

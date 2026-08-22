@@ -20,13 +20,13 @@ public class CheckWinPlayer : MonoBehaviour
     {
         if (index >= 32)
         {
-            Debug.Log("Player Win");
+          
             return true;
         }
 
         else
         {
-            Debug.Log("Chua du 33 buoc");
+          
             return false;
         }
 
@@ -35,12 +35,12 @@ public class CheckWinPlayer : MonoBehaviour
     {
         if (coin >= 4)
         {
-            Debug.Log("Nguoi choi da du 4 dong coin");
+           
             return true;
         }
         else
         {
-            Debug.Log("Chua du 4 coin");
+           
             return false;
         }
 

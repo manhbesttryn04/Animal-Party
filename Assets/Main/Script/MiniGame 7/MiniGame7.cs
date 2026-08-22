@@ -900,9 +900,7 @@ public class MiniGame7 : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning(
-                "Bullet prefab does not have a Rigidbody component!"
-            );
+           
         }
 
         // Tự hủy đạn sau 4 giây
@@ -1122,19 +1120,19 @@ public class MiniGame7 : MonoBehaviour
         // Xử lý người thắng
         if (winnerIndex == 0)
         {
-            Debug.Log("Player 1 thắng");
+           // Debug.Log("Player 1 thắng");
             PlayerCheckReward(0);
             AudioManager.Instance.PlaySpecial(AudioManager.Instance.playerOneWinClip);
         }
         else if (winnerIndex == 1)
         {
-            Debug.Log("Player 2 thắng");
+          //  Debug.Log("Player 2 thắng");
             PlayerCheckReward(1);
             AudioManager.Instance.PlaySpecial(AudioManager.Instance.playerTwoWinClip);
         }
         else
         {
-            Debug.Log("Minigame hòa");
+          //  Debug.Log("Minigame hòa");
             PlayerCheckReward(3);
         }
 

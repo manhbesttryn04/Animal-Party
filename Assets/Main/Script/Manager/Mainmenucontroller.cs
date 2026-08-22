@@ -270,11 +270,6 @@ public class MainMenuController : MonoBehaviour
             !settingButton.transform.IsChildOf(commonParent) ||
             !exitButton.transform.IsChildOf(commonParent))
         {
-            Debug.LogWarning(
-                "Không tự tìm được GameObject cha chung của Start/Setting/Exit. " +
-                "Hãy gắn CanvasGroup vào Menu Buttons Canvas Group."
-            );
-
             return;
         }
 
@@ -527,12 +522,6 @@ public class MainMenuController : MonoBehaviour
             if (Time.unscaledTime - waitStartTime >=
                 Mathf.Max(0.1f, menuIntroStateTimeout))
             {
-                Debug.LogWarning(
-                    "Không tìm thấy hoặc không thể chờ hết state Intro '" +
-                    configuredStateName +
-                    "'. Hãy kiểm tra Menu Intro State Name trong Inspector."
-                );
-
                 yield break;
             }
 

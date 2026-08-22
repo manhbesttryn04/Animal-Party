@@ -19,11 +19,11 @@ public class FreezeTrap : TrapBase
     {
         if (carrier.IsFrozen())
         {
-            Debug.Log($"[TRAP DEBUG] {name}: KHÔNG áp dụng Freeze vì '{carrier.name}' đã đang bị đóng băng.");
+           // Debug.Log($"[TRAP DEBUG] {name}: KHÔNG áp dụng Freeze vì '{carrier.name}' đã đang bị đóng băng.");
             return;
         }
 
-        Debug.Log($"[TRAP DEBUG] {name}: Áp dụng Freeze lên '{carrier.name}', duration = {freezeDuration}s.");
+       // Debug.Log($"[TRAP DEBUG] {name}: Áp dụng Freeze lên '{carrier.name}', duration = {freezeDuration}s.");
 
         // Truyền cả 2 VFX sang cho BombCarrier xử lý
         carrier.ApplyFreeze(freezeDuration, freezeHitVFX, freezeLoopVFX, vfxOffset, vfxScale);

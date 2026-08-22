@@ -48,7 +48,7 @@ public class LaserSpamObject : MonoBehaviour
         {
             if (hit.collider.CompareTag("Player"))
             {
-                Debug.Log("Spam Laser đã chém trúng: " + hit.collider.name);
+              //  Debug.Log("Spam Laser đã chém trúng: " + hit.collider.name);
             }
         }
     }

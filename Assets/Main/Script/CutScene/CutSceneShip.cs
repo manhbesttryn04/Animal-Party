@@ -478,10 +478,7 @@ public class CutSceneShip : MonoBehaviour
             index >= storyLines.Length ||
             index >= narratorVoices.Length)
         {
-            Debug.LogWarning(
-                "Narrator index không hợp lệ: " + index
-            );
-
+          
             yield break;
         }
 
@@ -705,20 +702,13 @@ public class CutSceneShip : MonoBehaviour
     {
         if (cam == null)
         {
-            Debug.LogError(
-                "CutSceneShip chưa được gán Camera."
-            );
-
             return false;
         }
 
         if (transVideoList == null ||
             transVideoList.Count < 6)
         {
-            Debug.LogError(
-                "CutSceneShip cần ít nhất 6 waypoint."
-            );
-
+           
             return false;
         }
 
@@ -726,10 +716,7 @@ public class CutSceneShip : MonoBehaviour
         {
             if (transVideoList[i] == null)
             {
-                Debug.LogError(
-                    "Waypoint " + i + " đang bị thiếu."
-                );
-
+               
                 return false;
             }
         }
