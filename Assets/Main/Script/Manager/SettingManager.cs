@@ -694,21 +694,18 @@ public class SettingManager : MonoBehaviour
         );
     }
 
-    private IEnumerator ApplyDisplaySettingsRoutine(
-        int displayModeIndex)
+    private IEnumerator ApplyDisplaySettingsRoutine(int displayModeIndex)
     {
-        displayModeIndex = Mathf.Clamp(
-            displayModeIndex,
-            0,
-            2
-        );
+        displayModeIndex = Mathf.Clamp(displayModeIndex, 0, 2);
 
-        Vector2Int selectedResolution =
-            GetSelectedResolution();
+        Vector2Int selectedResolution = GetSelectedResolution();
 
+        // =====================================================
+        // BORDERLESS
+        // Borderless luôn sử dụng độ phân giải hiện tại của Desktop.
+        // =====================================================
         if (displayModeIndex == 1)
         {
-            // Borderless phải luôn đúng kích thước desktop.
             Screen.SetResolution(
                 Display.main.systemWidth,
                 Display.main.systemHeight,
@@ -716,14 +713,21 @@ public class SettingManager : MonoBehaviour
             );
 
             yield return null;
+            yield return new WaitForEndOfFrame();
+
+            Debug.Log(
+                $"Borderless: {Screen.width} x {Screen.height}"
+            );
 
             displayApplyCoroutine = null;
             yield break;
         }
 
+        // =====================================================
+        // WINDOWED
+        // =====================================================
         if (displayModeIndex == 2)
         {
-            // Windowed dùng đúng độ phân giải người chơi chọn.
             windowedWidth = selectedResolution.x;
             windowedHeight = selectedResolution.y;
 
@@ -734,18 +738,25 @@ public class SettingManager : MonoBehaviour
             );
 
             yield return null;
+            yield return new WaitForEndOfFrame();
 
+            Debug.Log(
+                $"Windowed: {Screen.width} x {Screen.height}"
+            );
 
             displayApplyCoroutine = null;
             yield break;
         }
 
-        /*
-         * Ép Unity thoát khỏi Borderless/Windowed trước,
-         * sau đó mới chuyển sang Exclusive Fullscreen.
-         * Cách này tránh trường hợp đổi dropdown nhưng Windows
-         * vẫn giữ kích thước desktop.
-         */
+        // =====================================================
+        // EXCLUSIVE FULLSCREEN
+        //
+        // Đổi resolution trước, sau đó chuyển sang Exclusive.
+        // Cách này giúp Unity thoát khỏi trạng thái Borderless/
+        // Windowed trước khi yêu cầu display mode mới.
+        // =====================================================
+
+        // Bước 1: Thoát fullscreen hiện tại.
         Screen.SetResolution(
             selectedResolution.x,
             selectedResolution.y,
@@ -755,6 +766,7 @@ public class SettingManager : MonoBehaviour
         yield return null;
         yield return new WaitForEndOfFrame();
 
+        // Bước 2: Yêu cầu đúng độ phân giải ở Exclusive Fullscreen.
         Screen.SetResolution(
             selectedResolution.x,
             selectedResolution.y,
@@ -763,6 +775,18 @@ public class SettingManager : MonoBehaviour
 
         yield return null;
         yield return new WaitForEndOfFrame();
+
+        // Chờ thêm 1 frame để Windows/Unity hoàn tất việc đổi mode.
+        yield return null;
+
+        Debug.Log(
+            $"Requested Resolution: " +
+            $"{selectedResolution.x} x {selectedResolution.y} | " +
+            $"Actual Game Resolution: {Screen.width} x {Screen.height} | " +
+            $"Desktop: {Display.main.systemWidth} x " +
+            $"{Display.main.systemHeight} | " +
+            $"Mode: {Screen.fullScreenMode}"
+        );
 
         displayApplyCoroutine = null;
     }

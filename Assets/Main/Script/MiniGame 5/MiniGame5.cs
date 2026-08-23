@@ -744,7 +744,7 @@ public class MiniGame5 : MonoBehaviour
             {
                 resultText.text =
                     $"P1 win! ({player1Count} vs {player2Count})";
-                resultText.color = Color.blue;
+                resultText.color = Color.yellow;
 
                 if (AudioManager.Instance != null)
                 {
@@ -770,7 +770,7 @@ public class MiniGame5 : MonoBehaviour
             {
                 resultText.text =
                     $"Draw! ({player1Count} vs {player2Count})";
-                resultText.color = Color.yellow;
+                resultText.color = Color.orange;
             }
         }
 
