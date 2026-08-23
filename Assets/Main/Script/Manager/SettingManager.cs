@@ -2209,6 +2209,7 @@ public class SettingManager : MonoBehaviour
                 UIManager.Instance.openSettingPanelButton.SetActive(
                     false
                 );
+                UIManager.Instance.isShowKeyBoard = false;
             }
 
             if (UIManager.Instance.canvasNotifi != null)

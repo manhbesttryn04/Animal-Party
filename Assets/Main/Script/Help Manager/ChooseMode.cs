@@ -153,30 +153,32 @@ public class ChooseMode : MonoBehaviour
             cursor.SetSceneCursorVisible(true);
         }
 
-        if (AudioManager.Instance != null)
+        var audio = AudioManager.Instance;
+        if (audio != null)
         {
-            AudioManager.Instance.PlayMusic(
-                AudioManager.Instance.musicChooseSceneClip
+            audio.PlayMusic(
+                audio.musicChooseSceneClip
             );
 
-            AudioManager.Instance.PlayEnvironment(
-                AudioManager.Instance.theSeaClip
+            audio.PlayEnvironment(
+                audio.theSeaClip
             );
         }
 
-        if (UIManager.Instance != null &&
-            UIManager.Instance.openSettingPanelButton != null)
+        var ui = UIManager.Instance;
+        if (ui != null &&
+            ui.openSettingPanelButton != null)
         {
-            UIManager.Instance
-                .openSettingPanelButton
+            ui.openSettingPanelButton
                 .SetActive(true);
-            UIManager.Instance.isShowKeyBoard = true;
+            ui.isShowKeyBoard = true;
         }
 
-        if (SettingManager.Instance != null)
+        var setting = SettingManager.Instance;
+        if (setting != null)
         {
-            SettingManager.Instance.isOpenExitButton = true;
-            SettingManager.Instance.canOpenSettingByController = true;
+            setting.isOpenExitButton = true;
+            setting.canOpenSettingByController = true;
         }
     }
 

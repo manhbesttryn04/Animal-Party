@@ -145,15 +145,10 @@ public class MainMenuController : MonoBehaviour
         SetupAudio();
         SetupSetting();
         SetupVolume();
+        SetupUI();
 
         InitializeControllerState();
-
-        var ui = UIManager.Instance;
-        if (ui != null)
-        {
-            ui.isShowKeyBoard = false;
-        }
-
+     
         StartCoroutine(UnlockMenuAfterIntro());
     }
 
@@ -545,6 +540,14 @@ public class MainMenuController : MonoBehaviour
         return !state.loop;
     }
 
+    public void SetupUI()
+    {
+        var ui = UIManager.Instance;
+        if (ui != null)
+        {
+            ui.isShowKeyBoard = false;
+        }
+    }
     private void SetupCursor()
     {
         CursorManager cursor = CursorManager.Instance;
