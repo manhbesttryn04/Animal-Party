@@ -154,7 +154,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   indexPlayer1: 0
-  indexPlayer2: 0
+  indexPlayer2: 1
   player1List:
   - {fileID: 1324390462}
   - {fileID: 930064261}
@@ -929,7 +929,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f5c43531b7774c45ba1db7013ef8a54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  indexMiniGame: 5
+  indexMiniGame: 7
   miniGameList: {fileID: 288627989}
   intrusTextList: {fileID: 288627990}
   videoInstructList: {fileID: 288627991}
@@ -10074,6 +10074,54 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5331045381198100360, guid: 4ede0bf0bcac27e4caf9356a6938336d, type: 3}
+      propertyPath: m_colorMode
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5331045381198100360, guid: 4ede0bf0bcac27e4caf9356a6938336d, type: 3}
+      propertyPath: m_enableVertexGradient
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5331045381198100360, guid: 4ede0bf0bcac27e4caf9356a6938336d, type: 3}
+      propertyPath: m_fontColorGradient.topLeft.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5331045381198100360, guid: 4ede0bf0bcac27e4caf9356a6938336d, type: 3}
+      propertyPath: m_fontColorGradient.topLeft.g
+      value: 0.2705882
+      objectReference: {fileID: 0}
+    - target: {fileID: 5331045381198100360, guid: 4ede0bf0bcac27e4caf9356a6938336d, type: 3}
+      propertyPath: m_fontColorGradient.topLeft.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5331045381198100360, guid: 4ede0bf0bcac27e4caf9356a6938336d, type: 3}
+      propertyPath: m_fontColorGradient.topRight.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5331045381198100360, guid: 4ede0bf0bcac27e4caf9356a6938336d, type: 3}
+      propertyPath: m_fontColorGradient.topRight.g
+      value: 0.2705882
+      objectReference: {fileID: 0}
+    - target: {fileID: 5331045381198100360, guid: 4ede0bf0bcac27e4caf9356a6938336d, type: 3}
+      propertyPath: m_fontColorGradient.topRight.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5331045381198100360, guid: 4ede0bf0bcac27e4caf9356a6938336d, type: 3}
+      propertyPath: m_fontColorGradient.bottomLeft.b
+      value: 0.015686275
+      objectReference: {fileID: 0}
+    - target: {fileID: 5331045381198100360, guid: 4ede0bf0bcac27e4caf9356a6938336d, type: 3}
+      propertyPath: m_fontColorGradient.bottomLeft.g
+      value: 0.92156863
+      objectReference: {fileID: 0}
+    - target: {fileID: 5331045381198100360, guid: 4ede0bf0bcac27e4caf9356a6938336d, type: 3}
+      propertyPath: m_fontColorGradient.bottomRight.b
+      value: 0.015686275
+      objectReference: {fileID: 0}
+    - target: {fileID: 5331045381198100360, guid: 4ede0bf0bcac27e4caf9356a6938336d, type: 3}
+      propertyPath: m_fontColorGradient.bottomRight.g
+      value: 0.92156863
+      objectReference: {fileID: 0}
     - target: {fileID: 5504479634003100092, guid: 4ede0bf0bcac27e4caf9356a6938336d, type: 3}
       propertyPath: manager
       value: 
@@ -10099,14 +10147,62 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2133488384}
     m_Modifications:
+    - target: {fileID: 169569715619732680, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 169569715619732680, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
+      propertyPath: m_TagString
+      value: Block
+      objectReference: {fileID: 0}
+    - target: {fileID: 374998267711124655, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 8.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 570831875964704057, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 570831875964704057, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
+      propertyPath: m_TagString
+      value: Block
+      objectReference: {fileID: 0}
+    - target: {fileID: 1736240915511388617, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1787248676946116622, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
       propertyPath: m_Name
       value: MiniGame 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3038599524177464095, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 3038599524177464095, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
+      propertyPath: m_TagString
+      value: Block
+      objectReference: {fileID: 0}
+    - target: {fileID: 3921973622742797499, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3945112802847102104, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
       propertyPath: manager
       value: 
       objectReference: {fileID: 288627986}
+    - target: {fileID: 4089154521304041494, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6043411142834621321, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 6043411142834621321, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
+      propertyPath: m_TagString
+      value: Block
+      objectReference: {fileID: 0}
     - target: {fileID: 6941240572358139029, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -10149,6 +10245,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8121021932883651162, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8732349127249581866, guid: a9c634eaa7d51ef42943d2b851457284, type: 3}
+      propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -10330,6 +10430,10 @@ PrefabInstance:
       propertyPath: magnetTrapClip
       value: 
       objectReference: {fileID: 8300000, guid: 7323840482dd5ef40811a7572396d88e, type: 3}
+    - target: {fileID: 4179340222992171316, guid: 50c9760a63ee4574986bf76912301202, type: 3}
+      propertyPath: bothPlayerDrawClip
+      value: 
+      objectReference: {fileID: 8300000, guid: ef2f60c03ea18c849a0963f574253c1c, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
