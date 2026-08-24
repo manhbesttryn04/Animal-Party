@@ -1134,6 +1134,7 @@ public class MiniGame7 : MonoBehaviour
         {
           //  Debug.Log("Minigame hòa");
             PlayerCheckReward(3);
+            AudioManager.Instance.PlaySpecial(AudioManager.Instance.bothPlayerDrawClip);
         }
 
         // Hiện message trong 1.5 giây

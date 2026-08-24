@@ -11,7 +11,7 @@ public class PlayerAttack : MonoBehaviour
     public float aimDistance = 3f;
     public bool hasAttack;
 
-    private bool canAttack = true;
+    public bool canAttack = true;
 
     private void Start()
     {

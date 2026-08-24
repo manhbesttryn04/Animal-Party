@@ -412,7 +412,7 @@ public class MiniGame6 : MonoBehaviour
         bool isPlayer1Win = activePlayers[0] == carrier1;
 
         string winnerName = isPlayer1Win ? "PLAYER 1" : "PLAYER 2";
-        string color = isPlayer1Win ? "red" : "green";
+        string color = isPlayer1Win ? "red" : "yellow";
 
         if (resultText != null)
             resultText.text = $"<color={color}>{winnerName} WINS!</color>";
@@ -422,6 +422,7 @@ public class MiniGame6 : MonoBehaviour
 
         if (AudioManager.Instance != null)
         {
+
             if (isPlayer1Win)
             {
                 AudioManager.Instance.PlaySpecial(AudioManager.Instance.playerOneWinClip);

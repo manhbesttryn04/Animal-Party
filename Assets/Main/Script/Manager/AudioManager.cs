@@ -29,6 +29,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip playerTwoClip;
     public AudioClip playerOneWinClip;
     public AudioClip playerTwoWinClip;
+    public AudioClip bothPlayerDrawClip;
 
     [Header("Main Scene Environment")]
     public AudioClip theSeaClip;

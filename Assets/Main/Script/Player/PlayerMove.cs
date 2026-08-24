@@ -488,7 +488,7 @@ public class PlayerMove : MonoBehaviour
         if (manager != null &&
             manager.playerAttack != null)
         {
-            manager.playerAttack.hasAttack =
+            manager.playerAttack.canAttack =
                 false;
         }
 
@@ -509,7 +509,7 @@ public class PlayerMove : MonoBehaviour
         if (manager != null &&
             manager.playerAttack != null)
         {
-            manager.playerAttack.hasAttack =
+            manager.playerAttack.canAttack =
                 true;
         }
 

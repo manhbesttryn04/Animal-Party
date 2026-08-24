@@ -771,6 +771,12 @@ public class MiniGame5 : MonoBehaviour
                 resultText.text =
                     $"Draw! ({player1Count} vs {player2Count})";
                 resultText.color = Color.orange;
+                if (AudioManager.Instance != null)
+                {
+                    AudioManager.Instance.PlaySpecial(
+                        AudioManager.Instance.bothPlayerDrawClip
+                    );
+                }
             }
         }
 
