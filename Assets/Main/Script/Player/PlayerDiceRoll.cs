@@ -47,7 +47,7 @@ public class PlayerDiceRoll : MonoBehaviour
          */
         // int[] diceWeights = { 1, 1, 10, 29, 29, 30 };
         int[] diceWeights = { 30, 35, 35, 0, 0, 0 };
-
+     
         if (forcedNextDiceNumber >= 1 &&
             forcedNextDiceNumber <= 6)
         {

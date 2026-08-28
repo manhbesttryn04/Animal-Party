@@ -1069,8 +1069,7 @@ public class MainMenuController : MonoBehaviour
             return;
 
         GameObject selectedObject =
-            EventSystem.current
-                .currentSelectedGameObject;
+            EventSystem.current.currentSelectedGameObject;
 
         if (selectedObject == null)
         {
@@ -1081,14 +1080,69 @@ public class MainMenuController : MonoBehaviour
         Button selectedButton =
             selectedObject.GetComponent<Button>();
 
-        if (selectedButton == null ||
-            !selectedButton.interactable)
-        {
+        if (selectedButton == null || !selectedButton.interactable)
             return;
+
+        // Nháy pressed 0.2s rồi mới Invoke cho tất cả Start / Setting / Exit
+        StartCoroutine(PressAndInvoke(selectedButton));
+    }
+
+    private IEnumerator PressAndInvoke(Button button)
+    {
+        if (button == null) yield break;
+
+        // Hiệu ứng pressed
+        Image image = button.targetGraphic as Image;
+        if (image != null)
+        {
+            ColorBlock colors = button.colors;
+            SpriteState sprites = button.spriteState;
+
+            image.color = colors.pressedColor;
+            if (sprites.pressedSprite != null)
+                image.overrideSprite = sprites.pressedSprite;
         }
 
-        selectedButton.onClick.Invoke();
+        // Giữ pressed 0.2 giây
+        yield return new WaitForSeconds(0.1f);
+
+        // Trả về normal
+        if (image != null)
+        {
+            image.overrideSprite = null;
+            image.color = button.colors.normalColor;
+        }
+
+        // Thực thi hành động gốc
+        button.onClick.Invoke();
     }
+
+
+    // =========================================================
+    // FLASH MENU BUTTON (Controller Pressed Visual)
+    // =========================================================
+    private IEnumerator FlashMenuButton(Button button)
+    {
+        if (button == null) yield break;
+
+        Image image = button.targetGraphic as Image;
+        if (image == null) yield break;
+
+        ColorBlock colors = button.colors;
+        SpriteState sprites = button.spriteState;
+
+        // Hiệu ứng Pressed
+        image.color = colors.pressedColor;
+        if (sprites.pressedSprite != null)
+            image.overrideSprite = sprites.pressedSprite;
+
+        yield return new WaitForSeconds(0.1f);
+
+        // Trả về Normal
+        image.overrideSprite = null;
+        image.color = colors.normalColor;
+    }
+
 
     // =========================================================
     // FOCUS
@@ -1276,6 +1330,7 @@ public class MainMenuController : MonoBehaviour
 
     private IEnumerator StartLoadScene()
     {
+      //  yield return new WaitForSeconds(0.2f);
         AudioManager audio =
             AudioManager.Instance;
 
@@ -1371,7 +1426,10 @@ public class MainMenuController : MonoBehaviour
             );
         }
     }
-
+    // =========================================================
+    // FLASH MENU BUTTON (Controller Pressed Visual)
+    // =========================================================
+   
     // =========================================================
     // EXIT GAME
     // =========================================================
