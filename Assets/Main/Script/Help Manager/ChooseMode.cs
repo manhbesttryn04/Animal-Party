@@ -893,6 +893,7 @@ public class ChooseMode : MonoBehaviour
         if (isPlayer2Choose && indexP1 == indexP2)
         {
             PlayCannotChooseSound();
+            FlashDirectionButton(ListButtonChoose, 0);
             return;
         }
 
@@ -903,12 +904,7 @@ public class ChooseMode : MonoBehaviour
 
         // P1 chọn xong bằng bàn phím hoặc tay cầm:
         // khóa toàn bộ Button Highlight của P1.
-        DisablePlayerHighlightButtons(
-            listButtonHighlightP1
-        );
-
-        // Đồng thời khóa Button Choose của P1.
-        DisableChooseButton(0);
+        StartCoroutine(DisPlayerChoose(0, listButtonHighlightP1));
 
         if (stateChooseP1 != null &&
             stateChooseP1.Count > 1)
@@ -928,7 +924,13 @@ public class ChooseMode : MonoBehaviour
 
         CheckStartButton();
     }
-
+public IEnumerator DisPlayerChoose(int index, List<Button> listButtonChoose)
+    {
+        FlashDirectionButton(ListButtonChoose, index);
+        yield return new WaitForSeconds(0.2f);
+        DisablePlayerHighlightButtons(listButtonChoose);
+        DisableChooseButton(index);
+    }
     // =========================================================
     // PLAYER 2
     // =========================================================
@@ -1000,6 +1002,7 @@ public class ChooseMode : MonoBehaviour
         if (isPlayer1Choose && indexP2 == indexP1)
         {
             PlayCannotChooseSound();
+            FlashDirectionButton(ListButtonChoose, 1);
             return;
         }
 
@@ -1009,13 +1012,7 @@ public class ChooseMode : MonoBehaviour
         isPlayer2Choose = true;
 
         // P2 chọn xong bằng bàn phím hoặc tay cầm:
-        // khóa toàn bộ Button Highlight của P2.
-        DisablePlayerHighlightButtons(
-            listButtonHighlightP2
-        );
-
-        // Đồng thời khóa Button Choose của P2.
-        DisableChooseButton(1);
+        StartCoroutine(DisPlayerChoose(1, listButtonHighlightP2));
 
         if (stateChooseP2 != null &&
             stateChooseP2.Count > 1)
