@@ -1279,58 +1279,96 @@ public IEnumerator DisPlayerChoose(int index, List<Button> listButtonChoose)
 
     private void CheckStartInput()
     {
-        if (!isPlayer1Choose ||
-            !isPlayer2Choose)
-        {
+        if (!isPlayer1Choose || !isPlayer2Choose)
             return;
-        }
 
         if (isStartingGame)
             return;
 
-        // START đang chạy animation 0.2 giây thì chưa nhận input.
+        // Nếu nút Start đang chạy animation xuất hiện (0.2s) thì chưa nhận input
         if (!canPressStartButton)
             return;
 
         /*
-         * Chỉ kiểm tra input được phép của từng player:
-         *
-         * P1 có Console 1:
-         * - Button 0
-         * - Không nhận J
-         *
-         * P1 không có Console 1:
-         * - J
-         *
-         * P2 có Console 2:
-         * - Button 0
-         * - Không nhận Keypad1
-         *
-         * P2 không có Console 2:
-         * - Keypad1
+         * Xử lý trường hợp người chơi bấm giữ phím từ lúc chọn nhân vật.
+         * Yêu cầu nhả toàn bộ phím chọn ra trước khi nhận lệnh Start.
          */
-        bool confirmHeld =
-            IsPlayer1ConfirmHeld() ||
-            IsPlayer2ConfirmHeld();
-
         if (waitStartButtonRelease)
         {
-            if (!confirmHeld)
+            if (!IsPlayer1ConfirmHeld() && !IsPlayer2ConfirmHeld() && !Input.GetKey(KeyCode.A))
             {
                 waitStartButtonRelease = false;
             }
-
             return;
         }
 
-        bool confirmPressed =
-            IsPlayer1ConfirmPressed() ||
-            IsPlayer2ConfirmPressed();
+        // Kiểm tra tín hiệu bấm Start từ P1 hoặc P2
+        bool p1Pressed = IsStartPressedP1();
+        bool p2Pressed = IsStartPressedP2();
 
-        if (confirmPressed)
+        if (p1Pressed || p2Pressed)
         {
-            LoadScene(0);
+            TriggerStartButton();
         }
+    }
+
+    private bool IsStartPressedP1()
+    {
+        ControllerManager controller = ControllerManager.Instance;
+
+        // P1 có tay cầm -> Đọc Button 0 của Tay cầm 1
+        if (IsPlayer1UsingController())
+        {
+            return controller.GetConsoleButtonDown(1, 0);
+        }
+
+        // P1 dùng bàn phím -> Bấm A hoặc J
+        return Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.J);
+    }
+
+    private bool IsStartPressedP2()
+    {
+        ControllerManager controller = ControllerManager.Instance;
+
+        // P2 có tay cầm -> Đọc Button 0 của Tay cầm 2
+        if (IsPlayer2UsingController())
+        {
+            return controller.GetConsoleButtonDown(2, 0);
+        }
+
+        // P2 dùng bàn phím -> Bấm Keypad1 (hoặc bạn có thể bổ sung phím P2 tùy chọn)
+        return Input.GetKeyDown(KeyCode.Keypad1);
+    }
+
+    private void TriggerStartButton()
+    {
+        if (buttonStart == null) return;
+
+        Button btn = buttonStart.GetComponent<Button>();
+        if (btn != null && btn.interactable)
+        {
+            StartCoroutine(SimulateStartButtonPressed(btn));
+        }
+    }
+
+    private IEnumerator SimulateStartButtonPressed(Button btn)
+    {
+        PointerEventData pointerData = new PointerEventData(EventSystem.current)
+        {
+            button = PointerEventData.InputButton.Left
+        };
+
+        // 1. Kích hoạt hiệu ứng visual Pressed (đổi màu/sprite pressed)
+        btn.OnPointerDown(pointerData);
+
+        // 2. Chờ thời gian buttonPressedTime (0.08s) đã khai báo trong Inspector
+        yield return new WaitForSecondsRealtime(buttonPressedTime);
+
+        // 3. Trả nút về trạng thái Normal
+        btn.OnPointerUp(pointerData);
+
+        // 4. Kích hoạt sự kiện onClick của Button
+        btn.onClick.Invoke();
     }
 
     // =========================================================
