@@ -1192,6 +1192,12 @@ public class SettingManager : MonoBehaviour
             }
             else
             {
+                // Nhá lại hiệu ứng của chính nút Open Setting
+                if (openSettingButton != null)
+                {
+                    StartCoroutine(PulseButtonEffect(openSettingButton));
+                }
+
                 CloseControllerSetting();
             }
 
