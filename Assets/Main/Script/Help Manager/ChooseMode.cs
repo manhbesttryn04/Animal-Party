@@ -1389,7 +1389,7 @@ public IEnumerator DisPlayerChoose(int index, List<Button> listButtonChoose)
     {
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.PlayUI(
+            AudioManager.Instance.PlaySFX(
                 AudioManager.Instance
                     .startGameButtonClickClip
             );
@@ -1575,7 +1575,7 @@ public IEnumerator DisPlayerChoose(int index, List<Button> listButtonChoose)
     {
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.PlayUI(
+            AudioManager.Instance.PlaySFX(
                 AudioManager.Instance
                     .movechooseItemClip
             );
@@ -1586,7 +1586,7 @@ public IEnumerator DisPlayerChoose(int index, List<Button> listButtonChoose)
     {
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.PlayUI(
+            AudioManager.Instance.PlaySFX(
                 AudioManager.Instance
                     .doneChooseClickClip
             );
@@ -1597,7 +1597,7 @@ public IEnumerator DisPlayerChoose(int index, List<Button> listButtonChoose)
     {
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.PlayUI(
+            AudioManager.Instance.PlaySFX(
                 AudioManager.Instance
                     .noCoinBuyItemClip
             );
