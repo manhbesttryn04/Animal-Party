@@ -224,6 +224,7 @@ public class SettingManager : MonoBehaviour
             ToggleSettingByEsc();
         }
 
+
         if (!IsAnySettingPanelOpen())
             return;
 
@@ -1144,8 +1145,34 @@ public class SettingManager : MonoBehaviour
         // Khi Setting đang mở, nhấn lại nút này sẽ không đóng.
         if (!IsAnySettingPanelOpen())
         {
+            // 1. Nhá hiệu ứng Pressed trên UI Button (nếu đã gán tham chiếu openSettingButton)
+            if (openSettingButton != null)
+            {
+                StartCoroutine(PulseButtonEffect(openSettingButton));
+            }
+
+            // 2. Mở Setting Menu
             OpenControllerSetting();
         }
+    }
+
+    /// <summary>
+    /// Coroutine kích hoạt trạng thái Pressed UI của Button trong 0.1s
+    /// </summary>
+    private IEnumerator PulseButtonEffect(Button targetButton)
+    {
+        if (targetButton == null) yield break;
+
+        PointerEventData pointerData = new PointerEventData(EventSystem.current);
+
+        // Kích hoạt hiệu ứng đè nút UI Down
+        ExecuteEvents.Execute(targetButton.gameObject, pointerData, ExecuteEvents.pointerDownHandler);
+
+        // Giữ trạng thái Pressed 0.1s (dùng Realtime phòng trường hợp Pause game)
+        yield return new WaitForSecondsRealtime(0.1f);
+
+        // Kích hoạt nhả nút UI Up
+        ExecuteEvents.Execute(targetButton.gameObject, pointerData, ExecuteEvents.pointerUpHandler);
     }
 
     private void HandleControllerSettingNavigation()

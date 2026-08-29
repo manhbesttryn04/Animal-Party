@@ -1362,7 +1362,7 @@ public IEnumerator DisPlayerChoose(int index, List<Button> listButtonChoose)
         btn.OnPointerDown(pointerData);
 
         // 2. Chờ thời gian buttonPressedTime (0.08s) đã khai báo trong Inspector
-        yield return new WaitForSecondsRealtime(buttonPressedTime);
+        yield return new WaitForSecondsRealtime(0.1f);
 
         // 3. Trả nút về trạng thái Normal
         btn.OnPointerUp(pointerData);
