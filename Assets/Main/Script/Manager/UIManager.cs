@@ -736,16 +736,16 @@ public class UIManager : MonoBehaviour
         // Root chứa icon Coin Power Player 1
         Transform coinRoot =
             notifiplayer1.transform
-            .GetChild(2)
+            .GetChild(3)
             .GetChild(1);
 
         // Root chứa icon Coin Power Player 2
         Transform coinRoot2 =
             notifiplayer2.transform
-            .GetChild(2)
+            .GetChild(3)
             .GetChild(1);
-        Transform highlightYellowCoinPowerP1 = notifiplayer1.transform.GetChild(2).GetChild(0);
-        Transform highlightYellowCoinPowerP2 = notifiplayer2.transform.GetChild(2).GetChild(0);
+        Transform highlightYellowCoinPowerP1 = notifiplayer1.transform.GetChild(3).GetChild(0);
+        Transform highlightYellowCoinPowerP2 = notifiplayer2.transform.GetChild(3).GetChild(0);
 
         // =========================
         // PLAYER 1 COIN POWER
