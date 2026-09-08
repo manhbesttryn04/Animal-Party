@@ -87,7 +87,6 @@ public class MainMenuController : MonoBehaviour
 
     [Header("Focus")]
     [SerializeField] private bool focusStartButtonOnOpen = true;
-    public GameObject theBirdVoice;
     private Button[] menuButtons;
     private int currentButtonIndex;
 
@@ -1326,10 +1325,13 @@ public class MainMenuController : MonoBehaviour
         if (audio != null)
         {
             audio.PlayUI(audio.clickButton);
-            theBirdVoice.gameObject.SetActive(false);
-         //   audio.ZeroAllAudio();
-          //  audio.PauseAudio();
-            
+          
+        }
+
+        var mainmap = MapManager.Instance;
+        if(mainmap != null)
+        {
+            mainmap.mainMap.SetActive(false);
         }
 
         StartCoroutine(StartLoadScene());

@@ -2226,6 +2226,24 @@ public class SettingManager : MonoBehaviour
                 AudioManager.Instance.clickButton
             );
         }
+        if(MiniGameManager.Instance != null)
+        {
+            MiniGameManager.Instance.ExitStopMiniGame();
+        }
+        if(MapManager.Instance != null)
+        {
+            if(MapManager.Instance.mainMap.gameObject.activeSelf == true)
+            {
+                MapManager.Instance.mainMap.gameObject.SetActive(false);
+            }
+            
+        }
+        
+
+        if(MapMiniGameList.Instance != null)
+        {
+            MapMiniGameList.Instance.DisableActiveMapMiniGame();
+        }
 
         StartCoroutine(BackToMainMenuRoutine());
     }

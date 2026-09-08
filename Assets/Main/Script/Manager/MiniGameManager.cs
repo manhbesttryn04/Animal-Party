@@ -6,6 +6,19 @@ using UnityEngine.Video;
 
 public class MiniGameManager : MonoBehaviour
 {
+    public static MiniGameManager Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+    }
+
     #region INSPECTOR / STATE
 
     // =========================================================
@@ -26,9 +39,6 @@ public class MiniGameManager : MonoBehaviour
     public MapMiniGameList mapMiniGameList;
     public TimeMinigame timeMinigame;
     public InstructInputMinigame inputMinigame;
-
-    public GameObject mainMap;
-
     public GameObject playersMain;
 
     // =========================================================
@@ -111,6 +121,7 @@ public class MiniGameManager : MonoBehaviour
         var character = CharacterManager.Instance;
         var gameManager = GameManager.Instance;
         var volume = VolumeManager.Instance;
+        var mainmap = MapManager.Instance;
 
         // =====================================================
         // CHECK SINGLETON
@@ -209,7 +220,11 @@ public class MiniGameManager : MonoBehaviour
         isPlaying = true;
 
         // Tắt map chính
-        mainMap.SetActive(false);
+       
+        if(mainmap != null)
+        {
+            mainmap.mainMap.SetActive(false);
+        }
 
         // Bật map minigame
         mapMiniGameList.mapMiniGameList[miniGameIndex].SetActive(true);
@@ -687,7 +702,10 @@ public class MiniGameManager : MonoBehaviour
         playersMain.SetActive(true);
 
         // Bật lại map chính
-        mainMap.SetActive(true);
+        if (mainmap != null)
+        {
+            mainmap.mainMap.SetActive(true);
+        }
 
         // Reset light
         ResetLight();

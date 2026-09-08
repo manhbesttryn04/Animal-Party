@@ -361,7 +361,11 @@ public class CutScene2 : MonoBehaviour
             if (audio.specialSource != null)
                 audio.specialSource.Stop();
         }
-
+        var mainmap = MapManager.Instance;
+        if (mainmap != null)
+        {
+            mainmap.mainMap.SetActive(false);
+        }
         if (LoadingManager.Instance != null)
         {
             yield return StartCoroutine(
@@ -582,7 +586,11 @@ public class CutScene2 : MonoBehaviour
             setting.canOpenSettingByEsc = false;
             setting.canOpenSettingByController = false;
         }
-
+        var mainmap = MapManager.Instance;
+        if (mainmap != null)
+        {
+            mainmap.mainMap.SetActive(false);
+        }
         if (LoadingManager.Instance != null)
         {
             yield return StartCoroutine(
