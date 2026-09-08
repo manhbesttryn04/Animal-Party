@@ -20,6 +20,7 @@ public class SetUpStartMainScene : MonoBehaviour
             ui.canvasNotifi.SetActive(true);
             ui.ActiveOpenSettingButton(true);
             ui.FindPlayerManager();
+            ui.UpdateAllPlayMainUI();
         }
 
        var cursor = CursorManager.Instance;

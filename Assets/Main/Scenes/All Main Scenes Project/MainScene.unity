@@ -1233,11 +1233,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   timeMinigame1: 60
   timeMinigame2: 60
-  timeMinigame3: 90
+  timeMinigame3: 120
   timeMinigame4: 60
   timeMinigame5: 60
   timeMinigame6: 60
-  timeMinigame7: 90
+  timeMinigame7: 120
   timeMinigame8: 0
 --- !u!114 &288627995
 MonoBehaviour:
@@ -6091,8 +6091,7 @@ Transform:
   m_LocalPosition: {x: 1.90216, y: -0.81164, z: 8.76099}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 6328630357591323796}
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1475884772
@@ -10331,6 +10330,10 @@ PrefabInstance:
       propertyPath: manager
       value: 
       objectReference: {fileID: 288627986}
+    - target: {fileID: 5504479634003100092, guid: 4ede0bf0bcac27e4caf9356a6938336d, type: 3}
+      propertyPath: gameDuration
+      value: 118
+      objectReference: {fileID: 0}
     - target: {fileID: 7831158967064046170, guid: 4ede0bf0bcac27e4caf9356a6938336d, type: 3}
       propertyPath: m_Name
       value: MiniGame 7
@@ -11834,7 +11837,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 1475454294}
+    m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 1949100495609014, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
       propertyPath: m_AnchorMax.y
@@ -11971,6 +11974,10 @@ PrefabInstance:
     - target: {fileID: 1246595184488150327, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1338903550111504183, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
+      propertyPath: m_Name
+      value: ' Name Mode Panel'
       objectReference: {fileID: 0}
     - target: {fileID: 1641012059991115128, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
       propertyPath: m_AnchorMax.y
@@ -12112,6 +12119,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4121890189131192843, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
+      propertyPath: m_Name
+      value: 'Back Round '
+      objectReference: {fileID: 0}
     - target: {fileID: 4185238870661718190, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
       propertyPath: m_Name
       value: UI Manager
@@ -12172,6 +12183,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4885021107270174595, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
+      propertyPath: m_Name
+      value: Panel (1)
+      objectReference: {fileID: 0}
     - target: {fileID: 5086164541866405071, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -12226,15 +12241,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5807032868895756365, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1148.8645
+      value: 1150.7666
       objectReference: {fileID: 0}
     - target: {fileID: 5807032868895756365, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 619.3086
+      value: 618.49695
       objectReference: {fileID: 0}
     - target: {fileID: 5807032868895756365, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 56.315914
+      value: 65.076904
       objectReference: {fileID: 0}
     - target: {fileID: 5807032868895756365, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
       propertyPath: m_LocalRotation.w
@@ -12501,11 +12516,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
---- !u!4 &6328630357591323796 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 5807032868895756365, guid: 02822d56b2647f0499063b22883eae5f, type: 3}
-  m_PrefabInstance: {fileID: 6328630357591323795}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &6436329794482886368
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -24915,3 +24925,4 @@ SceneRoots:
   - {fileID: 1498656019}
   - {fileID: 210188797}
   - {fileID: 1194549210}
+  - {fileID: 6328630357591323795}
