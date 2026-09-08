@@ -441,6 +441,11 @@ public class CreditScroll : MonoBehaviour
         }
 
         outroPanel.alpha = 1f;
+        var mainmap = MapManager.Instance;
+        if(mainmap != null)
+        {
+            mainmap.mainMap.SetActive(false);
+        }
     }
 
     //==================================================
