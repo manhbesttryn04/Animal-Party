@@ -8,7 +8,7 @@ public class TheSeaAudio : MonoBehaviour
         var audio = AudioManager.Instance;
         if (audio != null)
         {
-            audio.PlayEnvironment(audio.theSeaClip);
+            audio.PlayEnvironment(audio.theNightClip);
         }
     }
     private void OnEnable()
@@ -16,7 +16,7 @@ public class TheSeaAudio : MonoBehaviour
         var audio = AudioManager.Instance;
         if(audio != null)
         {
-            audio.PlayEnvironment(audio.theSeaClip);
+            audio.PlayEnvironment(audio.theNightClip);
         }
     }
 }

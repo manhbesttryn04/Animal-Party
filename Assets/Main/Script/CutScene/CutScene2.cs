@@ -150,6 +150,8 @@ public class CutScene2 : MonoBehaviour
         if (audio != null)
         {
             audio.SetupMainGameAudio();
+           // audio.PlayEnvironment(audio.theNightClip);
+           // audio.PlaySFX(audio.seaGullClip);
             audio.PlayMusic(audio.musicCutScene2Clip);
         }
         var setting = SettingManager.Instance;
@@ -476,6 +478,11 @@ public class CutScene2 : MonoBehaviour
 
         if (set != null)
             set.StartCutScene();
+        var audio = AudioManager.Instance;
+        if(audio != null)
+        {
+            audio.PlaySFX(audio.seaGullClip);
+        }
 
         // Move tới point 7 và câu số 4.
         // Bình thường câu 4 đã được gọi ngay lúc câu 3 bị cắt ở 2.1 giây.

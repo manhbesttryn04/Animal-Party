@@ -229,6 +229,7 @@ public class CreditScroll : MonoBehaviour
             audio.creditMusicClip,
             startAudioFadeTime
         );
+        audio.PlayEnvironment(audio.theSeaClip);
     }
 
     //==================================================

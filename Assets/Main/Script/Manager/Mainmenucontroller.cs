@@ -87,7 +87,7 @@ public class MainMenuController : MonoBehaviour
 
     [Header("Focus")]
     [SerializeField] private bool focusStartButtonOnOpen = true;
-
+    public GameObject theBirdVoice;
     private Button[] menuButtons;
     private int currentButtonIndex;
 
@@ -564,10 +564,12 @@ public class MainMenuController : MonoBehaviour
 
         if (audio == null)
             return;
-
-        audio.PlayMusic(audio.musicMainMenuClip);
-        audio.PlayEnvironment(audio.theNightClip);
         audio.SetupMainGameAudio();
+        audio.PlayMusic(audio.musicMainMenuClip);
+      //  audio.PlaySFXNoOneShot(audio.theNightClip);
+        audio.PlayEnvironment(audio.theSeaClip);
+       // audio.PlayEnvironment(audio.theSeaAndShipClip);
+        
     }
 
     private void SetupSetting()
@@ -1297,6 +1299,7 @@ public class MainMenuController : MonoBehaviour
 
     public void OnStartClicked()
     {
+        
         // Animation intro chưa xong -> tuyệt đối không nhận.
         if (!canUseMainMenu || isLoading)
             return;
@@ -1323,6 +1326,10 @@ public class MainMenuController : MonoBehaviour
         if (audio != null)
         {
             audio.PlayUI(audio.clickButton);
+            theBirdVoice.gameObject.SetActive(false);
+         //   audio.ZeroAllAudio();
+          //  audio.PauseAudio();
+            
         }
 
         StartCoroutine(StartLoadScene());
@@ -1358,6 +1365,8 @@ public class MainMenuController : MonoBehaviour
 
         if (loading != null)
         {
+           
+           
             yield return StartCoroutine(
                 loading.ShowLoading()
             );

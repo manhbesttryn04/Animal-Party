@@ -35,6 +35,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip theSeaClip;
     [Header("Main Menu")]
     public AudioClip theNightClip;
+    public AudioClip theSeaAndShipClip;
     public AudioClip musicMainMenuClip;
     [Header("Choose Scene")]
     public AudioClip musicChooseSceneClip;

@@ -381,8 +381,9 @@ public class CutSceneShip : MonoBehaviour
 
         if (audio != null)
         {
+           // audio.SetupMainGameAudio();
             audio.PlaySFX(audio.shipVoiceClip);
-            audio.PlaySFX(audio.shipMoveClip);
+            audio.PlayEnvironment(audio.theSeaClip);
             audio.PlaySFX(audio.seaGullClip);
         }
 

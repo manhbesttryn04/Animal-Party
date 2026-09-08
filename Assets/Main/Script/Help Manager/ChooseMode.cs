@@ -132,6 +132,7 @@ public class ChooseMode : MonoBehaviour
     private bool previousP1ControllerConnected;
     private bool previousP2ControllerConnected;
     private bool inputInstructionInitialized;
+    public GameObject theBirdVoice;
 
     // =========================================================
     // UNITY
@@ -156,6 +157,7 @@ public class ChooseMode : MonoBehaviour
         var audio = AudioManager.Instance;
         if (audio != null)
         {
+          //  audio.SetupMainGameAudio();
             audio.PlayMusic(
                 audio.musicChooseSceneClip
             );
@@ -1504,6 +1506,7 @@ public IEnumerator DisPlayerChoose(int index, List<Button> listButtonChoose)
 
         if (LoadingManager.Instance != null)
         {
+            theBirdVoice.gameObject.SetActive(false);
             yield return StartCoroutine(
                 LoadingManager.Instance
                     .ShowLoading()
